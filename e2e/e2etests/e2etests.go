@@ -121,20 +121,11 @@ const (
 	TestSuiTokenWithdrawAndCallRevertWithCallName = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallName                    = "sui_withdraw_and_call"
 	TestSuiWithdrawRevertWithCallName             = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawAndCallInvalidPayloadName      = "sui_withdraw_and_call_invalid_payload"  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiDepositRestrictedName                  = "sui_deposit_restricted"
 	TestSuiWithdrawRestrictedName                 = "sui_withdraw_restricted"
 	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
-
-	/*
-	 Sui legacy tests (using legacy sui gateway package)
-	 TODO: https://github.com/zeta-chain/node/issues/4066
-	 remove legacy tests after re-enabling authenticated call
-	*/
-	TestSuiWithdrawAndCallLegacyName                    = "sui_withdraw_and_call_legacy"
-	TestSuiTokenWithdrawAndCallLegacyName               = "sui_token_withdraw_and_call_legacy"
-	TestSuiWithdrawAndCallRevertWithCallLegacyName      = "sui_withdraw_and_call_revert_with_call_legacy"       // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndCallRevertWithCallLegacyName = "sui_token_withdraw_and_call_revert_with_call_legacy" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
@@ -297,7 +288,8 @@ var (
 	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
-const V2ZetaVersion = "v33.0.0"
+// v2ZetaVersion is the minimum version that supports ZETA transfers using the gateway (v2 protocol contracts)
+const v2ZetaVersion = "v37.0.0"
 
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
@@ -311,7 +303,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
@@ -320,7 +312,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestZetaDepositAndCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertName,
@@ -329,14 +321,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositRevertAndAbortName,
 		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestZetaDepositRevertAndAbort,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
@@ -345,7 +337,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallNoMessageName,
@@ -354,7 +346,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallNoMessage,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawName,
@@ -363,7 +355,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdraw,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallName,
@@ -373,7 +365,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawAndCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertName,
@@ -382,7 +374,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevert,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertWithCallName,
@@ -391,7 +383,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawRevertAndAbortName,
@@ -401,7 +393,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawRevertAndAbort,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndArbitraryCallName,
@@ -410,7 +402,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndArbitraryCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
@@ -448,7 +440,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestETHDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
@@ -708,20 +700,26 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestZEVMToEVMCallName,
 		"zevm -> evm call",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCall,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertName,
 		"zevm -> evm call that reverts and call onRevert",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCallRevert,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertAndAbortName,
 		"zevm -> evm call that reverts and abort with onAbort",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCallRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
@@ -1139,7 +1137,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawRevertWithCallName,
@@ -1151,6 +1149,15 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSuiWithdrawAndCallInvalidPayloadName,
+		"withdraw SUI from ZEVM and makes an authenticated call to a contract that reverts due to invalid payload",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawAndCallInvalidPayload,
+		runner.WithMinimumVersion("v35.0.0"),
+	),
+	runner.NewE2ETest(
 		TestSuiWithdrawAndCallRevertWithCallName,
 		"withdraw SUI from ZEVM and makes an authenticated call to a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
@@ -1158,7 +1165,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawName,
@@ -1177,7 +1184,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallRevertWithCallName,
@@ -1187,7 +1194,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositRestrictedName,
@@ -1217,49 +1224,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiWithdrawInvalidReceiver,
 		runner.WithMinimumVersion("v33.0.0"),
 	),
-	/*
-	 Sui legacy tests (using legacy sui gateway)
-	*/
-	runner.NewE2ETest(
-		TestSuiWithdrawAndCallLegacyName,
-		"withdraw SUI from ZEVM and makes an legacy call to a contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in mist", DefaultValue: "1000000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
-		},
-		TestSuiWithdrawAndCallLegacy,
-		runner.WithMinimumVersion("v30.0.0"),
-	),
-	runner.NewE2ETest(
-		TestSuiWithdrawAndCallRevertWithCallLegacyName,
-		"withdraw SUI from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount in mist", DefaultValue: "1000000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
-		},
-		TestSuiWithdrawAndCallRevertWithCallLegacy,
-		runner.WithMinimumVersion("v30.0.0"),
-	),
-	runner.NewE2ETest(
-		TestSuiTokenWithdrawAndCallLegacyName,
-		"withdraw fungible token from ZEVM and makes an legacy call to a contract",
-		[]runner.ArgDefinition{
-			{Description: "amount in base unit", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
-		},
-		TestSuiTokenWithdrawAndCallLegacy,
-		runner.WithMinimumVersion("v30.0.0"),
-	),
-	runner.NewE2ETest(
-		TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
-		"withdraw fungible token from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
-		[]runner.ArgDefinition{
-			{Description: "amount in base unit", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
-		},
-		TestSuiTokenWithdrawAndCallRevertWithCallLegacy,
-		runner.WithMinimumVersion("v30.0.0"),
-	),
 
 	/*
 	 Bitcoin tests
@@ -1284,7 +1248,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallName,

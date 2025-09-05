@@ -32,6 +32,8 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// create the on_call payload
 	authorizedSender := r.EVMAddress()
 	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
+	message, err := payloadOnCall.PackABI()
+	require.NoError(r, err)
 
 	// ACT
 	// approve SUI ZRC20 token
@@ -42,7 +44,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		r.SUIZRC20Addr,
-		payloadOnCall,
+		message,
 		gasLimit,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
@@ -52,7 +54,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw_and_call")
-	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// balance after
 	balanceAfter := r.SuiGetSUIBalance(suiAddress)

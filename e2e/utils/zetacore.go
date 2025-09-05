@@ -38,32 +38,6 @@ const (
 	nodeSyncTolerance = constant.ZetaBlockTime * 5
 )
 
-// BalanceChange contains details about the balance change
-type BalanceChange struct {
-	// If provided, when set to
-	//  - true: the balance change must be positive
-	//  - false: the balance change must be negative
-	positive *bool
-
-	// If provided, it's the exact value of the balance change
-	// Delta value can be positive or negative
-	delta *big.Int
-}
-
-// NewBalanceChange returns a new BalanceChange with given positive flag
-func NewBalanceChange(positive bool) BalanceChange {
-	return BalanceChange{
-		positive: &[]bool{positive}[0],
-	}
-}
-
-// NewExactChange returns a new BalanceChange with the Delta field set to the exact value
-func NewExactChange(delta *big.Int) BalanceChange {
-	return BalanceChange{
-		delta: delta,
-	}
-}
-
 // GetCCTXByInboundHash gets cctx by inbound hash
 func GetCCTXByInboundHash(
 	ctx context.Context,
@@ -74,7 +48,7 @@ func GetCCTXByInboundHash(
 
 	// query cctx by inbound hash
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
-	res, err := client.InTxHashToCctxData(ctx, in)
+	res, err := client.InboundHashToCctxData(ctx, in)
 
 	require.NoError(t, err)
 	require.Len(t, res.CrossChainTxs, 1)
@@ -145,7 +119,7 @@ func WaitCctxsMinedByInboundHash(
 		// for the update tests
 		// TODO: replace with InboundHashToCctxData once removed
 		// https://github.com/zeta-chain/node/issues/2200
-		res, err := client.InTxHashToCctxData(ctx, in)
+		res, err := client.InboundHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
 			if i%20 == 0 {
@@ -397,7 +371,7 @@ func WaitCctxByInboundHash(
 	}
 
 	for {
-		out, err := c.InTxHashToCctxData(ctx, in)
+		out, err := c.InboundHashToCctxData(ctx, in)
 		statusCode, _ := status.FromError(err)
 
 		switch {
@@ -517,19 +491,7 @@ func WaitAndVerifyZRC20BalanceChange(
 		}
 		logger.Info("%s balance changed from %d to %d on address %s", symbol, oldBalance, newBalance, address.Hex())
 
-		// balance should increase or decrease?
-		if change.positive != nil {
-			if *change.positive {
-				require.True(t, newBalance.Cmp(oldBalance) > 0, "balance should be increased")
-			} else {
-				require.True(t, newBalance.Cmp(oldBalance) < 0, "balance should be decreased")
-			}
-		}
-
-		// check exact amount change if provided
-		if change.delta != nil {
-			require.Equal(t, new(big.Int).Add(oldBalance, change.delta), newBalance)
-		}
+		change.Verify(t, oldBalance, newBalance)
 
 		return
 	}

@@ -61,7 +61,6 @@ const (
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
-	previousVersion            = "v32.0.2"
 )
 
 var (
@@ -308,20 +307,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.AddPostUpgradeHandler(previousVersion, func() {
-		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
-		err = OverwriteAccountData(cmd, &conf)
-		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy)
-		if !testSui || deployerRunner.IsRunningTssMigration() {
-			return
-		}
-
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
-	})
-
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -483,22 +468,35 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawRevertWithCallName,
+			//e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
-			// TODO: https://github.com/zeta-chain/node/issues/4066
-			// remove legacy tests and enable new ones after re-enabling authenticated call
 			//e2etests.TestSuiWithdrawAndCallName,
+			//e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
 			//e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			//e2etests.TestSuiTokenWithdrawAndCallName,
 			//e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
-			e2etests.TestSuiWithdrawAndCallLegacyName,
-			e2etests.TestSuiWithdrawAndCallRevertWithCallLegacyName,
-			e2etests.TestSuiTokenWithdrawAndCallLegacyName,
-			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
 			e2etests.TestSuiDepositRestrictedName,
-			e2etests.TestSuiWithdrawRestrictedName,
+			//e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
+
+		// TODO: https://github.com/zeta-chain/node/issues/4139
+		// the v35 upgrade test is now based on v32 sui gateway
+		// 1. does not have MessageContext object, we have to skip all WaC tests
+		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
+		suiBreakingTestsV35Upgrade := []string{
+			e2etests.TestSuiWithdrawRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiWithdrawRestrictedName,
+		}
+		if !deployerRunner.IsRunningUpgrade() {
+			suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
+		}
+
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 
