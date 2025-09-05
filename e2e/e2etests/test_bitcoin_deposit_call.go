@@ -28,7 +28,8 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// create a random payload exactly fit max OP_RETURN data size 80 bytes (20 receiver + 60 payload)
 	size := txscript.MaxDataCarrierSize - ethcommon.AddressLength
 	payload := randomPayloadWithSize(r, size)
-	r.AssertTestDAppZEVMCalled(false, payload, big.NewInt(amountSats))
+	sender := r.GetBtcAddress().EncodeAddress()
+	r.AssertTestDAppZEVMCalled(false, payload, []byte(sender), big.NewInt(amountSats))
 
 	// ACT
 	// Send BTC to TSS address with a dummy memo
@@ -52,5 +53,5 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
+	r.AssertTestDAppZEVMCalled(true, payload, []byte(sender), big.NewInt(receivedAmount))
 }

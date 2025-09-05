@@ -25,17 +25,18 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)
 	require.NoError(r, err)
 
-	// Given a sender
-	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
+	// Given a senderWallet
+	_, senderWallet, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
+	sender := []byte(senderWallet.GetAddress().String())
 
 	// Given payload and a ZEVM contract
 	contractAddr := r.TestDAppV2ZEVMAddr
 	payload := randomPayload(r)
-	r.AssertTestDAppZEVMCalled(false, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(false, payload, sender, big.NewInt(0))
 
 	// ACT
-	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, []byte(payload))
+	_, err = r.TONDepositAndCall(gw, senderWallet, amount, contractAddr, []byte(payload))
 
 	// ASSERT
 	require.NoError(r, err)
@@ -47,5 +48,5 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.TONZRC20, contractAddr, big.NewInt(0), change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, expectedDeposit.BigInt())
+	r.AssertTestDAppZEVMCalled(true, payload, sender, expectedDeposit.BigInt())
 }

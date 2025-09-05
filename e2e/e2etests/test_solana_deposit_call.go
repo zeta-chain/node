@@ -18,8 +18,9 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given payload and ZEVM contract address
 	payload := randomPayload(r)
+	sender := []byte(r.GetSolanaPrivKey().PublicKey().String())
 	contractAddr := r.TestDAppV2ZEVMAddr
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
 	// ACT
 	// execute the deposit transaction
@@ -33,5 +34,5 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 }

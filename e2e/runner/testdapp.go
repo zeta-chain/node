@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"math/big"
 	"time"
 
@@ -21,28 +22,29 @@ const (
 // AssertTestDAppZEVMCalled is a function that asserts the values of the test dapp on the ZEVM
 // this function uses TestDAppV2 for the assertions, in the future we should only use this contracts for all tests
 // https://github.com/zeta-chain/node/issues/2655
-func (r *E2ERunner) AssertTestDAppZEVMCalled(expectedCalled bool, message string, amount *big.Int) {
-	r.waitAndVerifyTestDAppCall(r.TestDAppV2ZEVM, message, expectedCalled, amount)
+func (r *E2ERunner) AssertTestDAppZEVMCalled(expectedCalled bool, message string, sender []byte, amount *big.Int) {
+	r.waitAndVerifyTestDAppCall(r.TestDAppV2ZEVM, expectedCalled, message, sender, amount)
 }
 
 // AssertTestDAppEVMCalled is a function that asserts the values of the test dapp on the external EVM
 func (r *E2ERunner) AssertTestDAppEVMCalled(expectedCalled bool, message string, amount *big.Int) {
-	r.waitAndVerifyTestDAppCall(r.TestDAppV2EVM, message, expectedCalled, amount)
+	r.waitAndVerifyTestDAppCall(r.TestDAppV2EVM, expectedCalled, message, nil, amount)
 }
 
-// waitAndVerifyTestDAppCall waits for the test dapp to be called with the expected message and amount
+// waitAndVerifyTestDAppCall waits for the test dapp to be called with the expected message, sender and amount
 // This function is to tolerate the fact that the dApp state may not be synced across all nodes behind a RPC.
 func (r *E2ERunner) waitAndVerifyTestDAppCall(
 	testDApp *testdappv2.TestDAppV2,
-	message string,
 	expectedCalled bool,
+	message string,
+	expectedSender []byte,
 	expectedAmount *big.Int,
 ) {
 	// do simply assert if the dApp is NOT expected to be called, no need to wait
 	if !expectedCalled {
 		called, err := testDApp.GetCalledWithMessage(&bind.CallOpts{}, message)
 		require.NoError(r, err)
-		require.EqualValues(r, expectedCalled, called)
+		require.EqualValues(r, false, called)
 		return
 	}
 
@@ -57,11 +59,17 @@ func (r *E2ERunner) waitAndVerifyTestDAppCall(
 		called, err := testDApp.GetCalledWithMessage(&bind.CallOpts{}, message)
 		require.NoError(r, err)
 
+		sender, err := testDApp.GetSenderWithMessage(&bind.CallOpts{}, message)
+		require.NoError(r, err)
+
 		amount, err := testDApp.GetAmountWithMessage(&bind.CallOpts{}, message)
 		require.NoError(r, err)
 
-		// stop only if both message and amount are matching the expected values
-		if called == expectedCalled && amount.Cmp(expectedAmount) == 0 {
+		// if sender is provided, check if it matches the actual sender
+		sameSender := len(expectedSender) == 0 || bytes.Equal(sender, expectedSender)
+
+		// stop only if sender, message and amount are matching the expected values
+		if called == expectedCalled && amount.Cmp(expectedAmount) == 0 && sameSender {
 			return
 		}
 	}

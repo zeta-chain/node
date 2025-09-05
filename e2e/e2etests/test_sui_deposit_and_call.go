@@ -22,6 +22,12 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	payload := randomPayload(r)
 
+	// given sender
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err)
+	sender, err := sui.EncodeAddress(signer.Address())
+	require.NoError(r, err)
+
 	// make the deposit transaction
 	resp := r.SuiDepositAndCallSUI(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte(payload))
 
@@ -35,21 +41,10 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
 	require.True(r, cctx.InboundParams.IsCrossChainCall)
 
-	newBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
-
-	// check sender passed in the call
-	signer, err := r.Account.SuiSigner()
-	require.NoError(r, err)
-
-	sender, err := sui.EncodeAddress(signer.Address())
-	require.NoError(r, err)
-
-	actualSender, err := r.TestDAppV2ZEVM.GetSenderWithMessage(&bind.CallOpts{}, payload)
-	require.NoError(r, err)
-	require.EqualValues(r, sender, actualSender)
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SUIZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 }
