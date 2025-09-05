@@ -65,11 +65,11 @@ func (r *E2ERunner) waitAndVerifyTestDAppCall(
 		amount, err := testDApp.GetAmountWithMessage(&bind.CallOpts{}, message)
 		require.NoError(r, err)
 
-		// if sender is provided, check if it matches the actual sender
-		sameSender := len(expectedSender) == 0 || bytes.Equal(sender, expectedSender)
+		// if sender is provided, check if it matches the actual sender, otherwise skip the check
+		senderMatched := len(expectedSender) == 0 || bytes.Equal(sender, expectedSender)
 
 		// stop only if sender, message and amount are matching the expected values
-		if called == expectedCalled && amount.Cmp(expectedAmount) == 0 && sameSender {
+		if called == expectedCalled && amount.Cmp(expectedAmount) == 0 && senderMatched {
 			return
 		}
 	}
