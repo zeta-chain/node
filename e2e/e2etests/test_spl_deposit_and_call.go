@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
@@ -37,6 +38,10 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	payload := randomPayload(r)
 	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
+	// get zrc20 balance for recipient
+	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
+	require.NoError(r, err)
+
 	// ACT
 	// execute the deposit transaction
 	// #nosec G115 e2eTest - always in range
@@ -51,6 +56,10 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)
+
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SPLZRC20, contractAddr, zrc20BalanceBefore, change, r.Logger)
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
