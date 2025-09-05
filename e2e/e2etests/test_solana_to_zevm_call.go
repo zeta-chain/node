@@ -22,7 +22,6 @@ func TestSolanaToZEVMCall(r *runner.E2ERunner, args []string) {
 
 	// ACT
 	// execute call transaction
-	// data := []byte("hello")
 	sig := r.SOLCall(nil, contractAddr, []byte(payload), nil)
 
 	// ASSERT
