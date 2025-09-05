@@ -50,14 +50,6 @@ func randomPayloadWithSize(r *runner.E2ERunner, size int) string {
 	return hex.EncodeToString(bytes)[:size]
 }
 
-func randomPayloadBytes(r *runner.E2ERunner) []byte {
-	bytes := make([]byte, 50)
-	_, err := rand.Read(bytes)
-	require.NoError(r, err)
-
-	return bytes
-}
-
 func formatDuration(d time.Duration) string {
 	minutes := int(d.Minutes())
 	seconds := d.Seconds() - float64(minutes*60)
