@@ -15,7 +15,8 @@ import (
 )
 
 func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 0)
+	require.Len(r, args, 1)
+	gasLimit := utils.ParseBigInt(r, args[0])
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -34,6 +35,7 @@ func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined
