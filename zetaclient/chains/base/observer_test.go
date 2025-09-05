@@ -516,64 +516,72 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	})
 }
 
-func Test_GetSetAnyString(t *testing.T) {
+func Test_GetSetAuxString(t *testing.T) {
 	chain := chains.SuiMainnet
 
-	t.Run("should be able to update any string value", func(t *testing.T) {
+	t.Run("should be able to update auxiliary string value", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// should return empty value if not set
 		key := "test key"
-		require.Empty(t, ob.GetAnyString(key))
+		require.Empty(t, ob.GetAuxString(key))
 
-		// update any string value
+		// update auxiliary string value
 
 		value := "test value"
-		ob.Observer.WithAnyString(key, value)
-		require.Equal(t, value, ob.GetAnyString(key))
+		ob.Observer.WithAuxString(key, value)
+		require.Equal(t, value, ob.GetAuxString(key))
 	})
 }
 
-func Test_LoadAnyString(t *testing.T) {
+func Test_LoadAuxString(t *testing.T) {
 	chain := chains.SuiMainnet
 	key := "test key"
-	envvar := base.EnvVarLatestAnyStringByChain(chain, key)
+	envvar := base.EnvVarLatestAuxStringByChain(chain, key)
 
-	t.Run("should be able to load any string value", func(t *testing.T) {
+	t.Run("should be able to load/update auxiliary string value", func(t *testing.T) {
 		// create observer and open db
 		ob := newTestSuite(t, chain)
 
-		// create db and write any string value
-		err := ob.WriteAnyStringToDB(key, "test value")
+		// create db and write auxiliary string value
+		err := ob.WriteAuxStringToDB(key, "test value")
 		require.NoError(t, err)
 
-		// read any string value
-		ob.LoadAnyString(key)
-		require.EqualValues(t, "test value", ob.GetAnyString(key))
+		// read auxiliary string value
+		ob.LoadAuxString(key)
+		require.EqualValues(t, "test value", ob.GetAuxString(key))
+
+		// update auxiliary string value
+		err = ob.WriteAuxStringToDB(key, "test value 2")
+		require.NoError(t, err)
+
+		// read again
+		ob.LoadAuxString(key)
+		require.EqualValues(t, "test value 2", ob.GetAuxString(key))
 	})
 
 	t.Run("should return empty value if not found in db", func(t *testing.T) {
 		// create observer and open db
 		ob := newTestSuite(t, chain)
 
-		// read any string value
-		ob.LoadAnyString(key)
-		require.Empty(t, ob.GetAnyString(key))
+		// read auxiliary string value
+		ob.LoadAuxString(key)
+		require.Empty(t, ob.GetAuxString(key))
 	})
 
 	t.Run("should overwrite string value if env var is set", func(t *testing.T) {
 		// create observer and open db
 		ob := newTestSuite(t, chain)
 
-		// create db and write any string value
-		ob.WriteAnyStringToDB(key, "test value 1")
+		// create db and write auxiliary string value
+		ob.WriteAuxStringToDB(key, "test value 1")
 
 		// set env var
 		os.Setenv(envvar, "test value 2")
 
-		// read any string value
-		ob.LoadAnyString(key)
-		require.EqualValues(t, "test value 2", ob.GetAnyString(key))
+		// read auxiliary string value
+		ob.LoadAuxString(key)
+		require.EqualValues(t, "test value 2", ob.GetAuxString(key))
 	})
 }
 

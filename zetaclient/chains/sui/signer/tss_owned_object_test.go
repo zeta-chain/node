@@ -13,12 +13,12 @@ import (
 func Test_withdrawCapID(t *testing.T) {
 	// ARRANGE
 	withdrawCapID := sample.SuiAddress(t)
-	originalPackageID := sample.SuiAddress(t)
+	previousPackageID := sample.SuiAddress(t)
 
 	// create test suite and specify withdraw cap ID
 	ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 		cfg.withdrawCapID = withdrawCapID
-		cfg.originalPackageID = originalPackageID
+		cfg.previousPackageID = previousPackageID
 	})
 
 	// ACT

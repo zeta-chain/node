@@ -30,10 +30,10 @@ type Gateway struct {
 	// It is used to specify the withdraw cap object ID only after the gateway upgrade.
 	withdrawCapID string
 
-	// originalPackageID is an optional field that points to the original gateway package.
+	// previousPackageID is an optional field that points to the previous gateway package.
 	// After gateway upgrade, the observer MUST use this packageID to query inbound events,
-	// because the original gateway package was where the events were initially defined.
-	originalPackageID string
+	// because the previous gateway package was where the events were initially defined.
+	previousPackageID string
 
 	mu sync.RWMutex
 }
@@ -67,10 +67,10 @@ func ActiveMessageContextDynamicFieldName() (json.RawMessage, error) {
 	return dynamicFieldNameToJSONArray("active_message_context")
 }
 
-// NewGatewayFromAddress creates a new Sui Gateway struct from the gateway address in chain params.
-// The gateway address is in the form of `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
-func NewGatewayFromAddress(gatewayAddress string) (*Gateway, error) {
-	packageID, gatewayObjectID, withdrawCapID, originalPackageID, err := parseGatewayAddress(gatewayAddress)
+// NewGatewayFromPairID creates a new Sui Gateway struct from the chain params gateway address,
+// which is a pair ID of `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID]`
+func NewGatewayFromPairID(pair string) (*Gateway, error) {
+	packageID, gatewayObjectID, withdrawCapID, previousPackageID, err := parsePair(pair)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func NewGatewayFromAddress(gatewayAddress string) (*Gateway, error) {
 		packageID:         packageID,
 		objectID:          gatewayObjectID,
 		withdrawCapID:     withdrawCapID,
-		originalPackageID: originalPackageID,
+		previousPackageID: previousPackageID,
 	}, nil
 }
 
@@ -88,38 +88,38 @@ func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
-// MakeAddress makes a gateway address of the form `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// MakePairID makes a pair ID of the form `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID]`
 // Note: It is only used for tests at the moment.
-func MakeAddress(packageID, gatewayObjectID, withdrawCapID, originalPackageID string) string {
-	if withdrawCapID == "" || originalPackageID == "" {
+func MakePairID(packageID, gatewayObjectID, withdrawCapID, previousPackageID string) string {
+	if withdrawCapID == "" || previousPackageID == "" {
 		return fmt.Sprintf("%s,%s", packageID, gatewayObjectID)
 	}
-	return fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayObjectID, withdrawCapID, originalPackageID)
+	return fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayObjectID, withdrawCapID, previousPackageID)
 }
 
-// ToAddress return a gateway address of `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// ToPairID return a pair ID of `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID]`
 // Note: It is only used for tests at the moment.
-func (gw *Gateway) ToAddress() string {
+func (gw *Gateway) ToPairID() string {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
-	return MakeAddress(gw.packageID, gw.objectID, gw.withdrawCapID, gw.originalPackageID)
+	return MakePairID(gw.packageID, gw.objectID, gw.withdrawCapID, gw.previousPackageID)
 }
 
-// Original creates a Gateway struct that points to the original gateway.
+// Previous creates a Gateway struct that points to the previous gateway.
 //
 // Note:
-//   - Gateway events were defined in the original gateway package, so the original package ID should be used for event queries.
+//   - Gateway events were defined in the previous gateway package, so the previous package ID should be used for event queries.
 //     Event queries on upgraded gateway package ID will return empty events and lead to missed deposits.
-//   - This method allows the observer to make a switch and work with the original gateway package after upgrade.
-func (gw *Gateway) Original() *Gateway {
+//   - This method allows the observer to make a switch and work with the previous package after upgrade.
+func (gw *Gateway) Previous() *Gateway {
 	gw.mu.Lock()
 	defer gw.mu.Unlock()
 
-	// return self if original package ID is not specified
-	if gw.originalPackageID == "" {
+	// return self if previous package ID is not specified
+	if gw.previousPackageID == "" {
 		return gw
 	}
-	return &Gateway{packageID: gw.originalPackageID, objectID: gw.objectID, withdrawCapID: gw.withdrawCapID}
+	return &Gateway{packageID: gw.previousPackageID, objectID: gw.objectID, withdrawCapID: gw.withdrawCapID}
 }
 
 // Event represents generic event wrapper
@@ -180,15 +180,15 @@ func (gw *Gateway) PackageID() string {
 	return gw.packageID
 }
 
-// PackageIDs returns slice of {packageID[,originalPackageID]}
+// PackageIDs returns slice of {packageID[,previousPackageID]}
 func (gw *Gateway) PackageIDs() []string {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
 
-	if gw.originalPackageID == "" {
+	if gw.previousPackageID == "" {
 		return []string{gw.packageID}
 	}
-	return []string{gw.packageID, gw.originalPackageID}
+	return []string{gw.packageID, gw.previousPackageID}
 }
 
 // ObjectID returns Gateway's struct object id
@@ -206,14 +206,14 @@ func (gw *Gateway) WithdrawCapID() string {
 }
 
 // WithdrawCapType returns struct type of the WithdrawCap
-// Note: the withdraw cap was defined in the original package, so original package ID should be used
+// Note: the withdraw cap was defined in the previous package, so previous package ID should be used
 func (gw *Gateway) WithdrawCapType() string {
-	return fmt.Sprintf("%s::%s::WithdrawCap", gw.Original().PackageID(), GatewayModule)
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.Previous().PackageID(), GatewayModule)
 }
 
-// UpdateIDs updates packageID, objectID, withdrawCapID and originalPackageID.
-func (gw *Gateway) UpdateIDs(gatewayAddress string) error {
-	packageID, gatewayObjectID, withdrawCapID, originalPackageID, err := parseGatewayAddress(gatewayAddress)
+// UpdateIDs updates packageID, objectID, withdrawCapID and previousPackageID.
+func (gw *Gateway) UpdateIDs(pair string) error {
+	packageID, gatewayObjectID, withdrawCapID, previousPackageID, err := parsePair(pair)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func (gw *Gateway) UpdateIDs(gatewayAddress string) error {
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
 	gw.withdrawCapID = withdrawCapID
-	gw.originalPackageID = originalPackageID
+	gw.previousPackageID = previousPackageID
 
 	return nil
 }
@@ -475,14 +475,14 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
-// parseGatewayAddress parses a gateway address of the form `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// parsePair parses a pair of IDs from `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID]`
 // There are two cases:
 //   - `$packageID,$gatewayObjectID`, the first version of the gateway address
-//   - `$packageID,$gatewayObjectID,$withdrawCapID,$originalPackageID`, gateway address after upgrade
-func parseGatewayAddress(gatewayAddress string) (string, string, string, string, error) {
+//   - `$packageID,$gatewayObjectID,$withdrawCapID,$previousPackageID`, gateway address after upgrade
+func parsePair(gatewayAddress string) (string, string, string, string, error) {
 	parts := strings.Split(gatewayAddress, ",")
 	if len(parts) != 2 && len(parts) != 4 {
-		return "", "", "", "", errors.Errorf("invalid gateway address %q", gatewayAddress)
+		return "", "", "", "", errors.Errorf("invalid pair %q", gatewayAddress)
 	}
 
 	// each part should be a valid Sui address

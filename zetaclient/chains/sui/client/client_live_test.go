@@ -260,7 +260,7 @@ func TestClientLive(t *testing.T) {
 		require.NotNil(t, res)
 		require.Equal(t, TxStatusSuccess, res.Effects.Status.Status)
 
-		gw, err := sui.NewGatewayFromAddress(
+		gw, err := sui.NewGatewayFromPairID(
 			"0x6b2fe12c605d64e14ca69f9aba51550593ba92ff43376d0a6cc26a5ca226f9bd,0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700",
 		)
 		require.NoError(t, err)

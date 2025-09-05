@@ -212,7 +212,7 @@ func (s *Sui) updateChainParams(ctx context.Context) error {
 
 	s.observer.SetChainParams(*params)
 
-	// note that address should be in format of `$packageID,$gatewayObjectID[,originalPackageID]`
+	// note that address should be in format of `$packageID,$gatewayObjectID[,withdrawCapID,previousPackageID]`
 	if err := s.observer.Gateway().UpdateIDs(params.GatewayAddress); err != nil {
 		return errors.Wrap(err, "unable to update gateway ids")
 	}

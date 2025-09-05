@@ -72,25 +72,26 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	return nil
 }
 
-// MigrateInboundCursorToV35 migrates old inbound cursor in the database to v35 format
-// zetaclient v35 needs two separate inbound cursors for old and new gateway packages,
-// so the cursors have to be stored under separate keys - the package IDs
-func (ob *Observer) MigrateInboundCursorToV35() error {
-	// all we need to do is to migrate the cursor for original package
-	// the old cursor is stored as 'LastTransactionSQLType'
+// MigrateCursorForAuthenticatedCallUpgrade migrates inbound cursor in the database to adopt Sui authenticated call upgrade
+//   - before upgrade, there is only one cursor stored as 'LastTransactionSQLType' for gateway package.
+//   - after  upgrade, we might face scenarios where multiple cursors need to be stored for versioned packages,
+//     so we need to migrate the single cursor model to a multi-cursor model. Moving forward, the cursors will
+//     be stored under separate keys - the package IDs.
+func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
+	// get old cursor
 	oldCursor := ob.LastTxScanned()
 	if oldCursor == "" {
-		// nothing to migrate
+		// nothing to migrate or already migrated
 		return nil
 	}
 
 	// Sui chain params may or may not contain new gateway package ID
-	// the 'originalPackageID' should be used as the DB key for old cursor
-	originalPackageID := ob.gateway.Original().PackageID()
-	if err := ob.WriteAnyStringToDB(originalPackageID, oldCursor); err != nil {
-		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", originalPackageID)
+	// the 'previousPackageID' should be used as the DB key for old cursor
+	previousPackageID := ob.gateway.Previous().PackageID()
+	if err := ob.WriteAuxStringToDB(previousPackageID, oldCursor); err != nil {
+		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", previousPackageID)
 	}
-	ob.WithAnyString(originalPackageID, oldCursor)
+	ob.WithAuxString(previousPackageID, oldCursor)
 
 	// set old cursor to empty value
 	if err := ob.WriteLastTxScannedToDB(""); err != nil {
@@ -99,7 +100,7 @@ func (ob *Observer) MigrateInboundCursorToV35() error {
 	ob.WithLastTxScanned("")
 
 	ob.Logger().Inbound.Info().
-		Str("package", originalPackageID).
+		Str("package", previousPackageID).
 		Str("cursor", oldCursor).
 		Msgf("Migrated inbound cursor")
 
@@ -164,17 +165,17 @@ func (ob *Observer) setLatestGasPrice(price uint64) {
 
 // getCursor retrieves the inbound cursor for a given packageID
 func (ob *Observer) getCursor(packageID string) string {
-	return ob.GetAnyString(packageID)
+	return ob.GetAuxString(packageID)
 }
 
 // setCursor saves the inbound cursor for a given packageID
 func (ob *Observer) setCursor(packageID string, eventID models.EventId) error {
 	cursor := client.EncodeCursor(eventID)
 
-	if err := ob.WriteAnyStringToDB(packageID, cursor); err != nil {
+	if err := ob.WriteAuxStringToDB(packageID, cursor); err != nil {
 		return errors.Wrapf(err, "unable to write cursor to db for package %s", packageID)
 	}
-	ob.WithAnyString(packageID, cursor)
+	ob.WithAuxString(packageID, cursor)
 
 	return nil
 }

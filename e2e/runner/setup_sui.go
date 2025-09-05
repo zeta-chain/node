@@ -495,7 +495,7 @@ func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              r.SuiGateway.ToAddress(),
+		GatewayAddress:              r.SuiGateway.ToPairID(),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,

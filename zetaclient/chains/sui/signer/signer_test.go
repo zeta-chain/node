@@ -324,7 +324,7 @@ type testSuite struct {
 
 type testSuiteConfig struct {
 	withdrawCapID     string
-	originalPackageID string
+	previousPackageID string
 }
 
 func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
@@ -346,14 +346,14 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 		logger     = base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 	)
 
-	// append withdraw cap ID and original package ID if provided
-	if cfg.withdrawCapID != "" && cfg.originalPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.originalPackageID)
+	// append withdraw cap ID and previous package ID if provided
+	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID)
 	}
 
 	suiMock := mocks.NewSuiClient(t)
 
-	gw, err := sui.NewGatewayFromAddress(chainParams.GatewayAddress)
+	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	baseSigner := base.NewSigner(chain, tss, logger)

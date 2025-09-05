@@ -58,9 +58,9 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
-	// anyStringMap is a key-value map to store any string values used by the observer
+	// auxStringMap is a key-value map to store any auxiliary string values used by the observer
 	// it is now only used by Sui observer to store old/new Sui gateway inbound cursors
-	anyStringMap map[string]string
+	auxStringMap map[string]string
 
 	blockCache *lru.Cache
 
@@ -106,7 +106,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
-		anyStringMap:     make(map[string]string),
+		auxStringMap:     make(map[string]string),
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
@@ -392,64 +392,69 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 	return lastTx.Hash, nil
 }
 
-// GetAnyString get any string data by key
-func (ob *Observer) GetAnyString(key string) string {
+// GetAuxString get any auxiliary string data by key
+func (ob *Observer) GetAuxString(key string) string {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
-	return ob.anyStringMap[key]
+	return ob.auxStringMap[key]
 }
 
-// WithAnyString set any string data by key
-func (ob *Observer) WithAnyString(key, value string) *Observer {
+// WithAuxString set any auxiliary string data by key
+func (ob *Observer) WithAuxString(key, value string) *Observer {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
-	if ob.anyStringMap[key] == "" {
-		ob.logger.Chain.Info().Str("key", key).Str("value", value).Msg("initializing any string value")
+	if ob.auxStringMap[key] == "" {
+		ob.logger.Chain.Info().Str("key", key).Str("value", value).Msg("initializing auxiliary string value")
 	}
-	ob.anyStringMap[key] = value
+	ob.auxStringMap[key] = value
 
 	return ob
 }
 
-// WriteAnyStringToDB writes the any string data to the database.
-func (ob *Observer) WriteAnyStringToDB(key, value string) error {
-	// handle both insert and update cases
-	anyString := clienttypes.ToAnyStringSQLType(key, value)
-	return ob.db.Client().Where("key_name = ?", key).Assign(anyString).FirstOrCreate(anyString).Error
+// WriteAuxStringToDB writes the auxiliary string data to the database.
+func (ob *Observer) WriteAuxStringToDB(key, value string) error {
+	// create new record if not found
+	var existingRecord clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&existingRecord).Error; err != nil {
+		return ob.db.Client().Create(clienttypes.ToAuxStringSQLType(key, value)).Error
+	}
+
+	// record exists, update it
+	return ob.db.Client().Model(&existingRecord).Update("value", value).Error
 }
 
-// LoadAnyString loads any string data from environment variable or from database.
-func (ob *Observer) LoadAnyString(key string) {
+// LoadAuxString loads auxiliary string data from environment variable or from database.
+func (ob *Observer) LoadAuxString(key string) {
 	// get environment variable
-	envvar := EnvVarLatestAnyStringByChain(ob.chain, key)
+	envvar := EnvVarLatestAuxStringByChain(ob.chain, key)
 	value := os.Getenv(envvar)
 
 	// load from environment variable if set
 	if value != "" {
 		ob.logger.Chain.Info().Str("envvar", envvar).Str("value", value).Msg("environment variable is set")
-		ob.WithAnyString(key, value)
+		ob.WithAuxString(key, value)
 		return
 	}
 
 	// load from DB otherwise
-	value, err := ob.ReadAnyStringFromDB(key)
+	value, err := ob.ReadAuxStringFromDB(key)
 	if err != nil {
 		// if not found, let the concrete chain observer decide where to start
 		chainID := ob.chain.ChainId
 		ob.logger.Chain.Info().Int64(logs.FieldChain, chainID).Str("key", key).Msg("string value not found in db")
 		return
 	}
-	ob.WithAnyString(key, value)
+	ob.WithAuxString(key, value)
 }
 
-// ReadAnyStringFromDB reads the any string data from the database.
-func (ob *Observer) ReadAnyStringFromDB(key string) (string, error) {
-	var anyString clienttypes.AnyStringSQLType
-	if err := ob.db.Client().Where("key_name = ?", key).First(&anyString).Error; err != nil {
+// ReadAuxStringFromDB reads the auxiliary string data from the database.
+func (ob *Observer) ReadAuxStringFromDB(key string) (string, error) {
+	var record clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&record).Error; err != nil {
 		return "", err
 	}
-	return anyString.Value, nil
+	return record.Value, nil
 }
 
 // PostVoteInbound posts a vote for the given vote message and returns the ballot.
@@ -525,9 +530,9 @@ func EnvVarLatestTxByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
 }
 
-// EnvVarLatestAnyStringByChain returns the environment variable for any string data by chain for the given key.
-func EnvVarLatestAnyStringByChain(chain chains.Chain, key string) string {
-	return fmt.Sprintf("CHAIN_%d_ANY_STRING_%s", chain.ChainId, key)
+// EnvVarLatestAuxStringByChain returns the environment variable for auxiliary string data by chain for the given key.
+func EnvVarLatestAuxStringByChain(chain chains.Chain, key string) string {
+	return fmt.Sprintf("CHAIN_%d_AUX_STRING_%s", chain.ChainId, key)
 }
 
 func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {

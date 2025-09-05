@@ -24,8 +24,8 @@ type LastTransactionSQLType struct {
 	Hash string
 }
 
-// AnyStringSQLType is a model for storing any auxiliary string data
-type AnyStringSQLType struct {
+// AuxStringSQLType is a model for storing auxiliary string data
+type AuxStringSQLType struct {
 	gorm.Model
 	Key   string `gorm:"column:key_name;uniqueIndex;not null"`
 	Value string
@@ -47,9 +47,9 @@ func ToLastTxHashSQLType(lastTx string) *LastTransactionSQLType {
 	}
 }
 
-// ToAnyStringSQLType converts given key and value to a AnyStringSQLType
-func ToAnyStringSQLType(key, value string) *AnyStringSQLType {
-	return &AnyStringSQLType{
+// ToAuxStringSQLType converts given key and value to a AuxStringSQLType
+func ToAuxStringSQLType(key, value string) *AuxStringSQLType {
+	return &AuxStringSQLType{
 		Key:   key,
 		Value: value,
 	}

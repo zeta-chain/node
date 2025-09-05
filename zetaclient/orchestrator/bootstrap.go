@@ -203,8 +203,8 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 
 	// note that gateway address should be in either of the following formats:
 	//   - `$packageID,$gatewayObjectID`
-	//   - `$packageID,$gatewayObjectID,$withdrawCapID,$originalPackageID`
-	gateway, err := suigateway.NewGatewayFromAddress(chain.Params().GatewayAddress)
+	//   - `$packageID,$gatewayObjectID,$withdrawCapID,$previousPackageID`
+	gateway, err := suigateway.NewGatewayFromPairID(chain.Params().GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create gateway")
 	}
@@ -218,8 +218,11 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
-	// migrate inbound cursor
-	if err = observer.MigrateInboundCursorToV35(); err != nil {
+	// migrate inbound cursor to adopt authenticated call upgrade.
+	// after upgrade, we might have to deal with multiple packages,
+	// so any auxiliary data should be managed under different package IDs.
+	// TODO: https://github.com/zeta-chain/node/issues/4164
+	if err = observer.MigrateCursorForAuthenticatedCallUpgrade(); err != nil {
 		return nil, errors.Wrap(err, "unable to migrate inbound cursor")
 	}
 
