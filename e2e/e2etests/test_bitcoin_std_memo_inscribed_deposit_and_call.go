@@ -67,5 +67,5 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
+	r.AssertTestDAppZEVMCalled(true, payload, []byte(senderAddress), big.NewInt(receivedAmount))
 }
