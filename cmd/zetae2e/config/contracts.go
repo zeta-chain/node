@@ -20,7 +20,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
-	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
@@ -355,24 +354,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZEVMClient)
 		if err != nil {
 			return err
-		}
-	}
-
-	if c := conf.Contracts.ZEVM.ContextAppAddr; c != "" {
-		r.ContextAppAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ContextAppAddr: %w", err)
-		}
-		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
-		if err != nil {
-			return err
-		}
-	}
-
-	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
-		r.ZevmTestDAppAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ZevmTestDappAddr: %w", err)
 		}
 	}
 

@@ -25,6 +25,7 @@
 * [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
 * [4113](https://github.com/zeta-chain/node/pull/4113) - fix Solana flaky depositAndCall e2e tests in live networks
 * [4142](https://github.com/zeta-chain/node/pull/4142) - fix Solana flaky SPL deposit e2e test in live networks
+* [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 
 ## v33.0.0
 
