@@ -21,7 +21,7 @@ func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, nil, amount)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -44,7 +44,7 @@ func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(

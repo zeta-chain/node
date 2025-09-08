@@ -15,8 +15,9 @@ func TestEVMToZEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	payload := randomPayload(r)
+	sender := r.EVMAddress().Bytes()
 
-	r.AssertTestDAppZEVMCalled(false, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(false, payload, sender, big.NewInt(0))
 
 	// perform the withdraw
 	tx := r.EVMToZEMVCall(
@@ -31,5 +32,5 @@ func TestEVMToZEVMCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, sender, big.NewInt(0))
 }
