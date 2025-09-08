@@ -36,7 +36,8 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Given payload and ZEVM contract address
 	contractAddr := r.TestDAppV2ZEVMAddr
 	payload := randomPayload(r)
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	sender := []byte(r.GetSolanaPrivKey().PublicKey().String())
+	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
 	// get zrc20 balance for recipient
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
@@ -55,7 +56,7 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)

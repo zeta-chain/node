@@ -39,7 +39,7 @@ func TestZEVMToEVMCallRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(

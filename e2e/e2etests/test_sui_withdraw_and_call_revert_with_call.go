@@ -71,7 +71,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// should have called 'onRevert'
-	r.AssertTestDAppZEVMCalled(true, payloadOnRevert, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payloadOnRevert, nil, big.NewInt(0))
 
 	// sender and message should match
 	sender, err := r.TestDAppV2ZEVM.SenderWithMessage(
