@@ -195,6 +195,24 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      }
+    ],
+    "name": "gatewayMultipleDepositsLegacy",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "dst",
+        "type": "address"
+      },
+      {
         "internalType": "address",
         "name": "asset",
         "type": "address"

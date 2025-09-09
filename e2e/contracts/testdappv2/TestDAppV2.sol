@@ -318,6 +318,18 @@ contract TestDAppV2 {
         IGatewayEVM(gateway).depositAndCall{ value: additionalFee }(dst, assetAmount / 2, asset, payload, RevertOptions(msg.sender, false, address(0), "", 0));
     }
 
+    function gatewayMultipleDepositsLegacy(address dst, uint256 fee) external payable {
+        require(!isZetaChain);
+        // substract fee from msg.value
+        uint256 amount = msg.value - fee;
+
+        // initial free legacy deposit
+        IGatewayEVM(gateway).deposit{value: amount / 2 }(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+
+        // second legacy deposit with provided fee
+        IGatewayEVM(gateway).deposit{value: amount / 2 + fee }(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
     // deposit and call through Gateway EVM
     function gatewayDepositAndCall(address dst, bytes calldata payload) external payable {
         require(!isZetaChain);

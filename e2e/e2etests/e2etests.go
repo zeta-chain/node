@@ -13,6 +13,7 @@ const (
 	*/
 	TestETHDepositName                      = "eth_deposit"
 	TestETHMultipleDepositsName             = "eth_multiple_deposits"
+	TestETHMultipleDepositsLegacyName       = "eth_multiple_deposits_legacy"
 	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
@@ -419,6 +420,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestETHMultipleDeposits,
+	),
+	runner.NewE2ETest(
+		TestETHMultipleDepositsLegacyName,
+		"deposit Ether into ZEVM multiple legacy",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestETHMultipleDepositsLegacy,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallName,

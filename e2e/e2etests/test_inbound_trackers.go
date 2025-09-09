@@ -21,7 +21,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	amount := big.NewInt(1e17)
 
-	addTrackerAndWaitForCCTXS := func(coinType coin.CoinType, txHash string, cctxCount int) {
+	addTrackerAndWaitForCCTXs := func(coinType coin.CoinType, txHash string, cctxCount int) {
 		r.AddInboundTracker(coinType, txHash)
 		cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, txHash, r.CctxClient, cctxCount, r.Logger, r.CctxTimeout)
 		for _, cctx := range cctxs {
@@ -33,19 +33,19 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	// send v1 eth deposit
 	r.Logger.Print("🏃test legacy eth deposit")
 	txHash := r.LegacyDepositEtherWithAmount(amount)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, txHash.Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, txHash.Hex(), 1)
 	r.Logger.Print("🍾legacy eth deposit observed")
 
 	// send v1 erc20 deposit
 	r.Logger.Print("🏃test legacy erc20 deposit")
 	txHash = r.LegacyDepositERC20WithAmountAndMessage(r.EVMAddress(), amount, []byte{})
-	addTrackerAndWaitForCCTXS(coin.CoinType_ERC20, txHash.Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, txHash.Hex(), 1)
 	r.Logger.Print("🍾legacy erc20 deposit observed")
 
 	// send eth deposit
 	r.Logger.Print("🏃test eth deposit")
 	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, false)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 eth deposit observed")
 
 	// send eth deposit and call
@@ -56,14 +56,14 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 eth deposit and call observed")
 
 	// send erc20 deposit
 	r.Logger.Print("🏃test  erc20 deposit")
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 	tx = r.ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 erc20 deposit observed")
 
 	// send erc20 deposit and call
@@ -74,7 +74,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 erc20 deposit and call observed")
 
 	// send call
@@ -84,7 +84,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	addTrackerAndWaitForCCTXS(coin.CoinType_NoAssetCall, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_NoAssetCall, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 call observed")
 
 	// set value of the payable transactions
@@ -95,14 +95,14 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🏃test deposit through contract")
 	tx, err := r.TestDAppV2EVM.GatewayDeposit(r.EVMAuth, r.EVMAddress())
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 deposit through contract observed")
 
 	// send deposit and call through contract
 	r.Logger.Print("🏃test deposit and call through contract")
 	tx, err = r.TestDAppV2EVM.GatewayDepositAndCall(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 deposit and call through contract observed")
 
 	// reset the value of the payable transactions
@@ -112,7 +112,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🏃test call through contract")
 	tx, err = r.TestDAppV2EVM.GatewayCall(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXS(coin.CoinType_NoAssetCall, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_NoAssetCall, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 call through contract observed")
 
 	// set value of the payable transactions
@@ -126,7 +126,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🏃test multiple deposits through contract")
 	tx, err = r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXS(coin.CoinType_Gas, tx.Hash().Hex(), 3)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 3)
 	r.Logger.Print("🍾 multiple deposits through contract observed")
 
 	// reset the value of the payable transactions
@@ -152,7 +152,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 	)
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXS(coin.CoinType_ERC20, tx.Hash().Hex(), 2)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 2)
 	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")
 
 	// reset the value of the payable transactions

@@ -29,11 +29,9 @@ func TestETHMultipleDeposits(r *runner.E2ERunner, args []string) {
 	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
 
 	// send multiple deposit through contract
-	r.Logger.Print("🏃test multiple deposits through contract")
 	tx, err := r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
-	r.Logger.Print("🍾 multiple deposits through contract observed")
 
 	r.EVMAuth.Value = previousValue
 

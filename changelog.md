@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and additional action fee should be set.
+
 ### Features
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract

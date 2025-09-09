@@ -34,7 +34,6 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	r.EVMAuth.Value = new(big.Int).Add(amount, fee)
 
 	// send multiple deposit through contract
-	r.Logger.Print("🏃test multiple erc20 deposits through contract")
 	tx, err = r.TestDAppV2EVM.GatewayMultipleERC20Deposits(
 		r.EVMAuth,
 		r.TestDAppV2ZEVMAddr,
@@ -44,7 +43,6 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
-	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")
 
 	r.EVMAuth.Value = previousValue
 
