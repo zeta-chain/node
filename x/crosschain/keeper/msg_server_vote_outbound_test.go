@@ -282,7 +282,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "refund error returns error for zEVM sender",
 			receiverChainID:          42,
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  5,
 			outboundTxActualGasPrice: math.NewInt(10),

@@ -206,9 +206,8 @@ func (k Keeper) useRemainingGasFee(
 	// Send all tokens to stability pool by default
 	stabilityPoolPercentage := uint64(100)
 	refundToUser := false
-	// Refund tokens to user if it's a withdrawal originating from zEVM.
-	// Refund to the sender irrespective of weather its EOA or contract address
-	// For v1 msg passing, we cannot refund the user on zEVM
+
+	// Refund to the sender irrespective of weather its EOA or contract address if it's a withdrawal originating from zEVM.
 	if chains.IsZetaChain(
 		senderChainID,
 		k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
@@ -275,13 +274,8 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 
 // PercentOf returns the percentage of a number
 func PercentOf(n math.Uint, percent uint64) math.Uint {
-	// Convert percent to math.Uint
 	percentUint := math.NewUint(percent)
-
-	// Calculate n * percent
 	result := n.Mul(percentUint)
-
-	// Divide by 100
 	hundred := math.NewUint(100)
 	result = result.Quo(hundred)
 
