@@ -3,9 +3,11 @@ package e2etests
 import (
 	"math/big"
 
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -71,5 +73,24 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	// revert address should receive the amount
 	revertBalanceAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
-	require.EqualValues(r, new(big.Int).Add(revertBalanceBefore, amount), revertBalanceAfter)
+
+	userBalanceAfterUint := math.NewUintFromBigInt(revertBalanceAfter)
+	userBalanceBeforeUint := math.NewUintFromBigInt(revertBalanceBefore)
+	totalRevertAmount := getTotalRevertedAmount(r, cctx)
+
+	require.EqualValues(r, userBalanceAfterUint.Sub(totalRevertAmount), userBalanceBeforeUint)
+}
+
+func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) math.Uint {
+	OutboundParams := cctx.OutboundParams[0]
+	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
+	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
+	userGasFeePaid := OutboundParams.UserGasFeePaid
+	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
+
+	remainingFees := crosschainkeeper.PercentOf(totalRemainingFees, crosschaintypes.UsableRemainingFeesPercentage)
+
+	amount := cctx.InboundParams.Amount
+	return amount.Add(remainingFees)
 }
