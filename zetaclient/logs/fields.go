@@ -25,5 +25,4 @@ const (
 	ModNameInbound  = "inbound"
 	ModNameOutbound = "outbound"
 	ModNameGasPrice = "gasprice"
-	ModNameHeaders  = "headers"
 )

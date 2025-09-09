@@ -42,9 +42,6 @@ type ObserverLogger struct {
 	// the logger for the chain's gas price
 	GasPrice zerolog.Logger
 
-	// the logger for block headers
-	Headers zerolog.Logger
-
 	// the logger for the compliance check
 	Compliance zerolog.Logger
 }

@@ -559,7 +559,6 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 		Inbound:    log.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
 		Outbound:   log.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
 		GasPrice:   log.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
-		Headers:    log.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: complianceLog,
 	}
 }
