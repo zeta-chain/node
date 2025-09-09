@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -76,12 +77,12 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	userBalanceAfterUint := math.NewUintFromBigInt(revertBalanceAfter)
 	userBalanceBeforeUint := math.NewUintFromBigInt(revertBalanceBefore)
-	totalRevertAmount := getTotalRevertedAmount(cctx)
+	totalRevertAmount := getTotalRevertedAmount(r, cctx)
 
 	require.EqualValues(r, userBalanceAfterUint.Sub(totalRevertAmount), userBalanceBeforeUint)
 }
 
-func getTotalRevertedAmount(cctx *crosschaintypes.CrossChainTx) math.Uint {
+func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) math.Uint {
 	OutboundParams := cctx.OutboundParams[0]
 	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
 	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
@@ -90,7 +91,22 @@ func getTotalRevertedAmount(cctx *crosschaintypes.CrossChainTx) math.Uint {
 	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
 
 	remainingFees := crosschainkeeper.PercentOf(totalRemainingFees, crosschaintypes.UsableRemainingFeesPercentage)
+	if !remainingFees.GT(math.ZeroUint()) {
+		return math.ZeroUint()
+	}
+
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
+		ChainId: evmChainID.Int64(),
+	})
+	require.NoError(r, err)
+	stabilityPoolPercentage := chainParams.ChainParams.StabilityPoolPercentage
+
+	stabilityPoolAmount := crosschainkeeper.PercentOf(remainingFees, stabilityPoolPercentage)
+	refundAmount := remainingFees.Sub(stabilityPoolAmount)
 
 	amount := cctx.InboundParams.Amount
-	return amount.Add(remainingFees)
+	return amount.Add(refundAmount)
 }

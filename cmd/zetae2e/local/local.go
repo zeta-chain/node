@@ -292,7 +292,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
+		deployerRunner.UpdateEVMChainParams(testLegacy)
 
 		if testTON {
 			deployerRunner.SetupTON(

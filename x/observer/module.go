@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-const consensusVersion = 11
+const consensusVersion = 12
 
 var (
 	_ module.AppModule      = AppModule{}
