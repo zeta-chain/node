@@ -76,12 +76,12 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	userBalanceAfterUint := math.NewUintFromBigInt(revertBalanceAfter)
 	userBalanceBeforeUint := math.NewUintFromBigInt(revertBalanceBefore)
-	totalRevertAmount := getTotalRevertedAmount(r, cctx)
+	totalRevertAmount := getTotalRevertedAmount(cctx)
 
 	require.EqualValues(r, userBalanceAfterUint.Sub(totalRevertAmount), userBalanceBeforeUint)
 }
 
-func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) math.Uint {
+func getTotalRevertedAmount(cctx *crosschaintypes.CrossChainTx) math.Uint {
 	OutboundParams := cctx.OutboundParams[0]
 	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
 	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
