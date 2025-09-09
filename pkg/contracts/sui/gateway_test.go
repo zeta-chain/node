@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,17 +77,17 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, packageID, gw.PackageID())
-			assert.Equal(t, gatewayID, gw.ObjectID())
+			require.Equal(t, packageID, gw.PackageID())
+			require.Equal(t, gatewayID, gw.ObjectID())
 
 			if !tt.wantOriginal {
-				assert.Equal(t, []string{packageID}, gw.PackageIDs())
+				require.Equal(t, []string{packageID}, gw.PackageIDs())
 				return
 			}
 
-			assert.Equal(t, withdrawCapID, gw.WithdrawCapID())
-			assert.Equal(t, previousPackageID, gw.Previous().PackageID())
-			assert.True(t, slices.Equal([]string{packageID, previousPackageID}, gw.PackageIDs()))
+			require.Equal(t, withdrawCapID, gw.WithdrawCapID())
+			require.Equal(t, previousPackageID, gw.Previous().PackageID())
+			require.True(t, slices.Equal([]string{packageID, previousPackageID}, gw.PackageIDs()))
 		})
 	}
 }
@@ -103,12 +102,12 @@ func Test_MakeAddress(t *testing.T) {
 
 	t.Run("previous package id is empty", func(t *testing.T) {
 		gatewayAddress := MakePairID(packageID, gatewayID, "", "")
-		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gatewayAddress)
+		require.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gatewayAddress)
 	})
 
 	t.Run("previous package id is not empty", func(t *testing.T) {
 		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID)
-		assert.Equal(t, fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, previousPackageID), gatewayAddress)
+		require.Equal(t, fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, previousPackageID), gatewayAddress)
 	})
 }
 
@@ -122,14 +121,14 @@ func Test_ToPairID(t *testing.T) {
 
 	t.Run("previous package id is empty", func(t *testing.T) {
 		gw := NewGateway(packageID, gatewayID)
-		assert.Equal(t, MakePairID(packageID, gatewayID, withdrawCapID, ""), gw.ToPairID())
+		require.Equal(t, MakePairID(packageID, gatewayID, withdrawCapID, ""), gw.ToPairID())
 	})
 
 	t.Run("previous package id is not empty", func(t *testing.T) {
 		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID)
 		gw, err := NewGatewayFromPairID(gatewayAddress)
 		require.NoError(t, err)
-		assert.Equal(t, gatewayAddress, gw.ToPairID())
+		require.Equal(t, gatewayAddress, gw.ToPairID())
 	})
 }
 
@@ -146,10 +145,10 @@ func Test_Previous(t *testing.T) {
 		require.NoError(t, err)
 
 		gwPrevious := gw.Previous()
-		assert.Equal(t, previousPackageID, gwPrevious.PackageID())
-		assert.Equal(t, gatewayID, gwPrevious.ObjectID())
-		assert.Equal(t, withdrawCapID, gwPrevious.WithdrawCapID())
-		assert.Empty(t, gwPrevious.previousPackageID)
+		require.Equal(t, previousPackageID, gwPrevious.PackageID())
+		require.Equal(t, gatewayID, gwPrevious.ObjectID())
+		require.Equal(t, withdrawCapID, gwPrevious.WithdrawCapID())
+		require.Empty(t, gwPrevious.previousPackageID)
 	})
 
 	t.Run("previous package id is empty", func(t *testing.T) {
@@ -157,10 +156,10 @@ func Test_Previous(t *testing.T) {
 		require.NoError(t, err)
 
 		gwOriginal := gw.Previous()
-		assert.Equal(t, packageID, gwOriginal.PackageID())
-		assert.Equal(t, gatewayID, gwOriginal.ObjectID())
-		assert.Empty(t, gwOriginal.WithdrawCapID())
-		assert.Empty(t, gwOriginal.previousPackageID)
+		require.Equal(t, packageID, gwOriginal.PackageID())
+		require.Equal(t, gatewayID, gwOriginal.ObjectID())
+		require.Empty(t, gwOriginal.WithdrawCapID())
+		require.Empty(t, gwOriginal.previousPackageID)
 	})
 }
 
@@ -177,17 +176,17 @@ func Test_UpdateIDs(t *testing.T) {
 
 	// before update
 	gw := NewGateway(packageID, gatewayID)
-	assert.Equal(t, packageID, gw.PackageID())
-	assert.Equal(t, gatewayID, gw.ObjectID())
-	assert.Empty(t, gw.WithdrawCapID())
-	assert.Empty(t, gw.previousPackageID)
+	require.Equal(t, packageID, gw.PackageID())
+	require.Equal(t, gatewayID, gw.ObjectID())
+	require.Empty(t, gw.WithdrawCapID())
+	require.Empty(t, gw.previousPackageID)
 
 	// after update
 	require.NoError(t, gw.UpdateIDs(MakePairID(packageID2, gatewayID2, withdrawCapID, previousPackageID)))
-	assert.Equal(t, packageID2, gw.PackageID())
-	assert.Equal(t, gatewayID2, gw.ObjectID())
-	assert.Equal(t, withdrawCapID, gw.WithdrawCapID())
-	assert.Equal(t, previousPackageID, gw.Previous().PackageID())
+	require.Equal(t, packageID2, gw.PackageID())
+	require.Equal(t, gatewayID2, gw.ObjectID())
+	require.Equal(t, withdrawCapID, gw.WithdrawCapID())
+	require.Equal(t, previousPackageID, gw.Previous().PackageID())
 }
 
 func TestParseEvent(t *testing.T) {
@@ -240,19 +239,19 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositEvent, out.EventType)
-				assert.Equal(t, uint64(0), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositEvent, out.EventType)
+				require.Equal(t, uint64(0), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(100).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverAlice, deposit.Receiver)
-				assert.False(t, deposit.IsCrossChainCall)
-				assert.True(t, deposit.IsGas())
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(100).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverAlice, deposit.Receiver)
+				require.False(t, deposit.IsCrossChainCall)
+				require.True(t, deposit.IsGas())
 			},
 		},
 		{
@@ -271,19 +270,19 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{0, 1, 2}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{0, 1, 2}, deposit.Payload)
 			},
 		},
 		{
@@ -302,19 +301,19 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{3, 4, 5}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{3, 4, 5}, deposit.Payload)
 			},
 		},
 		{
@@ -333,19 +332,19 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{}, deposit.Payload)
 			},
 		},
 		{
@@ -364,17 +363,17 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, WithdrawEvent, out.EventType)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, WithdrawEvent, out.EventType)
 
 				wd, err := out.Withdrawal()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, wd.CoinType)
-				assert.True(t, math.NewUint(200).Equal(wd.Amount))
-				assert.Equal(t, sender, wd.Sender)
-				assert.Equal(t, receiverBob.String(), wd.Receiver)
-				assert.True(t, wd.IsGas())
+				require.Equal(t, SUI, wd.CoinType)
+				require.True(t, math.NewUint(200).Equal(wd.Amount))
+				require.Equal(t, sender, wd.Sender)
+				require.Equal(t, receiverBob.String(), wd.Receiver)
+				require.True(t, wd.IsGas())
 			},
 		},
 		// ERRORS

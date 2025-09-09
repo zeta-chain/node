@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -127,37 +126,37 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is on INVALID event, that's expected
-		assert.Equal(t, "TX_4_invalid_data,0", ts.GetAuxString(previousPackageID))
+		require.Equal(t, "TX_4_invalid_data,0", ts.GetAuxString(previousPackageID))
 
 		// Check for transactions
 		require.Equal(t, 2, len(ts.inboundVotesBag))
 
 		vote1 := ts.inboundVotesBag[0]
-		assert.Equal(t, "TX_1_ok", vote1.InboundHash)
-		assert.Equal(t, uint64(10_000), vote1.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
-		assert.Equal(t, false, vote1.IsCrossChainCall)
-		assert.Equal(t, math.NewUint(200), vote1.Amount)
-		assert.Equal(t, "", vote1.Asset)
-		assert.Equal(t, evmBob.String(), vote1.Receiver)
+		require.Equal(t, "TX_1_ok", vote1.InboundHash)
+		require.Equal(t, uint64(10_000), vote1.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_Gas, vote1.CoinType)
+		require.Equal(t, false, vote1.IsCrossChainCall)
+		require.Equal(t, math.NewUint(200), vote1.Amount)
+		require.Equal(t, "", vote1.Asset)
+		require.Equal(t, evmBob.String(), vote1.Receiver)
 
 		vote3 := ts.inboundVotesBag[1]
-		assert.Equal(t, "TX_3_ok", vote3.InboundHash)
-		assert.Equal(t, uint64(20_000), vote3.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
-		assert.Equal(t, true, vote3.IsCrossChainCall)
-		assert.Equal(t, usdc, vote3.Asset)
-		assert.Equal(t, math.NewUint(300), vote3.Amount)
-		assert.Equal(t, evmAlice.String(), vote3.Receiver)
-		assert.Equal(t, "010203", vote3.Message)
+		require.Equal(t, "TX_3_ok", vote3.InboundHash)
+		require.Equal(t, uint64(20_000), vote3.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
+		require.Equal(t, true, vote3.IsCrossChainCall)
+		require.Equal(t, usdc, vote3.Asset)
+		require.Equal(t, math.NewUint(300), vote3.Amount)
+		require.Equal(t, evmAlice.String(), vote3.Receiver)
+		require.Equal(t, "010203", vote3.Message)
 
 		// Check that other 2 txs are skipped
-		assert.Contains(
+		require.Contains(
 			t,
 			ts.log.String(),
 			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
 		)
-		assert.Contains(
+		require.Contains(
 			t,
 			ts.log.String(),
 			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
@@ -211,7 +210,7 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is expected on restricted tx
-		assert.Equal(t, "TX_restricted,0", ts.GetAuxString(packageID))
+		require.Equal(t, "TX_restricted,0", ts.GetAuxString(packageID))
 
 		// No inbound votes should be created
 		require.Empty(t, ts.inboundVotesBag)
@@ -264,12 +263,12 @@ func TestObserver(t *testing.T) {
 
 		vote := ts.inboundVotesBag[0]
 
-		assert.Equal(t, txHash, vote.InboundHash)
-		assert.Equal(t, uint64(15_000), vote.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, false, vote.IsCrossChainCall)
-		assert.Equal(t, math.NewUint(1000), vote.Amount)
-		assert.Equal(t, evmAlice.String(), vote.Receiver)
+		require.Equal(t, txHash, vote.InboundHash)
+		require.Equal(t, uint64(15_000), vote.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, false, vote.IsCrossChainCall)
+		require.Equal(t, math.NewUint(1000), vote.Amount)
+		require.Equal(t, evmAlice.String(), vote.Receiver)
 	})
 
 	t.Run("ProcessOutboundTrackers", func(t *testing.T) {
@@ -349,8 +348,8 @@ func TestObserver(t *testing.T) {
 
 		// ASSERT
 		require.NoError(t, err)
-		assert.True(t, ts.OutboundCreated(nonce))
-		assert.False(t, ts.OutboundCreated(nonce+1))
+		require.True(t, ts.OutboundCreated(nonce))
+		require.False(t, ts.OutboundCreated(nonce+1))
 	})
 
 	t.Run("VoteOutbound successful withdrawal", func(t *testing.T) {
@@ -415,23 +414,23 @@ func TestObserver(t *testing.T) {
 		vote := ts.outboundVotesBag[0]
 
 		// common
-		assert.Equal(t, chains.ReceiveStatus_success, vote.Status) // success
-		assert.Equal(t, cctx.Index, vote.CctxHash)
-		assert.Equal(t, uint64(nonce), vote.OutboundTssNonce)
-		assert.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
+		require.Equal(t, chains.ReceiveStatus_success, vote.Status) // success
+		require.Equal(t, cctx.Index, vote.CctxHash)
+		require.Equal(t, uint64(nonce), vote.OutboundTssNonce)
+		require.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
 
 		// digest + checkpoint
-		assert.Equal(t, digest, vote.ObservedOutboundHash)
-		assert.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
+		require.Equal(t, digest, vote.ObservedOutboundHash)
+		require.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
 
 		// amount
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
-		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
-		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
+		require.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
+		require.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
+		require.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
 
 	t.Run("VoteOutbound failed withdrawal", func(t *testing.T) {
@@ -494,23 +493,23 @@ func TestObserver(t *testing.T) {
 		vote := ts.outboundVotesBag[0]
 
 		// common
-		assert.Equal(t, chains.ReceiveStatus_failed, vote.Status) // failure
-		assert.Equal(t, cctx.Index, vote.CctxHash)
-		assert.Equal(t, uint64(nonce), vote.OutboundTssNonce)
-		assert.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
+		require.Equal(t, chains.ReceiveStatus_failed, vote.Status) // failure
+		require.Equal(t, cctx.Index, vote.CctxHash)
+		require.Equal(t, uint64(nonce), vote.OutboundTssNonce)
+		require.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
 
 		// digest + checkpoint
-		assert.Equal(t, digest, vote.ObservedOutboundHash)
-		assert.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
+		require.Equal(t, digest, vote.ObservedOutboundHash)
+		require.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
 
 		// amount
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
-		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
-		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
+		require.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
+		require.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
+		require.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
 }
 
@@ -554,8 +553,8 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			// ensure the old cursor is set
 			oldCursor, err := ts.ReadLastTxScannedFromDB()
 			require.NoError(t, err)
-			assert.Equal(t, tt.cursor, oldCursor)
-			assert.Equal(t, tt.cursor, ts.LastTxScanned())
+			require.Equal(t, tt.cursor, oldCursor)
+			require.Equal(t, tt.cursor, ts.LastTxScanned())
 
 			// ACT-1
 			err = ts.MigrateCursorForAuthenticatedCallUpgrade()
@@ -566,22 +565,22 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			// ensure the new cursor is stored under previous package ID
 			newCursor, err := ts.ReadAuxStringFromDB(previousPackageID)
 			require.NoError(t, err)
-			assert.Equal(t, tt.cursor, newCursor)
-			assert.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
+			require.Equal(t, tt.cursor, newCursor)
+			require.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
 
 			// ensure nothing is stored under new package ID
 			if packageID != previousPackageID {
 				cursor, err := ts.ReadAuxStringFromDB(packageID)
 				require.ErrorContains(t, err, "record not found")
-				assert.Empty(t, cursor)
-				assert.Empty(t, ts.GetAuxString(packageID))
+				require.Empty(t, cursor)
+				require.Empty(t, ts.GetAuxString(packageID))
 			}
 
 			// ensure the old cursor is set to empty
 			oldCursor, err = ts.ReadLastTxScannedFromDB()
 			require.NoError(t, err)
-			assert.Empty(t, oldCursor)
-			assert.Empty(t, ts.LastTxScanned())
+			require.Empty(t, oldCursor)
+			require.Empty(t, ts.LastTxScanned())
 
 			// ACT-2, migrate again
 			err = ts.MigrateCursorForAuthenticatedCallUpgrade()
@@ -592,8 +591,8 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			// ensure the new cursor stay untouched
 			cursor, err := ts.ReadAuxStringFromDB(previousPackageID)
 			require.NoError(t, err)
-			assert.Equal(t, tt.cursor, cursor)
-			assert.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
+			require.Equal(t, tt.cursor, cursor)
+			require.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
 		})
 	}
 }
