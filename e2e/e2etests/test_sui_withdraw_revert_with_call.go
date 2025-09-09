@@ -84,7 +84,7 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Less(r, tssBalanceAfter, tssBalanceBefore)
 
 	// should have called 'onRevert'
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
 
 	// sender and message should match
 	sender, err := r.TestDAppV2ZEVM.SenderWithMessage(

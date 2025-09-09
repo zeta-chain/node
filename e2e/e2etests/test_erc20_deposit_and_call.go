@@ -20,8 +20,9 @@ func TestERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
 	payload := randomPayload(r)
+	sender := r.EVMAddress().Bytes()
 
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
 	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -44,5 +45,5 @@ func TestERC20DepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 }

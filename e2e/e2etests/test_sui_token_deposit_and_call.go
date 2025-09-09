@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -20,6 +21,12 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	payload := randomPayload(r)
+
+	// given sender
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err)
+	sender, err := sui.EncodeAddress(signer.Address())
+	require.NoError(r, err)
 
 	// make the deposit transaction
 	resp := r.SuiFungibleTokenDepositAndCall(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte(payload))
@@ -38,5 +45,5 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.SuiTokenZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 }
