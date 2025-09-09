@@ -32,6 +32,9 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 
 	// add 1 fee to provided amount to pay for 2 inbounds (1st one is free)
 	r.EVMAuth.Value = new(big.Int).Add(amount, fee)
+	defer func() {
+		r.EVMAuth.Value = previousValue
+	}()
 
 	// send multiple deposit through contract
 	tx, err = r.TestDAppV2EVM.GatewayMultipleERC20Deposits(
@@ -43,8 +46,6 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
-
-	r.EVMAuth.Value = previousValue
 
 	// wait for the cctxs to be mined
 	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 2, r.Logger, r.CctxTimeout)

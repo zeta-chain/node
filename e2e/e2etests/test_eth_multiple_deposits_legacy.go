@@ -21,9 +21,6 @@ func TestETHMultipleDepositsLegacy(r *runner.E2ERunner, args []string) {
 	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 
-	// set value of the payable transactions
-	previousValue := r.EVMAuth.Value
-
 	// send multiple legacy deposits through contract with 0 fee should revert
 	_, err = r.TestDAppV2EVM.GatewayMultipleDepositsLegacy(r.EVMAuth, r.TestDAppV2ZEVMAddr, big.NewInt(0))
 	require.Error(r, err)
@@ -32,12 +29,14 @@ func TestETHMultipleDepositsLegacy(r *runner.E2ERunner, args []string) {
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
 	// add fee to provided amount to pay for 2 inbounds (1st one is free)
+	previousValue := r.EVMAuth.Value
 	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+	defer func() {
+		r.EVMAuth.Value = previousValue
+	}()
 
 	_, err = r.TestDAppV2EVM.GatewayMultipleDepositsLegacy(r.EVMAuth, r.TestDAppV2ZEVMAddr, fee)
 	require.Error(r, err)
-
-	r.EVMAuth.Value = previousValue
 
 	// verify balance was not updated
 	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)

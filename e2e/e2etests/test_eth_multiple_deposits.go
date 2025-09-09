@@ -27,13 +27,14 @@ func TestETHMultipleDeposits(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
 	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+	defer func() {
+		r.EVMAuth.Value = previousValue
+	}()
 
 	// send multiple deposit through contract
 	tx, err := r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
-
-	r.EVMAuth.Value = previousValue
 
 	// wait for the cctxs to be mined
 	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
