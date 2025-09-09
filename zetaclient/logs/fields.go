@@ -3,19 +3,17 @@ package logs
 // A group of predefined field keys and module names for zetaclient logs
 const (
 	// field keys
-	FieldModule           = "module"
-	FieldChain            = "chain"
-	FieldChainNetwork     = "chain_network"
-	FieldNonce            = "nonce"
-	FieldTracker          = "tracker_id"
-	FieldTx               = "tx"
-	FieldOutboundID       = "outbound_id"
-	FieldBlock            = "block"
-	FieldCctx             = "cctx"
-	FieldZetaTx           = "zeta_tx"
-	FieldBallot           = "ballot"
-	FieldCoinType         = "coin_type"
-	FieldConfirmationMode = "confirmation_mode"
+	FieldModule       = "module"
+	FieldChain        = "chain"
+	FieldChainNetwork = "chain_network"
+	FieldBlock        = "block"
+	FieldNonce        = "nonce"
+	FieldTx           = "tx"
+	FieldCctx         = "cctx"
+	FieldZetaTx       = "zeta_tx"
+	FieldOutboundID   = "outbound_id"
+	FieldBallot       = "ballot"
+	FieldCoinType     = "coin_type"
 
 	// chain specific field keys
 	FieldBtcTxid = "txid"

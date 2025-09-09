@@ -50,7 +50,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		// should not happen
 		if len(tracker.HashList) == 0 {
 			// we don't want to block other cctxs, so let's error and continue
-			logger.Error().Str(logs.FieldTracker, tracker.Index).Msg("tracker hash list is empty")
+			logger.Error().Str("tracker_id", tracker.Index).Msg("tracker hash list is empty")
 			continue
 		}
 

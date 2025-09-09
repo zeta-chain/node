@@ -441,7 +441,7 @@ func (ob *Observer) PostVoteInbound(
 	logger := ob.logger.Inbound.With().
 		Str(logs.FieldTx, txHash).
 		Stringer(logs.FieldCoinType, coinType).
-		Stringer(logs.FieldConfirmationMode, msg.ConfirmationMode).
+		Stringer("confirmation_mode", msg.ConfirmationMode).
 		Logger()
 
 	cctxIndex := msg.Digest()
