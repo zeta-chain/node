@@ -219,8 +219,6 @@ func NewWithdrawAndCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	// Temporary NOTE for PR review: Don't think this check is necessary as CallOptions.GasLimit is always set
-	// If its zero we should probably return as the event is directly from the smart contract
 	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		gasLimit = gasLimitQueried.Uint64()
