@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zetasolrpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -57,7 +58,9 @@ func New(baseObserver *base.Observer, solClient interfaces.SolanaRPCClient, gate
 // LoadLastTxScanned loads the last scanned tx from the database.
 func (ob *Observer) LoadLastTxScanned() error {
 	ob.Observer.LoadLastTxScanned()
-	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from tx %s", ob.Chain().ChainId, ob.LastTxScanned())
+	ob.Logger().Chain.Info().
+		Str(logs.FieldTx, ob.LastTxScanned()).
+		Msg("chain starts scanning from tx")
 
 	return nil
 }

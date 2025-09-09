@@ -77,20 +77,27 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	if limit > maxGasLimit {
 		limit = maxGasLimit
 		logger.Warn().
-			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
+			Uint64("cctx_initial_gas_limit", params.CallOptions.GasLimit).
+			Uint64("cctx_gas_limit", limit).
+			Uint64("max_gas_limit", maxGasLimit).
+			Msg("gas limit is too high; setting to the maximum")
 	} else if limit < contractCallMinGasLimit && (params.CoinType != coin.CoinType_Gas || isWithdrawWithNoCall || isRevertWithNoCall) {
-		// currently a gas limit that is too low will not make the transaction fail but just completely block the network because the outbound can't be broadcasted
+		// currently a gas limit that is too low will not make the transaction fail but just
+		// completely block the network because the outbound can't be broadcasted
+		//
 		// this check ensure that the gas limit is high enough for the outbound to be broadcasted
-		// a minimal gas limit is set to the tx, this check is skipped above in the case where a simple gas withdraw is performed or a gas deposit revert without revert call
+		//
+		// a minimal gas limit is set to the tx, this check is skipped above in the case where a
+		// simple gas withdraw is performed or a gas deposit revert without revert call
+		//
 		// TODO: gas limit that is too low should now block outbound at all
 		// https://github.com/zeta-chain/node/issues/3725
 		limit = contractCallMinGasLimit
 		logger.Warn().
-			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low for contract call; Setting to the minimum (%d)", contractCallMinGasLimit)
+			Uint64("cctx_initial_gas_limit", params.CallOptions.GasLimit).
+			Uint64("cctx_gas_limit", limit).
+			Uint64("min_gas_limit", contractCallMinGasLimit).
+			Msg("gas limit is too low for contract call; setting to the minimum")
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
@@ -104,13 +111,17 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 		return Gas{}, errors.Wrap(err, "unable to parse priorityFee")
 	case gasPrice.Cmp(priorityFee) == -1:
 		logger.Warn().
-			Str("cctx.initial_priority_fee", priorityFee.String()).
-			Str("cctx.forced_priority_fee", gasPrice.String()).
+			Stringer("cctx_initial_priority_fee", priorityFee).
+			Stringer("cctx_forced_priority_fee", gasPrice).
 			Msg("gasPrice is less than priorityFee, setting priorityFee = gasPrice")
 
-		// this should in theory never happen, but this reported bug might be a cause: https://github.com/zeta-chain/node/issues/2954
+		// this should in theory never happen, but this reported bug might be a cause:
+		// https://github.com/zeta-chain/node/issues/2954
+		//
 		// in this case we lower the priorityFee to the gasPrice to ensure the transaction is valid
+		//
 		// the only potential issue is the transaction might not cover the baseFee
+		//
 		// the gas stability pool mechanism help to mitigate this issue
 		priorityFee = big.NewInt(0).Set(gasPrice)
 	}

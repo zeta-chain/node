@@ -19,9 +19,10 @@ func TestZetaDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 
 	payload := randomPayload(r)
+	sender := r.EVMAddress().Bytes()
 	receiverAddress := r.TestDAppV2ZEVMAddr
 
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
 	oldBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
 	require.NoError(r, err)
@@ -40,7 +41,7 @@ func TestZetaDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 
 	// check the balance was updated
 	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)

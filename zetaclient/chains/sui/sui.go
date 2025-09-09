@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Sui observer-signer.
@@ -175,7 +176,7 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			// ProcessOutboundTrackers HAS fetched existing Sui outbound,
 			// Let's report this by voting to zetacore
 			if err := s.observer.VoteOutbound(ctx, cctx); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("VoteOutbound failed")
+				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling VoteOutbound")
 			}
 			continue
 		}
@@ -187,7 +188,7 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		// - Then this pair will be handled by ProcessOutboundTrackers -> OutboundCreated -> VoteOutbound
 		bg.Work(ctx, func(ctx context.Context) error {
 			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("ProcessCCTX failed")
+				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
 			}
 
 			return nil
@@ -221,7 +222,7 @@ func (s *Sui) updateChainParams(ctx context.Context) error {
 }
 
 func (s *Sui) outboundLogger(id string) *zerolog.Logger {
-	l := s.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

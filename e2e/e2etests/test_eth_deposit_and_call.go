@@ -18,8 +18,9 @@ func TestETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
+	sender := r.EVMAddress().Bytes()
 
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
 	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -42,5 +43,5 @@ func TestETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
 }
