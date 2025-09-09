@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	// flagsAllFieldsSet sets all fields: [receiver, payload, revert address, abort address, CallOnRevert]
-	flagsAllFieldsSet = 0b00011111
+	// flagsAllFieldsSet sets all fields: [receiver, payload, revert address, abort address, CallOnRevert, revert message]
+	flagsAllFieldsSet = 0b00111111
 )
 
 func Test_V0_Pack(t *testing.T) {
@@ -58,13 +58,13 @@ func Test_V0_Pack(t *testing.T) {
 			name:      "pack all fields with compact encoding",
 			opCode:    memo.OpCodeDepositAndCall,
 			encodeFmt: memo.EncodingFmtCompactShort,
-			dataFlags: flagsAllFieldsSet, // all fields are set
+			dataFlags: 0b00101111, // all fields are set except callOnRevert flag
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes,
 				RevertOptions: crosschaintypes.RevertOptions{
 					RevertAddress: fString,
-					CallOnRevert:  true,
+					CallOnRevert:  false,             // CallOnRevert is irrelevant to RevertMessage
 					AbortAddress:  fAddress.String(), // it's a ZEVM address
 					RevertMessage: fBytes,
 				},
@@ -88,8 +88,9 @@ func Test_V0_Pack(t *testing.T) {
 			errMsg: "receiver address is empty",
 		},
 		{
-			name:   "unable to get codec on invalid encoding format",
-			opCode: memo.OpCodeDepositAndCall,
+			name:      "unable to get codec on invalid encoding format",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: 0b00000001,
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 			},
@@ -155,7 +156,7 @@ func Test_V0_Unpack(t *testing.T) {
 		{
 			name:      "unpack all fields with compact encoding",
 			encodeFmt: memo.EncodingFmtCompactShort,
-			dataFlags: flagsAllFieldsSet, // all fields are set
+			dataFlags: 0b00101111, // all fields are set except callOnRevert flag
 			data: CompactPack(
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
@@ -168,7 +169,7 @@ func Test_V0_Unpack(t *testing.T) {
 				Payload:  fBytes,
 				RevertOptions: crosschaintypes.RevertOptions{
 					RevertAddress: fString,
-					CallOnRevert:  true,
+					CallOnRevert:  false, // CallOnRevert is irrelevant to RevertMessage
 					AbortAddress:  fAddress.String(),
 					RevertMessage: fBytes,
 				},
@@ -257,6 +258,15 @@ func Test_V0_Validate(t *testing.T) {
 			},
 		},
 		{
+			name:      "receiver address flag is not set",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: 0b00000000, // receiver flag is not set
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+			},
+			errMsg: "must set receiver address flag",
+		},
+		{
 			name:      "invalid receiver address",
 			opCode:    memo.OpCodeCall,
 			dataFlags: 0b00000001, // receiver flag is set
@@ -266,8 +276,9 @@ func Test_V0_Validate(t *testing.T) {
 			errMsg: "receiver address is empty",
 		},
 		{
-			name:   "payload is not allowed when opCode is deposit",
-			opCode: memo.OpCodeDeposit,
+			name:      "payload is not allowed when opCode is deposit",
+			opCode:    memo.OpCodeDeposit,
+			dataFlags: 0b00000001, // receiver flag is set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				Payload:  fBytes, // payload is mistakenly set
@@ -275,28 +286,30 @@ func Test_V0_Validate(t *testing.T) {
 			errMsg: "payload is not allowed for deposit operation",
 		},
 		{
-			name:      "abort address is invalid",
-			opCode:    memo.OpCodeDeposit,
-			dataFlags: 0b00001000, // abort address flag is set
+			name:      "revert message is empty",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: 0b00000101, // revert message flag is set
 			fields: memo.FieldsV0{
+				Receiver: fAddress,
 				RevertOptions: crosschaintypes.RevertOptions{
-					AbortAddress: "invalid abort address",
+					CallOnRevert:  true,
+					RevertMessage: []byte("revert message"),
 				},
 			},
-			errMsg: "invalid abort address",
+			errMsg: "revert address is empty",
 		},
 		{
-			name:   "revert message is not allowed when CallOnRevert is false",
-			opCode: memo.OpCodeDeposit,
+			name:      "abort address is invalid",
+			opCode:    memo.OpCodeDeposit,
+			dataFlags: 0b00001001, // abort address flag is set
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				RevertOptions: crosschaintypes.RevertOptions{
 					RevertAddress: fString,
-					CallOnRevert:  false,                    // CallOnRevert is false
-					RevertMessage: []byte("revert message"), // revert message is mistakenly set
+					AbortAddress:  "invalid abort address",
 				},
 			},
-			errMsg: "revert message is not allowed when CallOnRevert is false",
+			errMsg: "invalid abort address",
 		},
 	}
 
@@ -351,11 +364,11 @@ func Test_V0_DataFlags(t *testing.T) {
 				Receiver: fAddress,
 				RevertOptions: crosschaintypes.RevertOptions{
 					RevertAddress: fString,
-					CallOnRevert:  true,
+					CallOnRevert:  false, // CallOnRevert is irrelevant to RevertMessage
 					RevertMessage: fBytes,
 				},
 			},
-			expectedFlags: 0b00010101,
+			expectedFlags: 0b00100101,
 		},
 	}
 
