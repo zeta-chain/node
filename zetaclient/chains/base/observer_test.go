@@ -214,7 +214,6 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Chain.Info().Msg("print chain log")
 		logger.Inbound.Info().Msg("print inbound log")
 		logger.Outbound.Info().Msg("print outbound log")
-		logger.GasPrice.Info().Msg("print gasprice log")
 		logger.Compliance.Info().Msg("print compliance log")
 	})
 }

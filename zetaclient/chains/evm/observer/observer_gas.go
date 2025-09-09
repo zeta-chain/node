@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostGasPrice posts gas price to zetacore.
@@ -76,8 +77,9 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 		return false, errors.Wrap(err, "unable to get base fee")
 	}
 
-	ob.Logger().GasPrice.Info().
-		Str("base_fee", baseFee.String()).
+	ob.Logger().Chain.Info().
+		Str(logs.FieldModule, logs.ModNameGasPrice).
+		Stringer("base_fee", baseFee).
 		Msg("fetched base fee")
 
 	// EIP-1559 is supported if base fee is not zero.

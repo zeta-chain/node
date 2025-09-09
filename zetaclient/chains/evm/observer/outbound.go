@@ -160,7 +160,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
-	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
+	logger := ob.Logger().Outbound.With().Str("send_id", sendID).Logger()
 	// get connector and erc20Custody contracts
 	// Only one of these connector contracts will be used at one time.
 	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2

@@ -24,5 +24,5 @@ const (
 	// module names
 	ModNameInbound  = "inbound"
 	ModNameOutbound = "outbound"
-	ModNameGasPrice = "gasprice"
+	ModNameGasPrice = "gas_price"
 )

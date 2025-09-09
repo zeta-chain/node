@@ -39,9 +39,6 @@ type ObserverLogger struct {
 	// the logger for outbound transactions
 	Outbound zerolog.Logger
 
-	// the logger for the chain's gas price
-	GasPrice zerolog.Logger
-
 	// the logger for the compliance check
 	Compliance zerolog.Logger
 }
