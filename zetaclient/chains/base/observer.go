@@ -137,21 +137,21 @@ func (ob *Observer) Stop() {
 	defer ob.mu.Unlock()
 
 	if !ob.started {
-		ob.logger.Chain.Info().Msg("Observer already stopped")
+		ob.logger.Chain.Info().Msg("observer already stopped")
 		return
 	}
 
-	ob.logger.Chain.Info().Msg("Stopping observer")
+	ob.logger.Chain.Info().Msg("stopping the observer")
 
 	close(ob.stop)
 	ob.started = false
 
 	// close database
 	if err := ob.db.Close(); err != nil {
-		ob.Logger().Chain.Error().Err(err).Msg("Unable to close db")
+		ob.Logger().Chain.Error().Err(err).Msg("unable to close database")
 	}
 
-	ob.Logger().Chain.Info().Msgf("observer stopped")
+	ob.Logger().Chain.Info().Msg("stopped the observer")
 }
 
 // Chain returns the chain for the observer.
@@ -178,7 +178,7 @@ func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 
 	ob.chainParams = params
 
-	ob.logger.Chain.Info().Any("observer.chain_params", params).Msg("updated chain params")
+	ob.logger.Chain.Info().Any("chain_params", params).Msg("updated chain parameters")
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
@@ -290,7 +290,9 @@ func (ob *Observer) StopChannel() chan struct{} {
 
 // LoadLastBlockScanned loads last scanned block from environment variable or from database.
 // The last scanned block is the height from which the observer should continue scanning.
-func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
+func (ob *Observer) LoadLastBlockScanned() error {
+	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastBlockScanned").Logger()
+
 	// get environment variable
 	envvar := EnvVarLatestBlockByChain(ob.chain)
 	scanFromBlock := os.Getenv(envvar)
@@ -298,7 +300,9 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
 	// load from environment variable if set
 	if scanFromBlock != "" {
 		logger.Info().
-			Msgf("LoadLastBlockScanned: envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+			Str("envvar", envvar).
+			Str(logs.FieldBlock, scanFromBlock).
+			Msg("envvar is set; scan from block")
 		if scanFromBlock == EnvVarLatestBlock {
 			return nil
 		}
@@ -313,7 +317,7 @@ func (ob *Observer) LoadLastBlockScanned(logger zerolog.Logger) error {
 	// load from DB otherwise. If not found, start from latest block
 	blockNumber, err := ob.ReadLastBlockScannedFromDB()
 	if err != nil {
-		logger.Info().Msgf("LoadLastBlockScanned: last scanned block not found in db for chain %d", ob.chain.ChainId)
+		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
 	ob.WithLastBlockScanned(blockNumber)
@@ -345,13 +349,18 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 // LoadLastTxScanned loads last scanned tx from environment variable or from database.
 // The last scanned tx is the tx hash from which the observer should continue scanning.
 func (ob *Observer) LoadLastTxScanned() {
+	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastTxScanned").Logger()
+
 	// get environment variable
 	envvar := EnvVarLatestTxByChain(ob.chain)
 	scanFromTx := os.Getenv(envvar)
 
 	// load from environment variable if set
 	if scanFromTx != "" {
-		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: envvar %s is set; scan from  tx %s", envvar, scanFromTx)
+		logger.Info().
+			Str("envvar", envvar).
+			Str(logs.FieldTx, scanFromTx).
+			Msg("envvar is set; scan from tx")
 		ob.WithLastTxScanned(scanFromTx)
 		return
 	}
@@ -360,7 +369,7 @@ func (ob *Observer) LoadLastTxScanned() {
 	txHash, err := ob.ReadLastTxScannedFromDB()
 	if err != nil {
 		// If not found, let the concrete chain observer decide where to start
-		ob.logger.Chain.Info().Msgf("LoadLastTxScanned: last scanned tx not found in db for chain %d", ob.chain.ChainId)
+		logger.Info().Err(err).Msg("last scanned tx not found in the database")
 		return
 	}
 	ob.WithLastTxScanned(txHash)
@@ -470,13 +479,12 @@ func (ob *Observer) PostVoteInbound(
 		coinType = msg.CoinType
 	)
 
-	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod:           "PostVoteInbound",
-		logs.FieldTx:               txHash,
-		logs.FieldCoinType:         coinType.String(),
-		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
-	}
+	logger := ob.logger.Inbound.With().
+		Str(logs.FieldMethod, "PostVoteInbound").
+		Str(logs.FieldTx, txHash).
+		Stringer(logs.FieldCoinType, coinType).
+		Stringer(logs.FieldConfirmationMode, msg.ConfirmationMode).
+		Logger()
 
 	cctxIndex := msg.Digest()
 	// The cctx is created after the inbound ballot is finalized
@@ -490,7 +498,7 @@ func (ob *Observer) PostVoteInbound(
 			// Verify ballot is not found
 			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
 				// Query for ballot failed, the ballot does not exist we can return
-				ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+				logger.Info().Msg("inbound detected: CCTX exists but the ballot does not")
 				return cctxIndex, nil
 			}
 		}
@@ -498,23 +506,26 @@ func (ob *Observer) PostVoteInbound(
 
 	// make sure the message is valid to avoid unnecessary retries
 	if err := msg.ValidateBasic(); err != nil {
-		ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("invalid inbound vote message")
+		logger.Warn().Err(err).Msg("invalid inbound vote message")
 		return "", nil
 	}
 
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
-	lf[logs.FieldZetaTx] = zetaHash
-	lf[logs.FieldBallot] = ballot
+
+	logger = logger.With().
+		Str(logs.FieldZetaTx, zetaHash).
+		Str(logs.FieldBallot, ballot).
+		Logger()
 
 	switch {
 	case err != nil:
-		ob.logger.Inbound.Error().Err(err).Fields(lf).Msg("inbound detected: error posting vote")
+		logger.Error().Err(err).Msg("inbound detected: error posting vote")
 		return "", err
 	case zetaHash == "":
-		ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: already voted on ballot")
+		logger.Info().Msg("inbound detected: already voted on ballot")
 	default:
-		ob.logger.Inbound.Info().Fields(lf).Msgf("inbound detected: vote posted")
+		logger.Info().Msg("inbound detected: vote posted")
 	}
 
 	return ballot, nil

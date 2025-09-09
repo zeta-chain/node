@@ -88,7 +88,9 @@ func NewOutboundData(
 		if gasPriorityFee > 0 {
 			feeRateBumped = true
 			feeRateLatest = gasPriorityFee
-			logger.Info().Str("latest_fee_rate", params.GasPriorityFee).Msg("fee rate is bumped by zetacore")
+			logger.Info().
+				Str("latest_fee_rate", params.GasPriorityFee).
+				Msg("fee rate bumped by zetacore")
 		}
 	}
 
@@ -120,7 +122,9 @@ func NewOutboundData(
 	// check dust amount
 	dustAmount := amountSats < constant.BTCWithdrawalDustAmount
 	if dustAmount {
-		logger.Warn().Int64("amount", amountSats).Msg("outbound will be cancelled due to dust amount")
+		logger.Warn().
+			Int64("amount", amountSats).
+			Msg("outbound will be cancelled due to dust amount")
 	}
 
 	// set the amount to 0 when the tx should be cancelled

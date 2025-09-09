@@ -53,7 +53,7 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 	}
 
 	if len(events) == 0 {
-		ob.Logger().Inbound.Debug().Msg("No inbound events found")
+		ob.Logger().Inbound.Debug().Msg("found no inbound events")
 		return nil
 	}
 
@@ -74,18 +74,18 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("TX not found or not finalized. Pausing")
+				Msg("tx not found or not finalized; pausing")
 			return nil
 		case errors.Is(err, errCompliance):
 			// skip restricted tx and update the cursor
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Tx contains restricted address. Skipping")
+				Msg("tx contains restricted address; skipping")
 		case err != nil:
 			// failed processing also updates the cursor
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Unable to process inbound event")
+				Msg("unable to process inbound event")
 		}
 
 		// update the cursor
@@ -110,7 +110,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
-				Msg("Unable to process inbound tracker")
+				Msg("unable to process inbound tracker")
 		}
 	}
 
@@ -132,7 +132,7 @@ func (ob *Observer) processInboundEvent(
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
 	case errors.Is(err, sui.ErrParseEvent):
-		ob.Logger().Inbound.Err(err).Msg("Unable to parse event. Skipping")
+		ob.Logger().Inbound.Err(err).Msg("unable to parse event; skipping")
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")

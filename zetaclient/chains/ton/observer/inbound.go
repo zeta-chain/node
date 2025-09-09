@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -45,11 +46,14 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return nil
 	case len(txs) > paginationLimit:
 		ob.Logger().Inbound.Info().
-			Msgf("observeGateway: got %d transactions. Taking first %d", len(txs), paginationLimit)
-
+			Int("tx_count", len(txs)).
+			Int("pagination_limit", paginationLimit).
+			Msg("observe gateway: number of transactions exceeds pagination limit; taking only some")
 		txs = txs[:paginationLimit]
 	default:
-		ob.Logger().Inbound.Info().Msgf("observeGateway: got %d transactions", len(txs))
+		ob.Logger().Inbound.Info().
+			Int("tx_count", len(txs)).
+			Msg("observe gateway: got transactions")
 	}
 
 	for i := range txs {
@@ -64,13 +68,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			return errors.Wrap(err, "unexpected error")
 		case tx.ExitCode != 0:
 			skip = true
-			ob.Logger().Inbound.Warn().Fields(txLogFields(tx)).Msg("observeGateway: observed a failed tx")
+			ob.Logger().Inbound.Warn().
+				Fields(txLogFields(tx)).
+				Msg("observe gateway: observed a failed tx")
 		}
 
 		if skip {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
 			txHash := rpc.TransactionToHashString(tx.Transaction)
-			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
+			ob.Logger().Inbound.Warn().
+				Str("transaction_hash", txHash).
+				Msg("observe gateway: skipping tx")
 			ob.setLastScannedTx(tx)
 			continue
 		}
@@ -85,10 +93,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		// TON signer broadcasts ExtInMsgInfo with `src=null, dest=gateway`, so it will be observed here
 		if tx.IsOutbound() {
 			if err = ob.addOutboundTracker(ctx, tx); err != nil {
-				ob.Logger().Inbound.
-					Error().Err(err).
+				ob.Logger().Inbound.Error().
+					Err(err).
 					Fields(txLogFields(tx)).
-					Msg("observeGateway: unable to add outbound tracker")
+					Msg("observe gateway: unable to add outbound tracker")
 
 				return errors.Wrap(err, "unable to add outbound tracker")
 			}
@@ -99,10 +107,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// Ok, let's process a new inbound tx
 		if err := ob.voteInbound(ctx, tx); err != nil {
-			ob.Logger().Inbound.
-				Error().Err(err).
+			ob.Logger().Inbound.Error().
+				Err(err).
 				Fields(txLogFields(tx)).
-				Msg("observeGateway: unable to vote for inbound tx")
+				Msg("observe gateway: unable to vote for inbound tx")
 
 			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
 		}
@@ -187,7 +195,9 @@ type inboundData struct {
 func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) error {
 	// noop
 	if tx.Operation == toncontracts.OpDonate {
-		ob.Logger().Inbound.Info().Fields(txLogFields(tx)).Msg("Thank you rich folk for your donation!")
+		ob.Logger().Inbound.Info().
+			Fields(txLogFields(tx)).
+			Msg("thank you rich folk for your donation")
 		return nil
 	}
 
@@ -357,38 +367,37 @@ func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits25
 }
 
 func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
-	txHash := rpc.TransactionToHashString(tx.Transaction)
+	logger := ob.Logger().Inbound.With().
+		Str(logs.FieldMethod, "setLastScannedTx").
+		Fields(txLogFields(tx)).
+		Logger()
 
+	txHash := rpc.TransactionToHashString(tx.Transaction)
 	ob.WithLastTxScanned(txHash)
 
-	if err := ob.WriteLastTxScannedToDB(txHash); err != nil {
-		ob.Logger().Inbound.Error().
-			Err(err).
-			Fields(txLogFields(tx)).
-			Msgf("setLastScannedTX: unable to WriteLastTxScannedToDB")
-
+	err := ob.WriteLastTxScannedToDB(txHash)
+	if err != nil {
+		logger.Error().Err(err).Msg("error calling WriteLastTxScannedToDB")
 		return
 	}
 
-	ob.Logger().Inbound.Info().
-		Fields(txLogFields(tx)).
-		Msg("setLastScannedTX: WriteLastTxScannedToDB")
+	logger.Info().Msg("call to WriteLastTxScannedToDB was successful")
 }
 
 func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
 	ob.Logger().Inbound.Warn().
-		Str("transaction.hash", hash).
-		Str("skip_reason", reason).
 		Err(err).
-		Msg("Skipping tracker")
+		Str("transaction_hash", hash).
+		Str("skip_reason", reason).
+		Msg("skipping tracker")
 }
 
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"transaction.hash":           rpc.TransactionToHashString(tx.Transaction),
-		"transaction.ton.is_inbound": tx.IsInbound(),
-		"transaction.ton.op_code":    tx.Operation,
-		"transaction.ton.exit_code":  tx.ExitCode,
+		"transaction_hash":           rpc.TransactionToHashString(tx.Transaction),
+		"transaction_ton_is_inbound": tx.IsInbound(),
+		"transaction_ton_op_code":    tx.Operation,
+		"transaction_ton_exit_code":  tx.ExitCode,
 	}
 }
 

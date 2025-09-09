@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/scheduler"
@@ -15,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 const (
@@ -162,9 +162,11 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 			outboundID    = base.OutboundIDFromCCTX(cctx)
 		)
 
+		logger := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, outboundID).Logger()
+
 		switch {
 		case params.ReceiverChainId != chainID:
-			s.outboundLogger(outboundID).Error().Msg("chain id mismatch")
+			logger.Error().Msg("chain id mismatch")
 			continue
 		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+scheduleLookback:
 			return fmt.Errorf(
@@ -193,10 +195,10 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		continueKeysign, err := s.observer.VoteOutboundIfConfirmed(ctx, cctx)
 		switch {
 		case err != nil:
-			s.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX: VoteOutboundIfConfirmed failed")
+			logger.Error().Err(err).Msg("schedule CCTX: error calling VoteOutboundIfConfirmed")
 			continue
 		case !continueKeysign:
-			s.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
+			logger.Info().Msg("schedule CCTX: outbound already processed")
 			continue
 		}
 
@@ -233,10 +235,4 @@ func (s *Solana) updateChainParams(ctx context.Context) error {
 	s.signer.SetGatewayAddress(params.GatewayAddress)
 
 	return nil
-}
-
-func (s *Solana) outboundLogger(id string) *zerolog.Logger {
-	l := s.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
-
-	return &l
 }

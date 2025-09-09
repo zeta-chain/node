@@ -57,7 +57,7 @@ func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 		return s.withdrawCap.objectID, nil
 	}
 
-	s.Logger().Std.Info().Msg("WithdrawCap cache expired, fetching new objectID")
+	s.Logger().Std.Info().Msg("withdrawCap cache expired; fetching new objectID")
 
 	objectID, err := s.getWithdrawCapID(ctx)
 	if err != nil {
@@ -66,7 +66,7 @@ func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 
 	s.withdrawCap.set(objectID)
 
-	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("WithdrawCap objectID fetched")
+	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("withdrawCap objectID fetched")
 
 	return objectID, nil
 }
@@ -90,7 +90,7 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 		return s.messageContext.objectID, nil
 	}
 
-	s.Logger().Std.Info().Msg("MessageContext cache expired, fetching new objectID")
+	s.Logger().Std.Info().Msg("messageContext cache expired, fetching new objectID")
 
 	objectID, err := s.getMessageContextID(ctx)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 
 	s.messageContext.set(objectID)
 
-	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("MessageContext objectID fetched")
+	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("messageContext objectID fetched")
 
 	return objectID, nil
 }

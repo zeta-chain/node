@@ -154,12 +154,12 @@ func TestObserver(t *testing.T) {
 		require.Contains(
 			t,
 			ts.log.String(),
-			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 		require.Contains(
 			t,
 			ts.log.String(),
-			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 	})
 

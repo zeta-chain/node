@@ -32,7 +32,7 @@ func Test_ParsePubKeysFromPath(t *testing.T) {
 			generateKeyShareFiles(t, tt.n, dir)
 
 			// ACT
-			keys, err := ParsePubKeysFromPath(dir, logger)
+			keys, err := ParsePubKeysFromPath(logger, dir)
 
 			// ASSERT
 			require.NoError(t, err)

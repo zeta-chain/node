@@ -10,7 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -321,7 +320,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		require.NoError(t, err)
 
 		// read last block scanned
-		err = ob.LoadLastBlockScanned(log.Logger)
+		err = ob.LoadLastBlockScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, 100, ob.LastBlockScanned())
 	})
@@ -331,7 +330,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// read last block scanned
-		err := ob.LoadLastBlockScanned(log.Logger)
+		err := ob.LoadLastBlockScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
@@ -347,7 +346,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		os.Setenv(envvar, "101")
 
 		// read last block scanned
-		err := ob.LoadLastBlockScanned(log.Logger)
+		err := ob.LoadLastBlockScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, 101, ob.LastBlockScanned())
 	})
@@ -363,7 +362,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		os.Setenv(envvar, base.EnvVarLatestBlock)
 
 		// last block scanned should remain 0
-		err := ob.LoadLastBlockScanned(log.Logger)
+		err := ob.LoadLastBlockScanned()
 		require.NoError(t, err)
 		require.EqualValues(t, 0, ob.LastBlockScanned())
 	})
@@ -376,7 +375,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		os.Setenv(envvar, "invalid")
 
 		// read last block scanned
-		err := ob.LoadLastBlockScanned(log.Logger)
+		err := ob.LoadLastBlockScanned()
 		require.Error(t, err)
 	})
 }
@@ -638,7 +637,7 @@ func TestPostVoteInbound(t *testing.T) {
 		require.Equal(t, ballot, msg.Digest())
 
 		logOutput := logBuffer.String()
-		require.Contains(t, logOutput, "inbound detected: cctx exists but the ballot does not")
+		require.Contains(t, logOutput, "inbound detected: CCTX exists but the ballot does not")
 	})
 
 	t.Run("should post vote cctx already exists but ballot is found", func(t *testing.T) {

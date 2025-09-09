@@ -36,8 +36,8 @@ func PrintComplianceLog(
 		message = "Restricted address detected in cctx"
 		fields = map[string]any{
 			logs.FieldChain:    chainID,
-			logs.FieldCctx:     identifier,
 			logs.FieldCoinType: token,
+			logs.FieldCctx:     identifier,
 			"sender":           sender,
 			"receiver":         receiver,
 		}
