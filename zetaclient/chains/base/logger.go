@@ -54,7 +54,7 @@ func NewLogger(cfg config.Config) (Logger, error) {
 	augmentLogger := func(logger zerolog.Logger) zerolog.Logger {
 		level := zerolog.Level(cfg.LogLevel)
 
-		return logger.Level(level).With().Timestamp().Logger()
+		return logger.Level(level).With().Timestamp().Caller().Logger()
 	}
 
 	// create loggers based on configured level and format

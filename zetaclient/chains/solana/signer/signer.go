@@ -133,7 +133,6 @@ func (signer *Signer) TryProcessOutbound(
 		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
 			signer.Logger().Std.Error().
-				Str(logs.FieldMethod, "TryProcessOutbound").
 				Str(logs.FieldCctx, cctx.Index).
 				Any("panic", err).
 				Str("stack_trace", string(debug.Stack())).
@@ -144,7 +143,6 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str(logs.FieldMethod, "TryProcessOutbound").
 		Uint64("nonce", params.TssNonce).
 		Str("cctx", cctx.Index).
 		Logger()
@@ -310,9 +308,8 @@ func (signer *Signer) broadcastOutbound(
 	tx := outbound.Tx
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod: "broadcastOutbound",
-		logs.FieldNonce:  nonce,
-		logs.FieldTx:     tx.Signatures[0].String(),
+		logs.FieldNonce: nonce,
+		logs.FieldTx:    tx.Signatures[0].String(),
 	}
 
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)

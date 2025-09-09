@@ -4,7 +4,6 @@ package logs
 const (
 	// field keys
 	FieldModule           = "module"
-	FieldMethod           = "method"
 	FieldChain            = "chain"
 	FieldChainNetwork     = "chain_network"
 	FieldNonce            = "nonce"
@@ -20,9 +19,22 @@ const (
 
 	// chain specific field keys
 	FieldBtcTxid = "txid"
+)
 
+const (
 	// module names
-	ModNameInbound  = "inbound"
-	ModNameOutbound = "outbound"
-	ModNameGasPrice = "gas_price"
+	ModNameOrchestrator   = "orchestrator"
+	ModNameInbound        = "inbound"
+	ModNameOutbound       = "outbound"
+	ModNameSigner         = "signer"
+	ModNameGasPrice       = "gas_price"
+	ModNameClientBTC      = "btc_client"
+	ModNameClientZetaCore = "zetacore_client"
+	// TODO: This seems excessive.
+	//       Replace for ModNameTss = "tss", then use FieldMethod for the suffixes?
+	ModNameTssHealthCheck = "tss_healthcheck"
+	ModNameTssKeyGen      = "tss_keygen"
+	ModNameTssKeySign     = "tss_keysign"
+	ModNameTssService     = "tss_service"
+	ModNameTssSetup       = "tss_setup"
 )

@@ -301,7 +301,7 @@ func (ob *Observer) StopChannel() chan struct{} {
 // LoadLastBlockScanned loads last scanned block from environment variable or from database.
 // The last scanned block is the height from which the observer should continue scanning.
 func (ob *Observer) LoadLastBlockScanned() error {
-	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastBlockScanned").Logger()
+	logger := ob.logger.Chain
 
 	// get environment variable
 	envvar := EnvVarLatestBlockByChain(ob.chain)
@@ -373,7 +373,7 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 // LoadLastTxScanned loads last scanned tx from environment variable or from database.
 // The last scanned tx is the tx hash from which the observer should continue scanning.
 func (ob *Observer) LoadLastTxScanned() {
-	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastTxScanned").Logger()
+	logger := ob.logger.Chain
 
 	// get environment variable
 	envvar := EnvVarLatestTxByChain(ob.chain)
@@ -439,7 +439,6 @@ func (ob *Observer) PostVoteInbound(
 	)
 
 	logger := ob.logger.Inbound.With().
-		Str(logs.FieldMethod, "PostVoteInbound").
 		Str(logs.FieldTx, txHash).
 		Stringer(logs.FieldCoinType, coinType).
 		Stringer(logs.FieldConfirmationMode, msg.ConfirmationMode).
@@ -547,7 +546,7 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 	withLogFields := func(l zerolog.Logger) zerolog.Logger {
 		return l.With().
 			Int64(logs.FieldChain, chain.ChainId).
-			Str(logs.FieldChainNetwork, chain.Network.String()).
+			Stringer(logs.FieldChainNetwork, chain.Network).
 			Logger()
 	}
 

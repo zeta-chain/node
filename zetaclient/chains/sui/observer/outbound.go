@@ -45,10 +45,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		logger := ob.Logger().Outbound.With().
-			Str(logs.FieldMethod, "ProcessOutboundTrackers").
-			Uint64(logs.FieldNonce, nonce).
-			Logger()
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, nonce).Logger()
 
 		// should not happen
 		if len(tracker.HashList) == 0 {

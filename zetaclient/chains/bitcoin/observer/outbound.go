@@ -33,7 +33,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get all outbound trackers")
 	}
 
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "ProcessOutboundTrackers").Logger()
+	logger := ob.logger.Outbound
 
 	for _, tracker := range trackers {
 		// get the CCTX
@@ -112,7 +112,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger     = ob.logger.Outbound.With().
 				Uint64(logs.FieldNonce, nonce).
 				Str(logs.FieldOutboundID, outboundID).
-				Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
 				Logger()
 	)
 
@@ -222,7 +221,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce(ctx context.Context) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refresh_pending_nonce").Logger()
+	logger := ob.logger.Outbound
 
 	// get pending nonces from zetacore
 	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
@@ -280,7 +279,6 @@ func (ob *Observer) checkTxInclusion(
 ) (*btcjson.GetTransactionResult, bool) {
 	// logger fields
 	logger := ob.logger.Outbound.With().
-		Str(logs.FieldMethod, "checkTxInclusion").
 		Uint64(logs.FieldNonce, cctx.GetCurrentOutboundParam().TssNonce).
 		Str(logs.FieldTx, txHash).
 		Logger()
@@ -319,7 +317,6 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	)
 
 	logger := ob.logger.Outbound.With().
-		Str(logs.FieldMethod, "SetIncludedTx").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Str(logs.FieldOutboundID, outboundID).

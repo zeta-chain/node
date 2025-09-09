@@ -40,10 +40,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return err
 	}
 
-	// prepare logger fields
-	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Logger()
+	logger := ob.Logger().Outbound
 
 	// process outbound trackers
 	for _, tracker := range trackers {
@@ -223,7 +220,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	if err != nil {
 		logger.Error().
 			Err(err).
-			Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
 			Stringer(logs.FieldTx, receipt.TxHash).
 			Msg("error parsing outbound event")
 		return true, err
@@ -461,7 +457,6 @@ func (ob *Observer) checkConfirmedTx(
 
 	// prepare logger
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "checkConfirmedTx").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Logger()

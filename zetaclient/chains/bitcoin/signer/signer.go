@@ -89,9 +89,7 @@ func (signer *Signer) TryProcessOutbound(
 	// end outbound process on panic
 	defer func() {
 		if err := recover(); err != nil {
-			signer.Logger().
-				Std.Error().
-				Str(logs.FieldMethod, "TryProcessOutbound").
+			signer.Logger().Std.Error().
 				Str(logs.FieldCctx, cctx.Index).
 				Interface("panic", err).
 				Str("stack_trace", string(debug.Stack())).
@@ -104,9 +102,8 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
 	lf := map[string]any{
-		logs.FieldMethod: "TryProcessOutbound",
-		logs.FieldCctx:   cctx.Index,
-		logs.FieldNonce:  params.TssNonce,
+		logs.FieldCctx:  cctx.Index,
+		logs.FieldNonce: params.TssNonce,
 	}
 	signerAddress, err := observer.ZetacoreClient().GetKeys().GetAddress()
 	if err != nil {
@@ -179,7 +176,6 @@ func (signer *Signer) BroadcastOutbound(
 
 	// prepare logger fields
 	logger := signer.Logger().Std.With().
-		Str(logs.FieldMethod, "BroadcastOutbound").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Str(logs.FieldCctx, cctx.Index).

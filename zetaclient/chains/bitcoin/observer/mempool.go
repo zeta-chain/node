@@ -41,7 +41,7 @@ func (ob *Observer) ObserveMempool(ctx context.Context) error {
 // refreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
 // Once 2/3+ of the observers reach consensus on last stuck outbound, RBF will start.
 func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refreshLastStuckOutbound").Logger()
+	logger := ob.logger.Outbound
 
 	pendingTxFinder := ob.getLastPendingOutbound
 	if custom, ok := pendingTxFinderFromContext(ctx); ok {

@@ -234,7 +234,6 @@ func (ob *Observer) observeGatewayCall(
 		msg := ob.newCallInboundVote(event)
 
 		ob.Logger().Inbound.Info().
-			Str(logs.FieldMethod, "observeGatewayCall").
 			Stringer(logs.FieldTx, event.Raw.TxHash).
 			Uint64(logs.FieldBlock, event.Raw.BlockNumber).
 			Stringer("from", event.Sender).
@@ -360,7 +359,6 @@ func (ob *Observer) observeGatewayDepositAndCall(
 		msg := ob.newDepositAndCallInboundVote(event)
 
 		ob.Logger().Inbound.Info().
-			Str(logs.FieldMethod, "observeGatewayDepositAndCall").
 			Stringer(logs.FieldTx, event.Raw.TxHash).
 			Uint64(logs.FieldBlock, event.Raw.BlockNumber).
 			Stringer("from", event.Sender).

@@ -150,7 +150,7 @@ func NewService(
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Service, error) {
-	logger = logger.With().Str(logs.FieldModule, "tss_service").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssService).Logger()
 
 	// defaults, can be overridden by opts
 	cfg := serviceConfig{

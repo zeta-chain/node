@@ -55,10 +55,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
 	}
 
-	// prepare logger fields
-	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Logger()
+	logger := ob.Logger().Outbound
 
 	// process outbound trackers
 	for _, tracker := range trackers {
@@ -169,7 +166,6 @@ func (ob *Observer) PostVoteOutbound(
 	coinType coin.CoinType,
 ) {
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "PostVoteOutbound").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, outboundHash).
 		Logger()
@@ -251,7 +247,6 @@ func (ob *Observer) CheckFinalizedTx(
 	// prepare logger fields
 	chainID := ob.Chain().ChainId
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "CheckFinalizedTx").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).Logger()

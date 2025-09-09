@@ -181,7 +181,7 @@ func (ob *Observer) SelectUTXOs(
 
 // findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "findNonceMarkUTXO").Logger()
+	logger := ob.logger.Outbound
 
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)

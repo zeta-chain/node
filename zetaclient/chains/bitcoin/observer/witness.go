@@ -42,10 +42,7 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	lf := map[string]any{
-		logs.FieldMethod: "GetBtcEventWithWitness",
-		logs.FieldTx:     tx.Txid,
-	}
+	lf := map[string]any{logs.FieldTx: tx.Txid}
 
 	if len(tx.Vout) < 1 {
 		logger.Debug().Fields(lf).Msg("no output")
@@ -171,8 +168,6 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 
 // Try to extract the memo from the OP_RETURN
 func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
-	logger = logger.With().Str(logs.FieldMethod, "tryExtractOpRet").Logger()
-
 	if len(tx.Vout) < 2 {
 		logger.Debug().
 			Str(logs.FieldBtcTxid, tx.Txid).

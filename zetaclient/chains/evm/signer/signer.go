@@ -245,7 +245,6 @@ func (signer *Signer) TryProcessOutbound(
 		if r := recover(); r != nil {
 			signer.Logger().
 				Std.Error().
-				Str(logs.FieldMethod, "TryProcessOutbound").
 				Str(logs.FieldCctx, cctx.Index).
 				Interface("panic", r).
 				Str("stack_trace", string(debug.Stack())).
@@ -258,13 +257,12 @@ func (signer *Signer) TryProcessOutbound(
 		params = cctx.GetCurrentOutboundParam()
 		myID   = zetacoreClient.GetKeys().GetOperatorAddress()
 		logger = signer.Logger().Std.With().
-			Str(logs.FieldMethod, "TryProcessOutbound").
 			Int64(logs.FieldChain, signer.Chain().ChainId).
 			Uint64(logs.FieldNonce, params.TssNonce).
 			Str(logs.FieldCctx, cctx.Index).
 			Str("cctx_receiver", params.Receiver).
-			Str("cctx_amount", params.Amount.String()).
-			Str("signer", myID.String()).
+			Stringer("cctx_amount", params.Amount).
+			Stringer("signer", myID).
 			Logger()
 	)
 	logger.Info().Msg("TryProcessOutbound")
