@@ -61,19 +61,19 @@ func (s *Signer) TryProcessOutbound(
 
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
-	lf := map[string]any{
-		logs.FieldOutboundID: outboundID,
-		logs.FieldNonce:      cctx.GetCurrentOutboundParam().TssNonce,
-		"outcome":            string(outcome),
-	}
+	logger := s.Logger().Std.With().
+		Str(logs.FieldOutboundID, outboundID).
+		Uint64(logs.FieldNonce, cctx.GetCurrentOutboundParam().TssNonce).
+		Str("outcome", string(outcome)).
+		Logger()
 
 	switch {
 	case err != nil:
-		s.Logger().Std.Error().Err(err).Fields(lf).Msg("Unable to ProcessOutbound")
+		logger.Error().Err(err).Msg("error calling ProcessOutbound")
 	case outcome != Success:
-		s.Logger().Std.Warn().Fields(lf).Msg("Unsuccessful outcome for ProcessOutbound")
+		logger.Warn().Msg("unsuccessful outcome for ProcessOutbound")
 	default:
-		s.Logger().Std.Info().Fields(lf).Msg("Processed outbound")
+		logger.Info().Msg("processed outbound")
 	}
 }
 
@@ -97,7 +97,7 @@ func (s *Signer) ProcessOutbound(
 		return Invalid, errors.Wrap(err, "unable to compose message")
 	}
 
-	s.Logger().Std.Info().Fields(outbound.logFields).Msg("Signing outbound")
+	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
 
 	if err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce); err != nil {
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
@@ -154,7 +154,7 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 		// Might be possible if 2 concurrent zeta clients
 		// are trying to broadcast the same message.
 		if strings.Contains(err.Error(), "duplicate") {
-			s.Logger().Std.Warn().Fields(logFields).Msg("Message already sent")
+			s.Logger().Std.Warn().Fields(logFields).Msg("message already sent")
 			return Invalid, nil
 		}
 	}
@@ -163,8 +163,8 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 	case exitCode == uint32(toncontracts.ExitCodeInvalidSeqno):
 		// Might be possible if zeta clients send several seq. numbers concurrently.
 		// In the current implementation, Gateway supports only 1 nonce per block.
-		logFields["outbound.error.exit_code"] = exitCode
-		s.Logger().Std.Warn().Fields(logFields).Msg("Invalid nonce, retry later")
+		logFields["outbound_error_exit_code"] = exitCode
+		s.Logger().Std.Warn().Fields(logFields).Msg("invalid nonce, retry later")
 		return Invalid, nil
 	case err != nil:
 		return Fail, errors.Wrap(err, "unable to send external message")
@@ -192,8 +192,8 @@ func (s *Signer) SetGatewayAddress(addr string) {
 	}
 
 	s.Logger().Std.Info().
-		Str("signer.old_gateway_address", s.gateway.AccountID().ToRaw()).
-		Str("signer.new_gateway_address", acc.ToRaw()).
+		Str("signer_old_gateway_address", s.gateway.AccountID().ToRaw()).
+		Str("signer_new_gateway_address", acc.ToRaw()).
 		Msg("Updated gateway address")
 
 	s.Lock()

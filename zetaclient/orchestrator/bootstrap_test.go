@@ -51,7 +51,7 @@ func TestBootstrap(t *testing.T) {
 		// Check that the scheduler has some tasks for this
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "btc:8332")
 
-		assert.Contains(t, ts.Log.String(), `"chain":8332,"chain_network":"btc","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":8332,"chain_network":"btc","message":"added observer-signer"`)
 	})
 
 	t.Run("EVM", func(t *testing.T) {
@@ -96,7 +96,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "evm:1")
-		assert.Contains(t, ts.Log.String(), `"chain":1,"chain_network":"eth","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":1,"chain_network":"eth","message":"added observer-signer"`)
 
 		// ACT #2
 		// Enable polygon, remove ETH
@@ -113,10 +113,10 @@ func TestBootstrap(t *testing.T) {
 		assert.Eventually(t, check, 3*constant.ZetaBlockTime, 100*time.Millisecond)
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "evm:137")
-		assert.Contains(t, ts.Log.String(), `"chain":137,"chain_network":"polygon","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":137,"chain_network":"polygon","message":"added observer-signer"`)
 
 		tasksMissGroup(t, ts.scheduler.Tasks(), "evm:1")
-		assert.Contains(t, ts.Log.String(), `"chain":1,"message":"Removed observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":1,"message":"removed observer-signer"`)
 	})
 
 	t.Run("Solana", func(t *testing.T) {
@@ -151,7 +151,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "sol:900")
-		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"added observer-signer"`)
 	})
 
 	t.Run("Sui", func(t *testing.T) {
@@ -186,7 +186,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "sui:105")
-		assert.Contains(t, ts.Log.String(), `"chain":105,"chain_network":"sui","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":105,"chain_network":"sui","message":"added observer-signer"`)
 	})
 
 	t.Run("TON", func(t *testing.T) {
@@ -221,7 +221,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Eventually(t, check, 3*constant.ZetaBlockTime, 100*time.Millisecond)
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "ton:2015140")
-		assert.Contains(t, ts.Log.String(), `"chain":2015140,"chain_network":"ton","message":"Added observer-signer"`)
+		assert.Contains(t, ts.Log.String(), `"chain":2015140,"chain_network":"ton","message":"added observer-signer"`)
 	})
 }
 

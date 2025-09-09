@@ -18,6 +18,9 @@ const (
 	FieldCoinType         = "coin_type"
 	FieldConfirmationMode = "confirmation_mode"
 
+	// chain specific field keys
+	FieldBtcTxid = "txid"
+
 	// module names
 	ModNameInbound  = "inbound"
 	ModNameOutbound = "outbound"

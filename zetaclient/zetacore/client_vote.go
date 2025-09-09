@@ -12,6 +12,7 @@ import (
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -143,7 +144,10 @@ func (c *Client) PostVoteOutbound(
 
 		errMonitor := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
 		if errMonitor != nil {
-			c.logger.Error().Err(err).Msg("PostVoteOutbound: failed to monitor vote outbound result")
+			c.logger.Error().
+				Err(err).
+				Str(logs.FieldMethod, "PostVoteOutbound").
+				Msg("failed to monitor vote outbound result")
 		}
 	}()
 
@@ -190,7 +194,10 @@ func (c *Client) PostVoteInbound(
 
 		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
 		if errMonitor != nil {
-			c.logger.Error().Err(err).Msg("PostVoteInbound: failed to monitor vote inbound result")
+			c.logger.Error().
+				Err(err).
+				Str(logs.FieldMethod, "PostVoteInbound").
+				Msg("failed to monitor vote inbound result")
 		}
 	}()
 

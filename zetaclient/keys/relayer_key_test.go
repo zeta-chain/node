@@ -117,8 +117,16 @@ func Test_LoadRelayerKey(t *testing.T) {
 			expectedKey: &keys.RelayerKey{PrivateKey: solanaPrivKey.String()},
 		},
 		{
-			name:        "it's okay if relayer key is not provided",
-			keyPath:     sample.CreateTempDir(t), // create a empty directory
+			name:        "it's okay if the relayer key path is blank",
+			keyPath:     "",
+			network:     chains.Network_solana,
+			password:    "",
+			expectedKey: nil,
+			expectError: "",
+		},
+		{
+			name:        "it's okay if the relayer key path is invalid",
+			keyPath:     sample.CreateTempDir(t), // create an empty directory
 			network:     chains.Network_solana,
 			password:    "",
 			expectedKey: nil,

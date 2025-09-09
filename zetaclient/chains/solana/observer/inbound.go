@@ -48,7 +48,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
 	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
 	if err != nil {
-		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
+		ob.Logger().Inbound.Err(err).Msg("error calling GetSignaturesForAddressUntil")
 		return err
 	}
 
@@ -61,7 +61,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Info().
 			Str(logs.FieldMethod, "ObserveInbound").
 			Int("signatures", len(signatures)).
-			Int64(logs.FieldChain, chainID).
 			Msg("got wrong amount of signatures")
 	}
 
@@ -76,8 +75,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			switch {
 			case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
 				ob.Logger().Inbound.Warn().
-					Stringer("tx.signature", sig.Signature).
-					Msg("ObserveInbound: skip unsupported transaction")
+					Stringer("tx_signature", sig.Signature).
+					Msg("observe inbound: skip unsupported transaction")
 			// just save the sig to last scanned txs
 			case err != nil:
 				// we have to re-scan this signature on next ticker
@@ -89,8 +88,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 					// Log the error but continue processing other transactions
 					ob.Logger().Inbound.Error().
 						Err(err).
-						Str("tx.signature", sigString).
-						Msg("ObserveInbound: error filtering events, skipping")
+						Str("tx_signature", sigString).
+						Msg("observe inbound: error filtering events, skipping")
 					continue
 				}
 
@@ -104,18 +103,16 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
 		if err = ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
-			ob.Logger().
-				Inbound.Error().
+			ob.Logger().Inbound.Error().
 				Err(err).
-				Str("tx.signature", sigString).
-				Msg("ObserveInbound: error saving last sig")
+				Str("tx_signature", sigString).
+				Msg("observe inbound: error saving last sig")
 		}
 
-		ob.Logger().
-			Inbound.Info().
-			Str("tx.signature", sigString).
-			Uint64("tx.slot", sig.Slot).
-			Msg("ObserveInbound: last scanned sig")
+		ob.Logger().Inbound.Info().
+			Str("tx_signature", sigString).
+			Uint64("tx_slot", sig.Slot).
+			Msg("observe inbound: last scanned sig")
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {

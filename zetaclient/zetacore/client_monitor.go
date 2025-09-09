@@ -29,13 +29,14 @@ func (c *Client) MonitorVoteOutboundResult(
 	retryGasLimit uint64,
 	msg *types.MsgVoteOutbound,
 ) error {
+	logger := c.logger.With().
+		Str(logs.FieldZetaTx, zetaTxHash).
+		Str(logs.FieldMethod, "MonitorVoteOutboundResult").
+		Logger()
+
 	defer func() {
 		if r := recover(); r != nil {
-			c.logger.Error().
-				Any("panic", r).
-				Str(logs.FieldZetaTx, zetaTxHash).
-				Str(logs.FieldMethod, "monitorVoteOutboundResult").
-				Msg("Recovered from panic")
+			logger.Error().Any("panic", r).Msg("recovered from panic")
 		}
 	}()
 
@@ -45,11 +46,7 @@ func (c *Client) MonitorVoteOutboundResult(
 
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)
 	if err != nil {
-		c.logger.Error().Err(err).
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldMethod, "monitorVoteOutboundResult").
-			Msg("Unable to query tx result")
-
+		logger.Error().Err(err).Msg("unable to query tx result")
 		return err
 	}
 
@@ -68,34 +65,34 @@ func (c *Client) monitorVoteOutboundResult(
 		return errors.Wrap(err, "failed to query tx result")
 	}
 
-	logFields := map[string]any{
-		logs.FieldZetaTx:   zetaTxHash,
-		"outbound.raw_log": txResult.RawLog,
-	}
+	logger := c.logger.With().
+		Str(logs.FieldMethod, "monitorVoteOutboundResult").
+		Str(logs.FieldZetaTx, zetaTxHash).
+		Str("outbound_raw_log", txResult.RawLog).
+		Logger()
 
 	raw := strings.ToLower(txResult.RawLog)
-
 	switch {
 	case strings.Contains(raw, "already voted"):
 		// noop
 	case strings.Contains(raw, "failed to execute message"):
 		// the inbound vote tx shouldn't fail to execute
 		// this shouldn't happen
-		c.logger.Error().Fields(logFields).Msg("monitorVoteOutboundResult: failed to execute vote")
+		logger.Error().Msg("failed to execute vote")
 	case strings.Contains(raw, "out of gas"):
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
-		c.logger.Debug().Fields(logFields).Msg("monitorVoteOutboundResult: out of gas")
+		logger.Debug().Msg("out of gas")
 
 		if retryGasLimit > 0 {
 			// new retryGasLimit set to 0 to prevent reentering this function
 			if _, _, err := c.PostVoteOutbound(ctx, retryGasLimit, 0, msg); err != nil {
-				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteOutboundResult: failed to resend tx")
+				logger.Error().Err(err).Msg("failed to resend tx")
 			} else {
-				c.logger.Info().Fields(logFields).Msg("monitorVoteOutboundResult: successfully resent tx")
+				logger.Info().Msg("successfully resent tx")
 			}
 		}
 	default:
-		c.logger.Debug().Fields(logFields).Msg("monitorVoteOutboundResult: successful")
+		logger.Debug().Msg("successful")
 	}
 
 	return nil
@@ -110,12 +107,14 @@ func (c *Client) MonitorVoteInboundResult(
 	retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
 ) error {
+	logger := c.logger.With().
+		Str(logs.FieldMethod, "MonitorVoteInboundResult").
+		Str(logs.FieldZetaTx, zetaTxHash).
+		Logger()
+
 	defer func() {
 		if r := recover(); r != nil {
-			c.logger.Error().
-				Any("panic", r).
-				Str(logs.FieldZetaTx, zetaTxHash).
-				Msg("monitorVoteInboundResult: recovered from panic")
+			logger.Error().Any("panic", r).Msg("recovered from panic")
 		}
 	}()
 
@@ -128,10 +127,7 @@ func (c *Client) MonitorVoteInboundResult(
 
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
 	if err != nil {
-		c.logger.Error().Err(err).
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Msg("monitorVoteInboundResult: unable to query tx result")
-
+		logger.Error().Err(err).Msg("unable to query tx result")
 		return err
 	}
 
@@ -150,31 +146,30 @@ func (c *Client) monitorVoteInboundResult(
 		return errors.Wrap(err, "failed to query tx result")
 	}
 
-	logFields := map[string]any{
-		logs.FieldZetaTx:  zetaTxHash,
-		"inbound.raw_log": txResult.RawLog,
-	}
+	logger := c.logger.With().
+		Str(logs.FieldMethod, "monitorVoteInboundResult").
+		Str("inbound_raw_log", txResult.RawLog).
+		Logger()
 
 	switch {
 	case strings.Contains(txResult.RawLog, "failed to execute message"):
 		// the inbound vote tx shouldn't fail to execute. this shouldn't happen
-		c.logger.Error().Fields(logFields).Msg("monitorVoteInboundResult: failed to execute vote")
+		logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to execute vote")
 
 	case strings.Contains(txResult.RawLog, "out of gas"):
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
-		c.logger.Debug().Fields(logFields).Msg("monitorVoteInboundResult: out of gas")
-
+		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("out of gas")
 		if retryGasLimit > 0 {
 			// new retryGasLimit set to 0 to prevent reentering this function
-			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
-				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
+			resentZetaTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg)
+			if err != nil {
+				logger.Error().Err(err).Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to resend tx")
 			} else {
-				logFields[logs.FieldZetaTx] = resentTxHash
-				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx")
+				logger.Info().Str(logs.FieldZetaTx, resentZetaTxHash).Msg("successfully resent tx")
 			}
 		}
 	default:
-		c.logger.Debug().Fields(logFields).Msg("monitorVoteInboundResult: successful")
+		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("successful")
 	}
 
 	return nil
