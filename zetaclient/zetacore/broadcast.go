@@ -31,7 +31,7 @@ var reductionRate = sdkmath.LegacyMustNewDecFromStr(ante.GasPriceReductionRate)
 
 var accountSequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
 
-// Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
+// Broadcast broadcasts tx to ZetaChain. Returns txHash and error
 func (c *Client) Broadcast(
 	ctx context.Context,
 	gasLimit uint64,
@@ -138,10 +138,12 @@ func (c *Client) Broadcast(
 			return "", errors.Wrapf(err, "code 32, cannot parse got seq %q", matches[2])
 		}
 
-		c.seqNumber[authzSigner.KeyType] = expectedSeq
-
 		c.logger.Warn().
-			Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
+			Uint64("from", gotSeq).
+			Uint64("to", expectedSeq).
+			Msg("reset seq number (from err msg)")
+
+		c.seqNumber[authzSigner.KeyType] = expectedSeq
 	}
 
 	return commit.TxHash, fmt.Errorf("failed to broadcast tx (code: %d). Log: %s", commit.Code, commit.RawLog)
@@ -193,16 +195,16 @@ func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash s
 		return false, true
 
 	case strings.Contains(msg, "replacement transaction underpriced"):
-		evt.Msg("Broadcast replacement")
+		evt.Msg("broadcast replacement")
 		return false, false
 
 	case strings.Contains(msg, "already known"):
 		// report to tracker, because there's possibilities a successful broadcast gets this error code
-		evt.Msg("Broadcast duplicates")
+		evt.Msg("broadcast duplicates")
 		return false, true
 
 	default:
-		evt.Msg("Broadcast error. Retrying...")
+		evt.Msg("broadcast error; retrying...")
 		return true, false
 	}
 }

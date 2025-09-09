@@ -33,23 +33,20 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get all outbound trackers")
 	}
 
-	// logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "ProcessOutboundTrackers",
-	}
+	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "ProcessOutboundTrackers").Logger()
 
 	for _, tracker := range trackers {
-		// set logger fields
-		lf[logs.FieldNonce] = tracker.Nonce
-
 		// get the CCTX
 		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
 		if err != nil {
-			ob.logger.Outbound.Err(err).Fields(lf).Msg("cannot find cctx")
+			logger.Err(err).Uint64(logs.FieldNonce, tracker.Nonce).Msg("cannot find CCTX")
 			break
 		}
 		if len(tracker.HashList) > 1 {
-			ob.logger.Outbound.Warn().Msgf("oops, got multiple (%d) outbound hashes", len(tracker.HashList))
+			logger.Warn().
+				Uint64(logs.FieldNonce, tracker.Nonce).
+				Int("count", len(tracker.HashList)).
+				Msg("oops, got multiple outbound hashes")
 		}
 
 		// Iterate over all txHashes to find the truly included outbound.
@@ -152,12 +149,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	}
 
 	// #nosec G115 always in range
-	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
+	requiredConfirmations := int64(ob.ChainParams().OutboundConfirmationSafe())
+	if res.Confirmations < requiredConfirmations {
 		logger.Debug().
-			Int64("confirmations.current", res.Confirmations).
-			Uint64("confirmations.required", ob.ChainParams().OutboundConfirmationSafe()).
-			Msg("Outbound not confirmed yet")
-
+			Int64("current_confirmations", res.Confirmations).
+			Int64("required_confirmations", requiredConfirmations).
+			Msg("outbound not confirmed yet")
 		return false, nil
 	}
 
@@ -212,9 +209,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger.Error().
 			Err(err).
 			Fields(logFields).
-			Msg("Error confirming outbound")
+			Msg("error confirming outbound")
 	} else if zetaHash != "" {
-		logger.Info().Fields(logFields).Msg("Outbound confirmed")
+		logger.Info().Fields(logFields).Msg("outbound confirmed")
 	}
 
 	return false, nil
@@ -282,29 +279,29 @@ func (ob *Observer) checkTxInclusion(
 	txHash string,
 ) (*btcjson.GetTransactionResult, bool) {
 	// logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "checkTxInclusion",
-		logs.FieldNonce:  cctx.GetCurrentOutboundParam().TssNonce,
-		logs.FieldTx:     txHash,
-	}
+	logger := ob.logger.Outbound.With().
+		Str(logs.FieldMethod, "checkTxInclusion").
+		Uint64(logs.FieldNonce, cctx.GetCurrentOutboundParam().TssNonce).
+		Str(logs.FieldTx, txHash).
+		Logger()
 
 	// fetch tx result
 	hash, txResult, err := ob.rpc.GetTransactionByStr(ctx, txHash)
 	if err != nil {
-		ob.logger.Outbound.Warn().Err(err).Fields(lf).Msg("GetTxResultByHash failed")
+		logger.Warn().Err(err).Msg("call to GetTransactionByStr failed")
 		return nil, false
 	}
 
 	// check minimum confirmations
 	if txResult.Confirmations < minTxConfirmations {
-		ob.logger.Outbound.Warn().Fields(lf).Msgf("invalid confirmations %d", txResult.Confirmations)
+		logger.Warn().Int64("confirmations", txResult.Confirmations).Msg("invalid confirmations")
 		return nil, false
 	}
 
 	// validate tx result
 	err = ob.checkTssOutboundResult(ctx, cctx, hash, txResult)
 	if err != nil {
-		ob.logger.Outbound.Error().Err(err).Fields(lf).Msg("checkTssOutboundResult failed")
+		logger.Error().Err(err).Send()
 		return nil, false
 	}
 
@@ -319,13 +316,14 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	var (
 		txHash     = getTxResult.TxID
 		outboundID = ob.OutboundID(nonce)
-		lf         = map[string]any{
-			logs.FieldMethod:     "SetIncludedTx",
-			logs.FieldNonce:      nonce,
-			logs.FieldTx:         txHash,
-			logs.FieldOutboundID: outboundID,
-		}
 	)
+
+	logger := ob.logger.Outbound.With().
+		Str(logs.FieldMethod, "SetIncludedTx").
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txHash).
+		Str(logs.FieldOutboundID, outboundID).
+		Logger()
 
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
@@ -339,20 +337,22 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		if nonce >= ob.pendingNonce {
 			ob.pendingNonce = nonce + 1
 		}
-		lf["pending_nonce"] = ob.pendingNonce
-		ob.logger.Outbound.Info().Fields(lf).Msg("included new bitcoin outbound")
+		logger.Info().
+			Uint64("pending_nonce", ob.pendingNonce).
+			Msg("included new bitcoin outbound")
 	} else if txHash == res.TxID {
 		// for existing hash:
 		//   - update tx result because confirmations may increase
 		ob.includedTxResults[outboundID] = getTxResult
 		if getTxResult.Confirmations > res.Confirmations {
-			ob.logger.Outbound.Info().Fields(lf).Msgf("bitcoin outbound got %d confirmations", getTxResult.Confirmations)
+			logger.Info().
+				Int64("confirmations", getTxResult.Confirmations).
+				Msg("bitcoin outbound got confirmations")
 		}
 	} else {
 		// for other hash:
 		// got multiple hashes for same nonce. RBF tx replacement happened.
-		lf["prior_tx"] = res.TxID
-		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound")
+		logger.Info().Str("prior_tx", res.TxID).Msg("replaced bitcoin outbound")
 
 		// remove prior txHash and txResult
 		delete(ob.tssOutboundHashes, res.TxID)

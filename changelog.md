@@ -15,6 +15,7 @@
 ### Refactor
 
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 
 ### Fixes
 

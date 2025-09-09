@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // TON represents TON observer-signer components that is responsible
@@ -141,7 +142,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 		outboundID := base.OutboundIDFromCCTX(cctx)
 
 		if err := t.processCCTX(ctx, outboundID, cctx, zetaHeight); err != nil {
-			t.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX failed")
+			t.outboundLogger(outboundID).Error().Err(err).Msg("schedule CCTX failed")
 		}
 	}
 
@@ -163,7 +164,7 @@ func (t *TON) processCCTX(ctx context.Context, outboundID string, cctx *types.Cr
 	case err != nil:
 		return errors.Wrap(err, "failed to VoteOutboundIfConfirmed")
 	case !continueKeySign:
-		t.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
+		t.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 		return nil
 	}
 
@@ -195,7 +196,7 @@ func (t *TON) updateChainParams(ctx context.Context) error {
 }
 
 func (t *TON) outboundLogger(id string) *zerolog.Logger {
-	l := t.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := t.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

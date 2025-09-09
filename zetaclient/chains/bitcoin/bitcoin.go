@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/common"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 type Bitcoin struct {
@@ -154,7 +155,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		)
 
 		if params.ReceiverChainId != chainID {
-			b.outboundLogger(outboundID).Error().Msg("Schedule CCTX: chain id mismatch")
+			b.outboundLogger(outboundID).Error().Msg("schedule CCTX: chain id mismatch")
 
 			continue
 		}
@@ -164,10 +165,12 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 
 		switch {
 		case err != nil:
-			b.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX: VoteOutboundIfConfirmed failed")
+			b.outboundLogger(outboundID).Error().
+				Err(err).
+				Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
 			continue
 		case !continueKeysign:
-			b.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
+			b.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 			continue
 		case nonce > b.observer.GetPendingNonce():
 			// stop if the nonce being processed is higher than the pending nonce
@@ -176,8 +179,8 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 			// stop if lookahead is reached 2 bitcoin confirmations span is 20 minutes on average.
 			// We look ahead up to 100 pending cctx to target TPM of 5.
 			b.outboundLogger(outboundID).Warn().
-				Uint64("outbound.earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
-				Msg("Schedule CCTX: lookahead reached")
+				Uint64("outbound_earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
+				Msg("schedule CCTX: lookahead reached")
 			return nil
 		case b.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
@@ -217,7 +220,7 @@ func (b *Bitcoin) updateChainParams(ctx context.Context) error {
 }
 
 func (b *Bitcoin) outboundLogger(id string) *zerolog.Logger {
-	l := b.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := b.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

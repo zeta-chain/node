@@ -154,15 +154,15 @@ func (c *Client) newRequest(ctx context.Context, body []byte) (*http.Request, er
 }
 
 func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse, err error) {
-	c.logger.Debug().Str("rpc.method", method).Msg("Sending request")
+	c.logger.Debug().Str("rpc_method", method).Msg("sending request")
 	start := time.Now()
 
 	defer func() {
 		c.recordMetrics(method, start, out, err)
 		c.logger.Debug().Err(err).
-			Str("rpc.method", method).
-			Float64("rpc.duration", time.Since(start).Seconds()).
-			Msg("Sent request")
+			Str("rpc_method", method).
+			Float64("rpc_duration", time.Since(start).Seconds()).
+			Msg("sent request")
 	}()
 
 	res, err := c.client.Do(req)

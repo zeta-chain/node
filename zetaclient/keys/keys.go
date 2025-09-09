@@ -90,10 +90,14 @@ func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring,
 	os.Stdin = nil
 
 	logger.Debug().
-		Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
+		Str("hotkey", granteeName).
+		Str("folder", chainHomeFolder).
+		Str("backend", kb.Backend()).
+		Msg("checking for hotkey")
 	rc, err := kb.Key(granteeName)
 	if err != nil {
-		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)
+		format := "key not in backend %s present with name (%s): %w"
+		return nil, "", fmt.Errorf(format, kb.Backend(), granteeName, err)
 	}
 
 	pubkeyBech32, err := zetacrypto.GetPubkeyBech32FromRecord(rc)

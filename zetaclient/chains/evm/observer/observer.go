@@ -216,7 +216,7 @@ func (ob *Observer) blockByNumber(ctx context.Context, blockNumber int) (*client
 // loadLastBlockScanned loads the last scanned block from the database
 // TODO(revamp): move to a db file
 func (ob *Observer) loadLastBlockScanned(ctx context.Context) error {
-	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
+	err := ob.Observer.LoadLastBlockScanned()
 	if err != nil {
 		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
 	}
@@ -231,7 +231,9 @@ func (ob *Observer) loadLastBlockScanned(ctx context.Context) error {
 		}
 		ob.WithLastBlockScanned(blockNumber)
 	}
-	ob.Logger().Chain.Info().Uint64("last_block_scanned", ob.LastBlockScanned()).Msg("LoadLastBlockScanned succeed")
+	ob.Logger().Chain.Info().
+		Uint64("last_block_scanned", ob.LastBlockScanned()).
+		Send()
 
 	return nil
 }

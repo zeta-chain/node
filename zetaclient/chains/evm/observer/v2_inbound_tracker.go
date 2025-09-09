@@ -26,7 +26,9 @@ func (ob *Observer) ProcessInboundTrackerV2(
 ) error {
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
-		ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
+		ob.Logger().Inbound.Debug().
+			Err(err).
+			Msg("error getting gateway contract for processing inbound tracker")
 		return ErrGatewayNotSet
 	}
 

@@ -62,7 +62,7 @@ func ResolvePreParamsFromPath(path string) (*keygen.LocalPreParams, error) {
 // Example: `tssPath="~/.tss"`. Contents:
 // localstate-zetapub1addwnpepq2fdhcmfyv07s86djjca835l4f2n2ta0c7le6vnl508mseca2s9g6slj0gm.json
 // Output: `zetapub1addwnpepq2fdhcmfyv07s86djjca835l4f2n2ta0c7le6vnl508mseca2s9g6slj0gm`
-func ParsePubKeysFromPath(tssPath string, logger zerolog.Logger) ([]PubKey, error) {
+func ParsePubKeysFromPath(logger zerolog.Logger, tssPath string) ([]PubKey, error) {
 	const prefix = "localstate-"
 
 	files, err := os.ReadDir(tssPath)
@@ -78,23 +78,30 @@ func ParsePubKeysFromPath(tssPath string, logger zerolog.Logger) ([]PubKey, erro
 	}
 
 	if len(shareFiles) == 0 {
-		logger.Warn().Msg("No TSS key share files found")
+		logger.Warn().Msg("found no TSS key share files")
 		return nil, nil
 	}
 
-	logger.Info().Msgf("Found TSS %d key share files", len(shareFiles))
+	logger.Info().
+		Int("count", len(shareFiles)).
+		Msg("found TSS key share files")
 
 	result := []PubKey{}
 	for _, entry := range shareFiles {
 		filename := filepath.Base(entry.Name())
 
 		if !strings.HasPrefix(filename, prefix) {
-			logger.Warn().Msgf("Skipping file %s as it doesn't have %q prefix", prefix, filename)
+			logger.Warn().
+				Str("file", filename).
+				Str("expected_prefix", prefix).
+				Msg("skipping file: does not have the expected prefix")
 			continue
 		}
 
 		if !strings.HasSuffix(filename, ".json") {
-			logger.Warn().Msgf("Skipping file %s as it's not .json", filename)
+			logger.Warn().
+				Str("file", filename).
+				Msg("skipping file: not a JSON file")
 			continue
 		}
 
@@ -102,7 +109,11 @@ func ParsePubKeysFromPath(tssPath string, logger zerolog.Logger) ([]PubKey, erro
 
 		pubKey, err := NewPubKeyFromBech32(bech32)
 		if err != nil {
-			logger.Error().Err(err).Msgf("Unable to create PubKey from %q", bech32)
+			logger.Error().
+				Err(err).
+				Str("file", filename).
+				Str("bech32", bech32).
+				Msg("skipping file: unable to create PubKey")
 			continue
 		}
 
@@ -110,7 +121,7 @@ func ParsePubKeysFromPath(tssPath string, logger zerolog.Logger) ([]PubKey, erro
 	}
 
 	if len(result) == 0 {
-		logger.Warn().Msg("No valid TSS pub keys were found")
+		logger.Warn().Msg("found no valid TSS pub keys")
 		return nil, nil
 	}
 
