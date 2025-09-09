@@ -71,9 +71,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		if err != nil {
 			ob.Logger().Outbound.
 				Error().Err(err).
-				Uint64("outbound.nonce", nonce).
-				Msg("Unable to get cctx by nonce")
-
+				Uint64(logs.FieldNonce, nonce).
+				Msg("unable to get CCTX by nonce")
 			continue
 		}
 
@@ -81,9 +80,9 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			if err := ob.processOutboundTracker(ctx, cctx, txHash.TxHash); err != nil {
 				ob.Logger().Outbound.
 					Error().Err(err).
-					Uint64("outbound.nonce", nonce).
-					Str("outbound.hash", txHash.TxHash).
-					Msg("Unable to check transaction by nonce")
+					Str(logs.FieldTx, txHash.TxHash).
+					Uint64(logs.FieldNonce, nonce).
+					Msg("unable to check CCTX by nonce")
 			}
 		}
 	}
@@ -146,9 +145,10 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 		return err
 	case auth.Signer != ob.TSS().PubKey().AddressEVM():
 		ob.Logger().Inbound.Warn().
+			Str(logs.FieldMethod, "addOutboundTracker").
 			Fields(txLogFields(tx)).
-			Str("transaction.ton.signer", auth.Signer.String()).
-			Msg("observeGateway: addOutboundTracker: signer is not TSS. Skipping")
+			Str("transaction_ton_signer", auth.Signer.String()).
+			Msg("observe gateway: signer is not TSS; skipping")
 
 		return nil
 	}
@@ -233,13 +233,13 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 
 	switch {
 	case err != nil:
-		log.Error().Err(err).Msg("Unable to post outbound vote")
+		log.Error().Err(err).Msg("unable to post outbound vote")
 		return err
 	case zetaTxHash != "":
 		log.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
 			Str(logs.FieldBallot, ballot).
-			Msg("Outbound vote posted")
+			Msg("posted outbound vote")
 	}
 
 	return nil

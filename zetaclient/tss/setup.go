@@ -65,18 +65,18 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	if len(bootstrapPeers) == 0 {
-		setupLogger.Warn().Msg("No bootstrap peers provided")
+		setupLogger.Warn().Msg("no bootstrap peers provided")
 	} else {
-		setupLogger.Info().Interface("bootstrap_peers", bootstrapPeers).Msgf("Bootstrap peers")
+		setupLogger.Info().Interface("bootstrap_peers", bootstrapPeers).Send()
 	}
 
 	// 2. Resolve pre-params. We want to enforce pre-params file existence
 	tssPreParams, err := ResolvePreParamsFromPath(p.Config.PreParamsPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to resolve TSS pre-params. Use `zetaclient tss gen-pre-params`")
+		return nil, errors.Wrap(err, "unable to resolve TSS pre-params; use `zetaclient tss gen-pre-params`")
 	}
 
-	setupLogger.Info().Msg("Pre-params file resolved")
+	setupLogger.Info().Msg("resolved pre-params file")
 
 	// 3. Prepare whitelist of peers
 	tssKeygen, err := p.Zetacore.GetKeyGen(ctx)
@@ -84,7 +84,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to get TSS keygen")
 	}
 
-	setupLogger.Info().Msg("Fetched TSS keygen info")
+	setupLogger.Info().Msg("fetched TSS keygen info")
 
 	whitelistedPeers := make([]peer.ID, len(tssKeygen.GranteePubkeys))
 	for i, pk := range tssKeygen.GranteePubkeys {
@@ -94,7 +94,9 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		}
 	}
 
-	setupLogger.Info().Interface("whitelisted_peers", whitelistedPeers).Msg("Resolved whitelist peers")
+	setupLogger.Info().
+		Any("whitelisted_peers", whitelistedPeers).
+		Msg("resolved whitelist peers")
 
 	// 4. Bootstrap go-tss TSS server
 	tssServer, err := NewServer(
@@ -114,7 +116,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		p.Telemetry.SetP2PID(tssServer.GetLocalPeerID())
 	}
 
-	setupLogger.Info().Msg("TSS server started")
+	setupLogger.Info().Msg("started TSS server")
 
 	// 5. Perform key generation (if needed)
 	tssInfo, err := KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
@@ -128,12 +130,12 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	// 6. Verify key shares
-	setupLogger.Info().Msg("Got historical TSS info from zetacore. Verifying key shares...")
+	setupLogger.Info().Msg("got historical TSS info from zetacore; verifying key shares...")
 	if err = verifyKeySharesForPubKeys(p, historicalTSSInfo, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to verify key shares for pub keys")
 	}
 
-	setupLogger.Info().Msg("Key shared verified")
+	setupLogger.Info().Msg("key shares verified")
 
 	// 7. Optionally test key signing
 	if p.Config.TestTssKeysign {
@@ -167,7 +169,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to validate tss addresses")
 	}
 
-	setupLogger.Info().Msg("TSS addresses validated. Starting healthcheck worker")
+	setupLogger.Info().Msg("validated TSS addresses; starting healthcheck worker")
 
 	healthCheckProps := HealthcheckProps{
 		Telemetry:               p.Telemetry,
@@ -249,7 +251,7 @@ func NewServer(
 		return nil, fmt.Errorf("local peer ID is empty, aborting")
 	}
 
-	logger.Info().Msgf("TSS local peer ID is %s", tssServer.GetLocalPeerID())
+	logger.Info().Str("id", tssServer.GetLocalPeerID()).Msg("TSS local peer ID")
 
 	return tssServer, nil
 }
@@ -266,7 +268,9 @@ func resolveTSSPath(tssPath string, logger zerolog.Logger) (string, error) {
 	}
 
 	tssPath = filepath.Join(home, ".tss")
-	logger.Warn().Msgf("TSS path is empty, falling back to %s", tssPath)
+	logger.Warn().
+		Str("to", tssPath).
+		Msg("TSS path is empty, falling back")
 
 	return tssPath, nil
 }
@@ -285,7 +289,7 @@ func verifyKeySharesForPubKeys(p SetupProps, history []observertypes.TSS, logger
 		return errors.Wrap(err, "unable to resolve TSS path")
 	}
 
-	pubKeys, err := ParsePubKeysFromPath(tssPath, logger)
+	pubKeys, err := ParsePubKeysFromPath(logger, tssPath)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse public keys from path")
 	}
@@ -319,7 +323,9 @@ func validateAddresses(service *Service, btcChainIDs []int64, logger zerolog.Log
 		return fmt.Errorf("blank tss evm address is empty")
 	}
 
-	logger.Info().Str("evm", evm.String()).Msg("EVM address")
+	logger.Info().
+		Stringer("address", evm).
+		Msg("EVM address")
 
 	// validate TSS BTC address for each btc chain
 	for _, chainID := range btcChainIDs {
@@ -328,7 +334,10 @@ func validateAddresses(service *Service, btcChainIDs []int64, logger zerolog.Log
 			return fmt.Errorf("unable to derive BTC address for chain %d", chainID)
 		}
 
-		logger.Info().Int64("chain_id", chainID).Str("addr", addr.String()).Msg("BTC address")
+		logger.Info().
+			Int64(logs.FieldChain, chainID).
+			Stringer("address", addr).
+			Msg("BTC address")
 	}
 
 	return nil

@@ -45,14 +45,15 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
+		logger := ob.Logger().Outbound.With().
+			Str(logs.FieldMethod, "ProcessOutboundTrackers").
+			Uint64(logs.FieldNonce, nonce).
+			Logger()
+
 		// should not happen
 		if len(tracker.HashList) == 0 {
 			// we don't want to block other cctxs, so let's error and continue
-			ob.Logger().Outbound.Error().
-				Str(logs.FieldMethod, "ProcessOutboundTrackers").
-				Uint64(logs.FieldNonce, nonce).
-				Str(logs.FieldTracker, tracker.Index).
-				Msg("Tracker hash list is empty!")
+			logger.Error().Str(logs.FieldTracker, tracker.Index).Msg("tracker hash list is empty")
 			continue
 		}
 
@@ -64,13 +65,11 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		}
 
 		if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {
-			// we don't want to block other cctxs, so let's error and continue
-			ob.Logger().Outbound.
-				Error().Err(err).
-				Str(logs.FieldMethod, "ProcessOutboundTrackers").
-				Uint64(logs.FieldNonce, nonce).
+			// we don't want to block other cctxs, so let's log the error and continue
+			logger.Error().
+				Err(err).
 				Str(logs.FieldTx, digest).
-				Msg("Unable to load outbound transaction")
+				Msg("unable to load outbound transaction")
 		}
 	}
 
@@ -237,7 +236,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
 			Str(logs.FieldZetaTx, zetaTxHash).
 			Str(logs.FieldBallot, ballot).
-			Msg("Outbound vote posted")
+			Msg("posted outbound vote")
 	}
 
 	return nil

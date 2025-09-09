@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -20,9 +21,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
-			Str("tracker.hash", tracker.TxHash).
-			Str("tracker.coin_type", tracker.CoinType.String()).
-			Msg("Processing inbound tracker")
+			Str(logs.FieldTx, tracker.TxHash).
+			Str(logs.FieldCoinType, tracker.CoinType.String()).
+			Msg("processing inbound tracker")
 		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err
 		}

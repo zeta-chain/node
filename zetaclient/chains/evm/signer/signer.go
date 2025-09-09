@@ -86,9 +86,9 @@ func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
 	}
 
 	signer.Logger().Std.Info().
-		Str("signer.old_zeta_connector_address", signer.zetaConnectorAddress.String()).
-		Str("signer.new_zeta_connector_address", addr.String()).
-		Msg("Updated zeta connector address")
+		Stringer("signer_old_zeta_connector_address", signer.zetaConnectorAddress).
+		Stringer("signer_new_zeta_connector_address", addr).
+		Msg("updated zeta connector address")
 
 	signer.Lock()
 	signer.zetaConnectorAddress = addr
@@ -103,9 +103,9 @@ func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
 	}
 
 	signer.Logger().Std.Info().
-		Str("signer.old_erc20_custody_address", signer.er20CustodyAddress.String()).
-		Str("signer.new_erc20_custody_address", addr.String()).
-		Msg("Updated erc20 custody address")
+		Stringer("signer_old_erc20_custody_address", signer.er20CustodyAddress).
+		Stringer("signer_new_erc20_custody_address", addr).
+		Msg("updated ERC-20 custody address")
 
 	signer.Lock()
 	signer.er20CustodyAddress = addr
@@ -122,8 +122,8 @@ func (signer *Signer) SetGatewayAddress(addrRaw string) {
 	}
 
 	signer.Logger().Std.Info().
-		Str("signer.old_gateway_address", signer.gatewayAddress.String()).
-		Str("signer.new_gateway_address", addr.String()).
+		Stringer("signer_old_gateway_address", signer.gatewayAddress).
+		Stringer("signer_new_gateway_address", addr).
 		Msg("Updated gateway address")
 
 	signer.Lock()
@@ -262,24 +262,24 @@ func (signer *Signer) TryProcessOutbound(
 			Int64(logs.FieldChain, signer.Chain().ChainId).
 			Uint64(logs.FieldNonce, params.TssNonce).
 			Str(logs.FieldCctx, cctx.Index).
-			Str("cctx.receiver", params.Receiver).
-			Str("cctx.amount", params.Amount.String()).
+			Str("cctx_receiver", params.Receiver).
+			Str("cctx_amount", params.Amount.String()).
 			Str("signer", myID.String()).
 			Logger()
 	)
-	logger.Info().Msgf("TryProcessOutbound")
+	logger.Info().Msg("TryProcessOutbound")
 
 	// retrieve app context
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		logger.Error().Err(err).Msg("Error getting app context")
+		logger.Error().Err(err).Msg("error getting app context")
 		return
 	}
 
 	// Setup Transaction input
 	txData, skipTx, err := NewOutboundData(ctx, cctx, height, logger)
 	if err != nil {
-		logger.Err(err).Msg("Error setting up transaction input fields")
+		logger.Err(err).Msg("error setting up transaction input fields")
 		return
 	}
 
@@ -290,11 +290,16 @@ func (signer *Signer) TryProcessOutbound(
 	toChain, err := app.GetChain(txData.toChainID.Int64())
 	switch {
 	case err != nil:
-		logger.Error().Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
+		logger.Error().
+			Err(err).
+			Int64("to_chain_id", txData.toChainID.Int64()).
+			Msg("error getting toChain")
 		return
 	case toChain.IsZeta():
 		// should not happen
-		logger.Error().Msgf("unable to TryProcessOutbound when toChain is zetaChain (%d)", toChain.ID())
+		logger.Error().
+			Int64("to_chain_id", toChain.ID()).
+			Msg("unable to TryProcessOutbound when toChain is zetaChain")
 		return
 	}
 
@@ -310,7 +315,7 @@ func (signer *Signer) TryProcessOutbound(
 		toChain,
 	)
 	if err != nil {
-		logger.Err(err).Msg("Error signing outbound")
+		logger.Err(err).Msg("error signing outbound")
 		return
 	}
 
@@ -359,36 +364,36 @@ func (signer *Signer) SignOutboundFromCCTX(
 	case IsPendingOutboundFromZetaChain(cctx, zetacoreClient):
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
-			logger.Info().Msg("SignGasWithdraw")
+			logger.Info().Msg("calling SignGasWithdraw")
 			return signer.SignGasWithdraw(ctx, outboundData)
 		case coin.CoinType_ERC20:
-			logger.Info().Msg("SignERC20Withdraw")
+			logger.Info().Msg("calling SignERC20Withdraw")
 			return signer.SignERC20Withdraw(ctx, outboundData)
 		case coin.CoinType_Zeta:
-			logger.Info().Msg("SignConnectorOnReceive")
+			logger.Info().Msg("calling SignConnectorOnReceive")
 			return signer.SignConnectorOnReceive(ctx, outboundData)
 		}
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId:
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Zeta:
-			logger.Info().Msg("SignConnectorOnRevert")
+			logger.Info().Msg("calling SignConnectorOnRevert")
 			outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 			outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
 			return signer.SignConnectorOnRevert(ctx, outboundData)
 		case coin.CoinType_Gas:
-			logger.Info().Msg("SignGasWithdraw")
+			logger.Info().Msg("calling SignGasWithdraw")
 			return signer.SignGasWithdraw(ctx, outboundData)
 		case coin.CoinType_ERC20:
-			logger.Info().Msg("SignERC20Withdraw")
+			logger.Info().Msg("calling SignERC20Withdraw")
 			return signer.SignERC20Withdraw(ctx, outboundData)
 		}
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert:
-		logger.Info().Msg("SignConnectorOnRevert")
+		logger.Info().Msg("calling SignConnectorOnRevert")
 		outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 		outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
 		return signer.SignConnectorOnRevert(ctx, outboundData)
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound:
-		logger.Info().Msg("SignConnectorOnReceive")
+		logger.Info().Msg("calling SignConnectorOnReceive")
 		return signer.SignConnectorOnReceive(ctx, outboundData)
 	}
 
@@ -413,14 +418,19 @@ func (signer *Signer) BroadcastOutbound(
 	toChain, err := app.GetChain(txData.toChainID.Int64())
 	switch {
 	case err != nil:
-		logger.Error().Err(err).Msgf("error getting toChain %d", txData.toChainID.Int64())
+		logger.Error().
+			Err(err).
+			Int64("to_chain_id", txData.toChainID.Int64()).
+			Msg("error getting toChain")
 		return
 	case toChain.IsZeta():
 		// should not happen
-		logger.Error().Msgf("unable to broadcast when toChain is zetaChain (%d)", toChain.ID())
+		logger.Error().
+			Int64("to_chain_id", toChain.ID()).
+			Msg("unable to broadcast when toChain is zetaChain")
 		return
 	case tx == nil:
-		logger.Warn().Msgf("BroadcastOutbound: no tx to broadcast %s", cctx.Index)
+		logger.Warn().Str(logs.FieldCctx, cctx.Index).Msg("no outbound tx to broadcast")
 		return
 	}
 
@@ -439,9 +449,12 @@ func (signer *Signer) BroadcastOutbound(
 
 		// if TSS nonce is higher than CCTX nonce, there is no need to broadcast
 		// this avoids foreseeable "nonce too low" error and unnecessary tracker report
-		// Note: the latest finalized nonce is used here, not the pending nonce, making it possible to replacing pending txs
+		// Note: the latest finalized nonce is used here, not the pending nonce, making it possible
+		//       to replace pending txs
 		if latestNonce > nonce {
-			logger.Info().Uint64("latest_nonce", latestNonce).Msg("cctx nonce is too low, skip broadcasting tx")
+			logger.Info().
+				Uint64("latest_nonce", latestNonce).
+				Msg("skipped broadcasting tx because CCTX nonce is too low")
 			return nil
 		}
 
@@ -470,7 +483,7 @@ func (signer *Signer) BroadcastOutbound(
 	bo := backoff.NewConstantBackOff(broadcastBackoff)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, broadcastRetries)
 	if err := retry.DoWithBackoff(broadcast, boWithMaxRetries); err != nil {
-		logger.Error().Err(err).Msgf("unable to broadcast EVM outbound")
+		logger.Error().Err(err).Msg("unable to broadcast EVM outbound")
 	}
 
 	logger.Info().Msg("broadcasted EVM outbound")

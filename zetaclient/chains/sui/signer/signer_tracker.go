@@ -33,7 +33,7 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 
 	alreadySet := s.SetBeingReportedFlag(digest)
 	if alreadySet {
-		logger.Info().Msg("Outbound is already being observed for the tracker")
+		logger.Info().Msg("outbound is already being observed for the tracker")
 		return nil
 	}
 
@@ -65,9 +65,9 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 		res, err := s.client.SuiGetTransactionBlock(ctx, req)
 		switch {
 		case ctx.Err() != nil:
-			return errors.Wrap(ctx.Err(), "Failed to get transaction block")
+			return errors.Wrap(ctx.Err(), "failed to get transaction block")
 		case err != nil:
-			logger.Error().Err(err).Msg("Failed to get transaction block")
+			logger.Error().Err(err).Msg("failed to get transaction block")
 			continue
 		case res.Effects.Status.Status == client.TxStatusFailure:
 			// failed outbound should be ignored as it cannot increment the gateway nonce.

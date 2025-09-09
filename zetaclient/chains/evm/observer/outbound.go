@@ -66,7 +66,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 				logger.Info().
 					Uint64(logs.FieldNonce, nonce).
 					Str(logs.FieldTx, txHash.TxHash).
-					Msg("Confirmed outbound")
+					Msg("confirmed outbound")
 			}
 		}
 
@@ -76,9 +76,12 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		case txCount > 1:
 			// Unexpected state: multiple transactions exist for a single nonce.
 			// This could indicate duplicate transaction broadcasting or unreliable RPC data
-			logger.Error().Uint64(logs.FieldNonce, nonce).Msgf("Confirmed multiple (%d) outbound", txCount)
+			logger.Error().
+				Uint64(logs.FieldNonce, nonce).
+				Int("count", txCount).
+				Msg("confirmed multiple outbounds")
 		case tracker.MaxReached():
-			logger.Error().Uint64(logs.FieldNonce, nonce).Msg("Outbound tracker is full of hashes")
+			logger.Error().Uint64(logs.FieldNonce, nonce).Msg("outbound tracker is full of hashes")
 		}
 	}
 
@@ -124,26 +127,24 @@ func (ob *Observer) postVoteOutbound(
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	// post vote to zetacore
-	logFields := map[string]any{
-		logs.FieldNonce: nonce,
-		logs.FieldTx:    receipt.TxHash.String(),
-	}
+	logger = logger.With().
+		Uint64(logs.FieldNonce, nonce).
+		Stringer(logs.FieldTx, receipt.TxHash).
+		Logger()
 
+	// post vote to zetacore
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
-		logger.Error().
-			Err(err).
-			Fields(logFields).
-			Msg("Unable to post outbound vote")
+		logger.Error().Err(err).Msg("unable to post outbound vote")
 		return
 	}
 
 	// print vote tx hash and ballot
 	if zetaTxHash != "" {
-		logFields[logs.FieldZetaTx] = zetaTxHash
-		logFields[logs.FieldBallot] = ballot
-		logger.Info().Fields(logFields).Msg("Outbound vote posted")
+		logger.Info().
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldBallot, ballot).
+			Msg("posted outbound vote")
 	}
 }
 
@@ -222,7 +223,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	if err != nil {
 		logger.Error().
 			Err(err).
-			Msgf("VoteOutboundIfConfirmed: error parsing outbound event for chain %d txhash %s", ob.Chain().ChainId, receipt.TxHash)
+			Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
+			Stringer(logs.FieldTx, receipt.TxHash).
+			Msg("error parsing outbound event")
 		return true, err
 	}
 
@@ -412,11 +415,10 @@ func (ob *Observer) filterTSSOutboundInBlock(ctx context.Context, blockNumber ui
 	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
 	block, err := ob.GetBlockByNumberCached(ctx, blockNumber)
 	if err != nil {
-		ob.Logger().
-			Outbound.Error().
+		ob.Logger().Outbound.Error().
 			Err(err).
 			Uint64(logs.FieldBlock, blockNumber).
-			Msg("Error getting block")
+			Msg("error getting block")
 		return
 	}
 
@@ -460,7 +462,6 @@ func (ob *Observer) checkConfirmedTx(
 	// prepare logger
 	logger := ob.Logger().Outbound.With().
 		Str(logs.FieldMethod, "checkConfirmedTx").
-		Int64(logs.FieldChain, ob.Chain().ChainId).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Logger()
@@ -468,7 +469,7 @@ func (ob *Observer) checkConfirmedTx(
 	// query transaction
 	transaction, isPending, err := ob.evmClient.TransactionByHash(ctx, ethcommon.HexToHash(txHash))
 	if err != nil {
-		logger.Error().Err(err).Msg("TransactionByHash error")
+		logger.Error().Err(err).Msg("error calling TransactionByHash")
 		return nil, nil, false
 	}
 	if transaction == nil { // should not happen
@@ -491,12 +492,12 @@ func (ob *Observer) checkConfirmedTx(
 	case from != ob.TSS().PubKey().AddressEVM():
 		// might be false positive during TSS upgrade for unconfirmed txs
 		// Make sure all deposits/withdrawals are paused during TSS upgrade
-		logger.Error().Str("tx.sender", from.String()).Msgf("tx sender is not TSS addresses")
+		logger.Error().Str("tx_sender", from.String()).Msg("tx sender is not TSS addresses")
 		return nil, nil, false
 	case transaction.Nonce() != nonce:
 		logger.Error().
-			Uint64("tx.nonce", transaction.Nonce()).
-			Uint64("tracker.nonce", nonce).
+			Uint64(logs.FieldNonce, transaction.Nonce()).
+			Uint64("tracker_nonce", nonce).
 			Msg("tx nonce is not matching tracker nonce")
 		return nil, nil, false
 	}
@@ -504,7 +505,7 @@ func (ob *Observer) checkConfirmedTx(
 	// query receipt
 	receipt, err := ob.evmClient.TransactionReceipt(ctx, ethcommon.HexToHash(txHash))
 	if err != nil {
-		logger.Error().Err(err).Msg("TransactionReceipt error")
+		logger.Error().Err(err).Msg("error calling TransactionReceipt")
 		return nil, nil, false
 	}
 	if receipt == nil { // should not happen
@@ -515,7 +516,10 @@ func (ob *Observer) checkConfirmedTx(
 	// check confirmations
 	txBlock := receipt.BlockNumber.Uint64()
 	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
-		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
+		logger.Debug().
+			Uint64("tx_block", txBlock).
+			Uint64("last_block", ob.LastBlock()).
+			Msg("tx not confirmed yet")
 		return nil, nil, false
 	}
 
@@ -523,7 +527,7 @@ func (ob *Observer) checkConfirmedTx(
 	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
 	err = ob.checkTxInclusion(ctx, transaction, receipt)
 	if err != nil {
-		logger.Error().Err(err).Msg("CheckTxInclusion error")
+		logger.Error().Err(err).Msg("error calling checkTxInclusion")
 		return nil, nil, false
 	}
 
