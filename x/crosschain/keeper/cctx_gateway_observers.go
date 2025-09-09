@@ -66,7 +66,6 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 			if !found {
 				return fmt.Errorf("gasprice not found for %d", config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
 			}
-
 			gasLimit := sdkmath.NewUint(config.CCTX.GetCurrentOutboundParam().CallOptions.GasLimit)
 			config.CCTX.GetCurrentOutboundParam().GasPrice = gasPrice.String()
 			config.CCTX.GetCurrentOutboundParam().GasPriorityFee = priorityFee.String()

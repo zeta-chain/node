@@ -7,13 +7,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // TestEtherWithdrawRestricted tests the withdrawal to a restricted receiver address
@@ -98,9 +98,12 @@ func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChai
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
-	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
-		ChainId: evmChainID.Int64(),
-	})
+	chainParams, err := r.ObserverClient.GetChainParamsForChain(
+		r.Ctx,
+		&observertypes.QueryGetChainParamsForChainRequest{
+			ChainId: evmChainID.Int64(),
+		},
+	)
 	require.NoError(r, err)
 	stabilityPoolPercentage := chainParams.ChainParams.StabilityPoolPercentage
 

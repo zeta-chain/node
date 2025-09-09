@@ -192,9 +192,9 @@ func (k Keeper) useRemainingGasFee(
 	}
 
 	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
-	remainingFees := PercentOf(totalRemainingFees, types.UsableRemainingFeesPercentage)
+	usableRemainingFees := PercentOf(totalRemainingFees, types.UsableRemainingFeesPercentage)
 
-	if !remainingFees.GT(math.ZeroUint()) {
+	if !usableRemainingFees.GT(math.ZeroUint()) {
 		return nil
 	}
 
@@ -217,9 +217,9 @@ func (k Keeper) useRemainingGasFee(
 		stabilityPoolPercentage = chainParams.StabilityPoolPercentage
 	}
 
-	stabilityPoolAmount := PercentOf(remainingFees, stabilityPoolPercentage)
+	stabilityPoolAmount := PercentOf(usableRemainingFees, stabilityPoolPercentage)
 	// Refund the remaining fees to the user
-	refundAmount := remainingFees.Sub(stabilityPoolAmount)
+	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
 	refundAddress := ethcommon.HexToAddress(sender)
 
 	if stabilityPoolAmount.GT(math.ZeroUint()) {

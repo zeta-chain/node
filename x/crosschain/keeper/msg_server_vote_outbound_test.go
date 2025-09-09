@@ -196,7 +196,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                          "no calls if outbound fee is greater than user fee paid",
 			receiverChainID:               42,
-			senderChainID:                 1, // non-zEVM chain
+			senderChainID:                 1,
 			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:       100,
 			outboundTxActualGasPrice:      math.NewInt(10),
@@ -209,7 +209,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                          "no calls if remaining fee rounds down to zero",
 			receiverChainID:               42,
-			senderChainID:                 1, // non-zEVM chain
+			senderChainID:                 1,
 			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:       100,
 			outboundTxActualGasPrice:      math.NewInt(10),
@@ -222,7 +222,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "chain params not found returns error",
 			receiverChainID:          42,
-			senderChainID:            1, // non-zEVM chain
+			senderChainID:            1,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  5,
 			outboundTxActualGasPrice: math.NewInt(10),
@@ -239,13 +239,13 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "non-zEVM chain sends 100% of 95% remaining fees to stability pool",
 			receiverChainID:          42,
-			senderChainID:            1, // non-zEVM chain
+			senderChainID:            1,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  5,
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
+			),
 			stabilityPoolPercentage:       40, // For non-zEVM, fixed at 100% regardless of this value
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -255,7 +255,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				902,
-			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
+			), // 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
 		},
 		{
 			name:                     "fund stability pool error returns error",
@@ -307,14 +307,14 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "successful refund for zEVM sender",
 			receiverChainID:          42,
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  5,
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
 			),
-			stabilityPoolPercentage:       40, // Used for zEVM chains
+			stabilityPoolPercentage:       40,
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
 			refundRemainingFeesReturn:     nil,
@@ -324,26 +324,26 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				360,
-			), // 95% of 950 = 902, then 40% of that
-			refundRemainingFeesExpectedAmount:  big.NewInt(542), // 902 - 360 = 542
+			),
+			refundRemainingFeesExpectedAmount:  big.NewInt(542),
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
 		{
 			name:                     "no refund for invalid hex address - send 100% of 95% to stability pool",
 			receiverChainID:          42,
 			senderZEVMAddress:        "not-a-hex-address",
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			outboundTxActualGasUsed:  5,
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
 			),
-			stabilityPoolPercentage:       40, // Ignored because address is invalid, uses 100% instead
+			stabilityPoolPercentage:       40,
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
 			expectGetChainParamsCall:      true,
 			expectFundStabilityPoolCall:   true,
-			expectRefundRemainingFeesCall: false, // No refund for invalid hex address
+			expectRefundRemainingFeesCall: false,
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				902,
@@ -352,7 +352,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "zero stability pool percentage sends 0% to pool, 100% to refund",
 			receiverChainID:          42,
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  50,
 			outboundTxActualGasPrice: math.NewInt(10),
@@ -375,7 +375,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 		{
 			name:                     "100% stability pool percentage sends 100% to pool, 0% to refund",
 			receiverChainID:          42,
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
 			outboundTxActualGasUsed:  50,
 			outboundTxActualGasPrice: math.NewInt(10),
@@ -397,7 +397,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			name:                     "exact fees calculation with different values",
 			receiverChainID:          42,
 			senderZEVMAddress:        "0xabcdef0123456789abcdef0123456789abcdef01",
-			senderChainID:            7000, // zEVM chain
+			senderChainID:            7000,
 			outboundTxActualGasUsed:  200,
 			outboundTxActualGasPrice: math.NewInt(5),
 			userGasFeePaid: math.NewUint(
