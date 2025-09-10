@@ -59,7 +59,7 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 		Uint64("old_fee_rate", fb.txsAndFees.AvgFeeRate).
 		Uint64("new_fee_rate", result.NewFeeRate).
 		Int64("additional_fees", result.AdditionalFees).
-		Msg("BumpTxFee succeed")
+		Msg("call to BumpTxFee succeed")
 
 	// collect input amounts for signing
 	inAmounts := make([]int64, len(result.NewTx.TxIn))

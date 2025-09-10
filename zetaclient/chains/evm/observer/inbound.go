@@ -62,7 +62,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 				ob.Chain().ChainId,
 			)
 		}
-		ob.Logger().Inbound.Info().Msgf("checking tracker for inbound %s chain %d", tracker.TxHash, ob.Chain().ChainId)
+		ob.Logger().Inbound.Info().
+			Str(logs.FieldTx, tracker.TxHash).
+			Msg("checking inbound tracker")
 
 		// try processing the tracker for v2 inbound
 		// filter error if event is not found, in this case we run v1 tracker process
@@ -176,26 +178,36 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		// handle connector contract deposit
 		lastScannedZetaSent, err = ob.observeZetaSent(ctx, startBlock, toBlock, logs)
 		if err != nil {
-			logger.Error().Err(err).Msg("error observing zeta sent events from ZetaConnector contract")
+			logger.Error().
+				Err(err).
+				Msg("error observing zeta sent events from ZetaConnector contract")
 		}
 
 		// handle legacy erc20 direct deposit logs
 		lastScannedDeposited, err = ob.observeERC20Deposited(ctx, startBlock, toBlock, logs)
 		if err != nil {
-			logger.Error().Err(err).Msg("error observing deposited events from ERC20Custody contract")
+			logger.Error().
+				Err(err).
+				Msg("error observing deposited events from ERC20Custody contract")
 		}
 
 		lastScannedGatewayDeposit, err = ob.observeGatewayDeposit(ctx, startBlock, toBlock, logs)
 		if err != nil {
-			ob.Logger().Inbound.Error().Err(err).Msg("error observing deposit events from Gateway contract")
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msg("error observing deposit events from Gateway contract")
 		}
 		lastScannedGatewayCall, err = ob.observeGatewayCall(ctx, startBlock, toBlock, logs)
 		if err != nil {
-			ob.Logger().Inbound.Error().Err(err).Msg("error observing call events from Gateway contract")
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msg("error observing call events from Gateway contract")
 		}
 		lastScannedGatewayDepositAndCall, err = ob.observeGatewayDepositAndCall(ctx, startBlock, toBlock, logs)
 		if err != nil {
-			ob.Logger().Inbound.Error().Err(err).Msg("error observing depositAndCall events from Gateway contract")
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msg("error observing depositAndCall events from Gateway contract")
 		}
 	}
 
@@ -251,7 +263,7 @@ func (ob *Observer) fetchLogs(ctx context.Context, startBlock, toBlock uint64) (
 func (ob *Observer) observeZetaSent(
 	ctx context.Context,
 	startBlock, toBlock uint64,
-	logs []ethtypes.Log,
+	ethlogs []ethtypes.Log,
 ) (uint64, error) {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -267,21 +279,23 @@ func (ob *Observer) observeZetaSent(
 
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*zetaconnector.ZetaConnectorNonEthZetaSent, 0)
-	for _, log := range logs {
+	for _, ethlog := range ethlogs {
 		// sanity check tx event
-		err := common.ValidateEvmTxLog(&log, addrConnector, "", common.TopicsZetaSent)
+		err := common.ValidateEvmTxLog(&ethlog, addrConnector, "", common.TopicsZetaSent)
 		if err != nil {
 			continue
 		}
-		event, err := connector.ParseZetaSent(log)
+		event, err := connector.ParseZetaSent(ethlog)
 		if err == nil {
 			events = append(events, event)
 			continue
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Msgf("ObserveZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
-				log.TxHash.Hex(), ob.Chain().ChainId, log.BlockNumber)
+			Str(logs.FieldMethod, "observeZetaSent").
+			Stringer(logs.FieldTx, ethlog.TxHash).
+			Uint64(logs.FieldBlock, ethlog.BlockNumber).
+			Msg("invalid ZetaSent event")
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -307,7 +321,9 @@ func (ob *Observer) observeZetaSent(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Msgf("ObserveZetaSent: multiple remote call events detected in tx %s", event.Raw.TxHash)
+				Str(logs.FieldMethod, "observeZetaSent").
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple remote call events detected in a tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -333,7 +349,7 @@ func (ob *Observer) observeZetaSent(
 func (ob *Observer) observeERC20Deposited(
 	ctx context.Context,
 	startBlock, toBlock uint64,
-	logs []ethtypes.Log,
+	ethlogs []ethtypes.Log,
 ) (uint64, error) {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.getERC20CustodyContract()
@@ -344,21 +360,23 @@ func (ob *Observer) observeERC20Deposited(
 
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*erc20custody.ERC20CustodyDeposited, 0)
-	for _, log := range logs {
+	for _, ethlog := range ethlogs {
 		// sanity check tx event
-		err := common.ValidateEvmTxLog(&log, addrCustody, "", common.TopicsDeposited)
+		err := common.ValidateEvmTxLog(&ethlog, addrCustody, "", common.TopicsDeposited)
 		if err != nil {
 			continue
 		}
-		event, err := erc20custodyContract.ParseDeposited(log)
+		event, err := erc20custodyContract.ParseDeposited(ethlog)
 		if err == nil {
 			events = append(events, event)
 			continue
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Msgf("ObserveERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
-				log.TxHash.Hex(), ob.Chain().ChainId, log.BlockNumber)
+			Str(logs.FieldMethod, "observeERC20Deposited").
+			Stringer(logs.FieldTx, ethlog.TxHash).
+			Uint64(logs.FieldBlock, ethlog.BlockNumber).
+			Msg("invalid Deposited event")
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -391,7 +409,9 @@ func (ob *Observer) observeERC20Deposited(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Msgf("ObserveERC20Deposited: multiple remote call events detected in tx %s", event.Raw.TxHash)
+				Str(logs.FieldMethod, "observeERC20Deposited").
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple remote call events detected in a tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -463,7 +483,10 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 			if err == nil {
 				msg = ob.buildInboundVoteMsgForZetaSentEvent(app, event)
 			} else {
-				ob.Logger().Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+				ob.Logger().Inbound.Error().
+					Err(err).
+					Str(logs.FieldTx, tx.Hash).
+					Msg("error calling ValidateEvmTxLog")
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -471,7 +494,9 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 	}
 	if msg == nil {
 		// no event, restricted tx, etc.
-		ob.Logger().Inbound.Info().Msgf("no ZetaSent event found for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+		ob.Logger().Inbound.Info().
+			Str("inbound", tx.Hash).
+			Msg("no ZetaSent event found for inbound")
 		return "", nil
 	}
 	if vote {
@@ -514,7 +539,10 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 			if err == nil {
 				msg = ob.buildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
-				ob.Logger().Inbound.Error().Err(err).Msgf("CheckEvmTxLog error on inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+				ob.Logger().Inbound.Error().
+					Err(err).
+					Str(logs.FieldTx, tx.Hash).
+					Msg("error calling ValidateEvmTxLog")
 				return "", err
 			}
 			break // only one event is allowed per tx
@@ -522,7 +550,9 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 	}
 	if msg == nil {
 		// no event, donation, restricted tx, etc.
-		ob.Logger().Inbound.Info().Msgf("no Deposited event found for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+		ob.Logger().Inbound.Info().
+			Str(logs.FieldTx, tx.Hash).
+			Msg("no Deposited event found for inbound")
 		return "", nil
 	}
 	if vote {
@@ -561,7 +591,9 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 	msg := ob.buildInboundVoteMsgForTokenSentToTSS(tx, sender, receipt.BlockNumber.Uint64())
 	if msg == nil {
 		// donation, restricted tx, etc.
-		ob.Logger().Inbound.Info().Msgf("no vote message built for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
+		ob.Logger().Inbound.Info().
+			Str(logs.FieldTx, tx.Hash).
+			Msg("no vote message built for inbound")
 		return "", nil
 	}
 	if vote {
@@ -599,14 +631,18 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 	// donation check
 	if bytes.Equal(event.Message, []byte(constant.DonationMessage)) {
 		ob.Logger().Inbound.Info().
-			Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.Chain().ChainId)
+			Stringer(logs.FieldTx, event.Raw.TxHash).
+			Msg("thank you rich folk for your donation!")
 		return nil
 	}
 	message := hex.EncodeToString(event.Message)
 	ob.Logger().Inbound.Info().
-		Msgf("ERC20CustodyDeposited inbound detected on chain %d tx %s block %d from %s value %s message %s",
-			ob.Chain().
-				ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), message)
+		Stringer(logs.FieldTx, event.Raw.TxHash).
+		Uint64(logs.FieldBlock, event.Raw.BlockNumber).
+		Stringer("from", sender).
+		Stringer("value", event.Amount).
+		Str("message", message).
+		Msg("ERC20CustodyDeposited inbound detected")
 
 	return zetacore.GetInboundVoteMessage(
 		sender.Hex(),
@@ -633,9 +669,13 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 ) *types.MsgVoteInbound {
 	// note that this is most likely zeta chain
-	destChain, err := appContext.GetChain(event.DestinationChainId.Int64())
+	chainID := event.DestinationChainId.Int64()
+	destChain, err := appContext.GetChain(chainID)
 	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msgf("chain id %d not supported", event.DestinationChainId.Int64())
+		ob.Logger().Inbound.Warn().
+			Err(err).
+			Int64("destination_chain_id", chainID).
+			Msg("chain id not supported")
 		return nil
 	}
 
@@ -653,14 +693,19 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	if !destChain.IsZeta() {
 		if strings.EqualFold(destAddr, destChain.Params().ZetaTokenContractAddress) {
 			ob.Logger().Inbound.Warn().
-				Msgf("potential attack attempt: %s destination address is ZETA token contract address", destAddr)
+				Str("zeta_token_contract_destination_address", destAddr).
+				Msg("potential attack attempt")
 			return nil
 		}
 	}
 	message := base64.StdEncoding.EncodeToString(event.Message)
-	ob.Logger().Inbound.Info().Msgf("ZetaSent inbound detected on chain %d tx %s block %d from %s value %s message %s",
-		ob.Chain().
-			ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender, event.ZetaValueAndGas.String(), message)
+	ob.Logger().Inbound.Info().
+		Uint64(logs.FieldBlock, event.Raw.BlockNumber).
+		Stringer(logs.FieldTx, event.Raw.TxHash).
+		Str("from", sender).
+		Stringer("value", event.ZetaValueAndGas).
+		Str("message", message).
+		Msg("detected ZetaSent inbound")
 
 	return zetacore.GetInboundVoteMessage(
 		sender,
@@ -706,11 +751,17 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 	data, _ := hex.DecodeString(message)
 	if bytes.Equal(data, []byte(constant.DonationMessage)) {
 		ob.Logger().Inbound.Info().
-			Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.Chain().ChainId)
+			Str(logs.FieldTx, tx.Hash).
+			Msg("thank you rich folk for your donation!")
 		return nil
 	}
-	ob.Logger().Inbound.Info().Msgf("TSS inbound detected on chain %d tx %s block %d from %s value %s message %s",
-		ob.Chain().ChainId, tx.Hash, blockNumber, sender.Hex(), tx.Value.String(), message)
+	ob.Logger().Inbound.Info().
+		Str(logs.FieldTx, tx.Hash).
+		Uint64(logs.FieldBlock, blockNumber).
+		Stringer("from", sender).
+		Stringer("value", tx.Value).
+		Str("message", message).
+		Msg("detected TSS inbound")
 
 	return zetacore.GetInboundVoteMessage(
 		sender.Hex(),
