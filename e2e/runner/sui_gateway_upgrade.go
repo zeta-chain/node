@@ -51,9 +51,9 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	r.Logger.Print("🏃 Verifying Sui deposit from new package")
 	r.suiVerifyDepositFromPackage(r.SuiGateway.PackageID(), big.NewInt(10000000000))
 
-	// deposit from original gateway package should be observed
-	r.Logger.Print("🏃 Verifying Sui deposit from original package")
-	r.suiVerifyDepositFromPackage(r.SuiGateway.Original().PackageID(), big.NewInt(2000000))
+	// deposit from previous gateway package should be observed
+	r.Logger.Print("🏃 Verifying Sui deposit from previous package")
+	r.suiVerifyDepositFromPackage(r.SuiGateway.Previous().PackageID(), big.NewInt(2000000))
 }
 
 // suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
