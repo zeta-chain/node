@@ -3,17 +3,21 @@ package runner
 import (
 	"context"
 	"encoding/json"
+	"math/big"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
-	"github.com/pkg/errors"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
@@ -25,13 +29,12 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	require.NoError(r, err)
 
 	// upgrade the Sui gateway package
-	newGatewayPackageID, err := r.suiUpgradeGatewayPackage()
-	require.NoError(r, err)
+	r.suiUpgradeGatewayPackage()
 
-	r.Logger.Print("⚙️ Sui gateway package upgrade completed")
+	r.Logger.Print("⚙️ Sui gateway upgrade completed: %s", r.SuiGateway.PackageID())
 
 	// call the new method 'upgraded' in the new gateway package
-	r.moveCallUpgraded(r.Ctx, newGatewayPackageID)
+	r.moveCallUpgraded(r.Ctx, r.SuiGateway.PackageID())
 
 	// retrieve new gateway object data
 	gatewayDataAfter, err := r.suiGetObjectData(r.Ctx, r.SuiGateway.ObjectID())
@@ -39,10 +42,22 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 
 	// gateway data should remain unchanged
 	require.Equal(r, gatewayDataBefore, gatewayDataAfter)
+
+	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
+	// wait for 2 blocks to ensure the new gateway package ID is effective
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
+
+	// deposit from new gateway package should be observed
+	r.Logger.Print("🏃 Verifying Sui deposit from new package")
+	r.suiVerifyDepositFromPackage(r.SuiGateway.PackageID(), big.NewInt(10000000000))
+
+	// deposit from previous gateway package should be observed
+	r.Logger.Print("🏃 Verifying Sui deposit from previous package")
+	r.suiVerifyDepositFromPackage(r.SuiGateway.Previous().PackageID(), big.NewInt(2000000))
 }
 
 // suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
-func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
+func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	// build the upgraded gateway package
 	r.suiBuildGatewayUpgraded()
 
@@ -71,13 +86,29 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 	require.NoError(r, err)
 
 	// find packageID
+	packageID := ""
 	for _, change := range response.ObjectChanges {
 		if change.Type == "published" {
-			return change.PackageId, nil
+			packageID = change.PackageId
 		}
 	}
+	require.NotEmpty(r, packageID, "new gateway package ID not found")
 
-	return "", errors.New("new gateway package ID not found")
+	// find withdraw cap ID
+	withdrawCapID, found := r.suiGetOwnedObjectID(r.SuiTSSAddress, r.SuiGateway.WithdrawCapType())
+	require.True(r, found, "withdraw cap object not found")
+
+	// update runner gateway package ID
+	previousPackageID := r.SuiGateway.PackageID()
+	originalPackageID := previousPackageID
+	r.SuiGateway, err = sui.NewGatewayFromPairID(
+		sui.MakePairID(packageID, r.SuiGateway.ObjectID(), withdrawCapID, previousPackageID, originalPackageID),
+	)
+	require.NoError(r, err)
+
+	// update the chain params so zetaclient can pick it up
+	err = r.setSuiChainParams(false)
+	require.NoError(r, err)
 }
 
 // moveCallUpgraded performs a move call to 'upgraded' method on the new Sui gateway package
@@ -128,4 +159,27 @@ func (r *E2ERunner) suiGetObjectData(ctx context.Context, objectID string) (mode
 	require.NotNil(r, object.Data.Content)
 
 	return *object.Data.Content, nil
+}
+
+// suiVerifyDepositFromPackage verifies the deposit from given Sui gateway packageID and amount
+func (r *E2ERunner) suiVerifyDepositFromPackage(packageID string, amount *big.Int) {
+	oldBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
+	// make a deposit from gateway package
+	resp := r.SuiDepositSUI(packageID, r.EVMAddress(), math.NewUintFromBigInt(amount))
+	r.Logger.Info("Sui deposit tx: %s from package: %s", resp.Digest, packageID)
+
+	// wait for the CCTX to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
+	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// wait for the SUI ZRC20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SUIZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
+	require.Equal(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
+	// only one single CCTX should be created
+	cctxs := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, resp.Digest)
+	require.Len(r, cctxs, 1)
 }

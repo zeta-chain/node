@@ -58,6 +58,10 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
+	// auxStringMap is a key-value map to store any auxiliary string values used by the observer
+	// it is now only used by Sui observer to store old/new Sui gateway inbound cursors
+	auxStringMap map[string]string
+
 	blockCache *lru.Cache
 
 	// db is the database to persist data
@@ -102,6 +106,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
+		auxStringMap:     make(map[string]string),
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
@@ -228,6 +233,8 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 
 // LastTxScanned get last transaction scanned.
 func (ob *Observer) LastTxScanned() string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	return ob.lastTxScanned
 }
 
@@ -236,7 +243,11 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
+	if ob.lastTxScanned == "" {
+		ob.logger.Chain.Info().Str("tx", txHash).Msg("initializing last tx scanned")
+	}
 	ob.lastTxScanned = txHash
+
 	return ob
 }
 
@@ -381,6 +392,71 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 	return lastTx.Hash, nil
 }
 
+// GetAuxString get any auxiliary string data by key
+func (ob *Observer) GetAuxString(key string) string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+	return ob.auxStringMap[key]
+}
+
+// WithAuxString set any auxiliary string data by key
+func (ob *Observer) WithAuxString(key, value string) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	if ob.auxStringMap[key] == "" {
+		ob.logger.Chain.Info().Str("key", key).Str("value", value).Msg("initializing auxiliary string value")
+	}
+	ob.auxStringMap[key] = value
+
+	return ob
+}
+
+// WriteAuxStringToDB writes the auxiliary string data to the database.
+func (ob *Observer) WriteAuxStringToDB(key, value string) error {
+	// create new record if not found
+	var existingRecord clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&existingRecord).Error; err != nil {
+		return ob.db.Client().Create(clienttypes.ToAuxStringSQLType(key, value)).Error
+	}
+
+	// record exists, update it
+	return ob.db.Client().Model(&existingRecord).Update("value", value).Error
+}
+
+// LoadAuxString loads auxiliary string data from environment variable or from database.
+func (ob *Observer) LoadAuxString(key string) {
+	// get environment variable
+	envvar := EnvVarLatestAuxStringByChain(ob.chain, key)
+	value := os.Getenv(envvar)
+
+	// load from environment variable if set
+	if value != "" {
+		ob.logger.Chain.Info().Str("envvar", envvar).Str("value", value).Msg("environment variable is set")
+		ob.WithAuxString(key, value)
+		return
+	}
+
+	// load from DB otherwise
+	value, err := ob.ReadAuxStringFromDB(key)
+	if err != nil {
+		// if not found, let the concrete chain observer decide where to start
+		chainID := ob.chain.ChainId
+		ob.logger.Chain.Info().Int64(logs.FieldChain, chainID).Str("key", key).Msg("string value not found in db")
+		return
+	}
+	ob.WithAuxString(key, value)
+}
+
+// ReadAuxStringFromDB reads the auxiliary string data from the database.
+func (ob *Observer) ReadAuxStringFromDB(key string) (string, error) {
+	var record clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&record).Error; err != nil {
+		return "", err
+	}
+	return record.Value, nil
+}
+
 // PostVoteInbound posts a vote for the given vote message and returns the ballot.
 func (ob *Observer) PostVoteInbound(
 	ctx context.Context,
@@ -452,6 +528,11 @@ func EnvVarLatestBlockByChain(chain chains.Chain) string {
 // EnvVarLatestTxByChain returns the environment variable for the last tx by chain.
 func EnvVarLatestTxByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
+}
+
+// EnvVarLatestAuxStringByChain returns the environment variable for auxiliary string data by chain for the given key.
+func EnvVarLatestAuxStringByChain(chain chains.Chain, key string) string {
+	return fmt.Sprintf("CHAIN_%d_AUX_STRING_%s", chain.ChainId, key)
 }
 
 func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {

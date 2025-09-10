@@ -111,6 +111,7 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 
 // SuiDepositSUI calls Deposit on Sui
 func (r *E2ERunner) SuiDepositSUI(
+	packageID string,
 	receiver ethcommon.Address,
 	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
@@ -121,7 +122,7 @@ func (r *E2ERunner) SuiDepositSUI(
 	coinObjectID := r.suiSplitSUI(signer, amount)
 
 	// create the tx
-	return r.suiExecuteDeposit(signer, string(sui.SUI), coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, packageID, string(sui.SUI), coinObjectID, receiver)
 }
 
 // SuiDepositAndCallSUI calls DepositAndCall on Sui
@@ -142,6 +143,7 @@ func (r *E2ERunner) SuiDepositAndCallSUI(
 
 // SuiDepositFungibleToken calls Deposit with fungible token on Sui
 func (r *E2ERunner) SuiDepositFungibleToken(
+	packageID string,
 	receiver ethcommon.Address,
 	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
@@ -152,7 +154,7 @@ func (r *E2ERunner) SuiDepositFungibleToken(
 	coinObjectID := r.suiSplitUSDC(signer, amount)
 
 	// create the tx
-	return r.suiExecuteDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, packageID, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
 }
 
 // SuiFungibleTokenDepositAndCall calls DepositAndCall with fungible token on Sui
@@ -329,6 +331,7 @@ func (r *E2ERunner) SuiMonitorCCTXByInboundHash(inboundHash string, index int) (
 // suiExecuteDeposit executes a deposit on the SUI contract
 func (r *E2ERunner) suiExecuteDeposit(
 	signer *sui.SignerSecp256k1,
+	packageID string,
 	coinType string,
 	coinObjectID string,
 	receiver ethcommon.Address,
@@ -336,7 +339,7 @@ func (r *E2ERunner) suiExecuteDeposit(
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.SuiGateway.PackageID(),
+		PackageObjectId: packageID,
 		Module:          "gateway",
 		Function:        "deposit",
 		TypeArguments:   []any{coinType},

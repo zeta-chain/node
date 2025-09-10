@@ -94,7 +94,10 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 	// used checkpoint instead of block height
 	checkpoint, err := strconv.ParseUint(tx.Checkpoint, 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse checkpoint")
+		return errors.Wrapf(err, "invalid checkpoint: %s", tx.Checkpoint)
+	}
+	if checkpoint == 0 {
+		return errors.New("checkpoint is zero")
 	}
 
 	// parse outbound event
@@ -235,6 +238,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 	case zetaTxHash != "":
 		ob.Logger().Outbound.Info().
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
+			Uint64(logs.FieldNonce, msg.OutboundTssNonce).
 			Str(logs.FieldZetaTx, zetaTxHash).
 			Str(logs.FieldBallot, ballot).
 			Msg("Outbound vote posted")

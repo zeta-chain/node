@@ -24,10 +24,24 @@ var (
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
+	// always query inbound events from original gateway package
+	// querying events from upgraded packageID will get nothing
+	packageID := ob.gateway.Original().PackageID()
+	if err := ob.observeGatewayInbound(ctx, packageID); err != nil {
+		return errors.Wrap(err, "unable to observe gateway inbound")
+	}
+
+	return nil
+}
+
+// observeGatewayInbound observes inbound deposits for the given gateway packageID
+// The last processed event will be used as the next cursor
+func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string) error {
+	cursor := ob.getCursor(packageID)
 	query := client.EventQuery{
-		PackageID: ob.gateway.PackageID(),
+		PackageID: packageID,
 		Module:    sui.GatewayModule,
-		Cursor:    ob.getCursor(),
+		Cursor:    cursor,
 		Limit:     client.DefaultEventsLimit,
 	}
 
@@ -42,7 +56,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return nil
 	}
 
-	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing inbound events")
+	ob.Logger().
+		Inbound.Info().
+		Str("package", packageID).
+		Str("cursor", cursor).
+		Int("events", len(events)).
+		Msg("Processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
@@ -69,7 +88,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// update the cursor
-		if err := ob.setCursor(event.Id); err != nil {
+		if err := ob.setCursor(packageID, event.Id); err != nil {
 			return errors.Wrapf(err, "unable to set cursor %+v", event.Id)
 		}
 	}
@@ -124,7 +143,10 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	if tx == nil {
-		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txReq := models.SuiGetTransactionBlockRequest{
+			Digest:  event.TxHash,
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		}
 		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
@@ -149,8 +171,11 @@ func (ob *Observer) processInboundEvent(
 // processInboundTracker queries tx with its events by tracker and then votes.
 func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  tracker.TxHash,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+		Digest: tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+			ShowEvents:  true,
+		},
 	}
 
 	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)

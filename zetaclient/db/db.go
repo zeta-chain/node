@@ -33,6 +33,7 @@ var (
 		&types.TransactionResultSQLType{},
 		&types.OutboundHashSQLType{},
 		&types.LastTransactionSQLType{},
+		&types.AuxStringSQLType{},
 	}
 )
 

@@ -37,6 +37,17 @@ func (wc *tssOwnedObject) set(objectID string) {
 	wc.fetchedAt = time.Now()
 }
 
+// withdrawCapID returns the objectID of the WithdrawCap.
+func (s *Signer) withdrawCapID(ctx context.Context) (string, error) {
+	// withdraw cap ID in the chain params is preferred
+	if withdrawCapID := s.gateway.WithdrawCapID(); withdrawCapID != "" {
+		return withdrawCapID, nil
+	}
+
+	// query from Sui network for backward compatibility
+	return s.getWithdrawCapIDCached(ctx)
+}
+
 // getWithdrawCapIDCached getWithdrawCapID with tssOwnedObjectTTL cache.
 func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 	if s.withdrawCap.valid() {
