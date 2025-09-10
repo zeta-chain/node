@@ -61,7 +61,7 @@ func MainnetConfig() *Config {
 		SolanaRPC:    "https://api.mainnet-beta.solana.com",
 		BaseRPC:      "https://base-mainnet.public.blastapi.io",
 		BscRPC:       "https://bsc-mainnet.public.blastapi.io",
-		PolygonRPC:   "https://polygon-bor-rpc.publicnode.com",
+		PolygonRPC:   "https://polygon-rpc.com/",
 	}
 }
 
