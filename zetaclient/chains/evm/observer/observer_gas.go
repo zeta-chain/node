@@ -77,9 +77,8 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 	}
 
 	ob.Logger().GasPrice.Info().
-		Int64("observer.chain_id", ob.Chain().ChainId).
-		Str("observer.base_fee", baseFee.String()).
-		Msg("Fetched base fee for chain")
+		Str("base_fee", baseFee.String()).
+		Msg("fetched base fee")
 
 	// EIP-1559 is supported if base fee is not zero.
 	// Not that, for example, BSC supports EIP-1559 but base fee is zero.

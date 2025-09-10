@@ -237,13 +237,14 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			}
 			msg = zetatoolchains.GasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
 		}
-	case compareAddress(tx.To().Hex(), chainParams.GatewayAddress):
+	default:
 		{
 			gatewayAddr := ethcommon.HexToAddress(chainParams.GatewayAddress)
 			gateway, err := gatewayevm.NewGatewayEVM(gatewayAddr, evmClient)
 			if err != nil {
 				return fmt.Errorf("failed to get gateway contract: %w", err)
 			}
+			foundLog := false
 			for _, log := range receipt.Logs {
 				if log == nil || log.Address != gatewayAddr {
 					continue
@@ -251,6 +252,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 				eventDeposit, err := gateway.ParseDeposited(*log)
 				if err == nil {
 					msg = zetatoolchains.DepositInboundVoteV2(eventDeposit, inboundChain.ChainId, zetaChainID)
+					foundLog = true
 					break
 				}
 				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
@@ -260,23 +262,21 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 						inboundChain.ChainId,
 						zetaChainID,
 					)
+					foundLog = true
 					break
 				}
 				eventCall, err := gateway.ParseCalled(*log)
 				if err == nil {
 					msg = zetatoolchains.CallInboundVoteV2(eventCall, inboundChain.ChainId, zetaChainID)
+					foundLog = true
 					break
 				}
 			}
+			if !foundLog {
+				return fmt.Errorf("no valid gateway event found for tx %s", inboundHash)
+			}
 		}
-	default:
-		return fmt.Errorf(
-			"irrelevant transaction , not sent to any known address txHash: %s to address %s",
-			inboundHash,
-			tx.To(),
-		)
 	}
-
 	c.CCTXIdentifier = msg.Digest()
 	c.updateInboundConfirmation(isConfirmed)
 	return nil
