@@ -43,9 +43,6 @@ func (r *E2ERunner) UpdateEVMChainParams(testLegacy bool) {
 	// update with the new gateway address
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
 
-	// update stability pool percentage to 60%
-	chainParams.StabilityPoolPercentage = 60
-
 	//  update with the new connector address only if not running legacy tests
 	// when running legacy tests the connector address is set by the LegacySetupEVM function
 	if !testLegacy {
