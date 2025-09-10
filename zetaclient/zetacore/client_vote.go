@@ -190,7 +190,11 @@ func (c *Client) PostVoteInbound(
 
 		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
 		if errMonitor != nil {
-			c.logger.Error().Err(err).Msg("PostVoteInbound: failed to monitor vote inbound result")
+			logFields := map[string]any{
+				"inbound.hash":       msg.InboundHash,
+				"monitoring.zeta.tx": zetaTxHash,
+			}
+			c.logger.Error().Fields(logFields).Err(errMonitor).Msg("PostVoteInbound: failed to monitor vote inbound result")
 		}
 	}()
 
