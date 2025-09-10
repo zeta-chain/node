@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/contracts/testgasconsumer"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -179,8 +180,16 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("Results:")
 	r.Logger.Print("  Total transactions: %d", totalTxs)
 	r.Logger.Print("  Sent successfully:  %d", sentCount.Load())
-	r.Logger.Print("  Succeeded:          %d (%.2f%%)", successCount.Load(), float64(successCount.Load())/float64(totalTxs)*100)
-	r.Logger.Print("  Failed:             %d (%.2f%%)", failedCount.Load(), float64(failedCount.Load())/float64(totalTxs)*100)
+	r.Logger.Print(
+		"  Succeeded:          %d (%.2f%%)",
+		successCount.Load(),
+		float64(successCount.Load())/float64(totalTxs)*100,
+	)
+	r.Logger.Print(
+		"  Failed:             %d (%.2f%%)",
+		failedCount.Load(),
+		float64(failedCount.Load())/float64(totalTxs)*100,
+	)
 	r.Logger.Print("Timing:")
 	r.Logger.Print("  Send duration:      %v", sendDuration)
 	r.Logger.Print("  Receipt duration:   %v", receiptDuration)
