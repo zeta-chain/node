@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -305,11 +306,31 @@ func Test_V0_Validate(t *testing.T) {
 			fields: memo.FieldsV0{
 				Receiver: fAddress,
 				RevertOptions: crosschaintypes.RevertOptions{
-					RevertAddress: fString,
-					AbortAddress:  "invalid abort address",
+					AbortAddress: "invalid abort address",
 				},
 			},
 			errMsg: "invalid abort address",
+		},
+		{
+			name:      "abort address is empty",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: 0b00001001, // abort address flag is set
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+				RevertOptions: crosschaintypes.RevertOptions{
+					AbortAddress: constant.EVMZeroAddress,
+				},
+			},
+			errMsg: "abort address is empty",
+		},
+		{
+			name:      "reserved flags are not zero",
+			opCode:    memo.OpCodeDepositAndCall,
+			dataFlags: 0b01000001, // reserved flags are not zero
+			fields: memo.FieldsV0{
+				Receiver: fAddress,
+			},
+			errMsg: "reserved flags are not zero",
 		},
 	}
 

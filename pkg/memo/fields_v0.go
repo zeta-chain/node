@@ -1,6 +1,8 @@
 package memo
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -21,7 +23,7 @@ const (
 
 const (
 	// MaskFlagsReserved is the mask for reserved data flags
-	MaskFlagsReserved = 0b11100000
+	MaskFlagsReserved = 0b11000000
 )
 
 var _ Fields = (*FieldsV0)(nil)
@@ -87,8 +89,19 @@ func (f *FieldsV0) Validate(opCode OpCode, dataFlags uint8) error {
 	}
 
 	// must provide the abort address if flag is set
-	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) && !common.IsHexAddress(f.RevertOptions.AbortAddress) {
-		return errors.New("invalid abort address")
+	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) {
+		if !common.IsHexAddress(f.RevertOptions.AbortAddress) {
+			return errors.New("invalid abort address")
+		}
+
+		if crypto.IsEmptyAddress(common.HexToAddress(f.RevertOptions.AbortAddress)) {
+			return errors.New("abort address is empty")
+		}
+	}
+
+	// reserved flags must be zero
+	if zetabits.GetBits(dataFlags, MaskFlagsReserved) != 0 {
+		return fmt.Errorf("reserved flags are not zero: %08b", dataFlags)
 	}
 
 	return nil
