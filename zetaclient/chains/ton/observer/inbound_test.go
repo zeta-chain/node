@@ -277,7 +277,7 @@ func TestInbound(t *testing.T) {
 
 		// Check that NO cctx was sent && log contains entry for restricted address
 		require.Len(t, ts.votesBag, 0)
-		require.Contains(t, ts.logger.String(), "Restricted address detected in inbound")
+		require.Contains(t, ts.logger.String(), "restricted address detected in inbound")
 	})
 
 	// Yep, it's possible to have withdrawals here because we scroll through all gateway's txs

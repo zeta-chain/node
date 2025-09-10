@@ -4,6 +4,7 @@ package compliance
 import (
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -20,36 +21,32 @@ func IsCCTXRestricted(cctx *crosschaintypes.CrossChainTx, additionalAddresses ..
 	return config.ContainRestrictedAddress(additionalAddresses...)
 }
 
-// PrintComplianceLog prints compliance log with fields [chain, cctx/inbound, chain, sender, receiver, token]
+// PrintComplianceLog prints compliance log with fields
+// [chain, sender, receiver, coin_type, cctx/tx] (coinType is optional)
 func PrintComplianceLog(
 	logger, complianceLogger zerolog.Logger,
 	outbound bool,
 	chainID int64,
-	identifier, sender, receiver, token string,
+	identifier, sender, receiver string,
+	coinType *coin.CoinType,
 ) {
-	var (
-		message string
-		fields  map[string]any
-	)
+	var message string
+	fields := map[string]any{
+		logs.FieldChain: chainID,
+		"sender":        sender,
+		"receiver":      receiver,
+	}
+
+	if coinType != nil {
+		fields[logs.FieldCoinType] = *coinType
+	}
 
 	if outbound {
-		message = "Restricted address detected in cctx"
-		fields = map[string]any{
-			logs.FieldChain:    chainID,
-			logs.FieldCoinType: token,
-			"identifier":       identifier,
-			"sender":           sender,
-			"receiver":         receiver,
-		}
+		message = "restricted address detected in CCTX"
+		fields["indentifier"] = identifier
 	} else {
-		message = "Restricted address detected in inbound"
-		fields = map[string]any{
-			logs.FieldChain:    chainID,
-			logs.FieldCoinType: token,
-			logs.FieldTx:       identifier,
-			"sender":           sender,
-			"receiver":         receiver,
-		}
+		message = "restricted address detected in inbound"
+		fields[logs.FieldTx] = identifier
 	}
 
 	logger.Warn().Fields(fields).Msg(message)
