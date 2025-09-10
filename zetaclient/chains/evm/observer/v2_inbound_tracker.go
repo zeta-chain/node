@@ -41,6 +41,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		)
 	}
 
+	eventFound := false
 	for _, log := range receipt.Logs {
 		if log == nil || log.Address != gatewayAddr {
 			continue
@@ -49,6 +50,8 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		// try parsing deposit
 		eventDeposit, err := gateway.ParseDeposited(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventDeposit.Sender,
@@ -68,6 +71,8 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		// try parsing deposit and call
 		eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventDepositAndCall.Sender,
@@ -87,6 +92,8 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		// try parsing call
 		eventCall, err := gateway.ParseCalled(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventCall.Sender,
@@ -102,6 +109,10 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return err
 			}
 		}
+	}
+
+	if eventFound {
+		return nil
 	}
 
 	return errors.Wrapf(ErrEventNotFound, "inbound tracker %s", tx.Hash)

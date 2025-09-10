@@ -30,8 +30,8 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
 
-	// add 1 fee to provided amount to pay for 2 inbounds (1st one is free)
-	r.EVMAuth.Value = new(big.Int).Add(amount, fee)
+	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
+	r.EVMAuth.Value = fee
 	defer func() {
 		r.EVMAuth.Value = previousValue
 	}()

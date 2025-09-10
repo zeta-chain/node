@@ -139,8 +139,8 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	// set value of the payable transactions
 	previousValue = r.EVMAuth.Value
-	// add 1 fee to provided amount to pay for 2 inbounds (1st one is free)
-	r.EVMAuth.Value = new(big.Int).Add(amount, fee)
+	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
+	r.EVMAuth.Value = fee
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple erc20 deposits through contract")

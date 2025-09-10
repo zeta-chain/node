@@ -4,7 +4,8 @@
 
 ### Breaking Changes
 
-* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and additional action fee should be set.
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
 
 ### Features
 

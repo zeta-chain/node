@@ -36,7 +36,7 @@ const (
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 
 	TestERC20DepositName                      = "erc20_deposit"
-	TestERC20MultipleDepositsName             = "erc20_multiple_deposits_name"
+	TestERC20MultipleDepositsName             = "erc20_multiple_deposits"
 	TestERC20DepositAndCallName               = "erc20_deposit_and_call"
 	TestERC20DepositAndCallNoMessageName      = "erc20_deposit_and_call_no_message"
 	TestERC20DepositAndCallRevertName         = "erc20_deposit_and_call_revert"
@@ -209,7 +209,7 @@ const (
 	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                   = "migrate_tss"
 	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
-	TestUpdateZRC20NameName              = "update_zrc20_name"
+	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
