@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 

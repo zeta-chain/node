@@ -134,16 +134,14 @@ func (c *Client) PostVoteOutbound(
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
 		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
 	})
-
 	if err != nil {
 		return "", ballotIndex, errors.Wrap(err, "unable to broadcast vote outbound")
 	}
 
 	go func() {
 		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
-		if errMonitor != nil {
+		err := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if err != nil {
 			c.logger.Error().Err(err).Msg("failed to monitor vote outbound result")
 		}
 	}()

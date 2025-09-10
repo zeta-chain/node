@@ -414,9 +414,9 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 
 	return map[string]any{
 		msgField:           must(req.MsgID()),
-		"tss.chain_id":     chainID,
-		"tss.block_height": blockHeight,
-		"tss.nonce":        nonce,
+		"tss_chain_id":     chainID,
+		"tss_block_height": blockHeight,
+		"tss_nonce":        nonce,
 	}
 }
 

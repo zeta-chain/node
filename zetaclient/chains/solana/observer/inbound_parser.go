@@ -97,7 +97,7 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 			p.logger.Info().
 				Stringer("signature", p.tx.Signatures[0]).
 				Str("location", location).
-				Uint32("eventIndex", p.eventIndex-1).
+				Uint32("event_index", p.eventIndex-1).
 				Msg("deposit detected")
 			return nil
 		}

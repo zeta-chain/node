@@ -145,7 +145,7 @@ func NewClient(
 
 	return &Client{
 		Clients: zetacoreClients,
-		logger:  logger.With().Str(logs.FieldModule, logs.ModNameClientZetaCore).Logger(),
+		logger:  logger.With().Str(logs.FieldModule, logs.ModNameZetaCoreClient).Logger(),
 		config:  zetacoreCfg,
 
 		cosmosClientContext: cosmosContext,

@@ -140,7 +140,7 @@ func (ob *Observer) postVoteOutbound(
 	if zetaTxHash != "" {
 		logger.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 }

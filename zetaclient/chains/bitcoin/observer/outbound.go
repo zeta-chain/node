@@ -199,9 +199,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
 	logFields := map[string]any{
-		logs.FieldTx:     res.TxID,
-		logs.FieldZetaTx: zetaHash,
-		logs.FieldBallot: ballot,
+		logs.FieldTx:          res.TxID,
+		logs.FieldZetaTx:      zetaHash,
+		logs.FieldBallotIndex: ballot,
 	}
 
 	if err != nil {

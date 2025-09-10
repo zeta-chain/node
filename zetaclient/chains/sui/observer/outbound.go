@@ -232,7 +232,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 		ob.Logger().Outbound.Info().
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 

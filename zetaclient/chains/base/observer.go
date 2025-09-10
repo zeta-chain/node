@@ -475,7 +475,7 @@ func (ob *Observer) PostVoteInbound(
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
-		Str(logs.FieldBallot, ballot).
+		Str(logs.FieldBallotIndex, ballot).
 		Logger()
 
 	switch {
@@ -512,9 +512,8 @@ func (ob *Observer) handleMonitoringError(
 		if monitorErr.Err != nil {
 			logger.Error().
 				Err(monitorErr).
-				Str(logs.FieldMethod, "handleMonitoringError").
 				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
-				Str(logs.FieldBallot, monitorErr.BallotIndex).
+				Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
 				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
 				Msg("error monitoring vote transaction")
 
@@ -546,7 +545,7 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 	withLogFields := func(l zerolog.Logger) zerolog.Logger {
 		return l.With().
 			Int64(logs.FieldChain, chain.ChainId).
-			Stringer(logs.FieldChainNetwork, chain.Network).
+			Stringer(logs.FieldNetwork, chain.Network).
 			Logger()
 	}
 

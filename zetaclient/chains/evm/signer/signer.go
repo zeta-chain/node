@@ -245,7 +245,7 @@ func (signer *Signer) TryProcessOutbound(
 		if r := recover(); r != nil {
 			signer.Logger().
 				Std.Error().
-				Str(logs.FieldCctx, cctx.Index).
+				Str(logs.FieldCctxIndex, cctx.Index).
 				Interface("panic", r).
 				Str("stack_trace", string(debug.Stack())).
 				Msg("caught panic error")
@@ -259,7 +259,7 @@ func (signer *Signer) TryProcessOutbound(
 		logger = signer.Logger().Std.With().
 			Int64(logs.FieldChain, signer.Chain().ChainId).
 			Uint64(logs.FieldNonce, params.TssNonce).
-			Str(logs.FieldCctx, cctx.Index).
+			Str(logs.FieldCctxIndex, cctx.Index).
 			Str("cctx_receiver", params.Receiver).
 			Stringer("cctx_amount", params.Amount).
 			Stringer("signer", myID).
@@ -428,7 +428,7 @@ func (signer *Signer) BroadcastOutbound(
 			Msg("unable to broadcast when toChain is zetaChain")
 		return
 	case tx == nil:
-		logger.Warn().Str(logs.FieldCctx, cctx.Index).Msg("no outbound tx to broadcast")
+		logger.Warn().Str(logs.FieldCctxIndex, cctx.Index).Msg("no outbound tx to broadcast")
 		return
 	}
 

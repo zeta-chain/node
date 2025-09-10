@@ -2,34 +2,32 @@ package logs
 
 // A group of predefined field keys and module names for zetaclient logs
 const (
-	// field keys
-	FieldModule       = "module"
-	FieldChain        = "chain"
-	FieldChainNetwork = "chain_network"
-	FieldBlock        = "block"
-	FieldNonce        = "nonce"
-	FieldTx           = "tx"
-	FieldCctx         = "cctx"
-	FieldZetaTx       = "zeta_tx"
-	FieldOutboundID   = "outbound_id"
-	FieldBallot       = "ballot"
-	FieldCoinType     = "coin_type"
+	FieldModule      = "module"
+	FieldChain       = "chain"
+	FieldNetwork     = "network"
+	FieldBlock       = "block"
+	FieldNonce       = "nonce"
+	FieldTx          = "tx"
+	FieldCctxIndex   = "cctx_index"
+	FieldZetaTx      = "zeta_tx"
+	FieldOutboundID  = "outbound_id"
+	FieldBallotIndex = "ballot_index"
+	FieldCoinType    = "coin_type"
 
-	// chain specific field keys
+	// chain specific
 	FieldBtcTxid = "txid"
 )
 
+// module names
 const (
-	// module names
 	ModNameOrchestrator   = "orchestrator"
 	ModNameInbound        = "inbound"
 	ModNameOutbound       = "outbound"
 	ModNameSigner         = "signer"
 	ModNameGasPrice       = "gas_price"
-	ModNameClientBTC      = "btc_client"
-	ModNameClientZetaCore = "zetacore_client"
-	// TODO: This seems excessive.
-	//       Replace for ModNameTss = "tss", then use FieldMethod for the suffixes?
+	ModNameBtcClient      = "btc_client"
+	ModNameZetaCoreClient = "zetacore_client"
+
 	ModNameTssHealthCheck = "tss_healthcheck"
 	ModNameTssKeyGen      = "tss_keygen"
 	ModNameTssKeySign     = "tss_keysign"
