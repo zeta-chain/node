@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 const (
@@ -44,6 +45,8 @@ func (signer *Signer) SignWithdrawTx(
 	txData *OutboundData,
 	ob *observer.Observer,
 ) (*wire.MsgTx, error) {
+	logger := signer.Logger().Std.With().Uint64(logs.FieldNonce, txData.nonce).Logger()
+
 	nonceMark := chains.NonceMarkAmount(txData.nonce)
 
 	// we don't know how many UTXOs will be used beforehand, so we do
@@ -90,10 +93,12 @@ func (signer *Signer) SignWithdrawTx(
 	if err != nil {
 		return nil, err
 	}
-	logger := signer.Logger().Std.With().Uint64("tx.nonce", txData.nonce).Int64("tx.size", txSize).Logger()
 	if txSize > common.OutboundBytesMax {
 		// in case of accident
-		logger.Warn().Msg("tx size is greater than outboundBytesMax")
+		logger.Warn().
+			Int64("tx_size", txSize).
+			Int64("outbound_bytes_max", common.OutboundBytesMax).
+			Msg("tx size is greater than outbound bytes max")
 		txSize = common.OutboundBytesMax
 	}
 
@@ -103,19 +108,21 @@ func (signer *Signer) SignWithdrawTx(
 
 	// add tx outputs
 	inputValue := selected.Value
-	if err := signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx); err != nil {
+	err = signer.AddWithdrawTxOutputs(tx,
+		txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
+	if err != nil {
 		return nil, err
 	}
-	signer.Logger().
-		Std.Info().
-		Uint64("tx.rate", txData.feeRate).
-		Int64("tx.fees", fees).
-		Uint16("tx.consolidated_utxos", selected.ConsolidatedUTXOs).
-		Float64("tx.consolidated_value", selected.ConsolidatedValue).
+	logger.Info().
+		Uint64("tx_rate", txData.feeRate).
+		Int64("tx_fees", fees).
+		Uint16("tx_consolidated_utxos", selected.ConsolidatedUTXOs).
+		Float64("tx_consolidated_value", selected.ConsolidatedValue).
 		Msg("signing bitcoin outbound")
 
 	// sign the tx
-	if err := signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce); err != nil {
+	err = signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce)
+	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
 
@@ -181,7 +188,9 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	if remainingSats < 0 {
 		return fmt.Errorf("remainder value is negative: %d", remainingSats)
 	} else if remainingSats == nonceMark {
-		signer.Logger().Std.Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
+		signer.Logger().Std.Info().
+			Int64("remaining_sats", remainingSats).
+			Msg("adjust remainder value to avoid duplicate nonce-mark")
 		remainingSats--
 	}
 

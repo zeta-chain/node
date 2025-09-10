@@ -250,20 +250,19 @@ func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 
-	lf := map[string]any{
-		logs.FieldMethod: "SetLastStuckOutbound",
-	}
+	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "SetLastStuckOutbound").Logger()
 
 	if stuckTx != nil {
-		lf[logs.FieldNonce] = stuckTx.Nonce
-		lf[logs.FieldTx] = stuckTx.Tx.MsgTx().TxID()
-		ob.logger.Outbound.Warn().
-			Fields(lf).
-			Msgf("Bitcoin outbound is stuck for %f minutes", stuckTx.StuckFor.Minutes())
+		logger.Warn().
+			Uint64(logs.FieldNonce, stuckTx.Nonce).
+			Str(logs.FieldTx, stuckTx.Tx.MsgTx().TxID()).
+			Float64("duration_in_minutes", stuckTx.StuckFor.Minutes()).
+			Msg("bitcoin outbound is stuck")
 	} else if ob.lastStuckTx != nil {
-		lf[logs.FieldNonce] = ob.lastStuckTx.Nonce
-		lf[logs.FieldTx] = ob.lastStuckTx.Tx.MsgTx().TxID()
-		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
+		logger.Info().
+			Uint64(logs.FieldNonce, ob.lastStuckTx.Nonce).
+			Str(logs.FieldTx, ob.lastStuckTx.Tx.MsgTx().TxID()).
+			Msg("bitcoin outbound is no longer stuck")
 	}
 	ob.lastStuckTx = stuckTx
 }
@@ -322,7 +321,7 @@ func (ob *Observer) updateLastBlock(ctx context.Context) error {
 	// 0 will be returned if the node is not synced
 	if blockNumber == 0 {
 		ob.nodeEnabled.Store(false)
-		ob.Logger().Chain.Debug().Err(err).Msg("Bitcoin node is not enabled")
+		ob.Logger().Chain.Debug().Err(err).Msg("bitcoin node is not enabled")
 		return nil
 	}
 	ob.nodeEnabled.Store(true)
