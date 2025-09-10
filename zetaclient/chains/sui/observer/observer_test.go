@@ -61,9 +61,11 @@ func TestObserver(t *testing.T) {
 	t.Run("ObserveInbound", func(t *testing.T) {
 		// ARRANGE
 		previousPackageID := sample.SuiAddress(t)
+		originalPackageID := sample.SuiAddress(t)
 		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 			cfg.withdrawCapID = sample.SuiAddress(t)
 			cfg.previousPackageID = previousPackageID
+			cfg.originalPackageID = originalPackageID
 		})
 
 		evmBob := sample.EthAddress()
@@ -73,7 +75,7 @@ func TestObserver(t *testing.T) {
 
 		// Given list of gateway events...
 		expectedQuery := client.EventQuery{
-			PackageID: previousPackageID,
+			PackageID: originalPackageID,
 			Module:    sui.GatewayModule,
 			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
@@ -81,19 +83,19 @@ func TestObserver(t *testing.T) {
 
 		// ...two of which are valid (1 & 3)
 		events := []models.SuiEventResponse{
-			ts.SampleEvent(previousPackageID, "TX_1_ok", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(originalPackageID, "TX_1_ok", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent(previousPackageID, "TX_2_unrelated_event", "something", map[string]any{
+			ts.SampleEvent(originalPackageID, "TX_2_unrelated_event", "something", map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent(previousPackageID, "TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
+			ts.SampleEvent(originalPackageID, "TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
 				// USDC
 				"coin_type": usdc,
 				"amount":    "300",
@@ -101,7 +103,7 @@ func TestObserver(t *testing.T) {
 				"receiver":  evmAlice.String(),
 				"payload":   preparePayload([]byte{1, 2, 3}),
 			}),
-			ts.SampleEvent(previousPackageID, "TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(originalPackageID, "TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "hello",
 				"sender":    "SUI_BOB",
@@ -126,7 +128,7 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is on INVALID event, that's expected
-		require.Equal(t, "TX_4_invalid_data,0", ts.GetAuxString(previousPackageID))
+		require.Equal(t, "TX_4_invalid_data,0", ts.GetAuxString(originalPackageID))
 
 		// Check for transactions
 		require.Equal(t, 2, len(ts.inboundVotesBag))
@@ -219,9 +221,11 @@ func TestObserver(t *testing.T) {
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {
 		// ARRANGE
 		previousPackageID := sample.SuiAddress(t)
+		originalPackageID := sample.SuiAddress(t)
 		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 			cfg.withdrawCapID = sample.SuiAddress(t)
 			cfg.previousPackageID = previousPackageID
+			cfg.originalPackageID = originalPackageID
 		})
 
 		// Given inbound tracker
@@ -241,7 +245,7 @@ func TestObserver(t *testing.T) {
 		evmAlice := sample.EthAddress()
 
 		ts.OnGetTx(txHash, "15000", true, true, []models.SuiEventResponse{
-			ts.SampleEvent(previousPackageID, txHash, string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(originalPackageID, txHash, string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
 				"sender":    "SUI_ALICE",
@@ -516,22 +520,23 @@ func TestObserver(t *testing.T) {
 func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 	withdrawCapID := sample.SuiAddress(t)
 	previousPackageID := sample.SuiAddress(t)
+	originalPackageID := previousPackageID
 
 	tests := []struct {
 		name              string
 		cursor            string
-		previousPackageID string
+		originalPackageID string
 		wantKey           string
 	}{
 		{
-			name:              "migration with empty previous package ID",
+			name:              "migration with empty original package ID",
 			cursor:            "HBgprKGko6Kk1q7cjZpg1KHVUqFXE7PFhT2M9DaPAezi,0",
-			previousPackageID: "",
+			originalPackageID: "",
 		},
 		{
-			name:              "migration with non-empty previous package ID",
+			name:              "migration with non-empty original package ID",
 			cursor:            "DVmb9QoJKRvSZfw6SkL8Zp1vRESxS7RuHy6XEYGT7WWn,0",
-			previousPackageID: previousPackageID,
+			originalPackageID: originalPackageID,
 		},
 	}
 
@@ -540,10 +545,11 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			// ARRANGE
 			ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 				cfg.withdrawCapID = withdrawCapID
-				cfg.previousPackageID = tt.previousPackageID
+				cfg.previousPackageID = previousPackageID
+				cfg.originalPackageID = tt.originalPackageID
 			})
 			packageID := ts.Gateway().PackageID()
-			previousPackageID := ts.Gateway().Previous().PackageID()
+			originalPackageID := ts.Gateway().Original().PackageID()
 
 			// write a pre-v35 old cursor to the DB
 			err := ts.WriteLastTxScannedToDB(tt.cursor)
@@ -562,14 +568,14 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			// ASSERT
 			require.NoError(t, err)
 
-			// ensure the new cursor is stored under previous package ID
-			newCursor, err := ts.ReadAuxStringFromDB(previousPackageID)
+			// ensure the new cursor is stored under original package ID
+			newCursor, err := ts.ReadAuxStringFromDB(originalPackageID)
 			require.NoError(t, err)
 			require.Equal(t, tt.cursor, newCursor)
-			require.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
+			require.Equal(t, tt.cursor, ts.GetAuxString(originalPackageID))
 
 			// ensure nothing is stored under new package ID
-			if packageID != previousPackageID {
+			if packageID != originalPackageID {
 				cursor, err := ts.ReadAuxStringFromDB(packageID)
 				require.ErrorContains(t, err, "record not found")
 				require.Empty(t, cursor)
@@ -589,10 +595,10 @@ func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
 			require.NoError(t, err)
 
 			// ensure the new cursor stay untouched
-			cursor, err := ts.ReadAuxStringFromDB(previousPackageID)
+			cursor, err := ts.ReadAuxStringFromDB(originalPackageID)
 			require.NoError(t, err)
 			require.Equal(t, tt.cursor, cursor)
-			require.Equal(t, tt.cursor, ts.GetAuxString(previousPackageID))
+			require.Equal(t, tt.cursor, ts.GetAuxString(originalPackageID))
 		})
 	}
 }
@@ -615,6 +621,7 @@ type testSuite struct {
 type testSuiteConfig struct {
 	withdrawCapID     string
 	previousPackageID string
+	originalPackageID string
 }
 
 func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
@@ -629,9 +636,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 	require.NotEmpty(t, chainParams.GatewayAddress)
 
-	// append withdraw cap ID and previous package ID if provided
-	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID)
+	// append withdraw cap ID, previous package ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
 	}
 
 	zetacore := mocks.NewZetacoreClient(t).

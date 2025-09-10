@@ -325,6 +325,7 @@ type testSuite struct {
 type testSuiteConfig struct {
 	withdrawCapID     string
 	previousPackageID string
+	originalPackageID string
 }
 
 func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
@@ -346,9 +347,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 		logger     = base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 	)
 
-	// append withdraw cap ID and previous package ID if provided
-	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID)
+	// append withdraw cap ID, previous package ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
 	}
 
 	suiMock := mocks.NewSuiClient(t)

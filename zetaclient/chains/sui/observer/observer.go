@@ -86,12 +86,12 @@ func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
 	}
 
 	// Sui chain params may or may not contain new gateway package ID
-	// the 'previousPackageID' should be used as the DB key for old cursor
-	previousPackageID := ob.gateway.Previous().PackageID()
-	if err := ob.WriteAuxStringToDB(previousPackageID, oldCursor); err != nil {
-		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", previousPackageID)
+	// the 'originalPackageID' should be used as the DB key for old cursor
+	originalPackageID := ob.gateway.Original().PackageID()
+	if err := ob.WriteAuxStringToDB(originalPackageID, oldCursor); err != nil {
+		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", originalPackageID)
 	}
-	ob.WithAuxString(previousPackageID, oldCursor)
+	ob.WithAuxString(originalPackageID, oldCursor)
 
 	// set old cursor to empty value
 	if err := ob.WriteLastTxScannedToDB(""); err != nil {
@@ -100,7 +100,7 @@ func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
 	ob.WithLastTxScanned("")
 
 	ob.Logger().Inbound.Info().
-		Str("package", previousPackageID).
+		Str("package", originalPackageID).
 		Str("cursor", oldCursor).
 		Msgf("Migrated inbound cursor")
 

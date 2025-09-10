@@ -25,9 +25,9 @@ var (
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	// always query inbound events from previous gateway package
+	// always query inbound events from original gateway package
 	// querying events from upgraded packageID will get nothing
-	packageID := ob.gateway.Previous().PackageID()
+	packageID := ob.gateway.Original().PackageID()
 	if err := ob.observeGatewayInbound(ctx, packageID); err != nil {
 		return errors.Wrap(err, "unable to observe gateway inbound")
 	}
