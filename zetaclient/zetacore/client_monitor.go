@@ -7,6 +7,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -149,6 +150,7 @@ func (c *Client) monitorVoteInboundResult(
 		c.logger.Debug().Fields(logFields).Msg("monitorVoteInboundResult: out of gas")
 
 		if retryGasLimit > 0 {
+			c.QueryBallot(ctx, msg)
 			// new retryGasLimit set to 0 to prevent reentering this function
 			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
 				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
@@ -163,6 +165,38 @@ func (c *Client) monitorVoteInboundResult(
 	}
 
 	return nil
+}
+
+func (c *Client) QueryBallot(ctx context.Context, msg *types.MsgVoteInbound) {
+	ballotIndex := msg.Digest()
+	ballot, err := c.GetBallot(ctx, ballotIndex)
+	if err != nil {
+		c.logger.Error().Err(err).Str("ballot.index", ballotIndex).Msg("QueryBallot: failed to query ballot")
+		return
+	}
+
+	totalVotes := len(ballot.Voters)
+	successVotes := 0
+	failVotes := 0
+	noVotes := 0
+	for _, vote := range ballot.Voters {
+		switch vote.VoteType {
+		case observertypes.VoteType_SuccessObservation:
+			successVotes++
+		case observertypes.VoteType_FailureObservation:
+			failVotes++
+		case observertypes.VoteType_NotYetVoted:
+			noVotes++
+		}
+	}
+
+	votes := map[string]any{
+		"total":   totalVotes,
+		"success": successVotes,
+		"fail":    failVotes,
+		"no_vote": noVotes,
+	}
+	c.logger.Debug().Fields(votes).Msgf("QueryBallot Before Executing with higher limit: ballot status %s", ballot.BallotStatus.String())
 }
 
 func retryWithBackoff(call func() error, attempts int, minInternal, maxInterval time.Duration) error {
