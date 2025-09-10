@@ -518,3 +518,23 @@ func (r *E2ERunner) suiTransferObjectToTSS(signer *zetasui.SignerSecp256k1, obje
 
 	r.suiExecuteTx(signer, tx)
 }
+
+// suiGetOwnedObjectID gets the first owned object ID by owner address and struct type
+func (r *E2ERunner) suiGetOwnedObjectID(ownerAddress, structType string) (string, bool) {
+	res, err := r.Clients.Sui.SuiXGetOwnedObjects(r.Ctx, models.SuiXGetOwnedObjectsRequest{
+		Address: ownerAddress,
+		Query: models.SuiObjectResponseQuery{
+			Filter: map[string]any{
+				"StructType": structType,
+			},
+		},
+		Limit: 1,
+	})
+	require.NoError(r, err)
+
+	if len(res.Data) == 0 {
+		return "", false
+	}
+
+	return res.Data[0].Data.ObjectId, true
+}
