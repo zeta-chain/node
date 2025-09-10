@@ -43,7 +43,7 @@ func PrintComplianceLog(
 
 	if outbound {
 		message = "restricted address detected in CCTX"
-		fields["indentifier"] = identifier
+		fields[logs.FieldCctxIndex] = identifier
 	} else {
 		message = "restricted address detected in inbound"
 		fields[logs.FieldTx] = identifier
