@@ -561,7 +561,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallHighGasUsageName,
-		"deposit Ether into ZEVM and call a contract that that consumes high gas",
+		"deposit Ether into ZEVM and call a contract that consumes high gas",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
