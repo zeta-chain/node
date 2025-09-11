@@ -319,8 +319,15 @@ func (ob *Observer) LoadLastBlockScanned() error {
 	return nil
 }
 
+// Scanner height H + 10
+// Monitering H
+
+//
+
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
+	// We always set forceResetLastScanned to false when starting a new scan
+	// The only time this flag can be true is if the monitering thread updated the last scanned value in the middle of scanning in which case we would rescan form the new value
 	if ob.forceResetLastScanned {
 		ob.forceResetLastScanned = false
 		return nil
