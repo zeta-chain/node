@@ -27,6 +27,7 @@
 * [4142](https://github.com/zeta-chain/node/pull/4142) - fix Solana flaky SPL deposit e2e test in live networks
 * [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 * [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
+* [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
 
 ## v33.0.0
 

@@ -5,11 +5,16 @@ pragma solidity ^0.8.26;
 contract TestGasConsumer {
     // used to simulate gas consumption
     uint256[] private storageArray;
+    uint256 private immutable targetGas;
 
     struct zContext {
         bytes origin;
         address sender;
         uint256 chainID;
+    }
+
+    constructor(uint256 _targetGas) {
+        targetGas = _targetGas;
     }
 
     // Universal contract interface on ZEVM
@@ -25,8 +30,6 @@ contract TestGasConsumer {
     }
 
     function consumeGas() internal {
-        // Approximate target gas consumption
-        uint256 targetGas = 1500000;
         // Approximate gas cost for a single storage write
         uint256 storageWriteGasCost = 20000;
         uint256 iterations = targetGas / storageWriteGasCost;
