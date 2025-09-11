@@ -2,6 +2,7 @@ package zetacore
 
 import (
 	"context"
+	"math/rand"
 
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/go-tss/blame"
@@ -181,9 +182,18 @@ func (c *Client) PostVoteInbound(
 		return "", ballotIndex, nil
 	}
 
-	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
+	// simulate occasional fail to broadcast vote
+	coinToss := rand.Intn(2) == 1
+	fc := func() (string, error) {
 		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
-	})
+	}
+	if coinToss {
+		fc = func() (string, error) {
+			return c.BroadcastWithSequence(ctx, gasLimit, authzMsg, authzSigner, 10000)
+		}
+	}
+
+	zetaTxHash, err := retry.DoTypedWithRetry(fc)
 
 	if err != nil {
 		return "", ballotIndex, errors.Wrap(err, "unable to broadcast vote inbound")

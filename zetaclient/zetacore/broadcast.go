@@ -208,3 +208,122 @@ func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash s
 		return true, false
 	}
 }
+
+// BroadcastWithSequence broadcasts tx to ZetaChain with custom sequence
+func (c *Client) BroadcastWithSequence(
+	ctx context.Context,
+	gasLimit uint64,
+	authzWrappedMsg sdktypes.Msg,
+	authzSigner authz.Signer,
+	sequence uint64,
+) (string, error) {
+	blockHeight, err := c.GetBlockHeight(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get block height")
+	}
+
+	baseGasPrice, err := c.GetBaseGasPrice(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get base gas price")
+	}
+
+	// shouldn't happen, but just in case
+	if baseGasPrice == 0 {
+		baseGasPrice = DefaultBaseGasPrice
+	}
+
+	// multiply gas price by the system tx reduction rate
+	adjustedBaseGasPrice := sdkmath.LegacyNewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if blockHeight > c.blockHeight {
+		c.blockHeight = blockHeight
+		accountNumber, seqNumber, err := c.GetAccountNumberAndSequenceNumber(authzSigner.KeyType)
+		if err != nil {
+			return "", err
+		}
+
+		c.accountNumber[authzSigner.KeyType] = accountNumber
+
+		if c.seqNumber[authzSigner.KeyType] < seqNumber {
+			c.seqNumber[authzSigner.KeyType] = seqNumber
+		}
+	}
+
+	factory, err := clienttx.NewFactoryCLI(c.cosmosClientContext, flag.NewFlagSet("zetaclient", 0))
+	if err != nil {
+		return "", err
+	}
+
+	factory = factory.
+		WithAccountNumber(c.accountNumber[authzSigner.KeyType]).
+		WithSequence(sequence).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to build unsigned tx")
+	}
+
+	builder.SetGasLimit(gasLimit)
+
+	// #nosec G115 always in range
+	fee := sdktypes.NewCoins(sdktypes.NewCoin(
+		config.BaseDenom,
+		sdkmath.NewInt(int64(gasLimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt()),
+	))
+	builder.SetFeeAmount(fee)
+
+	err = c.SignTx(ctx, factory, c.cosmosClientContext.GetFromName(), builder, true)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to sign tx")
+	}
+
+	txBytes, err := c.cosmosClientContext.TxConfig.TxEncoder()(builder.GetTx())
+	if err != nil {
+		return "", errors.Wrap(err, "unable to encode tx")
+	}
+
+	// broadcast to a Tendermint node
+	commit, err := c.cosmosClientContext.BroadcastTxAsync(txBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "fail to broadcast tx sync")
+	}
+
+	// Code will be the tendermint ABICode,
+	// it starts at 1, so if it is an error, code will not be zero.
+	if commit.Code == 0 {
+		// increment seqNum
+		//c.seqNumber[authzSigner.KeyType]++
+
+		return commit.TxHash, nil
+	}
+
+	if commit.Code == 32 {
+		matches := accountSequenceMismatchRegex.FindStringSubmatch(commit.RawLog)
+		if len(matches) != 3 {
+			return "", fmt.Errorf("code 32, no matches: %s", commit.RawLog)
+		}
+
+		expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
+		if err != nil {
+			return "", errors.Wrapf(err, "code 32, cannot parse expected seq %q", matches[1])
+		}
+
+		gotSeq, err := strconv.ParseUint(matches[2], 10, 64)
+		if err != nil {
+			return "", errors.Wrapf(err, "code 32, cannot parse got seq %q", matches[2])
+		}
+
+		c.logger.Warn().
+			Uint64("from", gotSeq).
+			Uint64("to", expectedSeq).
+			Msg("reset seq number (from err msg)")
+
+		c.seqNumber[authzSigner.KeyType] = expectedSeq
+	}
+
+	return commit.TxHash, fmt.Errorf("failed to broadcast tx (code: %d). Log: %s", commit.Code, commit.RawLog)
+}
