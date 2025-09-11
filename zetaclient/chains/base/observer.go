@@ -496,7 +496,7 @@ func (ob *Observer) handleMonitoringError(
 				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
 				Msg("monitoring error occurred , updating last scanned block")
 
-			err := ob.SaveLastBlockScanned(monitorErr.InboundBlockHeight)
+			err := ob.SaveLastBlockScannedIfOlder(monitorErr.InboundBlockHeight - 1)
 			if err != nil {
 				return
 			}

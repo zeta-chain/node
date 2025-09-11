@@ -95,6 +95,7 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 //
 // example 1: given lastBlock =  99, lastScanned = 90, confirmation = 10, then no unscanned block
 // example 2: given lastBlock = 100, lastScanned = 90, confirmation = 10, then 1 unscanned block (block 91)
+// example 3: given lastBlock = 100, lastScanned = 50, confirmation = 10, then 10 unscanned blocks[50 - 60] (last scanned is reset by monitoring thread)
 func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit uint64) (from uint64, end uint64) {
 	// got unscanned blocks or not?
 	// returning same values to indicate no unscanned block
