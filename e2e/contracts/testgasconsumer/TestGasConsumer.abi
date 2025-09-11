@@ -2,6 +2,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_targetGas",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "bytes",
