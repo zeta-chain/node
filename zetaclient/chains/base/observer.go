@@ -15,9 +15,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -320,6 +322,16 @@ func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
+func (ob *Observer) SaveLastBlockScannedIfOlder(blockNumber uint64) error {
+	currentLastScanned := ob.LastBlockScanned()
+	if blockNumber > currentLastScanned {
+		return nil
+	}
+
+	ob.WithLastBlockScanned(blockNumber)
+	return ob.WriteLastBlockScannedToDB(blockNumber)
+}
+
 // WriteLastBlockScannedToDB saves the last scanned block to the database.
 func (ob *Observer) WriteLastBlockScannedToDB(lastScannedBlock uint64) error {
 	return ob.db.Client().Save(clienttypes.ToLastBlockSQLType(lastScannedBlock)).Error
@@ -434,8 +446,10 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
+	monitorErrCh := make(chan zetaerrors.MonitorError, 1)
+
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
@@ -452,7 +466,44 @@ func (ob *Observer) PostVoteInbound(
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 
+	go func() {
+		ctxForHandler := zctx.Copy(ctx, context.Background())
+		ob.handleMonitoringError(ctxForHandler, monitorErrCh, logger)
+	}()
+
 	return ballot, nil
+}
+
+func (ob *Observer) handleMonitoringError(
+	ctx context.Context,
+	monitorErrCh <-chan zetaerrors.MonitorError,
+	logger zerolog.Logger,
+) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
+		}
+	}()
+
+	select {
+	case monitorErr := <-monitorErrCh:
+		if monitorErr.Err != nil {
+			logger.Error().
+				Err(monitorErr.Err).
+				Str(logs.FieldMethod, "handleMonitoringError").
+				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+				Str(logs.FieldBallot, monitorErr.BallotIndex).
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
+				Msg("monitoring error occurred , updating last scanned block")
+
+			err := ob.SaveLastBlockScanned(monitorErr.InboundBlockHeight)
+			if err != nil {
+				return
+			}
+		}
+	case <-ctx.Done():
+		logger.Debug().Msg("context cancelled while waiting for monitoring result")
+	}
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
