@@ -78,6 +78,8 @@ type Observer struct {
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
+
+	forceResetLastScanned bool
 }
 
 // NewObserver creates a new base observer.
@@ -97,19 +99,20 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetacoreClient:   zetacoreClient,
-		tss:              tss,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
+		chain:                 chain,
+		chainParams:           chainParams,
+		zetacoreClient:        zetacoreClient,
+		tss:                   tss,
+		lastBlock:             0,
+		lastBlockScanned:      0,
+		lastTxScanned:         "",
+		ts:                    ts,
+		db:                    database,
+		blockCache:            blockCache,
+		mu:                    &sync.Mutex{},
+		logger:                newObserverLogger(chain, logger),
+		stop:                  make(chan struct{}),
+		forceResetLastScanned: false,
 	}, nil
 }
 
@@ -318,16 +321,20 @@ func (ob *Observer) LoadLastBlockScanned() error {
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
+	if ob.forceResetLastScanned {
+		ob.forceResetLastScanned = false
+		return nil
+	}
 	ob.WithLastBlockScanned(blockNumber)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
-func (ob *Observer) SaveLastBlockScannedIfOlder(blockNumber uint64) error {
+func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
 	currentLastScanned := ob.LastBlockScanned()
 	if blockNumber > currentLastScanned {
 		return nil
 	}
-
+	ob.forceResetLastScanned = true
 	ob.WithLastBlockScanned(blockNumber)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
@@ -495,7 +502,7 @@ func (ob *Observer) handleMonitoringError(
 				Str(logs.FieldBallot, monitorErr.BallotIndex).
 				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight)
 
-			err := ob.SaveLastBlockScannedIfOlder(monitorErr.InboundBlockHeight - 1)
+			err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
 			if err != nil {
 				logger.Error().Err(err).
 					Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
