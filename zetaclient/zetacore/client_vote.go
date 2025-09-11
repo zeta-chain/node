@@ -162,7 +162,7 @@ func (c *Client) PostVoteInbound(
 	ctx context.Context,
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
-	monitorErrCh chan<- zetaerrors.MonitorError,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) (string, string, error) {
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -202,7 +202,7 @@ func (c *Client) PostVoteInbound(
 
 			if monitorErrCh != nil {
 				select {
-				case monitorErrCh <- zetaerrors.MonitorError{
+				case monitorErrCh <- zetaerrors.ErrTxMonitor{
 					Err:                errMonitor,
 					InboundBlockHeight: msg.InboundBlockHeight,
 					ZetaTxHash:         zetaTxHash,

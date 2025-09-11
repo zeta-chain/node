@@ -107,7 +107,7 @@ func (c *Client) MonitorVoteInboundResult(
 	zetaTxHash string,
 	retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
-	monitorErrCh chan<- zetaerrors.MonitorError,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
 	logger := c.logger.With().
 		Str(logs.FieldMethod, "MonitorVoteInboundResult").
@@ -142,7 +142,7 @@ func (c *Client) monitorVoteInboundResult(
 	zetaTxHash string,
 	retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
-	monitorErrCh chan<- zetaerrors.MonitorError,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
 	// query tx result from ZetaChain
 	txResult, err := c.QueryTxResult(zetaTxHash)

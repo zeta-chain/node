@@ -11,6 +11,9 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -22,8 +25,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -445,7 +446,7 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
-	monitorErrCh := make(chan zetaerrors.MonitorError, 1)
+	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
@@ -475,7 +476,7 @@ func (ob *Observer) PostVoteInbound(
 
 func (ob *Observer) handleMonitoringError(
 	ctx context.Context,
-	monitorErrCh <-chan zetaerrors.MonitorError,
+	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
 ) {
 	logger := ob.logger.Inbound
 	defer func() {
