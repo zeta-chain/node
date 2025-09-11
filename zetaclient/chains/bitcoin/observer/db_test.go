@@ -96,7 +96,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obOther := newTestSuite(t, chain)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
-		obOther.WithLastBlockScanned(0)
+		obOther.WithLastBlockScanned(0, false)
 
 		// attach a mock btc client that returns rpc error
 		obOther.client.ExpectedCalls = nil

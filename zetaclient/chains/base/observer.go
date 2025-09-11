@@ -225,7 +225,17 @@ func (ob *Observer) LastBlockScanned() uint64 {
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	// forceResetLastScanned is set to true only by the monitoring thread
+	if ob.forceResetLastScanned && !forceResetLastScanned {
+		ob.forceResetLastScanned = false
+		return ob
+	}
+
+	ob.forceResetLastScanned = forceResetLastScanned
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
 	return ob
@@ -304,7 +314,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
-		ob.WithLastBlockScanned(blockNumber)
+		ob.WithLastBlockScanned(blockNumber, false)
 		return nil
 	}
 
@@ -314,35 +324,29 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber, false)
 
 	return nil
 }
 
-// Scanner height H + 10
-// Monitering H
-
-//
-
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-	// We always set forceResetLastScanned to false when starting a new scan
-	// The only time this flag can be true is if the monitering thread updated the last scanned value in the middle of scanning in which case we would rescan form the new value
-	if ob.forceResetLastScanned {
-		ob.forceResetLastScanned = false
+	forceResetLastScannedBeforeUpdate := ob.forceResetLastScanned
+	ob.WithLastBlockScanned(blockNumber, false)
+	if forceResetLastScannedBeforeUpdate {
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
+// ForceSaveLastBlockScanned saves the last scanned block to memory if the new blocknumber is less than the current last scanned block.
+// It also forces the update of the last scanned block in the database, to makes sure any other the block gets rescanned.
 func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
 	currentLastScanned := ob.LastBlockScanned()
 	if blockNumber > currentLastScanned {
 		return nil
 	}
-	ob.forceResetLastScanned = true
-	ob.WithLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber, true)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
@@ -396,7 +400,7 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 	ob.WithLastTxScanned(txHash)
 
 	// update last_scanned_block_number metrics
-	ob.WithLastBlockScanned(slot)
+	ob.WithLastBlockScanned(slot, false)
 
 	return ob.WriteLastTxScannedToDB(txHash)
 }
