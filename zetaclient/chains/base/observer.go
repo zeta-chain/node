@@ -494,9 +494,9 @@ func (ob *Observer) handleMonitoringError(
 				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
 				Str(logs.FieldBallot, monitorErr.BallotIndex).
 				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
-				Msg("monitoring error occurred , updating last scanned block")
+				Msg("monitoring error occurred, updating last scanned block")
 
-			err := ob.SaveLastBlockScanned(monitorErr.InboundBlockHeight)
+			err := ob.SaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
 			if err != nil {
 				return
 			}
