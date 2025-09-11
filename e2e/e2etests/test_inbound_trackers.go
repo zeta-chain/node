@@ -60,7 +60,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🍾 eth deposit and call observed")
 
 	// send erc20 deposit
-	r.Logger.Print("🏃test  erc20 deposit")
+	r.Logger.Print("🏃test erc20 deposit")
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 	tx = r.ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
@@ -88,8 +88,11 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🍾 call observed")
 
 	// set value of the payable transactions
-	previousValue := r.EVMAuth.Value
+	firstValue := r.EVMAuth.Value
 	r.EVMAuth.Value = amount
+	defer func() {
+		r.EVMAuth.Value = firstValue
+	}()
 
 	// send deposit through contract
 	r.Logger.Print("🏃test deposit through contract")
@@ -106,7 +109,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🍾 deposit and call through contract observed")
 
 	// reset the value of the payable transactions
-	r.EVMAuth.Value = previousValue
+	r.EVMAuth.Value = firstValue
 
 	// send call through contract
 	r.Logger.Print("🏃test call through contract")
@@ -116,7 +119,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🍾 call through contract observed")
 
 	// set value of the payable transactions
-	previousValue = r.EVMAuth.Value
+	previousValue := r.EVMAuth.Value
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
 	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
@@ -138,7 +141,6 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.WaitForTxReceiptOnEVM(tx)
 
 	// set value of the payable transactions
-	previousValue = r.EVMAuth.Value
 	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
 	r.EVMAuth.Value = fee
 
@@ -154,7 +156,4 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 2)
 	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")
-
-	// reset the value of the payable transactions
-	r.EVMAuth.Value = previousValue
 }
