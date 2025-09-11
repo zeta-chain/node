@@ -86,7 +86,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestEthStress, false, "set to true to run eth stress tests")
-	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run sSlana stress tests")
+	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run Solana stress tests")
 	cmd.Flags().Bool(flagTestSuiStress, false, "set to true to run sui stress tests")
 	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run Solana tests")
