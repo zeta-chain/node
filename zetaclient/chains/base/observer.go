@@ -11,9 +11,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -25,6 +22,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -468,7 +467,7 @@ func (ob *Observer) PostVoteInbound(
 
 	go func() {
 		ctxForHandler := zctx.Copy(ctx, context.Background())
-		ob.handleMonitoringError(ctxForHandler, monitorErrCh, logger)
+		ob.handleMonitoringError(ctxForHandler, monitorErrCh)
 	}()
 
 	return ballot, nil
@@ -477,8 +476,8 @@ func (ob *Observer) PostVoteInbound(
 func (ob *Observer) handleMonitoringError(
 	ctx context.Context,
 	monitorErrCh <-chan zetaerrors.MonitorError,
-	logger zerolog.Logger,
 ) {
+	logger := ob.logger.Inbound
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
@@ -489,16 +488,17 @@ func (ob *Observer) handleMonitoringError(
 	case monitorErr := <-monitorErrCh:
 		if monitorErr.Err != nil {
 			logger.Error().
-				Err(monitorErr.Err).
+				Err(monitorErr).
 				Str(logs.FieldMethod, "handleMonitoringError").
 				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
 				Str(logs.FieldBallot, monitorErr.BallotIndex).
-				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
-				Msg("monitoring error occurred , updating last scanned block")
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight)
 
 			err := ob.SaveLastBlockScannedIfOlder(monitorErr.InboundBlockHeight - 1)
 			if err != nil {
-				return
+				logger.Error().Err(err).
+					Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+					Msg("unable to save last scanned block after monitoring error")
 			}
 		}
 	case <-ctx.Done():
