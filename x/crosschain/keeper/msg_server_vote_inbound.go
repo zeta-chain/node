@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/pkg/errors"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,6 +65,11 @@ func (k msgServer) VoteInbound(
 	// vote on inbound ballot
 	// use a temporary context to not commit any ballot state change in case of error
 	tmpCtx, commit := ctx.CacheContext()
+
+	// the message fail for every even block
+	if ctx.BlockHeight()%2 == 0 {
+		return nil, errors.New("simulated error")
+	}
 
 	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
 		tmpCtx,
