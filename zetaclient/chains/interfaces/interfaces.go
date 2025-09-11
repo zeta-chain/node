@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -43,6 +44,7 @@ type ZetacoreVoter interface {
 		ctx context.Context,
 		gasLimit, retryGasLimit uint64,
 		msg *crosschaintypes.MsgVoteInbound,
+		monitorErrCh chan<- zetaerrors.MonitorError,
 	) (string, string, error)
 	PostVoteOutbound(
 		ctx context.Context,

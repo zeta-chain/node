@@ -614,7 +614,7 @@ func (ts *testSuite) CatchInboundVotes() {
 	}
 
 	ts.zetaMock.
-		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
 }
