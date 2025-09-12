@@ -1,6 +1,8 @@
 package memo
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -15,12 +17,13 @@ const (
 	bitPosPayload       uint8 = 1 // payload
 	bitPosRevertAddress uint8 = 2 // revertAddress
 	bitPosAbortAddress  uint8 = 3 // abortAddress
-	bitPosRevertMessage uint8 = 4 // revertMessage
+	bitPosCallOnRevert  uint8 = 4 // callOnRevert
+	bitPosRevertMessage uint8 = 5 // revertMessage
 )
 
 const (
 	// MaskFlagsReserved is the mask for reserved data flags
-	MaskFlagsReserved = 0b11100000
+	MaskFlagsReserved = 0b11000000
 )
 
 var _ Fields = (*FieldsV0)(nil)
@@ -65,8 +68,13 @@ func (f *FieldsV0) Unpack(encodingFmt EncodingFormat, dataFlags uint8, data []by
 
 // Validate checks if the fields are valid
 func (f *FieldsV0) Validate(opCode OpCode, dataFlags uint8) error {
-	// receiver address must be a valid address
-	if zetabits.IsBitSet(dataFlags, bitPosReceiver) && crypto.IsEmptyAddress(f.Receiver) {
+	// must set receiver address flag
+	if !zetabits.IsBitSet(dataFlags, bitPosReceiver) {
+		return errors.New("must set receiver address flag")
+	}
+
+	// must provide a non-empty receiver address
+	if crypto.IsEmptyAddress(f.Receiver) {
 		return errors.New("receiver address is empty")
 	}
 
@@ -75,16 +83,25 @@ func (f *FieldsV0) Validate(opCode OpCode, dataFlags uint8) error {
 		return errors.New("payload is not allowed for deposit operation")
 	}
 
-	// abort address must be a valid address
-	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) && !common.IsHexAddress(f.RevertOptions.AbortAddress) {
-		return errors.New("invalid abort address")
+	// must provide the revert address if flag is set
+	if zetabits.IsBitSet(dataFlags, bitPosRevertAddress) && f.RevertOptions.RevertAddress == "" {
+		return errors.New("revert address is empty")
 	}
 
-	// revert message is not allowed when CallOnRevert is false
-	// 1. it's a good-to-have check to make the fields semantically correct.
-	// 2. unpacking won't hit this error as the codec will catch it earlier.
-	if !f.RevertOptions.CallOnRevert && len(f.RevertOptions.RevertMessage) > 0 {
-		return errors.New("revert message is not allowed when CallOnRevert is false")
+	// must provide the abort address if flag is set
+	if zetabits.IsBitSet(dataFlags, bitPosAbortAddress) {
+		if !common.IsHexAddress(f.RevertOptions.AbortAddress) {
+			return errors.New("invalid abort address")
+		}
+
+		if crypto.IsEmptyAddress(common.HexToAddress(f.RevertOptions.AbortAddress)) {
+			return errors.New("abort address is empty")
+		}
+	}
+
+	// reserved flags must be zero
+	if zetabits.GetBits(dataFlags, MaskFlagsReserved) != 0 {
+		return fmt.Errorf("reserved flags are not zero: %08b", dataFlags)
 	}
 
 	return nil
@@ -114,8 +131,13 @@ func (f *FieldsV0) DataFlags() uint8 {
 		zetabits.SetBit(&dataFlags, bitPosAbortAddress)
 	}
 
-	// set 'revertMessage' flag if provided
+	// set 'callOnRevert' flag
 	if f.RevertOptions.CallOnRevert {
+		zetabits.SetBit(&dataFlags, bitPosCallOnRevert)
+	}
+
+	// set 'revertMessage' flag if provided
+	if len(f.RevertOptions.RevertMessage) > 0 {
 		zetabits.SetBit(&dataFlags, bitPosRevertMessage)
 	}
 
@@ -146,7 +168,7 @@ func (f *FieldsV0) packFields(codec Codec, dataFlags uint8) ([]byte, error) {
 	}
 
 	// add 'revertMessage' argument optionally
-	if f.RevertOptions.CallOnRevert {
+	if zetabits.IsBitSet(dataFlags, bitPosRevertMessage) {
 		codec.AddArguments(ArgRevertMessage(f.RevertOptions.RevertMessage))
 	}
 
@@ -182,9 +204,11 @@ func (f *FieldsV0) unpackFields(codec Codec, dataFlags byte, data []byte) error 
 		codec.AddArguments(ArgAbortAddress(&abortAddress))
 	}
 
+	// set 'callOnRevert' flag
+	f.RevertOptions.CallOnRevert = zetabits.IsBitSet(dataFlags, bitPosCallOnRevert)
+
 	// add 'revertMessage' argument optionally
-	f.RevertOptions.CallOnRevert = zetabits.IsBitSet(dataFlags, bitPosRevertMessage)
-	if f.RevertOptions.CallOnRevert {
+	if zetabits.IsBitSet(dataFlags, bitPosRevertMessage) {
 		codec.AddArguments(ArgRevertMessage(&f.RevertOptions.RevertMessage))
 	}
 
