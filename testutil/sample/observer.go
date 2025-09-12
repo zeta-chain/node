@@ -100,9 +100,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 	confirmationParams := ConfirmationParams(r)
 
 	return &types.ChainParams{
-		ChainId:           chainID,
-		ConfirmationCount: r.Uint64(),
-
+		ChainId:                     chainID,
 		GasPriceTicker:              Uint64InRange(1, 300),
 		InboundTicker:               Uint64InRange(1, 300),
 		OutboundTicker:              Uint64InRange(1, 300),
@@ -123,9 +121,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
 	fiftyPercent := sdkmath.LegacyMustNewDecFromStr("0.5")
 	return &types.ChainParams{
-		ChainId:           chainID,
-		ConfirmationCount: r.Uint64(),
-
+		ChainId:                     chainID,
 		GasPriceTicker:              Uint64InRangeFromRand(r, 1, 300),
 		InboundTicker:               Uint64InRangeFromRand(r, 1, 300),
 		OutboundTicker:              Uint64InRangeFromRand(r, 1, 300),

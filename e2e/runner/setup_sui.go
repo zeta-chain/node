@@ -502,7 +502,6 @@ func (r *E2ERunner) setSuiChainParams() error {
 			FastInboundCount:  1,
 			FastOutboundCount: 1,
 		},
-		ConfirmationCount: 1, // still need to be provided for now
 	}
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast solana chain params tx")

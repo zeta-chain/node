@@ -95,7 +95,6 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	chainParams := &observertypes.ChainParams{
 		ChainId:                     chainID,
-		ConfirmationCount:           1,
 		GasPriceTicker:              5,
 		InboundTicker:               5,
 		OutboundTicker:              5,
