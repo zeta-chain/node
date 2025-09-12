@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -107,6 +108,94 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		// Convert the validator address into a user address.
 		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
 		require.NoError(t, err)
+		validatorAddress := validators[0].OperatorAddress
+		valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
+		addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
+		validatorAddr := addresstmp.String()
+
+		// Add validator to the observer list for voting
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
+			ObserverList: []string{validatorAddr},
+		})
+
+		// Add tss to the observer keeper
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+
+		// Vote on the FIRST message.
+		msg := &types.MsgVoteInbound{
+			Creator:            validatorAddr,
+			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId:      1337, // ETH
+			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain:      101, // zetachain
+			Amount:             sdkmath.NewUintFromString("10000000"),
+			Message:            "",
+			InboundBlockHeight: 1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000000,
+			},
+			InboundHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:         0, // zeta
+			TxOrigin:         "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:            "",
+			EventIndex:       1,
+			Status:           types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ConfirmationMode: types.ConfirmationMode_FAST,
+		}
+		_, err = msgServer.VoteInbound(
+			ctx,
+			msg,
+		)
+		require.NoError(t, err)
+
+		// Check that the vote passed
+		ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+		require.True(t, found)
+		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
+		//Perform the SAME event. Except, this time, we resubmit the event.
+		msg = &types.MsgVoteInbound{
+			Creator:            validatorAddr,
+			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId:      1337,
+			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain:      101,
+			Amount:             sdkmath.NewUintFromString("10000000"),
+			Message:            "",
+			InboundBlockHeight: 1,
+			CallOptions: &types.CallOptions{
+				GasLimit: 1000000001, // <---- Change here
+			},
+			InboundHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:         0,
+			TxOrigin:         "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:            "",
+			EventIndex:       1,
+			Status:           types.InboundStatus_SUCCESS, // <---- Change here
+			ConfirmationMode: types.ConfirmationMode_SAFE, // <---- Change here
+		}
+
+		_, err = msgServer.VoteInbound(
+			ctx,
+			msg,
+		)
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
+		_, found = zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+		require.False(t, found)
+	})
+
+	t.Run("prevent double event submission even if the second ballot is created before the first is finalized", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+		// MsgServer for the crosschain keeper
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		// Convert the validator address into a user address.
+		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+		require.NoError(t, err)
+
+		fmt.Println("Validators:", len(validators))
+
 		validatorAddress := validators[0].OperatorAddress
 		valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
 		addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))

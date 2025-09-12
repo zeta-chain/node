@@ -100,14 +100,36 @@ func (k msgServer) VoteInbound(
 		return &types.MsgVoteInboundResponse{}, nil
 	}
 
+	// handle finalized inbound
+	err = k.handleFinalizedInbound(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgVoteInboundResponse{}, nil
+}
+
+// handleFinalizedInbound handles the finalized inbound ballot. It validates the inbound CCTX and saves it to the store.
+// This function is only called once for every inbound CCTX , when the ballot is finalized for the first time.
+
+func (k Keeper) handleFinalizedInbound(ctx sdk.Context, msg *types.MsgVoteInbound) error {
+	if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
+		return sdkerrors.Wrapf(
+			types.ErrObservedTxAlreadyFinalized,
+			"%s, InboundHash:%s, SenderChainID:%d, EventIndex:%d",
+			voteInboundID,
+			msg.InboundHash,
+			msg.SenderChainId,
+			msg.EventIndex,
+		)
+	}
+
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to validate inbound")
+		return sdkerrors.Wrap(err, "failed to validate inbound")
 	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)
-
-	return &types.MsgVoteInboundResponse{}, nil
+	return nil
 }
 
 /* SaveObservedInboundInformation saves the inbound CCTX to the store.It does the following:
