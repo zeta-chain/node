@@ -61,12 +61,13 @@ func TestObserver(t *testing.T) {
 	t.Run("ObserveInbound", func(t *testing.T) {
 		// ARRANGE
 		previousPackageID := sample.SuiAddress(t)
-		originalPackageID := sample.SuiAddress(t)
+		originalPackageID := previousPackageID
 		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 			cfg.withdrawCapID = sample.SuiAddress(t)
 			cfg.previousPackageID = previousPackageID
 			cfg.originalPackageID = originalPackageID
 		})
+		packageID := ts.gateway.PackageID()
 
 		evmBob := sample.EthAddress()
 		evmAlice := sample.EthAddress()
@@ -83,19 +84,19 @@ func TestObserver(t *testing.T) {
 
 		// ...two of which are valid (1 & 3)
 		events := []models.SuiEventResponse{
-			ts.SampleEvent(originalPackageID, "TX_1_ok", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(packageID, "TX_1_ok", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent(originalPackageID, "TX_2_unrelated_event", "something", map[string]any{
+			ts.SampleEvent(packageID, "TX_2_unrelated_event", "something", map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent(originalPackageID, "TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
+			ts.SampleEvent(previousPackageID, "TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
 				// USDC
 				"coin_type": usdc,
 				"amount":    "300",
@@ -103,7 +104,7 @@ func TestObserver(t *testing.T) {
 				"receiver":  evmAlice.String(),
 				"payload":   preparePayload([]byte{1, 2, 3}),
 			}),
-			ts.SampleEvent(originalPackageID, "TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(previousPackageID, "TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "hello",
 				"sender":    "SUI_BOB",
@@ -220,13 +221,13 @@ func TestObserver(t *testing.T) {
 
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {
 		// ARRANGE
-		previousPackageID := sample.SuiAddress(t)
 		originalPackageID := sample.SuiAddress(t)
 		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
 			cfg.withdrawCapID = sample.SuiAddress(t)
-			cfg.previousPackageID = previousPackageID
+			cfg.previousPackageID = ""
 			cfg.originalPackageID = originalPackageID
 		})
+		packageID := ts.gateway.PackageID()
 
 		// Given inbound tracker
 		chainID := ts.Chain().ChainId
@@ -245,7 +246,7 @@ func TestObserver(t *testing.T) {
 		evmAlice := sample.EthAddress()
 
 		ts.OnGetTx(txHash, "15000", true, true, []models.SuiEventResponse{
-			ts.SampleEvent(originalPackageID, txHash, string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(packageID, txHash, string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
 				"sender":    "SUI_ALICE",
@@ -637,7 +638,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	require.NotEmpty(t, chainParams.GatewayAddress)
 
 	// append withdraw cap ID, previous package ID and original package ID if provided
-	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
+	if cfg.withdrawCapID != "" && cfg.originalPackageID != "" {
 		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
 	}
 
