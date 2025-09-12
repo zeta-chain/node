@@ -14,5 +14,6 @@ func (m ErrTxMonitor) Error() string {
 	if m.Err == nil {
 		return "monitoring completed without error"
 	}
-	return fmt.Sprintf("monitoring error: %v", m.Err)
+	return fmt.Sprintf("monitoring error: %v, inbound block height: %d, zeta tx hash: %s, ballot index: %s",
+		m.Err, m.InboundBlockHeight, m.ZetaTxHash, m.BallotIndex)
 }
