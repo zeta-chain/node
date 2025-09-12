@@ -526,9 +526,9 @@ func (ob *Observer) handleMonitoringError(
 			}
 		}
 	case <-ctx.Done():
-		logger.Error().
+		logger.Debug().
 			Str(logs.FieldZetaTx, zetaHash).
-			Msg("unable to monitor vote transaction: timeout")
+			Msg("tx succeeded no err from monitor channel before timeout")
 	}
 }
 
