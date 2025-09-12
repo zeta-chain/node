@@ -191,7 +191,6 @@ func (s *Signer) buildWithdrawAndCallTx(
 
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
-		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
 		Uint64("tx_amount", args.amount).
@@ -265,7 +264,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	ctx context.Context,
 	withdrawTxBuilder, cancelTxBuilder txBuilder,
 ) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// should not happen
 	if withdrawTxBuilder == nil || cancelTxBuilder == nil {
@@ -330,7 +329,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 // broadcastCancelTx broadcasts a cancel tx and returns the tx digest
 func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder(ctx)

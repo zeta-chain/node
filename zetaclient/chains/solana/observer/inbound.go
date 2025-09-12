@@ -59,7 +59,6 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 	} else {
 		ob.Logger().Inbound.Info().
-			Str(logs.FieldMethod, "ObserveInbound").
 			Int("signatures", len(signatures)).
 			Msg("got inbound signatures")
 	}

@@ -51,7 +51,7 @@ func KeygenCeremony(
 	ceremony := keygenCeremony{
 		tss:      server,
 		zetacore: zc,
-		logger:   logger.With().Str(logs.FieldModule, "tss_keygen").Logger(),
+		logger:   logger.With().Str(logs.FieldModule, logs.ModNameTssKeyGen).Logger(),
 	}
 
 	task := func(ctx context.Context, t *ticker.Ticker) error {
@@ -73,7 +73,7 @@ func KeygenCeremony(
 		}
 	}
 
-	err := ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "tss_keygen"))
+	err := ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "TSSKeygenTicker"))
 	if err != nil {
 		return observertypes.TSS{}, err
 	}
@@ -278,7 +278,7 @@ var testKeySignData = []byte("hello meta")
 
 // TestKeySign performs a TSS key-sign test of sample data.
 func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logger) error {
-	logger = logger.With().Str(logs.FieldModule, "tss_keysign").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssKeySign).Logger()
 
 	tssPubKey, err := NewPubKeyFromBech32(tssPubKeyBec32)
 	if err != nil {

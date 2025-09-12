@@ -41,7 +41,7 @@ type SetupProps struct {
 // Setup beefy function that does all the logic for bootstrapping tss-server, tss signer,
 // generating TSS key is needed, etc...
 func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, error) {
-	setupLogger := logger.With().Str(logs.FieldModule, "tss_setup").Logger()
+	setupLogger := logger.With().Str(logs.FieldModule, logs.ModNameTssSetup).Logger()
 
 	// 0. Resolve Hot Private Key
 	hotPrivateKey, err := p.Zetacore.GetKeys().GetPrivateKey(p.HotKeyPassword)
