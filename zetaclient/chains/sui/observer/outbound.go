@@ -45,15 +45,12 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		logger := ob.Logger().Outbound.With().
-			Str(logs.FieldMethod, "ProcessOutboundTrackers").
-			Uint64(logs.FieldNonce, nonce).
-			Logger()
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, nonce).Logger()
 
 		// should not happen
 		if len(tracker.HashList) == 0 {
 			// we don't want to block other cctxs, so let's error and continue
-			logger.Error().Str(logs.FieldTracker, tracker.Index).Msg("tracker hash list is empty")
+			logger.Error().Str("tracker_id", tracker.Index).Msg("tracker hash list is empty")
 			continue
 		}
 
@@ -235,7 +232,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 		ob.Logger().Outbound.Info().
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 

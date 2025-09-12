@@ -40,9 +40,9 @@ func (s *Signer) composeOutbound(cctx *cctypes.CrossChainTx) (outbound, error) {
 	}
 
 	logFields := map[string]any{
-		"outbound.recipient": recipient.ToRaw(),
-		"outbound.amount":    params.Amount.Uint64(),
-		"outbound.nonce":     seqno,
+		"outbound_recipient": recipient.ToRaw(),
+		"outbound_amount":    params.Amount.Uint64(),
+		"outbound_nonce":     seqno,
 	}
 
 	var cancelReason CancelReason
@@ -84,8 +84,8 @@ func (s *Signer) composeOutbound(cctx *cctypes.CrossChainTx) (outbound, error) {
 	} else {
 		// proceed with a cancellation tx that would only increase the seqno
 		// without withdrawing any funds.
-		logFields["outbound.cancel"] = true
-		logFields["outbound.cancel_reason"] = cancelReason
+		logFields["outbound_cancel"] = true
+		logFields["outbound_cancel_reason"] = cancelReason
 		message = &contract.IncreaseSeqno{
 			Seqno:      seqno,
 			ReasonCode: uint32(cancelReason),

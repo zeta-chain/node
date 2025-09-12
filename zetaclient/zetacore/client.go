@@ -102,8 +102,6 @@ func NewClient(
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
 	}
 
-	log := logger.With().Str(logs.FieldModule, "zetacoreClient").Logger()
-
 	cfg := config.ClientConfiguration{
 		ChainHost:    cosmosREST(chainIP),
 		SignerName:   signerName,
@@ -165,8 +163,9 @@ func NewClient(
 
 	return &Client{
 		Clients: zetacoreClients,
-		logger:  log,
-		config:  cfg,
+
+		logger: logger.With().Str(logs.FieldModule, logs.ModNameZetaCoreClient).Logger(),
+		config: cfg,
 
 		cosmosClientContext: cosmosContext,
 		cometBFTClient:      cometBFTClient,
