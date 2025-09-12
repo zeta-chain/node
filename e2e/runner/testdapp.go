@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// The nodes of external chain take to to sync the state, for example:
+	// The nodes of external chain take to sync the state, for example:
 	// The BSC chain outbound takes 15 seconds to confirm and still not enough for the node to sync,
 	// so we need proper tolerance to ensure the nodes behind RPC are in sync
 	externalNodeSyncTolerance = 30 * time.Second

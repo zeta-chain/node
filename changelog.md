@@ -20,6 +20,7 @@
 * [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
+* [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
 
 ### Tests
 
@@ -28,6 +29,7 @@
 * [4142](https://github.com/zeta-chain/node/pull/4142) - fix Solana flaky SPL deposit e2e test in live networks
 * [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 * [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
+* [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
 
 ## v33.0.0
 

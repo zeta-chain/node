@@ -67,13 +67,23 @@ func Test_GetScanRangeInboundSafe(t *testing.T) {
 			},
 			expectedBlockRange: [2]uint64{91, 101}, // [91, 101), 11 unscanned blocks, but capped to 10
 		},
+		{
+			name:        "last scanned reset by monitering thread (Low last scanned compared to last block)",
+			lastBlock:   100,
+			lastScanned: 50,
+			blockLimit:  10,
+			confParams: observertypes.ConfirmationParams{
+				SafeInboundCount: 10,
+			},
+			expectedBlockRange: [2]uint64{51, 61},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-			ob.Observer.WithLastBlockScanned(tt.lastScanned)
+			ob.Observer.WithLastBlockScanned(tt.lastScanned, false)
 
 			start, end := ob.GetScanRangeInboundSafe(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
@@ -131,7 +141,7 @@ func Test_GetScanRangeInboundFast(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-			ob.Observer.WithLastBlockScanned(tt.lastScanned)
+			ob.Observer.WithLastBlockScanned(tt.lastScanned, false)
 
 			start, end := ob.GetScanRangeInboundFast(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})

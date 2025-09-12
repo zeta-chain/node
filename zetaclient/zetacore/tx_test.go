@@ -239,7 +239,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		hash, _, err := client.PostVoteInbound(ctx, 100, 200, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
-		})
+		}, nil)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -281,7 +281,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		err := client.MonitorVoteInboundResult(ctx, sampleHash, 1000, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
-		})
+		}, nil)
 
 		require.NoError(t, err)
 	})
