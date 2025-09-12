@@ -7,6 +7,7 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
@@ -161,6 +162,7 @@ func (c *Client) PostVoteInbound(
 	ctx context.Context,
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) (string, string, error) {
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -191,13 +193,25 @@ func (c *Client) PostVoteInbound(
 
 	go func() {
 		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
 			c.logger.Error().
-				Err(err).
+				Err(errMonitor).
 				Str(logs.FieldMethod, "PostVoteInbound").
 				Msg("failed to monitor vote inbound result")
+
+			if monitorErrCh != nil {
+				select {
+				case monitorErrCh <- zetaerrors.ErrTxMonitor{
+					Err:                errMonitor,
+					InboundBlockHeight: msg.InboundBlockHeight,
+					ZetaTxHash:         zetaTxHash,
+					BallotIndex:        ballotIndex,
+				}:
+				case <-ctxForWorker.Done():
+					c.logger.Debug().Msg("context cancelled while sending monitor error")
+				}
+			}
 		}
 	}()
 

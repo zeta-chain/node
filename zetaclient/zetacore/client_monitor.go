@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/constant"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -106,6 +107,7 @@ func (c *Client) MonitorVoteInboundResult(
 	zetaTxHash string,
 	retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
 	logger := c.logger.With().
 		Str(logs.FieldMethod, "MonitorVoteInboundResult").
@@ -119,7 +121,7 @@ func (c *Client) MonitorVoteInboundResult(
 	}()
 
 	call := func() error {
-		err := c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg)
+		err := c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 
 		// force retry on err
 		return retry.Retry(err)
@@ -127,6 +129,7 @@ func (c *Client) MonitorVoteInboundResult(
 
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
 	if err != nil {
+		// All errors are forced to be retryable, we only return an error if the tx result cannot be queried
 		logger.Error().Err(err).Msg("unable to query tx result")
 		return err
 	}
@@ -139,6 +142,7 @@ func (c *Client) monitorVoteInboundResult(
 	zetaTxHash string,
 	retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
 	// query tx result from ZetaChain
 	txResult, err := c.QueryTxResult(zetaTxHash)
@@ -151,6 +155,8 @@ func (c *Client) monitorVoteInboundResult(
 		Str("inbound_raw_log", txResult.RawLog).
 		Logger()
 
+	// There is no error returned from here which mean the MonitorVoteInboundResult would return nil and no error is posted to monitorErrCh
+	// However the channel is passed to the subsequent call, which can post an error to the channel if the "execute" vote fails.
 	switch {
 	case strings.Contains(txResult.RawLog, "failed to execute message"):
 		// the inbound vote tx shouldn't fail to execute. this shouldn't happen
@@ -161,7 +167,7 @@ func (c *Client) monitorVoteInboundResult(
 		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("out of gas")
 		if retryGasLimit > 0 {
 			// new retryGasLimit set to 0 to prevent reentering this function
-			resentZetaTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg)
+			resentZetaTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg, monitorErrCh)
 			if err != nil {
 				logger.Error().Err(err).Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to resend tx")
 			} else {

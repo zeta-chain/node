@@ -19,6 +19,7 @@
 * [4111](https://github.com/zeta-chain/node/pull/4111) - cancel Solana outbound if transaction size is too large
 * [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
+* [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
 
 ### Tests
 
