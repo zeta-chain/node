@@ -225,23 +225,25 @@ func (ob *Observer) LastBlockScanned() uint64 {
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
+// WithLAstBlockScanned also sets the value of forceResetLastScanned and returns the previous value.
+// If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
 func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
-	valueBeforeUpdate := ob.forceResetLastScanned
+	wasForceReset := ob.forceResetLastScanned
 	ob.forceResetLastScanned = forceResetLastScanned
 
 	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
 	// In this case we should not update the last scanned block and just return
-	if valueBeforeUpdate {
-		return ob, valueBeforeUpdate
+	if wasForceReset {
+		return ob, wasForceReset
 	}
 
 	ob.forceResetLastScanned = forceResetLastScanned
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
-	return ob, valueBeforeUpdate
+	return ob, wasForceReset
 }
 
 // LastTxScanned get last transaction scanned.
