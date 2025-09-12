@@ -128,6 +128,9 @@ func (c *Client) MonitorVoteInboundResult(
 		return retry.Retry(err)
 	}
 
+	//                               10 attempts,    2 seconds,     4 seconds max
+	// This will retry for a maximum of ~40 seconds with exponential backoff,
+	// However, this call is recursive for up to 1 layer and so the maxim time this can take is ~80 seconds
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
 	if err != nil {
 		// All errors are forced to be retryable, we only return an error if the tx result cannot be queri

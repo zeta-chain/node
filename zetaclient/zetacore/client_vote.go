@@ -193,8 +193,8 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		ctxForWorker := zctx.Copy(ctx, context.Background())
-		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg, monitorErrCh)
+		// MonitorVoteInboundResult has a maximum lifetime of as the error handler but can be less than that if the retry gets over
+		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
 			c.logger.Error().
 				Err(errMonitor).
@@ -209,8 +209,9 @@ func (c *Client) PostVoteInbound(
 					ZetaTxHash:         zetaTxHash,
 					BallotIndex:        ballotIndex,
 				}:
-				case <-ctxForWorker.Done():
-					c.logger.Debug().Msg("context cancelled while sending monitor error")
+				case <-ctx.Done():
+					// This condition is very unlikely to happen; it will only trigger it the handleMonitoringError error has crashed.
+					c.logger.Debug().Msg("context cancelled while waiting for handling monitor error to rad from channel")
 				}
 			}
 		}
