@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking changes
+
+* `confirmation_count` in the chain params has been entirely removed. It was made deprecated in v28. Use `confirmation_params` instead.
+
 ### Features
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
@@ -11,6 +15,7 @@
 
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4192](https://github.com/zeta-chain/node/pull/4192) - remove deprecated code in observer module, `including confirmation_count`
 
 ### Fixes
 
