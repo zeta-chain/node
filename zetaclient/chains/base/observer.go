@@ -334,7 +334,6 @@ func (ob *Observer) LoadLastBlockScanned() error {
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-
 	_, forceResetLastScannedBeforeUpdate := ob.WithLastBlockScanned(blockNumber, false)
 	if forceResetLastScannedBeforeUpdate {
 		return nil
