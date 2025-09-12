@@ -14,6 +14,8 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
@@ -43,10 +45,6 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	// gateway data should remain unchanged
 	require.Equal(r, gatewayDataBefore, gatewayDataAfter)
 
-	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
-	// wait for 2 blocks to ensure the new gateway package ID is effective
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
-
 	// deposit from new gateway package should be observed
 	r.Logger.Print("🏃 Verifying Sui deposit from new package")
 	r.suiVerifyDepositFromPackage(r.SuiGateway.PackageID(), big.NewInt(10000000000))
@@ -54,6 +52,15 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	// deposit from previous gateway package should be observed
 	r.Logger.Print("🏃 Verifying Sui deposit from previous package")
 	r.suiVerifyDepositFromPackage(r.SuiGateway.Previous().PackageID(), big.NewInt(2000000))
+
+	// deprecate previous gateway package
+	previousPackageID := r.SuiGateway.Previous().PackageID()
+	r.Logger.Print("🏃 Deprecating previous package %s", previousPackageID)
+	r.suiDeprecatePreviousPackage()
+
+	// deposit from deprecated package should not be observed
+	r.Logger.Print("🏃 Verifying Sui deposit from deprecated package")
+	r.suiVerifyDepositFromDeprecatePackage(previousPackageID, big.NewInt(2000000))
 }
 
 // suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
@@ -106,9 +113,38 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	)
 	require.NoError(r, err)
 
-	// update the chain params so zetaclient can pick it up
+	// update the chain params
 	err = r.setSuiChainParams(false)
 	require.NoError(r, err)
+
+	// wait 2 Zeta blocks to ensure zetaclient picks up the new chain params
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
+}
+
+// suiDeprecatePreviousPackage deprecates the previous Sui gateway package
+func (r *E2ERunner) suiDeprecatePreviousPackage() {
+	// find withdraw cap ID
+	withdrawCapID, found := r.suiGetOwnedObjectID(r.SuiTSSAddress, r.SuiGateway.WithdrawCapType())
+	require.True(r, found, "withdraw cap object not found")
+
+	// deprecate the previous package by setting it to empty
+	var (
+		err               error
+		packageID         = r.SuiGateway.PackageID()
+		gatewayID         = r.SuiGateway.ObjectID()
+		originalPackageID = r.SuiGateway.Original().PackageID()
+	)
+	r.SuiGateway, err = sui.NewGatewayFromPairID(
+		sui.MakePairID(packageID, gatewayID, withdrawCapID, "", originalPackageID),
+	)
+	require.NoError(r, err)
+
+	// update the chain params
+	err = r.setSuiChainParams(false)
+	require.NoError(r, err)
+
+	// wait 2 Zeta blocks to ensure zetaclient picks up the new chain params
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
 }
 
 // moveCallUpgraded performs a move call to 'upgraded' method on the new Sui gateway package
@@ -182,4 +218,19 @@ func (r *E2ERunner) suiVerifyDepositFromPackage(packageID string, amount *big.In
 	// only one single CCTX should be created
 	cctxs := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, resp.Digest)
 	require.Len(r, cctxs, 1)
+}
+
+// suiVerifyDepositFromDeprecatePackage verifies the deposit from the deprecated Sui gateway package
+func (r *E2ERunner) suiVerifyDepositFromDeprecatePackage(packageID string, amount *big.Int) {
+	// make a deposit from gateway package
+	resp := r.SuiDepositSUI(packageID, r.EVMAddress(), math.NewUintFromBigInt(amount))
+	r.Logger.Info("Sui deposit tx: %s from deprecated package: %s", resp.Digest, packageID)
+
+	// wait for 2 zeta blocks
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 20*time.Second)
+
+	// query cctx by inbound hash, no CCTX should be created
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: resp.Digest}
+	_, err := r.CctxClient.InboundHashToCctxData(r.Ctx, in)
+	require.ErrorIs(r, err, status.Error(codes.NotFound, "not found"))
 }

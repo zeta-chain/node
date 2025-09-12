@@ -15,6 +15,17 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+const (
+	// gatewayPairIDPartsV1 is the number of parts in the gateway pair ID for v1
+	gatewayPairIDPartsV1 = 2
+
+	// gatewayPairIDPartsV2 is the number of parts in the gateway pair ID for v2 and later
+	gatewayPairIDPartsV2 = 5
+
+	// previousPackageIDIndex is the index of the previous package ID in the pair ID for v2 and later
+	previousPackageIDIndex = 3
+)
+
 // EventType represents Gateway event type (both inbound & outbound)
 type EventType string
 
@@ -97,7 +108,7 @@ func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 // MakePairID makes a pair ID of the form `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID,originalPackageID]`
 // Note: It is only used for tests at the moment.
 func MakePairID(packageID, gatewayObjectID, withdrawCapID, previousPackageID, originalPackageID string) string {
-	if withdrawCapID == "" || previousPackageID == "" || originalPackageID == "" {
+	if withdrawCapID == "" || originalPackageID == "" {
 		return fmt.Sprintf("%s,%s", packageID, gatewayObjectID)
 	}
 	return fmt.Sprintf(
@@ -207,15 +218,22 @@ func (gw *Gateway) PackageID() string {
 	return gw.packageID
 }
 
-// PackageIDs returns slice of {packageID[,previousPackageID,originalPackageID]}
-func (gw *Gateway) PackageIDs() []string {
+// SupportedPackageIDs returns slice of supported package IDs from which emitted events can be observed
+//
+// There are two cases:
+//   - There is only one supported package ID, which is the current package ID.
+//   - There are two supported package IDs, which are the current package ID and previous package ID.
+//     This happens during gateway upgrades before fully deprecating the previous package.
+//
+// Note: empty previous package ID means the previous package is deprecated.
+func (gw *Gateway) SupportedPackageIDs() []string {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
 
-	if gw.originalPackageID == "" {
+	if gw.previousPackageID == "" {
 		return []string{gw.packageID}
 	}
-	return []string{gw.packageID, gw.previousPackageID, gw.originalPackageID}
+	return []string{gw.packageID, gw.previousPackageID}
 }
 
 // ObjectID returns Gateway's struct object id
@@ -258,8 +276,8 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 // ParseEvent parses Event.
 func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
-	// event may carry either package ID, depending on which gateway was called
-	packageIDs := gw.PackageIDs()
+	// event may carry different package IDs, depending on which gateway was called
+	packageIDs := gw.SupportedPackageIDs()
 
 	// basic validation
 	switch {
@@ -492,19 +510,24 @@ func convertPayload(data []any) ([]byte, error) {
 //   - `$packageID,$gatewayObjectID,$withdrawCapID,$previousPackageID,$originalPackageID`, gateway address after upgrade
 func parsePair(gatewayAddress string) (string, string, string, string, string, error) {
 	parts := strings.Split(gatewayAddress, ",")
-	if len(parts) != 2 && len(parts) != 5 {
+	if len(parts) != gatewayPairIDPartsV1 && len(parts) != gatewayPairIDPartsV2 {
 		return "", "", "", "", "", errors.Errorf("invalid pair %q", gatewayAddress)
 	}
 
 	// each part should be a valid Sui address
-	for _, part := range parts {
+	for i, part := range parts {
+		// empty previous package ID is valid and it means the previous package is deprecated
+		if i == previousPackageIDIndex && part == "" {
+			continue
+		}
+
 		if err := ValidateAddress(part); err != nil {
 			return "", "", "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
 		}
 	}
 
 	// for first version of the gateway address
-	if len(parts) == 2 {
+	if len(parts) == gatewayPairIDPartsV1 {
 		return parts[0], parts[1], "", "", "", nil
 	}
 

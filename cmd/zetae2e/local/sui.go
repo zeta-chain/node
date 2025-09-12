@@ -57,6 +57,12 @@ func suiTestRoutine(
 			return fmt.Errorf("sui tests failed: %v", err)
 		}
 
+		// update Sui gateway package information after upgrade
+		// because the old gateway package ID is deprecated after upgrade
+		if suiRunner.IsRunningUpgrade() {
+			suiRunner.SuiUpdateGatewayInfo()
+		}
+
 		if err := suiRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("sui tests failed: %v", err)
 		}

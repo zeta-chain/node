@@ -115,6 +115,22 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
+// SuiUpdateGatewayInfo updates the gateway information from chain params
+func (r *E2ERunner) SuiUpdateGatewayInfo() {
+	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
+
+	// query chain params
+	resp, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
+	require.NoError(r, err)
+	require.NotNil(r, resp.ChainParams)
+
+	// update runner's gateway information
+	r.SuiGateway, err = zetasui.NewGatewayFromPairID(resp.ChainParams.GatewayAddress)
+	require.NoError(r, err)
+
+	r.Logger.Info("current gateway package ID: %s", r.SuiGateway.PackageID())
+}
+
 // suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
 // and sets the deployer address as the active address.
 func (r *E2ERunner) suiSetupDeployerAccount() {
