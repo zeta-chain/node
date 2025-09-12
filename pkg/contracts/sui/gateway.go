@@ -31,24 +31,34 @@ type EventType string
 
 // Gateway contains the API to read inbounds and sign outbounds to the Sui gateway
 type Gateway struct {
-	// packageID is the package ID of the gateway
+	// packageID is the package ID of the latest gateway
+	// For example, upon gateway upgrade v1 -> v2, the packageID will point to the v2 gateway package.
 	packageID string
 
 	// gatewayObjectID is the object ID of the gateway struct
+	// The gateway object ID will remain unchanged across upgrades.
 	objectID string
 
-	// withdrawCapID is an optional field that specifies the object ID of the withdraw cap.
-	// It is used to specify the withdraw cap object ID only after the gateway upgrade.
+	// withdrawCapID was introduced in the authenticated call gateway upgrade (v2).
+	// It explicitly specifies the withdrawCap object ID to avoid uncertainty across upgrades.
 	withdrawCapID string
 
-	// previousPackageID is an optional field that points to the previous gateway package.
-	// To achieve seamless upgrade, we might need previous package ID for potential usages.
-	// For instance, allowing some time to deprecate old package while running on new package.
+	// previousPackageID was introduced in the authenticated call gateway upgrade (v2).
+	// previousPackageID is an optional field (can be empty) that points to the previous gateway package.
+	// To achieve seamless upgrade, the protocol needs to know the previous package ID and continue to
+	// support it for a period of time (so users have time to migrate) before fully deprecating it.
+	//
+	// For example:
+	//  - on upgrade v1 -> v2, the previous package ID is v1 (same as originalPackageID)
+	//  - on upgrade v2 -> v3, the previous package ID is v2
+	//
+	// To deprecate previous package, this field must be set to empty string in the chain params' gateway address.
 	previousPackageID string
 
-	// originalPackageID is an optional field that points to the original gateway package.
-	// After gateway upgrades, the observer MUST use this packageID to query inbound events,
-	// because the original gateway package was where the events were initially defined.
+	// originalPackageID was introduced in the authenticated call gateway upgrade (v2).
+	// originalPackageID is the original (v1) gateway package ID and will remain unchanged across upgrades.
+	// The reason we need this field is because all the events were initially defined in the original gateway
+	// package, so the observers MUST pass this packageID to Sui RPC 'QueryModuleEvents' to query events.
 	originalPackageID string
 
 	mu sync.RWMutex
@@ -85,6 +95,15 @@ func ActiveMessageContextDynamicFieldName() (json.RawMessage, error) {
 
 // NewGatewayFromPairID creates a new Sui Gateway struct from the chain params gateway address,
 // which is a pair ID of `$packageID,$gatewayObjectID[,$withdrawCapID,previousPackageID,originalPackageID]`
+//
+// An example of 5-part gateway address string in the Sui chain params looks like:
+/*
+"0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff,
+0xba477ad7b87a31fde3d29c4e4512329d7340ec23e61f130ebb4d0169ba37e189,
+0x4a367f98d9299019e3d5bbc6ee1d41b5789172e14f7c63a881377766902438e2,
+0x1db3a54b99c2741bf8b8aaa8266d6e7b6daf0c702a5ef5b0d6e9e6cf12527a90,
+0x1db3a54b99c2741bf8b8aaa8266d6e7b6daf0c702a5ef5b0d6e9e6cf12527a90"
+*/
 func NewGatewayFromPairID(pair string) (*Gateway, error) {
 	packageID, gatewayObjectID, withdrawCapID, previousPackageID, originalPackageID, err := parsePair(pair)
 	if err != nil {
