@@ -220,6 +220,8 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
