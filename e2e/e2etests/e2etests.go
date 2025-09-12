@@ -1335,7 +1335,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM and call a contract with standard memo; revert and abort with onAbort",
 		[]runner.ArgDefinition{},
 		TestBitcoinStdMemoDepositAndCallRevertAndAbort,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoInscribedDepositAndCallName,

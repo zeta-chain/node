@@ -38,7 +38,7 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 					Payload:  fBytes,
 					RevertOptions: crosschaintypes.RevertOptions{
 						RevertAddress: fString,
-						CallOnRevert:  true,
+						CallOnRevert:  false,             // CallOnRevert is irrelevant to RevertMessage
 						AbortAddress:  fAddress.String(), // it's a ZEVM address
 						RevertMessage: fBytes,
 					},
@@ -49,7 +49,7 @@ func Test_Memo_EncodeToBytes(t *testing.T) {
 				uint8(memo.EncodingFmtABI),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
-				flagsAllFieldsSet, // all fields are set
+				0b00101111, // all fields are set except callOnRevert flag
 			),
 			expectedData: ABIPack(t,
 				memo.ArgReceiver(fAddress),
@@ -182,7 +182,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 					Version:     0,
 					EncodingFmt: memo.EncodingFmtABI,
 					OpCode:      memo.OpCodeDepositAndCall,
-					DataFlags:   0b00011111,
+					DataFlags:   0b00111111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
@@ -203,7 +203,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				uint8(memo.EncodingFmtCompactLong),
 				uint8(memo.OpCodeDepositAndCall),
 				0,
-				flagsAllFieldsSet, // all fields are set
+				0b00101111, // all fields are set except callOnRevert flag
 			),
 			data: CompactPack(
 				memo.EncodingFmtCompactLong,
@@ -218,14 +218,14 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 					Version:     0,
 					EncodingFmt: memo.EncodingFmtCompactLong,
 					OpCode:      memo.OpCodeDepositAndCall,
-					DataFlags:   0b00011111,
+					DataFlags:   0b00101111,
 				},
 				FieldsV0: memo.FieldsV0{
 					Receiver: fAddress,
 					Payload:  fBytes,
 					RevertOptions: crosschaintypes.RevertOptions{
 						RevertAddress: fString,
-						CallOnRevert:  true,
+						CallOnRevert:  false,             // CallOnRevert is irrelevant to RevertMessage
 						AbortAddress:  fAddress.String(), // it's a ZEVM address
 						RevertMessage: fBytes,
 					},

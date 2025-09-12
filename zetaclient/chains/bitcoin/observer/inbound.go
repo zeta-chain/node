@@ -265,11 +265,12 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
-	// inject the 'revertAddress' specified in the memo, so that
-	// zetacore will create a revert outbound that points to the custom revert address.
+	// inject revert options specified by the memo
+	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
 	revertOptions := crosschaintypes.RevertOptions{
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
 	}
 
 	// check if the memo is a cross-chain call, or simple token deposit
