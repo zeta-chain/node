@@ -61,7 +61,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Info().
 			Str(logs.FieldMethod, "ObserveInbound").
 			Int("signatures", len(signatures)).
-			Msg("got wrong amount of signatures")
+			Msg("got inbound signatures")
 	}
 
 	// loop signature from oldest to latest to filter inbound events
