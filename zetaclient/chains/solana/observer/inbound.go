@@ -55,13 +55,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// update metrics if no new signatures found
 	if len(signatures) == 0 {
 		if errSlot == nil {
-			ob.WithLastBlockScanned(lastSlot)
+			ob.WithLastBlockScanned(lastSlot, false)
 		}
 	} else {
 		ob.Logger().Inbound.Info().
-			Str(logs.FieldMethod, "ObserveInbound").
 			Int("signatures", len(signatures)).
-			Msg("got wrong amount of signatures")
+			Msg("got inbound signatures")
 	}
 
 	// loop signature from oldest to latest to filter inbound events

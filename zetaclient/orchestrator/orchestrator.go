@@ -374,8 +374,7 @@ func validateConstructor(s *scheduler.Scheduler, dep *Dependencies) error {
 }
 
 func newLoggers(baseLogger base.Logger) loggers {
-	std := baseLogger.Std.With().Str(logs.FieldModule, "orchestrator").Logger()
-
+	std := baseLogger.Std.With().Str(logs.FieldModule, logs.ModNameOrchestrator).Logger()
 	return loggers{
 		Logger:  std,
 		sampled: std.Sample(&zerolog.BasicSampler{N: 10}),

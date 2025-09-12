@@ -173,8 +173,8 @@ func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash s
 	}
 
 	msg := err.Error()
-	evt := log.Warn().Err(err).
-		Str(logs.FieldMethod, "HandleBroadcastError").
+	evt := log.Warn().
+		Err(err).
 		Int64(logs.FieldChain, toChain).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, outboundHash)

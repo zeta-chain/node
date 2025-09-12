@@ -40,8 +40,8 @@ type Signer struct {
 func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Signer {
 	withLogFields := func(log zerolog.Logger) zerolog.Logger {
 		return log.With().
+			Str(logs.FieldModule, logs.ModNameSigner).
 			Int64(logs.FieldChain, chain.ChainId).
-			Str(logs.FieldModule, "signer").
 			Logger()
 	}
 

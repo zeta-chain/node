@@ -12,18 +12,18 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestDepositAndCallOutOfGas tests that a deposit and call that consumer all gas will revert
-func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
+// TestDepositAndCallHighGasUsage tests that a deposit and call with gas usage close to limit get mined
+func TestDepositAndCallHighGasUsage(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Deploy the GasConsumer contract
-	// gas limit is currently 4M
+	// the target provided in the contract is not accurate, this value allows to get a gas usage close to the limit of 4M
 	gasConsumerAddress, _, _, err := testgasconsumer.DeployTestGasConsumer(
 		r.ZEVMAuth,
 		r.ZEVMClient,
-		big.NewInt(5000000),
+		big.NewInt(3350000),
 	)
 	require.NoError(r, err)
 
@@ -38,5 +38,5 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }

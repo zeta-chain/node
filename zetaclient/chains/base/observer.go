@@ -15,9 +15,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -58,6 +60,10 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
+	// auxStringMap is a key-value map to store any auxiliary string values used by the observer
+	// it is now only used by Sui observer to store old/new Sui gateway inbound cursors
+	auxStringMap map[string]string
+
 	blockCache *lru.Cache
 
 	// db is the database to persist data
@@ -76,6 +82,8 @@ type Observer struct {
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
+
+	forceResetLastScanned bool
 }
 
 // NewObserver creates a new base observer.
@@ -95,19 +103,21 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetacoreClient:   zetacoreClient,
-		tss:              tss,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
+		chain:                 chain,
+		chainParams:           chainParams,
+		zetacoreClient:        zetacoreClient,
+		tss:                   tss,
+		lastBlock:             0,
+		lastBlockScanned:      0,
+		lastTxScanned:         "",
+		auxStringMap:          make(map[string]string),
+		ts:                    ts,
+		db:                    database,
+		blockCache:            blockCache,
+		mu:                    &sync.Mutex{},
+		logger:                newObserverLogger(chain, logger),
+		stop:                  make(chan struct{}),
+		forceResetLastScanned: false,
 	}, nil
 }
 
@@ -215,19 +225,37 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
+// it also set the value of forceResetLastScanned and returns the previous value.
+// If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	wasForceReset := ob.forceResetLastScanned
+	ob.forceResetLastScanned = forceResetLastScanned
+
+	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
+	// In this case we should not update the last scanned block and just return
+	if wasForceReset && !forceResetLastScanned {
+		return ob, wasForceReset
+	}
+
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
-	return ob
+	return ob, wasForceReset
 }
 
 // LastTxScanned get last transaction scanned.
 func (ob *Observer) LastTxScanned() string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	return ob.lastTxScanned
 }
 
@@ -236,7 +264,11 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
+	if ob.lastTxScanned == "" {
+		ob.logger.Chain.Info().Str("tx", txHash).Msg("initializing last tx scanned")
+	}
 	ob.lastTxScanned = txHash
+
 	return ob
 }
 
@@ -280,7 +312,7 @@ func (ob *Observer) StopChannel() chan struct{} {
 // LoadLastBlockScanned loads last scanned block from environment variable or from database.
 // The last scanned block is the height from which the observer should continue scanning.
 func (ob *Observer) LoadLastBlockScanned() error {
-	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastBlockScanned").Logger()
+	logger := ob.logger.Chain
 
 	// get environment variable
 	envvar := EnvVarLatestBlockByChain(ob.chain)
@@ -299,7 +331,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
-		ob.WithLastBlockScanned(blockNumber)
+		ob.WithLastBlockScanned(blockNumber, false)
 		return nil
 	}
 
@@ -309,14 +341,28 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber, false)
 
 	return nil
 }
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-	ob.WithLastBlockScanned(blockNumber)
+	_, forceResetLastScannedBeforeUpdate := ob.WithLastBlockScanned(blockNumber, false)
+	if forceResetLastScannedBeforeUpdate {
+		return nil
+	}
+	return ob.WriteLastBlockScannedToDB(blockNumber)
+}
+
+// ForceSaveLastBlockScanned saves the last scanned block to memory if the new blocknumber is less than the current last scanned block.
+// It also forces the update of the last scanned block in the database, to makes sure any other the block gets rescanned.
+func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
+	currentLastScanned := ob.LastBlockScanned()
+	if blockNumber > currentLastScanned {
+		return nil
+	}
+	ob.WithLastBlockScanned(blockNumber, true)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
@@ -338,7 +384,7 @@ func (ob *Observer) ReadLastBlockScannedFromDB() (uint64, error) {
 // LoadLastTxScanned loads last scanned tx from environment variable or from database.
 // The last scanned tx is the tx hash from which the observer should continue scanning.
 func (ob *Observer) LoadLastTxScanned() {
-	logger := ob.logger.Chain.With().Str(logs.FieldMethod, "LoadLastTxScanned").Logger()
+	logger := ob.logger.Chain
 
 	// get environment variable
 	envvar := EnvVarLatestTxByChain(ob.chain)
@@ -370,7 +416,7 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 	ob.WithLastTxScanned(txHash)
 
 	// update last_scanned_block_number metrics
-	ob.WithLastBlockScanned(slot)
+	ob.WithLastBlockScanned(slot, false)
 
 	return ob.WriteLastTxScannedToDB(txHash)
 }
@@ -390,6 +436,71 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 	return lastTx.Hash, nil
 }
 
+// GetAuxString get any auxiliary string data by key
+func (ob *Observer) GetAuxString(key string) string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+	return ob.auxStringMap[key]
+}
+
+// WithAuxString set any auxiliary string data by key
+func (ob *Observer) WithAuxString(key, value string) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	if ob.auxStringMap[key] == "" {
+		ob.logger.Chain.Info().Str("key", key).Str("value", value).Msg("initializing auxiliary string value")
+	}
+	ob.auxStringMap[key] = value
+
+	return ob
+}
+
+// WriteAuxStringToDB writes the auxiliary string data to the database.
+func (ob *Observer) WriteAuxStringToDB(key, value string) error {
+	// create new record if not found
+	var existingRecord clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&existingRecord).Error; err != nil {
+		return ob.db.Client().Create(clienttypes.ToAuxStringSQLType(key, value)).Error
+	}
+
+	// record exists, update it
+	return ob.db.Client().Model(&existingRecord).Update("value", value).Error
+}
+
+// LoadAuxString loads auxiliary string data from environment variable or from database.
+func (ob *Observer) LoadAuxString(key string) {
+	// get environment variable
+	envvar := EnvVarLatestAuxStringByChain(ob.chain, key)
+	value := os.Getenv(envvar)
+
+	// load from environment variable if set
+	if value != "" {
+		ob.logger.Chain.Info().Str("envvar", envvar).Str("value", value).Msg("environment variable is set")
+		ob.WithAuxString(key, value)
+		return
+	}
+
+	// load from DB otherwise
+	value, err := ob.ReadAuxStringFromDB(key)
+	if err != nil {
+		// if not found, let the concrete chain observer decide where to start
+		chainID := ob.chain.ChainId
+		ob.logger.Chain.Info().Int64(logs.FieldChain, chainID).Str("key", key).Msg("string value not found in db")
+		return
+	}
+	ob.WithAuxString(key, value)
+}
+
+// ReadAuxStringFromDB reads the auxiliary string data from the database.
+func (ob *Observer) ReadAuxStringFromDB(key string) (string, error) {
+	var record clienttypes.AuxStringSQLType
+	if err := ob.db.Client().Where("key_name = ?", key).First(&record).Error; err != nil {
+		return "", err
+	}
+	return record.Value, nil
+}
+
 // PostVoteInbound posts a vote for the given vote message and returns the ballot.
 func (ob *Observer) PostVoteInbound(
 	ctx context.Context,
@@ -404,10 +515,9 @@ func (ob *Observer) PostVoteInbound(
 	)
 
 	logger := ob.logger.Inbound.With().
-		Str(logs.FieldMethod, "PostVoteInbound").
 		Str(logs.FieldTx, txHash).
 		Stringer(logs.FieldCoinType, coinType).
-		Stringer(logs.FieldConfirmationMode, msg.ConfirmationMode).
+		Stringer("confirmation_mode", msg.ConfirmationMode).
 		Logger()
 
 	cctxIndex := msg.Digest()
@@ -434,12 +544,14 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
+	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
+
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
-		Str(logs.FieldBallot, ballot).
+		Str(logs.FieldBallotIndex, ballot).
 		Logger()
 
 	switch {
@@ -452,7 +564,47 @@ func (ob *Observer) PostVoteInbound(
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 
+	go func() {
+		ctxForHandler := zctx.Copy(ctx, context.Background())
+		ob.handleMonitoringError(ctxForHandler, monitorErrCh)
+	}()
+
 	return ballot, nil
+}
+
+func (ob *Observer) handleMonitoringError(
+	ctx context.Context,
+	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
+) {
+	logger := ob.logger.Inbound
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
+		}
+	}()
+
+	select {
+	case monitorErr := <-monitorErrCh:
+		if monitorErr.Err != nil {
+			logger.Error().
+				Err(monitorErr).
+				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+				Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
+				Msg("error monitoring vote transaction")
+
+			if monitorErr.InboundBlockHeight > 0 {
+				err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
+				if err != nil {
+					logger.Error().Err(err).
+						Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+						Msg("unable to save last scanned block after monitoring error")
+				}
+			}
+		}
+	case <-ctx.Done():
+		logger.Debug().Msg("context cancelled while waiting for monitoring result")
+	}
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
@@ -465,11 +617,16 @@ func EnvVarLatestTxByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
 }
 
+// EnvVarLatestAuxStringByChain returns the environment variable for auxiliary string data by chain for the given key.
+func EnvVarLatestAuxStringByChain(chain chains.Chain, key string) string {
+	return fmt.Sprintf("CHAIN_%d_AUX_STRING_%s", chain.ChainId, key)
+}
+
 func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 	withLogFields := func(l zerolog.Logger) zerolog.Logger {
 		return l.With().
 			Int64(logs.FieldChain, chain.ChainId).
-			Str(logs.FieldChainNetwork, chain.Network.String()).
+			Stringer(logs.FieldNetwork, chain.Network).
 			Logger()
 	}
 
@@ -480,8 +637,6 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 		Chain:      log,
 		Inbound:    log.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
 		Outbound:   log.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
-		GasPrice:   log.With().Str(logs.FieldModule, logs.ModNameGasPrice).Logger(),
-		Headers:    log.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: complianceLog,
 	}
 }

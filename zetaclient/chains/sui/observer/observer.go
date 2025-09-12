@@ -72,6 +72,41 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	return nil
 }
 
+// MigrateCursorForAuthenticatedCallUpgrade migrates inbound cursor in the database to adopt Sui authenticated call upgrade
+//   - before upgrade, there is only one cursor stored as 'LastTransactionSQLType' for gateway package.
+//   - after  upgrade, we might face scenarios where multiple cursors need to be stored for versioned packages,
+//     so we need to migrate the single cursor model to a multi-cursor model. Moving forward, the cursors will
+//     be stored under separate keys - the package IDs.
+func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
+	// get old cursor
+	oldCursor := ob.LastTxScanned()
+	if oldCursor == "" {
+		// nothing to migrate or already migrated
+		return nil
+	}
+
+	// Sui chain params may or may not contain new gateway package ID
+	// the 'originalPackageID' should be used as the DB key for old cursor
+	originalPackageID := ob.gateway.Original().PackageID()
+	if err := ob.WriteAuxStringToDB(originalPackageID, oldCursor); err != nil {
+		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", originalPackageID)
+	}
+	ob.WithAuxString(originalPackageID, oldCursor)
+
+	// set old cursor to empty value
+	if err := ob.WriteLastTxScannedToDB(""); err != nil {
+		return errors.Wrap(err, "unable to clean last tx scanned from db")
+	}
+	ob.WithLastTxScanned("")
+
+	ob.Logger().Inbound.Info().
+		Str("package", originalPackageID).
+		Str("cursor", oldCursor).
+		Msgf("Migrated inbound cursor")
+
+	return nil
+}
+
 // PostGasPrice posts Sui gas price to zetacore.
 // Note (1) that Sui changes gas per EPOCH (not block)
 // Note (2) that SuiXGetCurrentEpoch() is deprecated.
@@ -128,16 +163,19 @@ func (ob *Observer) setLatestGasPrice(price uint64) {
 	ob.latestGasPrice = price
 }
 
-func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
+// getCursor retrieves the inbound cursor for a given packageID
+func (ob *Observer) getCursor(packageID string) string {
+	return ob.GetAuxString(packageID)
+}
 
-func (ob *Observer) setCursor(eventID models.EventId) error {
+// setCursor saves the inbound cursor for a given packageID
+func (ob *Observer) setCursor(packageID string, eventID models.EventId) error {
 	cursor := client.EncodeCursor(eventID)
 
-	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
-		return errors.Wrap(err, "unable to write last tx scanned to db")
+	if err := ob.WriteAuxStringToDB(packageID, cursor); err != nil {
+		return errors.Wrapf(err, "unable to write cursor to db for package %s", packageID)
 	}
-
-	ob.WithLastTxScanned(cursor)
+	ob.WithAuxString(packageID, cursor)
 
 	return nil
 }

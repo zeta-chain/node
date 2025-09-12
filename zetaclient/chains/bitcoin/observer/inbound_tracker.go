@@ -22,7 +22,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
-			Str(logs.FieldCoinType, tracker.CoinType.String()).
+			Stringer(logs.FieldCoinType, tracker.CoinType).
 			Msg("processing inbound tracker")
 		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err

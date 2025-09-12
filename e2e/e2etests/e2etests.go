@@ -34,6 +34,7 @@ const (
 	TestETHWithdrawRevertAndAbortName            = "eth_withdraw_revert_and_abort"
 	TestETHWithdrawAndCallRevertWithWithdrawName = "eth_withdraw_and_call_revert_with_withdraw"
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
+	TestDepositAndCallHighGasUsageName           = "deposit_and_call_high_gas_usage"
 
 	TestERC20DepositName                      = "erc20_deposit"
 	TestERC20MultipleDepositsName             = "erc20_multiple_deposits"
@@ -576,6 +577,14 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestETHWithdrawAndCallRevertWithWithdraw,
 		runner.WithMinimumVersion("v26.0.0"),
+	),
+	runner.NewE2ETest(
+		TestDepositAndCallHighGasUsageName,
+		"deposit Ether into ZEVM and call a contract that consumes high gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallHighGasUsage,
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
