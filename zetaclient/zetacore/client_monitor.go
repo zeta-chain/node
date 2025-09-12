@@ -30,10 +30,7 @@ func (c *Client) MonitorVoteOutboundResult(
 	retryGasLimit uint64,
 	msg *types.MsgVoteOutbound,
 ) error {
-	logger := c.logger.With().
-		Str(logs.FieldZetaTx, zetaTxHash).
-		Str(logs.FieldMethod, "MonitorVoteOutboundResult").
-		Logger()
+	logger := c.logger.With().Str(logs.FieldZetaTx, zetaTxHash).Logger()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -67,7 +64,6 @@ func (c *Client) monitorVoteOutboundResult(
 	}
 
 	logger := c.logger.With().
-		Str(logs.FieldMethod, "monitorVoteOutboundResult").
 		Str(logs.FieldZetaTx, zetaTxHash).
 		Str("outbound_raw_log", txResult.RawLog).
 		Logger()
@@ -109,10 +105,7 @@ func (c *Client) MonitorVoteInboundResult(
 	msg *types.MsgVoteInbound,
 	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
-	logger := c.logger.With().
-		Str(logs.FieldMethod, "MonitorVoteInboundResult").
-		Str(logs.FieldZetaTx, zetaTxHash).
-		Logger()
+	logger := c.logger.With().Str(logs.FieldZetaTx, zetaTxHash).Logger()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -150,10 +143,7 @@ func (c *Client) monitorVoteInboundResult(
 		return errors.Wrap(err, "failed to query tx result")
 	}
 
-	logger := c.logger.With().
-		Str(logs.FieldMethod, "monitorVoteInboundResult").
-		Str("inbound_raw_log", txResult.RawLog).
-		Logger()
+	logger := c.logger.With().Str("inbound_raw_log", txResult.RawLog).Logger()
 
 	// There is no error returned from here which mean the MonitorVoteInboundResult would return nil and no error is posted to monitorErrCh
 	// However the channel is passed to the subsequent call, which can post an error to the channel if the "execute" vote fails.

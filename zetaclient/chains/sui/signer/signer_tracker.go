@@ -26,10 +26,7 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 	const maxTimeout = time.Minute
 
 	// prepare logger
-	logger := zerolog.Ctx(ctx).With().
-		Str(logs.FieldMethod, "reportOutboundTracker").
-		Str(logs.FieldTx, digest).
-		Logger()
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldTx, digest).Logger()
 
 	alreadySet := s.SetBeingReportedFlag(digest)
 	if alreadySet {

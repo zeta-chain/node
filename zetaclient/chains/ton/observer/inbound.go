@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -367,10 +366,7 @@ func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits25
 }
 
 func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
-	logger := ob.Logger().Inbound.With().
-		Str(logs.FieldMethod, "setLastScannedTx").
-		Fields(txLogFields(tx)).
-		Logger()
+	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
 
 	txHash := rpc.TransactionToHashString(tx.Transaction)
 	ob.WithLastTxScanned(txHash)

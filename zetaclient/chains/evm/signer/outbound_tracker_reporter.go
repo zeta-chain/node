@@ -26,7 +26,6 @@ func (signer *Signer) reportToOutboundTracker(
 ) {
 	// prepare logger
 	logger = logger.With().
-		Str(logs.FieldMethod, "reportToOutboundTracker").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, outboundHash).

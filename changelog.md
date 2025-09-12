@@ -5,12 +5,14 @@
 ### Features
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+* [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ### Refactor
 
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
 
 ### Fixes
 
@@ -21,6 +23,7 @@
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
 * [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 
 ### Tests
 

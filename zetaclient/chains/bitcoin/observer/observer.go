@@ -250,7 +250,7 @@ func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "SetLastStuckOutbound").Logger()
+	logger := ob.logger.Outbound
 
 	if stuckTx != nil {
 		logger.Warn().

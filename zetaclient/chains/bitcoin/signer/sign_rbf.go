@@ -18,12 +18,10 @@ import (
 //   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
 func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastTx *btcutil.Tx) (*wire.MsgTx, error) {
 	var (
-		lf = map[string]any{
-			logs.FieldMethod: "SignRBFTx",
-			logs.FieldNonce:  txData.nonce,
-			logs.FieldTx:     lastTx.MsgTx().TxID(),
-		}
-		logger = signer.Logger().Std.With().Fields(lf).Logger()
+		logger = signer.Logger().Std.With().
+			Uint64(logs.FieldNonce, txData.nonce).
+			Str(logs.FieldTx, lastTx.MsgTx().TxID()).
+			Logger()
 
 		cctxRate = txData.feeRateLatest
 	)
