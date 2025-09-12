@@ -15,9 +15,9 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/zeta-chain/go-tss/blame"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

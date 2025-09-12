@@ -5,15 +5,15 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/go-tss/blame"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
-	"github.com/zeta-chain/node/zetaclient/logs"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.

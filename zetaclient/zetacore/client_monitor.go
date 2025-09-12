@@ -7,9 +7,9 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/constant"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
