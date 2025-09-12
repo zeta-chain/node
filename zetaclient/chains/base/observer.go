@@ -224,6 +224,13 @@ func (ob *Observer) LastBlockScanned() uint64 {
 	return height
 }
 
+func (ob *Observer) UpdateForceResetLastScanned(forceResetLastScanned bool) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	ob.forceResetLastScanned = forceResetLastScanned
+}
+
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
 // WithLAstBlockScanned also sets the value of forceResetLastScanned and returns the previous value.
 // If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
