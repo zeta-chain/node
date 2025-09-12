@@ -15,6 +15,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/zeta-chain/go-tss/blame"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -43,6 +44,7 @@ type ZetacoreVoter interface {
 		ctx context.Context,
 		gasLimit, retryGasLimit uint64,
 		msg *crosschaintypes.MsgVoteInbound,
+		monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 	) (string, string, error)
 	PostVoteOutbound(
 		ctx context.Context,

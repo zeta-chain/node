@@ -46,12 +46,12 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 			return errors.Wrap(err, "unable to get block count")
 		}
 		// #nosec G115 always positive
-		ob.WithLastBlockScanned(uint64(blockNumber))
+		ob.WithLastBlockScanned(uint64(blockNumber), false)
 	}
 
 	// bitcoin regtest starts from hardcoded block 100
 	if chains.IsBitcoinRegnet(ob.Chain().ChainId) {
-		ob.WithLastBlockScanned(RegnetStartBlock)
+		ob.WithLastBlockScanned(RegnetStartBlock, false)
 	}
 	ob.Logger().Chain.Info().Uint64("last_block_scanned", ob.LastBlockScanned()).Msg("LoadLastBlockScanned succeed")
 
