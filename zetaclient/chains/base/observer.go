@@ -243,7 +243,7 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScann
 
 	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
 	// In this case we should not update the last scanned block and just return
-	if wasForceReset {
+	if wasForceReset && !forceResetLastScanned {
 		return ob, wasForceReset
 	}
 
