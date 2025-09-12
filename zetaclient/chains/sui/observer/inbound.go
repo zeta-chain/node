@@ -40,6 +40,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string) error {
 	cursor := ob.getCursor(packageID)
 	query := client.EventQuery{
+		// PackageID argument is used by Sui to determine the event type and where to query the events.
+		// It is NOT the package ID that was called (by users) at the moment the events were triggered.
 		PackageID: packageID,
 		Module:    sui.GatewayModule,
 		Cursor:    cursor,
