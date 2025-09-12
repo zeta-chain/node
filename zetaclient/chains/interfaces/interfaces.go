@@ -44,7 +44,7 @@ type ZetacoreVoter interface {
 		ctx context.Context,
 		gasLimit, retryGasLimit uint64,
 		msg *crosschaintypes.MsgVoteInbound,
-		monitorErrCh chan<- zetaerrors.MonitorError,
+		monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 	) (string, string, error)
 	PostVoteOutbound(
 		ctx context.Context,

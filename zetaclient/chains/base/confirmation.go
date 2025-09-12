@@ -15,6 +15,9 @@ import (
 func (ob *Observer) GetScanRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
+	// force reset last scanned to true means last scanned block is reset by monitoring threa
+	// we are already fetch the last updated last block so this can be set to false
+	ob.forceResetLastScanned = false
 	confirmation := ob.ChainParams().InboundConfirmationSafe()
 
 	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit)
@@ -95,6 +98,7 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 //
 // example 1: given lastBlock =  99, lastScanned = 90, confirmation = 10, then no unscanned block
 // example 2: given lastBlock = 100, lastScanned = 90, confirmation = 10, then 1 unscanned block (block 91)
+// example 3: given lastBlock = 100, lastScanned = 50, confirmation = 10, then 41 unscanned blocks[51 - 91] (last scanned is reset by monitoring thread)
 func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit uint64) (from uint64, end uint64) {
 	// got unscanned blocks or not?
 	// returning same values to indicate no unscanned block

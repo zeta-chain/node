@@ -78,6 +78,8 @@ type Observer struct {
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
+
+	forceResetLastScanned bool
 }
 
 // NewObserver creates a new base observer.
@@ -97,19 +99,20 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetacoreClient:   zetacoreClient,
-		tss:              tss,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
+		chain:                 chain,
+		chainParams:           chainParams,
+		zetacoreClient:        zetacoreClient,
+		tss:                   tss,
+		lastBlock:             0,
+		lastBlockScanned:      0,
+		lastTxScanned:         "",
+		ts:                    ts,
+		db:                    database,
+		blockCache:            blockCache,
+		mu:                    &sync.Mutex{},
+		logger:                newObserverLogger(chain, logger),
+		stop:                  make(chan struct{}),
+		forceResetLastScanned: false,
 	}, nil
 }
 
@@ -222,10 +225,23 @@ func (ob *Observer) LastBlockScanned() uint64 {
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	valueBeforeUpdate := ob.forceResetLastScanned
+	ob.forceResetLastScanned = forceResetLastScanned
+
+	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
+	// In this case we should not update the last scanned block and just return
+	if valueBeforeUpdate {
+		return ob, valueBeforeUpdate
+	}
+
+	ob.forceResetLastScanned = forceResetLastScanned
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
-	return ob
+	return ob, valueBeforeUpdate
 }
 
 // LastTxScanned get last transaction scanned.
@@ -301,7 +317,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
-		ob.WithLastBlockScanned(blockNumber)
+		ob.WithLastBlockScanned(blockNumber, false)
 		return nil
 	}
 
@@ -311,24 +327,28 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber, false)
 
 	return nil
 }
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-	ob.WithLastBlockScanned(blockNumber)
+	_, forceResetLastScannedBeforeUpdate := ob.WithLastBlockScanned(blockNumber, false)
+	if forceResetLastScannedBeforeUpdate {
+		return nil
+	}
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
-func (ob *Observer) SaveLastBlockScannedIfOlder(blockNumber uint64) error {
+// ForceSaveLastBlockScanned saves the last scanned block to memory if the new blocknumber is less than the current last scanned block.
+// It also forces the update of the last scanned block in the database, to makes sure any other the block gets rescanned.
+func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
 	currentLastScanned := ob.LastBlockScanned()
 	if blockNumber > currentLastScanned {
 		return nil
 	}
-
-	ob.WithLastBlockScanned(blockNumber)
+	ob.WithLastBlockScanned(blockNumber, true)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
@@ -382,7 +402,7 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 	ob.WithLastTxScanned(txHash)
 
 	// update last_scanned_block_number metrics
-	ob.WithLastBlockScanned(slot)
+	ob.WithLastBlockScanned(slot, false)
 
 	return ob.WriteLastTxScannedToDB(txHash)
 }
@@ -446,7 +466,7 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
-	monitorErrCh := make(chan zetaerrors.MonitorError, 1)
+	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
@@ -468,7 +488,7 @@ func (ob *Observer) PostVoteInbound(
 
 	go func() {
 		ctxForHandler := zctx.Copy(ctx, context.Background())
-		ob.handleMonitoringError(ctxForHandler, monitorErrCh, logger)
+		ob.handleMonitoringError(ctxForHandler, monitorErrCh)
 	}()
 
 	return ballot, nil
@@ -476,9 +496,9 @@ func (ob *Observer) PostVoteInbound(
 
 func (ob *Observer) handleMonitoringError(
 	ctx context.Context,
-	monitorErrCh <-chan zetaerrors.MonitorError,
-	logger zerolog.Logger,
+	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
 ) {
+	logger := ob.logger.Inbound
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
@@ -489,16 +509,17 @@ func (ob *Observer) handleMonitoringError(
 	case monitorErr := <-monitorErrCh:
 		if monitorErr.Err != nil {
 			logger.Error().
-				Err(monitorErr.Err).
+				Err(monitorErr).
 				Str(logs.FieldMethod, "handleMonitoringError").
 				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
 				Str(logs.FieldBallot, monitorErr.BallotIndex).
-				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
-				Msg("monitoring error occurred , updating last scanned block")
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight)
 
-			err := ob.SaveLastBlockScanned(monitorErr.InboundBlockHeight)
+			err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
 			if err != nil {
-				return
+				logger.Error().Err(err).
+					Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+					Msg("unable to save last scanned block after monitoring error")
 			}
 		}
 	case <-ctx.Done():
