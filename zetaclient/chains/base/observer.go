@@ -232,7 +232,7 @@ func (ob *Observer) UpdateForceResetLastScanned(forceResetLastScanned bool) {
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-// WithLAstBlockScanned also sets the value of forceResetLastScanned and returns the previous value.
+// it also set the value of forceResetLastScanned and returns the previous value.
 // If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
 func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
 	ob.mu.Lock()
