@@ -227,9 +227,18 @@ func (ob *Observer) LastBlockScanned() uint64 {
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-// it also set the value of forceResetLastScanned and returns the previous value.
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	ob.updateBlockAndMetrics(blockNumber)
+	return ob
+}
+
+// UpdateLastBlockAndForceScan set last block scanned (not necessarily caught up with the chain; could be slow/paused).
+// it also sets the value of forceResetLastScanned and returns the previous value.
 // If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
-func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
+func (ob *Observer) UpdateLastBlockAndForceScan(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
@@ -241,9 +250,7 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScann
 	if wasForceReset && !forceResetLastScanned {
 		return ob, wasForceReset
 	}
-
-	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
-	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
+	ob.updateBlockAndMetrics(blockNumber)
 	return ob, wasForceReset
 }
 
@@ -320,7 +327,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
-		ob.WithLastBlockScanned(blockNumber, false)
+		ob.WithLastBlockScanned(blockNumber)
 		return nil
 	}
 
@@ -330,14 +337,14 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber, false)
+	ob.WithLastBlockScanned(blockNumber)
 
 	return nil
 }
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-	_, forceResetLastScannedBeforeUpdate := ob.WithLastBlockScanned(blockNumber, false)
+	_, forceResetLastScannedBeforeUpdate := ob.UpdateLastBlockAndForceScan(blockNumber, false)
 	if forceResetLastScannedBeforeUpdate {
 		return nil
 	}
@@ -351,7 +358,7 @@ func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
 	if blockNumber > currentLastScanned {
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber, true)
+	ob.UpdateLastBlockAndForceScan(blockNumber, true)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
@@ -405,7 +412,7 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 	ob.WithLastTxScanned(txHash)
 
 	// update last_scanned_block_number metrics
-	ob.WithLastBlockScanned(slot, false)
+	ob.WithLastBlockScanned(slot)
 
 	return ob.WriteLastTxScannedToDB(txHash)
 }
@@ -562,4 +569,10 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 		Headers:    log.With().Str(logs.FieldModule, logs.ModNameHeaders).Logger(),
 		Compliance: complianceLog,
 	}
+}
+
+// updateBlockAndMetrics updates the last scanned block and the corresponding metric.
+func (ob *Observer) updateBlockAndMetrics(blockNumber uint64) {
+	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
+	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
 }

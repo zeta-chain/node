@@ -83,7 +83,7 @@ func Test_GetScanRangeInboundSafe(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-			ob.Observer.WithLastBlockScanned(tt.lastScanned, false)
+			ob.Observer.WithLastBlockScanned(tt.lastScanned)
 
 			start, end := ob.GetScanRangeInboundSafe(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
@@ -141,7 +141,7 @@ func Test_GetScanRangeInboundFast(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-			ob.Observer.WithLastBlockScanned(tt.lastScanned, false)
+			ob.Observer.WithLastBlockScanned(tt.lastScanned)
 
 			start, end := ob.GetScanRangeInboundFast(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
