@@ -220,28 +220,38 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
+func (ob *Observer) UpdateForceResetLastScanned(forceResetLastScanned bool) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	ob.forceResetLastScanned = forceResetLastScanned
+}
+
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
+// it also set the value of forceResetLastScanned and returns the previous value.
+// If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
 func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
-	valueBeforeUpdate := ob.forceResetLastScanned
+	wasForceReset := ob.forceResetLastScanned
 	ob.forceResetLastScanned = forceResetLastScanned
 
 	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
 	// In this case we should not update the last scanned block and just return
-	if valueBeforeUpdate {
-		return ob, valueBeforeUpdate
+	if wasForceReset && !forceResetLastScanned {
+		return ob, wasForceReset
 	}
 
-	ob.forceResetLastScanned = forceResetLastScanned
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
-	return ob, valueBeforeUpdate
+	return ob, wasForceReset
 }
 
 // LastTxScanned get last transaction scanned.
@@ -513,13 +523,16 @@ func (ob *Observer) handleMonitoringError(
 				Str(logs.FieldMethod, "handleMonitoringError").
 				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
 				Str(logs.FieldBallot, monitorErr.BallotIndex).
-				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight)
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
+				Msg("error monitoring vote transaction")
 
-			err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
-			if err != nil {
-				logger.Error().Err(err).
-					Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
-					Msg("unable to save last scanned block after monitoring error")
+			if monitorErr.InboundBlockHeight > 0 {
+				err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
+				if err != nil {
+					logger.Error().Err(err).
+						Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+						Msg("unable to save last scanned block after monitoring error")
+				}
 			}
 		}
 	case <-ctx.Done():

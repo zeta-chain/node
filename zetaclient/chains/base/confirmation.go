@@ -15,9 +15,9 @@ import (
 func (ob *Observer) GetScanRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
-	// force reset last scanned to true means last scanned block is reset by monitoring threa
-	// we are already fetch the last updated last block so this can be set to false
-	ob.forceResetLastScanned = false
+	// This function fetches the latest block at the beginning of the scan cycle.
+	// If the last scanned block was reset by monitoring, the block would now be included in the scan range.
+	ob.UpdateForceResetLastScanned(false)
 	confirmation := ob.ChainParams().InboundConfirmationSafe()
 
 	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit)
