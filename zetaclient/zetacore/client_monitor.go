@@ -144,6 +144,15 @@ func (c *Client) monitorVoteInboundResult(
 	msg *types.MsgVoteInbound,
 	monitorErrCh chan<- zetaerrors.MonitorError,
 ) error {
+	// empty zetaHash means tx failure was simulated
+	if zetaTxHash == "" {
+		// sleep a bit to simulate the time taken to post a tx
+		// 5 seconds is chosen to be longer than the typical block time
+		time.Sleep(time.Second * 5)
+
+		return errors.New("simulated tx failure")
+	}
+
 	// query tx result from ZetaChain
 	txResult, err := c.QueryTxResult(zetaTxHash)
 	if err != nil {
