@@ -21,6 +21,7 @@
 * [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 
 ### Tests
 
