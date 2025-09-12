@@ -8,9 +8,6 @@
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
-## Fixes
-* [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
-
 ## v33.0.0
 
 ### Features
