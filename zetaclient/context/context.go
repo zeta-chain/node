@@ -43,13 +43,8 @@ func Copy(from, to goctx.Context) goctx.Context {
 func CopyWithTimeout(from, to goctx.Context, timeout time.Duration) (goctx.Context, goctx.CancelFunc) {
 	app, err := FromContext(from)
 	if err != nil {
-		// If no AppContext found, just add timeout to the target context
 		return goctx.WithTimeout(to, timeout)
 	}
-
-	// Create a new context with timeout
 	ctxWithTimeout, cancel := goctx.WithTimeout(to, timeout)
-
-	// Copy the AppContext to the new context
 	return WithAppContext(ctxWithTimeout, app), cancel
 }
