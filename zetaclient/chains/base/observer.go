@@ -551,8 +551,7 @@ func (ob *Observer) PostVoteInbound(
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
 	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
-	ctxWithTimeout, cancel := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
-	defer cancel()
+	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
 
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().
