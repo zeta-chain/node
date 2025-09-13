@@ -186,8 +186,9 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		ctxForWorker := zctx.Copy(ctx, context.Background())
-		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg, monitorErrCh)
+		// Use the passed context directly instead of creating a new one
+		// This ensures the monitoring goroutine respects the same timeout as the error handler
+		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
 			c.logger.Error().Err(errMonitor).Msg("failed to monitor vote inbound result")
 
@@ -199,8 +200,8 @@ func (c *Client) PostVoteInbound(
 					ZetaTxHash:         zetaTxHash,
 					BallotIndex:        ballotIndex,
 				}:
-				case <-ctxForWorker.Done():
-					c.logger.Debug().Msg("context cancelled while sending monitor error")
+				case <-ctx.Done():
+					c.logger.Error().Msg("context cancelled :timeout")
 				}
 			}
 		}
