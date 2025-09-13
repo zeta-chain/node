@@ -550,13 +550,13 @@ func (ob *Observer) PostVoteInbound(
 
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
-	// Create a timeout context for the entire monitoring process
-	// This ensures both the monitoring goroutine and error handler respect the same timeout
+	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
 	ctxWithTimeout, cancel := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
 	defer cancel()
 
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
+	zetaHash, ballot, err := ob.ZetacoreClient().
+		PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
