@@ -471,7 +471,8 @@ func (ob *Observer) PostVoteInbound(
 	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
 
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
+	zetaHash, ballot, err := ob.ZetacoreClient().
+		PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
 	lf[logs.FieldZetaTx] = zetaHash
 	lf[logs.FieldBallot] = ballot
 
