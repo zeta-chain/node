@@ -40,11 +40,6 @@ func TestGenesis(t *testing.T) {
 			sample.CrossChainTx(t, "1"),
 			sample.CrossChainTx(t, "2"),
 		},
-		LastBlockHeightList: []*types.LastBlockHeight{
-			sample.LastBlockHeight(t, "0"),
-			sample.LastBlockHeight(t, "1"),
-			sample.LastBlockHeight(t, "2"),
-		},
 		InboundHashToCctxList: []types.InboundHashToCctx{
 			sample.InboundHashToCctx(t, "0x0"),
 			sample.InboundHashToCctx(t, "0x1"),

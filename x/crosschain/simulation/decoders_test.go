@@ -17,7 +17,6 @@ func TestDecodeStore(t *testing.T) {
 	cdc := k.GetCodec()
 	dec := simulation.NewDecodeStore(cdc)
 	cctx := sample.CrossChainTx(t, "sample")
-	lastBlockHeight := sample.LastBlockHeight(t, "sample")
 	gasPrice := sample.GasPrice(t, "sample")
 	outboundTracker := sample.OutboundTracker(t, "sample")
 	inboundTracker := sample.InboundTracker(t, "sample")
@@ -27,7 +26,6 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.KeyPrefix(types.CCTXKey), Value: cdc.MustMarshal(cctx)},
-			{Key: types.KeyPrefix(types.LastBlockHeightKey), Value: cdc.MustMarshal(lastBlockHeight)},
 			{Key: types.KeyPrefix(types.GasPriceKey), Value: cdc.MustMarshal(gasPrice)},
 			{Key: types.KeyPrefix(types.OutboundTrackerKeyPrefix), Value: cdc.MustMarshal(&outboundTracker)},
 			{Key: types.KeyPrefix(types.InboundTrackerKeyPrefix), Value: cdc.MustMarshal(&inboundTracker)},
@@ -42,10 +40,6 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"CrossChainTx", fmt.Sprintf("key %s value A %v value B %v", types.CCTXKey, *cctx, *cctx)},
-		{
-			"LastBlockHeight",
-			fmt.Sprintf("key %s value A %v value B %v", types.LastBlockHeightKey, *lastBlockHeight, *lastBlockHeight),
-		},
 		{"GasPrice", fmt.Sprintf("key %s value A %v value B %v", types.GasPriceKey, *gasPrice, *gasPrice)},
 		{
 			"OutboundTracker",
