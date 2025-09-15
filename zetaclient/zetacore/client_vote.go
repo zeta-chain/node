@@ -13,7 +13,6 @@ import (
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -193,13 +192,11 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		// MonitorVoteInboundResult has a maximum lifetime of as the error handler but can be less than that if the retry gets over
+		// Use the passed context directly instead of creating a new one
+		// This ensures the monitoring goroutine respects the same timeout as the error handler
 		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
-			c.logger.Error().
-				Err(errMonitor).
-				Str(logs.FieldMethod, "PostVoteInbound").
-				Msg("failed to monitor vote inbound result")
+			c.logger.Error().Err(errMonitor).Msg("failed to monitor vote inbound result")
 
 			if monitorErrCh != nil {
 				select {
@@ -210,8 +207,7 @@ func (c *Client) PostVoteInbound(
 					BallotIndex:        ballotIndex,
 				}:
 				case <-ctx.Done():
-					// This condition is very unlikely to happen; it will only trigger it the handleMonitoringError error has crashed.
-					c.logger.Debug().Msg("context cancelled while waiting for handling monitor error to rad from channel")
+					c.logger.Error().Msg("context cancelled: timeout")
 				}
 			}
 		}
