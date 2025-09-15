@@ -102,8 +102,24 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.suiTransferObjectToTSS(deployerSigner, messageContextID)
 
 	// set the chain params
-	err = r.setSuiChainParams()
+	err = r.setSuiChainParams(true)
 	require.NoError(r, err)
+}
+
+// SuiUpdateGatewayInfo updates the gateway information from chain params
+func (r *E2ERunner) SuiUpdateGatewayInfo() {
+	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
+
+	// query chain params
+	resp, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
+	require.NoError(r, err)
+	require.NotNil(r, resp.ChainParams)
+
+	// update runner's gateway information
+	r.SuiGateway, err = zetasui.NewGatewayFromPairID(resp.ChainParams.GatewayAddress)
+	require.NoError(r, err)
+
+	r.Logger.Info("current gateway package ID: %s", r.SuiGateway.PackageID())
 }
 
 // suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
@@ -472,7 +488,7 @@ func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUS
 }
 
 // set the chain params for Sui
-func (r *E2ERunner) setSuiChainParams() error {
+func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 	if r.ZetaTxServer == nil {
 		return errors.New("ZetaTxServer is not initialized")
 	}
@@ -495,7 +511,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
+		GatewayAddress:              r.SuiGateway.ToPairID(),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,
@@ -507,18 +523,19 @@ func (r *E2ERunner) setSuiChainParams() error {
 		return errors.Wrap(err, "unable to broadcast solana chain params tx")
 	}
 
-	resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
-	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
-		return errors.Wrap(err, "unable to broadcast solana chain nonce reset tx")
+	if resetNonces {
+		resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
+		if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
+			return errors.Wrap(err, "unable to broadcast sui chain nonce reset tx")
+		}
 	}
 
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chainID}
 
 	const duration = 2 * time.Second
 
-	for i := 0; i < 10; i++ {
-		_, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
-		if err == nil {
+	for range 10 {
+		if _, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query); err == nil {
 			r.Logger.Print("⚙️ Sui chain params are set")
 			return nil
 		}

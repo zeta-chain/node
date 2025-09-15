@@ -37,7 +37,7 @@ func PrintComplianceLog(
 		fields = map[string]any{
 			logs.FieldChain:    chainID,
 			logs.FieldCoinType: token,
-			logs.FieldCctx:     identifier,
+			"identifier":       identifier,
 			"sender":           sender,
 			"receiver":         receiver,
 		}

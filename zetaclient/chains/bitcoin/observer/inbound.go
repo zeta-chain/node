@@ -22,7 +22,7 @@ import (
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
+	logger := ob.Logger().Inbound
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
@@ -188,10 +188,7 @@ func FilterAndParseIncomingTx(
 //     invalid data, not processable, invalid amount, etc.
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger
-	logger := ob.logger.Inbound.With().
-		Str(logs.FieldMethod, "GetInboundVoteFromBtcEvent").
-		Str(logs.FieldTx, event.TxHash).
-		Logger()
+	logger := ob.logger.Inbound.With().Str(logs.FieldTx, event.TxHash).Logger()
 
 	// decode event memo bytes
 	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
@@ -268,11 +265,12 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
-	// inject the 'revertAddress' specified in the memo, so that
-	// zetacore will create a revert outbound that points to the custom revert address.
+	// inject revert options specified by the memo
+	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
 	revertOptions := crosschaintypes.RevertOptions{
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
 	}
 
 	// check if the memo is a cross-chain call, or simple token deposit

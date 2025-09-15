@@ -26,7 +26,7 @@ func TestSuiDepositRestrictedAddress(r *runner.E2ERunner, args []string) {
 
 	// ACT
 	// perform the deposit
-	resp := r.SuiDepositSUI(receiver, math.NewUintFromBigInt(amount))
+	resp := r.SuiDepositSUI(r.SuiGateway.PackageID(), receiver, math.NewUintFromBigInt(amount))
 	r.Logger.Info("Sui restricted deposit tx: %s", resp.Digest)
 
 	// wait enough time

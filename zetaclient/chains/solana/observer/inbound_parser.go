@@ -10,7 +10,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/coin"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -57,8 +56,8 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 	// get the program ID
 	programPk, err := p.tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
-		p.logger.Err(err).
-			Str(logs.FieldMethod, "parseInstruction").
+		p.logger.
+			Err(err).
 			Stringer("signature", p.tx.Signatures[0]).
 			Str("location", location).
 			Uint16("index", instruction.ProgramIDIndex).
@@ -96,16 +95,14 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 			})
 			p.eventIndex++
 			p.logger.Info().
-				Str(logs.FieldMethod, "parseInstruction").
 				Stringer("signature", p.tx.Signatures[0]).
 				Str("location", location).
-				Uint32("eventIndex", p.eventIndex-1).
+				Uint32("event_index", p.eventIndex-1).
 				Msg("deposit detected")
 			return nil
 		}
 	} else {
 		p.logger.Warn().
-			Str(logs.FieldMethod, "parseInstruction").
 			Stringer("signature", p.tx.Signatures[0]).
 			Str("location", location).
 			Msg("multiple deposits detected")
@@ -136,7 +133,6 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 			})
 			p.eventIndex++
 			p.logger.Info().
-				Str(logs.FieldMethod, "parseInstruction").
 				Stringer("signature", p.tx.Signatures[0]).
 				Str("location", location).
 				Uint32("eventIndex", p.eventIndex-1).
@@ -145,7 +141,6 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 		}
 	} else {
 		p.logger.Warn().
-			Str(logs.FieldMethod, "parseInstruction").
 			Stringer("signature", p.tx.Signatures[0]).
 			Str("location", location).
 			Msg("multiple SPL deposits detected")
@@ -176,7 +171,6 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 			})
 			p.eventIndex++
 			p.logger.Info().
-				Str(logs.FieldMethod, "parseInstruction").
 				Stringer("signature", p.tx.Signatures[0]).
 				Str("location", location).
 				Uint32("eventIndex", p.eventIndex-1).
@@ -185,7 +179,6 @@ func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruc
 		}
 	} else {
 		p.logger.Warn().
-			Str(logs.FieldMethod, "parseInstruction").
 			Stringer("signature", p.tx.Signatures[0]).
 			Str("location", location).
 			Msg("multiple calls detected")

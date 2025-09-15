@@ -20,7 +20,7 @@ func TestSuiDeposit(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// make the deposit transaction
-	resp := r.SuiDepositSUI(r.EVMAddress(), math.NewUintFromBigInt(amount))
+	resp := r.SuiDepositSUI(r.SuiGateway.PackageID(), r.EVMAddress(), math.NewUintFromBigInt(amount))
 
 	r.Logger.Info("Sui deposit tx: %s", resp.Digest)
 
