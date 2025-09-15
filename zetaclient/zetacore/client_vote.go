@@ -201,7 +201,7 @@ func (c *Client) PostVoteInbound(
 					BallotIndex:        ballotIndex,
 				}:
 				case <-ctx.Done():
-					c.logger.Error().Msg("context cancelled :timeout")
+					c.logger.Error().Msg("context cancelled: timeout")
 				}
 			}
 		}
