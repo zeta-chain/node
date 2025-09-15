@@ -613,7 +613,7 @@ func (ob *Observer) handleMonitoringError(
 	case <-ctx.Done():
 		logger.Debug().
 			Str(logs.FieldZetaTx, zetaHash).
-			Msg("no error received for the monitoring , the transaction likely succeeded")
+			Msg("no error received for the monitoring, the transaction likely succeeded")
 	}
 }
 
