@@ -23,6 +23,8 @@
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4197](https://github.com/zeta-chain/node/pull/4197) - re-check for finalized ballot when executing inbound vote to create cctx
+
 
 ### Tests
 
