@@ -179,3 +179,61 @@ func (msg *MsgGasPriceVoter) GetSignBytes() []byte {
 func (msg *MsgGasPriceVoter) ValidateBasic() error {
 	return nil
 }
+
+// MsgMigrateERC20CustodyFunds
+
+var _ sdk.Msg = &MsgMigrateERC20CustodyFunds{}
+
+func (msg *MsgMigrateERC20CustodyFunds) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgMigrateERC20CustodyFunds) Type() string {
+	return "MigrateERC20CustodyFunds"
+}
+
+func (msg *MsgMigrateERC20CustodyFunds) GetSigners() []sdk.AccAddress {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{creator}
+}
+
+func (msg *MsgMigrateERC20CustodyFunds) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgMigrateERC20CustodyFunds) ValidateBasic() error {
+	return nil
+}
+
+// MsgUpdateERC20CustodyPauseStatus
+
+var _ sdk.Msg = &MsgUpdateERC20CustodyPauseStatus{}
+
+func (msg *MsgUpdateERC20CustodyPauseStatus) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgUpdateERC20CustodyPauseStatus) Type() string {
+	return "UpdateERC20CustodyPauseStatus"
+}
+
+func (msg *MsgUpdateERC20CustodyPauseStatus) GetSigners() []sdk.AccAddress {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{creator}
+}
+
+func (msg *MsgUpdateERC20CustodyPauseStatus) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgUpdateERC20CustodyPauseStatus) ValidateBasic() error {
+	return nil
+}

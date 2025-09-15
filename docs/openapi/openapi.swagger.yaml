@@ -54456,11 +54456,6 @@ definitions:
       isRemoved:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFundsResponse:
-    type: object
-    properties:
-      cctxIndex:
-        type: string
   zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse:
     type: object
   zetachain.zetacore.crosschain.MsgRefundAbortedCCTXResponse:
@@ -54469,11 +54464,6 @@ definitions:
     type: object
   zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse:
     type: object
-  zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse:
-    type: object
-    properties:
-      cctxIndex:
-        type: string
   zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlagsResponse:
     type: object
   zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse:
