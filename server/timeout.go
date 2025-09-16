@@ -59,6 +59,7 @@ func overWriteConfig(cmd *cobra.Command) error {
 			return fmt.Errorf("failed to set server context: %w", err)
 		}
 
+		// Skip writing to config file to prevent error for read-only file systems
 		//err = updateConfigFile(cmd, serverCtx.Config)
 		//if err != nil {
 		//	return err

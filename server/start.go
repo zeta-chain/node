@@ -132,7 +132,11 @@ which accepts a path for the resulting pprof file.
 					return err
 				}
 			}
-			skipOverwrite, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
+			// Default value is false we always use default value
+			skipOverwrite := false
+			if val, err := cmd.Flags().GetBool(FlagSkipConfigOverwrite); err == nil {
+				skipOverwrite = val
+			}
 			//zevmChainID, err := genesisChainID(serverCtx.Config.GenesisFile())
 			//if err != nil {
 			//	return errorsmod.Wrapf(err, "failed to get genesis chain ID from genesis file")
