@@ -295,7 +295,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 				ctx,
 				msg)
 
-			// Only the finalizing vote fails, but all votes are still added to the ballot
+			// the second ballot is never finalized
 			if i >= 6 {
 				require.Error(t, errVote2)
 				require.ErrorIs(t, errVote2, types.ErrObservedTxAlreadyFinalized)
