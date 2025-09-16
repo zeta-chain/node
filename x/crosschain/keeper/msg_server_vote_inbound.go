@@ -110,7 +110,6 @@ func (k msgServer) VoteInbound(
 
 // handleFinalizedInbound handles the finalized inbound ballot. It validates the inbound CCTX and saves it to the store.
 // This function is only called once for every inbound CCTX , when the ballot is finalized for the first time.
-
 func (k Keeper) handleFinalizedInbound(ctx sdk.Context, msg *types.MsgVoteInbound) error {
 	if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 		return sdkerrors.Wrapf(
