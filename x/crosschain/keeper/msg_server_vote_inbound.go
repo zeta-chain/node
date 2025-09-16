@@ -95,7 +95,7 @@ func (k msgServer) VoteInbound(
 	}
 	commit()
 
-	//// If the ballot is not finalized return nil here to add vote to commit state
+	// If the ballot is not finalized, return nil here to add a vote to commit state
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
 	}
@@ -104,7 +104,7 @@ func (k msgServer) VoteInbound(
 	if err := k.handleFinalizedInbound(ctx, msg); err != nil {
 		return nil, err
 	}
-	
+
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
