@@ -17,13 +17,13 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SimulateMsgWhitelistERC20 generates a MsgWhitelistERC20 with random values and delivers it
-func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
+// SimulateMsgWhitelistAsset generates a MsgWhitelistAsset with random values and delivers it
+func SimulateMsgWhitelistAsset(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistERC20, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistAsset, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -33,7 +33,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -42,7 +42,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if len(filteredChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"no EVM-compatible chains found",
 			), nil, nil
 		}
@@ -56,14 +56,14 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		case randomChain.IsEVMChain():
 			tokenAddress = sample.EthAddressFromRand(r).String()
 		default:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistAsset, "unsupported chain"), nil, nil
 		}
 
 		_, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"no TSS found",
 			), nil, nil
 		}
@@ -72,7 +72,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"no chain params found",
 			), nil, nil
 		}
@@ -81,7 +81,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if !isFound {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"median gas price not found",
 			), nil, nil
 		}
@@ -92,7 +92,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
+				TypeMsgWhitelistAsset,
 				"priorityFee is greater than median gasPrice",
 			), nil, nil
 		}
@@ -102,7 +102,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			if fCoin.Asset == tokenAddress && fCoin.ForeignChainId == randomChain.ChainId {
 				return simtypes.NoOpMsg(
 					types.ModuleName,
-					TypeMsgWhitelistERC20,
+					TypeMsgWhitelistAsset,
 					"ERC20 already whitelisted",
 				), nil, nil
 			}
@@ -110,10 +110,10 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 
 		gasLimit := r.Int63n(1000000000) + 1
 		nameLength := r.Intn(97) + 3
-		msg := types.MsgWhitelistERC20{
+		msg := types.MsgWhitelistAsset{
 			Creator:      policyAccount.Address.String(),
 			ChainId:      randomChain.ChainId,
-			Erc20Address: tokenAddress,
+			AssetAddress: tokenAddress,
 			GasLimit:     gasLimit,
 			Decimals:     18,
 			Name:         sample.StringRandom(r, nameLength),
@@ -125,8 +125,8 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgWhitelistERC20,
-				"unable to validate MsgWhitelistERC20",
+				TypeMsgWhitelistAsset,
+				"unable to validate MsgWhitelistAsset",
 			), nil, err
 		}
 

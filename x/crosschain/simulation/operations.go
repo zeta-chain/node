@@ -18,7 +18,7 @@ var (
 	TypeMsgVoteGasPrice                  = sdk.MsgTypeURL(&types.MsgVoteGasPrice{})
 	TypeMsgVoteOutbound                  = sdk.MsgTypeURL(&types.MsgVoteOutbound{})
 	TypeMsgVoteInbound                   = sdk.MsgTypeURL(&types.MsgVoteInbound{})
-	TypeMsgWhitelistERC20                = sdk.MsgTypeURL(&types.MsgWhitelistERC20{})
+	TypeMsgWhitelistAsset                = sdk.MsgTypeURL(&types.MsgWhitelistAsset{})
 	TypeMsgMigrateTssFunds               = sdk.MsgTypeURL(&types.MsgMigrateTssFunds{})
 	TypeMsgUpdateTssAddress              = sdk.MsgTypeURL(&types.MsgUpdateTssAddress{})
 	TypeMsgAbortStuckCCTX                = sdk.MsgTypeURL(&types.MsgAbortStuckCCTX{})
@@ -46,7 +46,7 @@ const (
 	DefaultWeightVoteGasPrice                  = 50
 	DefaultWeightVoteOutbound                  = 10
 	DefaultWeightVoteInbound                   = 10
-	DefaultWeightWhitelistERC20                = 10
+	DefaultWeightWhitelistAsset                = 10
 	DefaultWeightMigrateTssFunds               = 1
 	DefaultWeightUpdateTssAddress              = 10
 	DefaultWeightAbortStuckCCTX                = 5
@@ -60,7 +60,7 @@ const (
 	OpWeightVoteGasPrice                  = "op_weight_msg_vote_gas_price"                    // #nosec G101 not a hardcoded credential
 	OpWeightVoteOutbound                  = "op_weight_msg_vote_outbound"                     // #nosec G101 not a hardcoded credential
 	OpWeightVoteInbound                   = "op_weight_msg_vote_inbound"                      // #nosec G101 not a hardcoded credential
-	OpWeightWhitelistERC20                = "op_weight_msg_whitelist_erc20"                   // #nosec G101 not a hardcoded credential
+	OpWeightWhitelistAsset                = "op_weight_msg_whitelist_asset"                   // #nosec G101 not a hardcoded credential
 	OpWeightMigrateTssFunds               = "op_weight_msg_migrate_tss_funds"                 // #nosec G101 not a hardcoded credential
 	OpWeightUpdateTssAddress              = "op_weight_msg_update_tss_address"                // #nosec G101 not a hardcoded credential
 	OpWeightAbortStuckCCTX                = "op_weight_msg_abort_stuck_cctx"                  // #nosec G101 not a hardcoded credential
@@ -78,7 +78,7 @@ func WeightedOperations(
 		weightVoteGasPrice                  int
 		weightVoteOutbound                  int
 		weightVoteInbound                   int
-		weightWhitelistERC20                int
+		weightWhitelistAsset                int
 		weightMigrateTssFunds               int
 		weightUpdateTssAddress              int
 		weightAbortStuckCCTX                int
@@ -123,9 +123,9 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightWhitelistERC20, &weightWhitelistERC20, nil,
+	appParams.GetOrGenerate(OpWeightWhitelistAsset, &weightWhitelistAsset, nil,
 		func(_ *rand.Rand) {
-			weightWhitelistERC20 = DefaultWeightWhitelistERC20
+			weightWhitelistAsset = DefaultWeightWhitelistAsset
 		},
 	)
 
@@ -194,8 +194,8 @@ func WeightedOperations(
 			SimulateMsgRemoveOutboundTracker(k),
 		),
 		simulation.NewWeightedOperation(
-			weightWhitelistERC20,
-			SimulateMsgWhitelistERC20(k),
+			weightWhitelistAsset,
+			SimulateMsgWhitelistAsset(k),
 		),
 		simulation.NewWeightedOperation(
 			weightAbortStuckCCTX,
