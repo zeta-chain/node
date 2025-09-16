@@ -18,8 +18,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestWhitelistERC20 tests the whitelist ERC20 functionality
-func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
+// TestWhitelistAsset tests the whitelist asset functionality
+func TestWhitelistAsset(r *runner.E2ERunner, _ []string) {
 	// Deploy a new ERC20 on the new EVM chain
 	r.Logger.Info("Deploying new ERC20 contract")
 	erc20Addr, txERC20, _, err := erc20.DeployERC20(r.EVMAuth, r.EVMClient, "NEWERC20", "NEWERC20", 6)
