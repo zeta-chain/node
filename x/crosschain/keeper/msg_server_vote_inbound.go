@@ -101,10 +101,10 @@ func (k msgServer) VoteInbound(
 	}
 
 	// handle finalized inbound
-	err = k.handleFinalizedInbound(ctx, msg)
-	if err != nil {
+	if err := k.handleFinalizedInbound(ctx, msg); err != nil {
 		return nil, err
 	}
+	
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
