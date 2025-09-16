@@ -59,10 +59,10 @@ func overWriteConfig(cmd *cobra.Command) error {
 			return fmt.Errorf("failed to set server context: %w", err)
 		}
 
-		err = updateConfigFile(cmd, serverCtx.Config)
-		if err != nil {
-			return err
-		}
+		//err = updateConfigFile(cmd, serverCtx.Config)
+		//if err != nil {
+		//	return err
+		//}
 	}
 	return nil
 }
