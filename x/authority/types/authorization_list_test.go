@@ -422,7 +422,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&crosschaintypes.MsgMigrateERC20CustodyFunds{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgMigrateTssFunds{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgUpdateTssAddress{}),
-			sdk.MsgTypeURL(&crosschaintypes.MsgWhitelistERC20{}),
+			sdk.MsgTypeURL(&crosschaintypes.MsgWhitelistAsset{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgDeployFungibleCoinZRC20{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateContractBytecode{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
