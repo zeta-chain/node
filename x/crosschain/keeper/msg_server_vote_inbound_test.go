@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -297,7 +296,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 				msg)
 
 			// Only the finalizing vote fails, but all votes are still added to the ballot
-			if i == 6 {
+			if i >= 6 {
 				require.Error(t, errVote2)
 				require.ErrorIs(t, errVote2, types.ErrObservedTxAlreadyFinalized)
 				continue
@@ -312,9 +311,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 
 		ballot2, found2 = zk.ObserverKeeper.GetBallot(ctx, baseMsg2.Digest())
 		require.True(t, found2)
-		require.Equal(t, observertypes.BallotStatus_BallotFinalized_SuccessObservation, ballot2.BallotStatus)
+		require.Equal(t, observertypes.BallotStatus_BallotInProgress, ballot2.BallotStatus)
 
-		fmt.Println(ballot2.Votes)
 		_, found = k.GetCrossChainTx(ctx, baseMsg1.Digest())
 		require.True(t, found)
 

@@ -81,7 +81,7 @@ func (k msgServer) VoteInbound(
 	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
 	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
 	// This check prevents double spending
-	if isNew {
+	if isNew || finalized {
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, sdkerrors.Wrapf(
 				types.ErrObservedTxAlreadyFinalized,
@@ -95,7 +95,7 @@ func (k msgServer) VoteInbound(
 	}
 	commit()
 
-	// If the ballot is not finalized return nil here to add vote to commit state
+	//// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
 	}
@@ -111,17 +111,6 @@ func (k msgServer) VoteInbound(
 // handleFinalizedInbound handles the finalized inbound ballot. It validates the inbound CCTX and saves it to the store.
 // This function is only called once for every inbound CCTX , when the ballot is finalized for the first time.
 func (k Keeper) handleFinalizedInbound(ctx sdk.Context, msg *types.MsgVoteInbound) error {
-	if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
-		return sdkerrors.Wrapf(
-			types.ErrObservedTxAlreadyFinalized,
-			"%s, InboundHash:%s, SenderChainID:%d, EventIndex:%d",
-			voteInboundID,
-			msg.InboundHash,
-			msg.SenderChainId,
-			msg.EventIndex,
-		)
-	}
-
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to validate inbound")
