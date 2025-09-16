@@ -182,7 +182,7 @@ func (k msgServer) WhitelistAsset(
 	commit()
 
 	err = ctx.EventManager().EmitTypedEvent(
-		&types.EventERC20Whitelist{
+		&types.EventAssetWhitelist{
 			Zrc20Address:       zrc20Addr.Hex(),
 			WhitelistCctxIndex: cctx.Index,
 		},
