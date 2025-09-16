@@ -33,7 +33,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	r.Logger.Info("whitelisting ERC20 on new network")
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		erc20Addr.Hex(),
 		chains.GoerliLocalnet.ChainId,

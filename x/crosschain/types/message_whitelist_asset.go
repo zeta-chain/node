@@ -11,23 +11,23 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-const TypeMsgWhitelistERC20 = "whitelist_erc20"
+const TypeMsgWhitelistAsset = "whitelist_asset"
 
-var _ sdk.Msg = &MsgWhitelistERC20{}
+var _ sdk.Msg = &MsgWhitelistAsset{}
 
-func NewMsgWhitelistERC20(
+func NewMsgWhitelistAsset(
 	creator string,
-	erc20Address string,
+	assetAddress string,
 	chainID int64,
 	name string,
 	symbol string,
 	decimals uint32,
 	gasLimit int64,
 	liquidityCap sdkmath.Uint,
-) *MsgWhitelistERC20 {
-	return &MsgWhitelistERC20{
+) *MsgWhitelistAsset {
+	return &MsgWhitelistAsset{
 		Creator:      creator,
-		Erc20Address: erc20Address,
+		AssetAddress: assetAddress,
 		ChainId:      chainID,
 		Name:         name,
 		Symbol:       symbol,
@@ -37,15 +37,15 @@ func NewMsgWhitelistERC20(
 	}
 }
 
-func (msg *MsgWhitelistERC20) Route() string {
+func (msg *MsgWhitelistAsset) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgWhitelistERC20) Type() string {
-	return TypeMsgWhitelistERC20
+func (msg *MsgWhitelistAsset) Type() string {
+	return TypeMsgWhitelistAsset
 }
 
-func (msg *MsgWhitelistERC20) GetSigners() []sdk.AccAddress {
+func (msg *MsgWhitelistAsset) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -53,17 +53,17 @@ func (msg *MsgWhitelistERC20) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgWhitelistERC20) GetSignBytes() []byte {
+func (msg *MsgWhitelistAsset) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgWhitelistERC20) ValidateBasic() error {
+func (msg *MsgWhitelistAsset) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err.Error())
 	}
-	if err := validateAssetAddress(msg.Erc20Address); err != nil {
+	if err := validateAssetAddress(msg.AssetAddress); err != nil {
 		return cosmoserrors.Wrapf(types.ErrInvalidAddress, "invalid asset address (%s)", err.Error())
 	}
 	if msg.Decimals > 128 {

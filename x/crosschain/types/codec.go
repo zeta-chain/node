@@ -14,12 +14,12 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVoteGasPrice{}, "crosschain/VoteGasPrice", nil)
 	cdc.RegisterConcrete(&MsgVoteOutbound{}, "crosschain/VoteOutbound", nil)
 	cdc.RegisterConcrete(&MsgVoteInbound{}, "crosschain/VoteInbound", nil)
-	cdc.RegisterConcrete(&MsgWhitelistERC20{}, "crosschain/WhitelistERC20", nil)
 	cdc.RegisterConcrete(&MsgMigrateTssFunds{}, "crosschain/MigrateTssFunds", nil)
 	cdc.RegisterConcrete(&MsgUpdateTssAddress{}, "crosschain/UpdateTssAddress", nil)
 	cdc.RegisterConcrete(&MsgAbortStuckCCTX{}, "crosschain/AbortStuckCCTX", nil)
 	cdc.RegisterConcrete(&MsgUpdateRateLimiterFlags{}, "crosschain/UpdateRateLimiterFlags", nil)
 	cdc.RegisterConcrete(&MsgRemoveInboundTracker{}, "crosschain/RemoveInboundTracker", nil)
+	cdc.RegisterConcrete(&MsgWhitelistAsset{}, "crosschain/WhitelistAsset", nil)
 
 	// legacy messages defined for backward compatibility
 	cdc.RegisterConcrete(&MsgAddToInTxTracker{}, "crosschain/AddToInTxTracker", nil)
@@ -28,6 +28,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "crosschain/GasPriceVoter", nil)
+	cdc.RegisterConcrete(&MsgWhitelistERC20{}, "crosschain/WhitelistERC20", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -38,12 +39,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgVoteGasPrice{},
 		&MsgVoteOutbound{},
 		&MsgVoteInbound{},
-		&MsgWhitelistERC20{},
 		&MsgMigrateTssFunds{},
 		&MsgUpdateTssAddress{},
 		&MsgAbortStuckCCTX{},
 		&MsgUpdateRateLimiterFlags{},
 		&MsgRemoveInboundTracker{},
+		&MsgWhitelistAsset{},
 
 		// legacy messages defined for backward compatibility
 		&MsgAddToInTxTracker{},
@@ -52,6 +53,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgVoteOnObservedOutboundTx{},
 		&MsgVoteOnObservedInboundTx{},
 		&MsgGasPriceVoter{},
+		&MsgWhitelistERC20{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

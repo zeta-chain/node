@@ -54484,7 +54484,7 @@ definitions:
     type: object
   zetachain.zetacore.crosschain.MsgVoteOutboundResponse:
     type: object
-  zetachain.zetacore.crosschain.MsgWhitelistERC20Response:
+  zetachain.zetacore.crosschain.MsgWhitelistAssetResponse:
     type: object
     properties:
       zrc20Address:

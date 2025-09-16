@@ -25,8 +25,8 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
-	t.Run("SignAdminTx CmdWhitelistERC20", func(t *testing.T) {
-		cmd := constant.CmdWhitelistERC20
+	t.Run("SignAdminTx CmdWhitelistAsset", func(t *testing.T) {
+		cmd := constant.CmdWhitelistAsset
 		params := ConnectorAddress.Hex()
 		// Call SignAdminTx
 		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)

@@ -28,7 +28,7 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
 		CmdAddInboundTracker(),
-		CmdWhitelistERC20(),
+		CmdWhitelistAsset(),
 		CmdAbortStuckCCTX(),
 		CmdRefundAborted(),
 		CmdRemoveInboundTracker(),

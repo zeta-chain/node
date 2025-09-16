@@ -38,7 +38,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 
 	// whitelist sol zrc20
 	r.Logger.Info("whitelisting spl on new network")
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		spl.PublicKey().String(),
 		chains.SolanaLocalnet.ChainId,

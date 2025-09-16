@@ -153,7 +153,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	newRunner.Logger.Info("whitelisting ERC20 on new network")
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		newRunner.ERC20Addr.Hex(),
 		chains.Sepolia.ChainId,

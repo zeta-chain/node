@@ -285,7 +285,7 @@ func TestWhitelistERC20CmdCCTX(t *testing.T) {
 		tssPubKey := sample.PubKeyString()
 
 		// ACT
-		cctx := types.WhitelistERC20CmdCCTX(
+		cctx := types.WhitelistAssetCmdCCTX(
 			creator,
 			zrc20Address,
 			erc20Address,
@@ -295,7 +295,7 @@ func TestWhitelistERC20CmdCCTX(t *testing.T) {
 			priorityFee,
 			tssPubKey,
 		)
-		cctxDifferentZRC20Address := types.WhitelistERC20CmdCCTX(
+		cctxDifferentZRC20Address := types.WhitelistAssetCmdCCTX(
 			creator,
 			sample.EthAddress(),
 			erc20Address,
@@ -310,7 +310,7 @@ func TestWhitelistERC20CmdCCTX(t *testing.T) {
 		require.NotEmpty(t, cctx.Index)
 		require.EqualValues(t, creator, cctx.Creator)
 		require.EqualValues(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
-		require.EqualValues(t, fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
+		require.EqualValues(t, fmt.Sprintf("%s:%s", constant.CmdWhitelistAsset, erc20Address), cctx.RelayedMessage)
 		require.EqualValues(t, creator, cctx.InboundParams.Sender)
 		require.EqualValues(t, coin.CoinType_Cmd, cctx.InboundParams.CoinType)
 		require.Len(t, cctx.OutboundParams, 1)

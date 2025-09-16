@@ -6,6 +6,35 @@ import (
 	"github.com/zeta-chain/node/pkg/authz"
 )
 
+// MsgWhitelistERC20
+
+var _ sdk.Msg = &MsgWhitelistERC20{}
+
+func (msg *MsgWhitelistERC20) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgWhitelistERC20) Type() string {
+	return "whitelist_erc20"
+}
+
+func (msg *MsgWhitelistERC20) GetSigners() []sdk.AccAddress {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{creator}
+}
+
+func (msg *MsgWhitelistERC20) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgWhitelistERC20) ValidateBasic() error {
+	return nil
+}
+
 // MsgVoteOnObservedInboundTx
 
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
