@@ -53,6 +53,12 @@ func TestPercentOf(t *testing.T) {
 			percent:        200,
 			expectedOutput: math.NewUintFromString("20000000000000000000"), // 2*10^19
 		},
+		{
+			name:           "rounding error - should be 33.33",
+			input:          math.NewUintFromString("100"),
+			percent:        33,
+			expectedOutput: math.NewUint(33),
+		},
 	}
 
 	for _, tc := range tt {

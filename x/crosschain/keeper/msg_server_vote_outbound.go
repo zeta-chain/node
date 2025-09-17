@@ -145,22 +145,19 @@ func (k msgServer) VoteOutbound(
 func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	outboundParams := cctx.GetCurrentOutboundParam()
 	// If the userGasFeePaid is nil, it means that this cctx was created before the userGasFeePaid was added.
-	if outboundParams.UserGasFeePaid.IsNil() {
-		err := k.FundGasStabilityPoolFromRemainingFees(
-			ctx,
-			*outboundParams,
-			outboundParams.ReceiverChainId,
+	err := k.FundGasStabilityPoolFromRemainingFees(
+		ctx,
+		*outboundParams,
+		outboundParams.ReceiverChainId,
+	)
+	if err != nil {
+		ctx.Logger().Error("Failed to fund gas stability pool (Legacy) with remaining fees",
+			"voteOutboundID", voteOutboundID,
+			"cctxIndex", cctx.Index,
+			"error", err,
 		)
-		if err != nil {
-			ctx.Logger().Error("Failed to fund gas stability pool (Legacy) with remaining fees",
-				"voteOutboundID", voteOutboundID,
-				"cctxIndex", cctx.Index,
-				"error", err,
-			)
-		}
 		return
 	}
-
 	if err := k.useRemainingGasFee(ctx, cctx); err != nil {
 		ctx.Logger().Error("Failed to fund gas stability pool with remaining fees",
 			"voteOutboundID", voteOutboundID,
@@ -175,16 +172,20 @@ func (k Keeper) useRemainingGasFee(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 ) error {
-	OutboundParams := cctx.GetCurrentOutboundParam()
-
-	receiverChainID := OutboundParams.ReceiverChainId
+	outboundParams := cctx.GetCurrentOutboundParam()
+	receiverChainID := outboundParams.ReceiverChainId
 	senderChainID := cctx.InboundParams.SenderChainId
 	sender := cctx.InboundParams.Sender
-	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
-	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+	outboundTxGasUsed := math.NewUint(outboundParams.GasUsed)
+	outboundTxFinalGasPrice := math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt())
 	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
 	// We already know that the userGasFeePaid is not nil
-	userGasFeePaid := OutboundParams.UserGasFeePaid
+	userGasFeePaid := outboundParams.UserGasFeePaid
+
+	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, receiverChainID)
+	if !found {
+		return errors.Wrap(observertypes.ErrChainParamsNotFound, fmt.Sprintf("chainID: %d", receiverChainID))
+	}
 
 	// The final fee paid is greater than what the user paid originally.The stability pool would cover the extra cost in this case.
 	if outboundTxFeePaid.GTE(userGasFeePaid) {
@@ -198,16 +199,11 @@ func (k Keeper) useRemainingGasFee(
 		return nil
 	}
 
-	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, receiverChainID)
-	if !found {
-		return errors.Wrap(observertypes.ErrChainParamsNotFound, fmt.Sprintf("chainID: %d", receiverChainID))
-	}
-
 	// Send all tokens to stability pool by default
 	stabilityPoolPercentage := uint64(100)
 	refundToUser := false
 
-	// Refund to the sender irrespective of weather its EOA or contract address if it's a withdrawal originating from zEVM.
+	// Refund to the sender irrespective of whether its EOA or contract address if it's a withdrawal originating from zEVM.
 	if chains.IsZetaChain(
 		senderChainID,
 		k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
@@ -217,7 +213,7 @@ func (k Keeper) useRemainingGasFee(
 	}
 
 	stabilityPoolAmount := PercentOf(usableRemainingFees, stabilityPoolPercentage)
-	// Refund the remaining fees to the user
+	// Refund the remaining fees to the user and fund the stability pool with the rest
 	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
 	refundAddress := ethcommon.HexToAddress(sender)
 
@@ -276,10 +272,7 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 func PercentOf(n math.Uint, percent uint64) math.Uint {
 	percentUint := math.NewUint(percent)
 	result := n.Mul(percentUint)
-	hundred := math.NewUint(100)
-	result = result.Quo(hundred)
-
-	return result
+	return result.Quo(math.NewUint(100))
 }
 
 // SaveOutbound saves the outbound transaction.It does the following things in one function:

@@ -83,15 +83,15 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 }
 
 func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx) math.Uint {
-	OutboundParams := cctx.OutboundParams[0]
-	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
-	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+	outboundParams := cctx.OutboundParams[0]
+	outboundTxGasUsed := math.NewUint(outboundParams.GasUsed)
+	outboundTxFinalGasPrice := math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt())
 	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
-	userGasFeePaid := OutboundParams.UserGasFeePaid
+	userGasFeePaid := outboundParams.UserGasFeePaid
 	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
 
 	remainingFees := crosschainkeeper.PercentOf(totalRemainingFees, crosschaintypes.UsableRemainingFeesPercentage)
-	if !remainingFees.GT(math.ZeroUint()) {
+	if remainingFees.LTE(math.ZeroUint()) {
 		return math.ZeroUint()
 	}
 
@@ -105,11 +105,8 @@ func getTotalRevertedAmount(r *runner.E2ERunner, cctx *crosschaintypes.CrossChai
 		},
 	)
 	require.NoError(r, err)
-	stabilityPoolPercentage := chainParams.ChainParams.StabilityPoolPercentage
 
-	stabilityPoolAmount := crosschainkeeper.PercentOf(remainingFees, stabilityPoolPercentage)
+	stabilityPoolAmount := crosschainkeeper.PercentOf(remainingFees, chainParams.ChainParams.StabilityPoolPercentage)
 	refundAmount := remainingFees.Sub(stabilityPoolAmount)
-
-	amount := cctx.InboundParams.Amount
-	return amount.Add(refundAmount)
+	return cctx.InboundParams.Amount.Add(refundAmount)
 }

@@ -39,9 +39,5 @@ func (k Keeper) InitiateOutbound(ctx sdk.Context, config InitiateOutboundConfig)
 	}
 
 	config.CCTX.SetPendingOutbound(types.StatusMessages{StatusMessage: "initiating outbound"})
-
-	// The supported gatways are
-	// - CCTXGateway_observers : This is the gateway used for all connected chains.The outbound processing needs gas fee payment for execution on the destination chain.
-	// - CCTXGateway_zevm : This is the gateway used only for ZEVM.The outbound processing does not need gas fee payment for execution on zevm.
 	return cctxGateway.InitiateOutbound(ctx, config)
 }

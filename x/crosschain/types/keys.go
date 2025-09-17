@@ -27,10 +27,12 @@ const (
 	CCTXIndexLength          = 66
 	MaxOutboundTrackerHashes = 5
 
+	// UsableRemainingFeesPercentage UnableToPayFeesPercentage is the percentage of fees that is considered as unable.
+	// A portion of the fees is reserved for refunds, and the rest is used for funding the stability pool
 	UsableRemainingFeesPercentage = uint64(95)
 )
 
-// GetProtocolFee returns the protocol fee for the cross chain transaction
+// GetProtocolFee returns the protocol fee for the cross-chain transaction
 // It is no longer used, but the function is kept for backward compatibility with the Zeta Conversion Rate query
 func GetProtocolFee() math.Uint {
 	return math.ZeroUint()

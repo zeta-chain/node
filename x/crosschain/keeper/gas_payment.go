@@ -129,6 +129,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// calculate the final gas fee
 	gasFee := gas.GasLimit.Mul(gas.GasPrice)
+	// add a flat protocol fee which paid for every cctx.
 	outTxGasFee := gasFee.Add(gas.ProtocolFlatFee)
 
 	// subtract the withdraw fee from the input amount
