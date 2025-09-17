@@ -90,24 +90,37 @@ func (s *TapscriptSpender) BuildRevealTxn(
 	}
 	prevOutFetcher := txscript.NewCannedPrevOutputFetcher(commitScript, commitAmount)
 	sigHashes := txscript.NewTxSigHashes(revealTx, prevOutFetcher)
-	sigHash, err := txscript.CalcTapscriptSignaturehash(
+	// sigHash, err := txscript.CalcTapscriptSignaturehash(
+	// 	sigHashes,
+	// 	txscript.SigHashDefault,
+	// 	revealTx,
+	// 	int(commitTxn.Index),
+	// 	prevOutFetcher,
+	// 	s.tapLeaf,                // this used to be the script content, but now we want to retrieve the funds in commit UTXO
+	// )
+	sigHash, err := txscript.CalcTaprootSignatureHash(
 		sigHashes,
 		txscript.SigHashDefault,
 		revealTx,
 		int(commitTxn.Index),
 		prevOutFetcher,
-		s.tapLeaf,
+		// now we don't pass the script content, instead we try taproot-spending
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to calculate tapscript sighash")
+		return nil, errors.Wrap(err, "failed to calculate taproot sighash")
 	}
 
+	// tweak the internal key with the tapscript root hash
+	tapScriptTree := txscript.AssembleTaprootScriptTree(s.tapLeaf)
+	tapScriptRoot := tapScriptTree.RootNode.TapHash()
+	tapTweakedPrivKey := txscript.TweakTaprootPrivKey(*s.internalKey, tapScriptRoot[:])
+
 	// Step 5: sign the sighash with the internal key
-	sig, err := schnorr.Sign(s.internalKey, sigHash)
+	sig, err := schnorr.Sign(tapTweakedPrivKey, sigHash)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to sign sighash")
 	}
-	revealTx.TxIn[0].Witness = wire.TxWitness{sig.Serialize(), s.tapLeaf.Script, s.ctrlBlockBytes}
+	revealTx.TxIn[0].Witness = wire.TxWitness{sig.Serialize()}
 
 	return revealTx, nil
 }

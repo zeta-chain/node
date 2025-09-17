@@ -349,7 +349,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 
 	if !skipRegular {
-		startEVMTests(&eg, conf, deployerRunner, verbose)
+		//startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 

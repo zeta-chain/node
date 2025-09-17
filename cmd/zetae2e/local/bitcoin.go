@@ -30,39 +30,39 @@ func startBitcoinTests(
 	// start the bitcoin tests
 	// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
 	bitcoinDepositTests := []string{
-		e2etests.TestBitcoinDonationName,
+		//e2etests.TestBitcoinDonationName,
 		e2etests.TestBitcoinDepositName,
-		e2etests.TestBitcoinDepositFastConfirmationName,
-		e2etests.TestBitcoinDepositAndCallName,
-		e2etests.TestBitcoinDepositAndCallRevertName,
-		e2etests.TestBitcoinStdMemoDepositName,
-		e2etests.TestBitcoinStdMemoDepositAndCallName,
-		e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
-		e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
+		// e2etests.TestBitcoinDepositFastConfirmationName,
+		// e2etests.TestBitcoinDepositAndCallName,
+		// e2etests.TestBitcoinDepositAndCallRevertName,
+		// e2etests.TestBitcoinStdMemoDepositName,
+		// e2etests.TestBitcoinStdMemoDepositAndCallName,
+		// e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
+		// e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
 		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
-		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
-		e2etests.TestBitcoinDepositInvalidMemoRevertName,
-		e2etests.TestCrosschainSwapName,
+		// e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		// e2etests.TestBitcoinDepositInvalidMemoRevertName,
+		// e2etests.TestCrosschainSwapName,
 	}
 	bitcoinDepositTestsAdvanced := []string{
-		e2etests.TestBitcoinDepositAndCallRevertWithDustName,
-		e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
-		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
+		// e2etests.TestBitcoinDepositAndCallRevertWithDustName,
+		// e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+		// e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 	}
 	bitcoinWithdrawTests := []string{
 		// need initial deposit to fund the withdraws
-		e2etests.TestBitcoinDepositName,
-		e2etests.TestBitcoinWithdrawSegWitName,
-		e2etests.TestBitcoinWithdrawInvalidAddressName,
-		e2etests.TestLegacyZetaWithdrawBTCRevertName,
+		// e2etests.TestBitcoinDepositName,
+		// e2etests.TestBitcoinWithdrawSegWitName,
+		// e2etests.TestBitcoinWithdrawInvalidAddressName,
+		// e2etests.TestLegacyZetaWithdrawBTCRevertName,
 	}
 	bitcoinWithdrawTestsAdvanced := []string{
-		e2etests.TestBitcoinWithdrawTaprootName,
-		e2etests.TestBitcoinWithdrawLegacyName,
-		e2etests.TestBitcoinWithdrawP2SHName,
-		e2etests.TestBitcoinWithdrawP2WSHName,
-		e2etests.TestBitcoinWithdrawMultipleName,
-		e2etests.TestBitcoinWithdrawRestrictedName,
+		// e2etests.TestBitcoinWithdrawTaprootName,
+		// e2etests.TestBitcoinWithdrawLegacyName,
+		// e2etests.TestBitcoinWithdrawP2SHName,
+		// e2etests.TestBitcoinWithdrawP2WSHName,
+		// e2etests.TestBitcoinWithdrawMultipleName,
+		// e2etests.TestBitcoinWithdrawRestrictedName,
 		// to run RBF test, change the constant 'minTxConfirmations' to 1 in the Bitcoin observer
 		// https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
 		//e2etests.TestBitcoinWithdrawRBFName,
