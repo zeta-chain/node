@@ -398,7 +398,8 @@ func (ac appCreator) newApp(
 
 	// this version is not allowed for validators
 	privValStatePath := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "priv_validator_state.json")
-	if data, err := os.ReadFile(privValStatePath); err == nil { // #nosec G304 -- this is file present on every node
+	// #nosec G304 -- this is file present on every node
+	if data, err := os.ReadFile(privValStatePath); err == nil {
 		var state PrivValidatorState
 		if err := json.Unmarshal(data, &state); err == nil {
 			h, err := strconv.ParseInt(state.Height, 10, 64)
