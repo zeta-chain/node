@@ -89,7 +89,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 
 		// mock successful uniswapv2factory deployment
 		mockSuccessfulContractDeployment(ctx, t, k)
-		// mock failed wzeta deployment deployment
+		// mock failed wzeta deployment
 		mockFailedContractDeployment(ctx, t, k)
 
 		msg := types.NewMsgDeploySystemContracts(admin)
