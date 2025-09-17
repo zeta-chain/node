@@ -117,7 +117,7 @@ func GetBtcEventWithWitness(
 		memo = []byte(noMemoFound)
 	}
 
-	event := &BTCInboundEvent{
+	return &BTCInboundEvent{
 		FromAddress:  fromAddress,
 		ToAddress:    tssAddress,
 		Value:        amount,
@@ -127,9 +127,7 @@ func GetBtcEventWithWitness(
 		TxHash:       tx.Txid,
 		Status:       status,
 		ErrorMessage: errorMessage,
-	}
-
-	return event, nil
+	}, nil
 }
 
 // ParseScriptFromWitness attempts to parse the script from the witness data. Ideally it should be handled by

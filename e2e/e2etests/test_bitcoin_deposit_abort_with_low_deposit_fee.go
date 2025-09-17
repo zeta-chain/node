@@ -31,7 +31,7 @@ func TestBitcoinDepositAndAbortWithLowDepositFee(r *runner.E2ERunner, args []str
 	require.Equal(r, cctx.InboundParams.Amount.Uint64(), uint64(0))
 	require.Equal(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(0))
 
-	// check cctx status
+	// check cctx status and error message
 	require.EqualValues(r, crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.InboundParams.Status)
 	utils.RequireCCTXErrorMessages(
 		r,

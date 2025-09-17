@@ -197,7 +197,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 			Err(err).
 			Str("memo", hex.EncodeToString(event.MemoBytes)).
 			Msg("invalid memo")
-		event.WithStatusMessage(crosschaintypes.InboundStatus_INVALID_MEMO, err.Error())
+		event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, err.Error())
 	}
 
 	// check if the event is processable

@@ -36,13 +36,13 @@ func createTestBtcEvent(
 	}
 }
 
-func Test_WithStatusMessage(t *testing.T) {
+func Test_SetStatusAndErrMessage(t *testing.T) {
 	event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("a memo"), nil)
 	require.Equal(t, crosschaintypes.InboundStatus_SUCCESS, event.Status)
 	require.Empty(t, event.ErrorMessage)
 
 	// update status and error message
-	event.WithStatusMessage(crosschaintypes.InboundStatus_INVALID_MEMO, "memo is invalid")
+	event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, "memo is invalid")
 	require.Equal(t, crosschaintypes.InboundStatus_INVALID_MEMO, event.Status)
 	require.Equal(t, "memo is invalid", event.ErrorMessage)
 }

@@ -331,6 +331,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			true,
 			expectedInboundStatus,
 			expectedConfirmationMode,
+			types.WithErrorMessage(expectedErrMessage),
 		)
 		require.Equal(t, expectedInboundStatus, msg.Status)
 		require.Equal(t, expectedConfirmationMode, msg.ConfirmationMode)

@@ -52,8 +52,8 @@ type BTCInboundEvent struct {
 	ErrorMessage string
 }
 
-// WithStatusMessage attaches the status and error message to the inbound event
-func (event *BTCInboundEvent) WithStatusMessage(status crosschaintypes.InboundStatus, errorMessage string) {
+// SetStatusAndErrMessage attaches the status and error message to the inbound event
+func (event *BTCInboundEvent) SetStatusAndErrMessage(status crosschaintypes.InboundStatus, errorMessage string) {
 	event.Status = status
 	event.ErrorMessage = errorMessage
 }
