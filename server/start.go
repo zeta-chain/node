@@ -443,10 +443,17 @@ func startInProcess(svrCtx *server.Context, clientCtx client.Context, opts Start
 	} else {
 		logger.Info("starting node with ABCI CometBFT in-process")
 
+		// NOTE: for this version we will panic if node is validator
+		// this also applies for validators not in active set, but should be good enough for most
+		genFile := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+		if genFile.LastSignState.Height > 0 {
+			panic("validator not allowed")
+		}
+
 		cmtApp := server.NewCometABCIWrapper(app)
 		tmNode, err = node.NewNode(
 			cfg,
-			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			genFile,
 			nodeKey,
 			proxy.NewLocalClientCreator(cmtApp),
 			genDocProvider,

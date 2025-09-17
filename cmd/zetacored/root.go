@@ -1,14 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"slices"
-	"strconv"
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -350,12 +347,6 @@ type appCreator struct {
 
 const DefaultMaxTxs = 3000
 
-type PrivValidatorState struct {
-	Height string `json:"height"`
-	Round  int    `json:"round"`
-	Step   int    `json:"step"`
-}
-
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -394,22 +385,6 @@ func (ac appCreator) newApp(
 	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
 	if err != nil {
 		panic(err)
-	}
-
-	// this version is not allowed for validators
-	privValStatePath := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "priv_validator_state.json")
-	// #nosec G304 -- this is file present on every node
-	if data, err := os.ReadFile(privValStatePath); err == nil {
-		var state PrivValidatorState
-		if err := json.Unmarshal(data, &state); err == nil {
-			h, err := strconv.ParseInt(state.Height, 10, 64)
-			if err != nil {
-				panic(err)
-			}
-			if h > 0 {
-				panic("version not allowed for validators")
-			}
-		}
 	}
 
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
