@@ -29,5 +29,6 @@ func (k Keeper) RefundRemainingGasFees(
 		gasZRC20,
 		receiver,
 		amount,
+		true,
 	)
 }

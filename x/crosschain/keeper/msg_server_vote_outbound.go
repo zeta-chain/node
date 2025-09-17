@@ -173,28 +173,21 @@ func (k Keeper) useRemainingGasFee(
 	cctx *types.CrossChainTx,
 ) error {
 	outboundParams := cctx.GetCurrentOutboundParam()
-	receiverChainID := outboundParams.ReceiverChainId
-	senderChainID := cctx.InboundParams.SenderChainId
-	sender := cctx.InboundParams.Sender
-	outboundTxGasUsed := math.NewUint(outboundParams.GasUsed)
-	outboundTxFinalGasPrice := math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt())
-	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
+	outboundTxFeePaid := math.NewUint(outboundParams.GasUsed).
+		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
 	// We already know that the userGasFeePaid is not nil
 	userGasFeePaid := outboundParams.UserGasFeePaid
-
-	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, receiverChainID)
-	if !found {
-		return errors.Wrap(observertypes.ErrChainParamsNotFound, fmt.Sprintf("chainID: %d", receiverChainID))
-	}
 
 	// The final fee paid is greater than what the user paid originally.The stability pool would cover the extra cost in this case.
 	if outboundTxFeePaid.GTE(userGasFeePaid) {
 		return nil
 	}
 
-	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
-	usableRemainingFees := PercentOf(totalRemainingFees, types.UsableRemainingFeesPercentage)
-
+	// We use a maximum for 95 percent of the remaining fees to fund the stability pool and refund the user.
+	usableRemainingFees := PercentOf(
+		outboundParams.UserGasFeePaid.Sub(outboundTxFeePaid),
+		types.UsableRemainingFeesPercentage,
+	)
 	if !usableRemainingFees.GT(math.ZeroUint()) {
 		return nil
 	}
@@ -204,30 +197,33 @@ func (k Keeper) useRemainingGasFee(
 	refundToUser := false
 
 	// Refund to the sender irrespective of whether its EOA or contract address if it's a withdrawal originating from zEVM.
-	if chains.IsZetaChain(
-		senderChainID,
-		k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
-	) && ethcommon.IsHexAddress(sender) {
+	if chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) &&
+		ethcommon.IsHexAddress(cctx.InboundParams.Sender) {
+		chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, outboundParams.ReceiverChainId)
+		if !found {
+			return errors.Wrap(
+				observertypes.ErrChainParamsNotFound,
+				fmt.Sprintf("chainID: %d", outboundParams.ReceiverChainId),
+			)
+		}
 		refundToUser = true
 		stabilityPoolPercentage = chainParams.StabilityPoolPercentage
 	}
-
 	stabilityPoolAmount := PercentOf(usableRemainingFees, stabilityPoolPercentage)
-	// Refund the remaining fees to the user and fund the stability pool with the rest
 	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
-	refundAddress := ethcommon.HexToAddress(sender)
 
 	if stabilityPoolAmount.GT(math.ZeroUint()) {
-		if err := k.fungibleKeeper.FundGasStabilityPool(ctx, receiverChainID, stabilityPoolAmount.BigInt()); err != nil {
+		if err := k.fungibleKeeper.FundGasStabilityPool(ctx, outboundParams.ReceiverChainId, stabilityPoolAmount.BigInt()); err != nil {
 			return err
 		}
 	}
 
 	if refundAmount.GT(math.ZeroUint()) && refundToUser {
-		if err := k.fungibleKeeper.RefundRemainingGasFees(ctx, receiverChainID, refundAmount.BigInt(), refundAddress); err != nil {
+		if err := k.fungibleKeeper.RefundRemainingGasFees(ctx, outboundParams.ReceiverChainId, refundAmount.BigInt(), ethcommon.HexToAddress(cctx.InboundParams.Sender)); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

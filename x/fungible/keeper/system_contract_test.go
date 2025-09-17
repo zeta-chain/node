@@ -1097,6 +1097,7 @@ func TestKeeper_CallZRC20Deposit(t *testing.T) {
 			sample.EthAddress(),
 			types.ModuleAddressEVM,
 			big.NewInt(1),
+			false,
 		)
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
