@@ -514,6 +514,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 			ProtocolContractVersion: types.ProtocolContractVersion_V1,
 			Status:                  types.InboundStatus_SUCCESS,
 			ConfirmationMode:        types.ConfirmationMode_SAFE,
+			ErrorMessage:            "",
 		}
 	}
 
@@ -623,6 +624,12 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	msg.ConfirmationMode = types.ConfirmationMode_FAST
 	hash2 = msg.Digest()
 	require.Equal(t, hash, hash2, "confirmation mode should not change hash")
+
+	// error message used
+	msg = getMsg()
+	msg.ErrorMessage = "a sample error message"
+	hash2 = msg.Digest()
+	require.NotEqual(t, hash, hash2, "error message should change hash")
 }
 
 func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
