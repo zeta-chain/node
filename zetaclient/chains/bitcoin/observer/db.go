@@ -42,7 +42,7 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	// 1. environment variable is set explicitly to "latest"
 	// 2. environment variable is empty and last scanned block is not found in DB
 	if ob.LastBlockScanned() == 0 {
-		blockNumber, err := ob.rpc.GetBlockCount(ctx)
+		blockNumber, err := ob.bitcoinClient.GetBlockCount(ctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to get block count")
 		}

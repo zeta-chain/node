@@ -375,7 +375,7 @@ func (s *testSuite) createObserver(t *testing.T) {
 	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, baseLogger)
 	require.NoError(t, err)
 
-	s.observer, err = observer.New(s.Chain(), baseObserver, s.client)
+	s.observer, err = observer.New(baseObserver, s.client, s.Chain())
 	require.NoError(t, err)
 }
 

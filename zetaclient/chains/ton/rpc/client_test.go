@@ -134,7 +134,7 @@ func TestLiveClient(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, txs, 3)
 
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			// ensure that GetTransactions orders TXs by DESC
 			require.Greater(t, txs[i].Lt, txs[i+1].Lt)
 		}

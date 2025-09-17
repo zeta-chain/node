@@ -113,7 +113,7 @@ func TestNewObserver(t *testing.T) {
 		chainParams    observertypes.ChainParams
 		appContext     *zctx.AppContext
 		zetacoreClient interfaces.ZetacoreClient
-		tss            interfaces.TSSSigner
+		tssSigner      interfaces.TSSSigner
 		blockCacheSize int
 		fail           bool
 		message        string
@@ -124,7 +124,7 @@ func TestNewObserver(t *testing.T) {
 			chainParams:    chainParams,
 			appContext:     appContext,
 			zetacoreClient: zetacoreClient,
-			tss:            tss,
+			tssSigner:      tss,
 			blockCacheSize: blockCacheSize,
 			fail:           false,
 		},
@@ -134,7 +134,7 @@ func TestNewObserver(t *testing.T) {
 			chainParams:    chainParams,
 			appContext:     appContext,
 			zetacoreClient: zetacoreClient,
-			tss:            tss,
+			tssSigner:      tss,
 			blockCacheSize: 0,
 			fail:           true,
 			message:        "error creating block cache",
@@ -148,7 +148,7 @@ func TestNewObserver(t *testing.T) {
 				tt.chain,
 				tt.chainParams,
 				tt.zetacoreClient,
-				tt.tss,
+				tt.tssSigner,
 				tt.blockCacheSize,
 				nil,
 				database,

@@ -52,8 +52,8 @@ type Observer struct {
 	// zetacoreClient is the client to interact with ZetaChain
 	zetacoreClient interfaces.ZetacoreClient
 
-	// tss is the TSS signer
-	tss interfaces.TSSSigner
+	// tssSigner is the TSS signer
+	tssSigner interfaces.TSSSigner
 
 	// lastBlock is the last block height of the observed chain
 	lastBlock uint64
@@ -95,7 +95,7 @@ func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
+	tssSigner interfaces.TSSSigner,
 	blockCacheSize int,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
@@ -110,7 +110,7 @@ func NewObserver(
 		chain:                 chain,
 		chainParams:           chainParams,
 		zetacoreClient:        zetacoreClient,
-		tss:                   tss,
+		tssSigner:             tssSigner,
 		lastBlock:             0,
 		lastBlockScanned:      0,
 		lastTxScanned:         "",
@@ -197,7 +197,7 @@ func (ob *Observer) ZetacoreClient() interfaces.ZetacoreClient {
 
 // TSS returns the tss signer for the observer.
 func (ob *Observer) TSS() interfaces.TSSSigner {
-	return ob.tss
+	return ob.tssSigner
 }
 
 // TSSAddressString returns the TSS address for the chain.
@@ -206,13 +206,13 @@ func (ob *Observer) TSS() interfaces.TSSSigner {
 func (ob *Observer) TSSAddressString() string {
 	switch ob.chain.Consensus {
 	case chains.Consensus_bitcoin:
-		address, err := ob.tss.PubKey().AddressBTC(ob.Chain().ChainId)
+		address, err := ob.tssSigner.PubKey().AddressBTC(ob.Chain().ChainId)
 		if err != nil {
 			return ""
 		}
 		return address.EncodeAddress()
 	default:
-		return ob.tss.PubKey().AddressEVM().String()
+		return ob.tssSigner.PubKey().AddressEVM().String()
 	}
 }
 

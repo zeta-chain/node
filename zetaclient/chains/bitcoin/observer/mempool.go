@@ -62,7 +62,7 @@ func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
 		Msg("checking last TSS outbound")
 
 	// step 2: is last tx stuck in mempool?
-	stuck, stuckFor, err := ob.rpc.IsTxStuckInMempool(ctx, lastTxHash, ob.feeBumpWaitBlocks)
+	stuck, stuckFor, err := ob.bitcoinClient.IsTxStuckInMempool(ctx, lastTxHash, ob.feeBumpWaitBlocks)
 	if err != nil {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", lastTxHash, lastNonce)
 	}
@@ -156,7 +156,7 @@ func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx,
 	}
 
 	// is tx in the mempool?
-	if _, err = ob.rpc.GetMempoolEntry(ctx, lastHash); err != nil {
+	if _, err = ob.bitcoinClient.GetMempoolEntry(ctx, lastHash); err != nil {
 		return nil, 0, errors.Wrapf(err, "last tx %s is not in mempool", lastHash)
 	}
 
@@ -175,7 +175,7 @@ func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx,
 	//  1. it can fetch both stuck tx and non-stuck tx as far as they are valid txs.
 	//  2. it never fetch invalid tx (e.g., old tx replaced by RBF), so we can exclude invalid ones.
 	//  3. zetaclient needs the original tx body of a stuck tx to bump its fee and sign again.
-	lastTx, err := ob.rpc.GetRawTransactionByStr(ctx, lastHash)
+	lastTx, err := ob.bitcoinClient.GetRawTransactionByStr(ctx, lastHash)
 	if err != nil {
 		return nil, 0, errors.Wrapf(err, "GetRawTransactionByStr failed for last tx %s nonce %d", lastHash, lastNonce)
 	}

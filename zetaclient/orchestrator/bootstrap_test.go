@@ -303,7 +303,7 @@ func mockZetacoreCalls(ts *testSuite) {
 	on(ts.zetacore, "NewBlockSubscriber", 1).Return(blockChan, nil)
 	on(ts.zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
 	on(ts.zetacore, "GetPendingNoncesByChain", 2).Return(observertypes.PendingNonces{}, nil).Maybe()
-	on(ts.zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(ts.zetacore, "GetOutboundTrackers", 3).Return(nil, nil).Maybe()
 	on(ts.zetacore, "PostVoteGasPrice", 5).Return("", nil).Maybe()
 }
 

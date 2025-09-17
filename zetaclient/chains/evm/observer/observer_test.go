@@ -100,7 +100,7 @@ func Test_NewObserver(t *testing.T) {
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   *client.Client
-		tss         interfaces.TSSSigner
+		tssSigner   interfaces.TSSSigner
 		logger      base.Logger
 		before      func()
 		after       func()
@@ -115,7 +115,7 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   evmClient,
-			tss:         mocks.NewTSS(t),
+			tssSigner:   mocks.NewTSS(t),
 			logger:      base.Logger{},
 			ts:          nil,
 			fail:        false,
@@ -137,11 +137,11 @@ func Test_NewObserver(t *testing.T) {
 
 				return c
 			}(),
-			tss:     mocks.NewTSS(t),
-			logger:  base.Logger{},
-			ts:      nil,
-			fail:    true,
-			message: "json-rpc error",
+			tssSigner: mocks.NewTSS(t),
+			logger:    base.Logger{},
+			ts:        nil,
+			fail:      true,
+			message:   "json-rpc error",
 		},
 		{
 			name: "should fail on invalid ENV var",
@@ -150,7 +150,7 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   evmClient,
-			tss:         mocks.NewTSS(t),
+			tssSigner:   mocks.NewTSS(t),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
 				os.Setenv(envVar, "invalid")
@@ -187,7 +187,7 @@ func Test_NewObserver(t *testing.T) {
 				chain,
 				tt.chainParams,
 				zetacoreClient,
-				tt.tss,
+				tt.tssSigner,
 				1000,
 				tt.ts,
 				database,
@@ -389,7 +389,7 @@ type testSuite struct {
 	chainParams *observertypes.ChainParams
 	tss         *mocks.TSS
 	zetacore    *mocks.ZetacoreClient
-	evmMock     *mocks.EVMRPCClient
+	evmMock     *mocks.ObserverEvmClient
 }
 
 type testSuiteConfig struct {
@@ -412,7 +412,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	appContext, _ := getAppContext(t, chain, "", &chainParams)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
-	evmMock := mocks.NewEVMRPCClient(t)
+	evmMock := mocks.NewObserverEvmClient(t)
 	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil).Maybe()
 
 	zetacore := mocks.NewZetacoreClient(t).
