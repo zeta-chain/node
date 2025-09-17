@@ -223,6 +223,10 @@ message MsgVoteInbound {
 
   // confirmation mode used for the inbound
   ConfirmationMode confirmation_mode = 21;
+
+  // error_message carries information about the error that caused non-SUCCESS
+  // status of inbound observation
+  string error_message = 22;
 }
 
 message MsgVoteInboundResponse {}

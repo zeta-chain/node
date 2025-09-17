@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -171,6 +172,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", tx.Vout[0].Value, depositorFee),
 		}
 
 		// mock up rpc client to return sender address

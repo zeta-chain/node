@@ -1324,7 +1324,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM that aborts due to insufficient deposit fee",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositAndAbortWithLowDepositFee,
-		runner.WithMinimumVersion("v27.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -1402,9 +1402,11 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
 		"deposit Bitcoin with invalid memo; expect revert",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.01"},
+		},
 		TestBitcoinDepositInvalidMemoRevert,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawRBFName,

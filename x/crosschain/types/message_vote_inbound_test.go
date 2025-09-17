@@ -307,9 +307,10 @@ func TestNewMsgVoteInbound(t *testing.T) {
 		require.False(t, msg.IsCrossChainCall)
 	})
 
-	t.Run("can set inbound status and confirmation mode", func(t *testing.T) {
+	t.Run("can set inbound status, confirmation mode and error message", func(t *testing.T) {
 		expectedInboundStatus := types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 		expectedConfirmationMode := types.ConfirmationMode_FAST
+		expectedErrMessage := "no memo found in inbound"
 
 		msg := types.NewMsgVoteInbound(
 			sample.AccAddress(),
@@ -333,6 +334,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 		)
 		require.Equal(t, expectedInboundStatus, msg.Status)
 		require.Equal(t, expectedConfirmationMode, msg.ConfirmationMode)
+		require.Equal(t, expectedErrMessage, msg.ErrorMessage)
 	})
 }
 
