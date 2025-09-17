@@ -38,7 +38,7 @@ type withdrawAndCallPTBArgs struct {
 	payload   zetasui.CallPayload
 }
 
-// ptbOnCallTypeArgs builds the type arguments for on_call function
+// onCallTypeArgs builds the type arguments for on_call function
 func (args withdrawAndCallPTBArgs) onCallTypeArgs() ([]sui.TypeTag, error) {
 	var (
 		coinTypeStr = args.coinType
