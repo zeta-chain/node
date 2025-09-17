@@ -32,27 +32,28 @@ const (
 	broadcastRetries = 10
 )
 
-type RPC interface {
-	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
-	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
-	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
-	GetMempoolTxsAndFees(ctx context.Context, childHash string) (client.MempoolTxsAndFees, error)
+type BitcoinClient interface {
+	GetNetworkInfo(context.Context) (*btcjson.GetNetworkInfoResult, error)
+	GetRawTransaction(context.Context, *chainhash.Hash) (*btcutil.Tx, error)
+	GetEstimatedFeeRate(_ context.Context, confTarget int64) (uint64, error)
+	SendRawTransaction(_ context.Context, _ *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
+	GetMempoolTxsAndFees(_ context.Context, childHash string) (client.MempoolTxsAndFees, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.
 type Signer struct {
 	*base.Signer
-	rpc      RPC
-	isRegnet bool
+	bitcoinClient BitcoinClient
+	isRegnet      bool
 }
 
 // New creates a new Bitcoin signer
-func New(baseSigner *base.Signer, rpc RPC) *Signer {
+func New(baseSigner *base.Signer, bitcoinClient BitcoinClient) *Signer {
+	chainID := baseSigner.Chain().ChainId
 	return &Signer{
-		Signer:   baseSigner,
-		rpc:      rpc,
-		isRegnet: chains.IsBitcoinRegnet(baseSigner.Chain().ChainId),
+		Signer:        baseSigner,
+		bitcoinClient: bitcoinClient,
+		isRegnet:      chains.IsBitcoinRegnet(chainID),
 	}
 }
 
@@ -68,7 +69,7 @@ func (signer *Signer) Broadcast(ctx context.Context, signedTx *wire.MsgTx) error
 		Str("signer_tx_payload", hex.EncodeToString(outBuff.Bytes())).
 		Msg("broadcasting transaction")
 
-	_, err := signer.rpc.SendRawTransaction(ctx, signedTx, true)
+	_, err := signer.bitcoinClient.SendRawTransaction(ctx, signedTx, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to broadcast raw tx")
 	}
@@ -113,7 +114,7 @@ func (signer *Signer) TryProcessOutbound(
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// query network info to get minRelayFee (typically 1000 satoshis)
-	networkInfo, err := signer.rpc.GetNetworkInfo(ctx)
+	networkInfo, err := signer.bitcoinClient.GetNetworkInfo(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed get bitcoin network info")
 		return

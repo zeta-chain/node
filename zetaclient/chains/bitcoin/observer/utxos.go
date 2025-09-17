@@ -43,7 +43,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	utxos, err := ob.rpc.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
+	utxos, err := ob.bitcoinClient.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}

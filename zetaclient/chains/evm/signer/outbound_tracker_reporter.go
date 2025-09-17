@@ -74,7 +74,7 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// check tx confirmation status
-			confirmed, err := signer.client.IsTxConfirmed(ctx, outboundHash, common.ReorgProtectBlockCount)
+			confirmed, err := signer.evmClient.IsTxConfirmed(ctx, outboundHash, common.ReorgProtectBlockCount)
 			if err != nil {
 				logger.Err(err).Msg("unable to check confirmation status of outbound")
 				continue

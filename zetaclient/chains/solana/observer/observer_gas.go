@@ -32,13 +32,13 @@ const (
 // PostGasPrice posts gas price to zetacore
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// get current slot
-	slot, err := ob.solClient.GetSlot(ctx, rpc.CommitmentConfirmed)
+	slot, err := ob.solanaClient.GetSlot(ctx, rpc.CommitmentConfirmed)
 	if err != nil {
 		return errors.Wrap(err, "GetSlot error")
 	}
 
 	// query recent priority fees
-	recentFees, err := ob.solClient.GetRecentPrioritizationFees(ctx, nil)
+	recentFees, err := ob.solanaClient.GetRecentPrioritizationFees(ctx, nil)
 	if err != nil {
 		return errors.Wrap(err, "GetRecentPrioritizationFees error")
 	}

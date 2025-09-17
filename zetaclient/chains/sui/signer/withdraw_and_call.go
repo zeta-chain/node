@@ -199,7 +199,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID, msgContextID}, onCallObjectIDs...)
 
 	// query objects in batch
-	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+	suiObjects, err := s.suiClient.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
 		ObjectIds: objectIDs,
 		Options: models.SuiObjectDataOptions{
 			// show owner info in order to retrieve object initial shared version
@@ -260,7 +260,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	// get latest TSS SUI coin object ref for gas payment
-	suiCoinObjRefs, err := s.client.GetSuiCoinObjectRefs(ctx, s.TSS().PubKey().AddressSui(), gasBudget)
+	suiCoinObjRefs, err := s.suiClient.GetSuiCoinObjectRefs(ctx, s.TSS().PubKey().AddressSui(), gasBudget)
 	if err != nil {
 		return withdrawAndCallObjRefs{}, errors.Wrap(err, "unable to get TSS SUI coin objects")
 	}

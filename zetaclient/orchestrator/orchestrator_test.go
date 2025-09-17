@@ -173,7 +173,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Mock CCTX-related calls (stubs for now)
 	on(zetacore, "ListPendingCCTX", 2).Return(nil, uint64(0), nil).Maybe()
 	on(zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
-	on(zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(zetacore, "GetOutboundTrackers", 2).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 

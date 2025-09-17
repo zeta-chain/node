@@ -20,10 +20,10 @@ import (
 func MockSolanaObserver(
 	t *testing.T,
 	chain chains.Chain,
-	solClient interfaces.SolanaRPCClient,
+	solanaClient observer.SolanaClient,
 	chainParams observertypes.ChainParams,
 	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
+	tssSigner interfaces.TSSSigner,
 ) *observer.Observer {
 	// use mock zetacore client if not provided
 	if zetacoreClient == nil {
@@ -31,8 +31,8 @@ func MockSolanaObserver(
 	}
 
 	// use mock tss if not provided
-	if tss == nil {
-		tss = mocks.NewTSS(t)
+	if tssSigner == nil {
+		tssSigner = mocks.NewTSS(t)
 	}
 
 	database, err := db.NewFromSqliteInMemory(true)
@@ -42,7 +42,7 @@ func MockSolanaObserver(
 		chain,
 		chainParams,
 		zetacoreClient,
-		tss,
+		tssSigner,
 		1000,
 		nil,
 		database,
@@ -50,7 +50,7 @@ func MockSolanaObserver(
 	)
 	require.NoError(t, err)
 
-	ob, err := observer.New(baseObserver, solClient, chainParams.GatewayAddress)
+	ob, err := observer.New(baseObserver, solanaClient, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	return ob
