@@ -1959,8 +1959,8 @@ github.com/zeebo/assert v1.3.0/go.mod h1:Pq9JiuJQpG8JLJdtkwrJESF0Foym2/D9XMU5ciN
 github.com/zeebo/errs v1.4.0 h1:XNdoD/RRMKP7HD0UhJnIzUy74ISdGGxURlYG8HSWSfM=
 github.com/zeebo/errs v1.4.0/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtCw4=
 github.com/zeebo/xxh3 v1.0.2/go.mod h1:5NWz9Sef7zIDm2JHfFlcQvNekmcEl9ekUZQQKCYaDcA=
-github.com/zeta-chain/evm v0.0.0-20250917090653-bc7e3bef3041 h1:hUizAWfgdF5o82Pi4oItCqyMkv8T+ZkRaokkhzvEx7U=
-github.com/zeta-chain/evm v0.0.0-20250917090653-bc7e3bef3041/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
+github.com/zeta-chain/evm v0.0.0-20250917101904-669c8b9d0676 h1:fiaIc0GWGgMzm/T5+TvEinxPnEIDVc7CfTFzS+dnsPg=
+github.com/zeta-chain/evm v0.0.0-20250917101904-669c8b9d0676/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
 github.com/zeta-chain/go-tss v0.6.3 h1:c/zSEvI0h7MJ+xxu42M58uBdEWrlzfD3NI1kP/FlWBE=
