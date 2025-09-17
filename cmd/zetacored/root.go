@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"cosmossdk.io/log"
@@ -350,6 +352,12 @@ type appCreator struct {
 
 const DefaultMaxTxs = 3000
 
+type PrivValidatorState struct {
+	Height string `json:"height"`
+	Round  int    `json:"round"`
+	Step   int    `json:"step"`
+}
+
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -392,11 +400,19 @@ func (ac appCreator) newApp(
 
 	// check if it's validator and version and panic before creating new app if version is v37
 	privValStatePath := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "priv_validator_state.json")
-	if _, err := os.Stat(privValStatePath); err != nil {
-		if strings.Contains(constant.GetNormalizedVersion(), "v37") {
-			panic("version v37 not allowed for validators")
+	if data, err := os.ReadFile(privValStatePath); err == nil {
+		var state PrivValidatorState
+		if err := json.Unmarshal(data, &state); err == nil {
+			h, err := strconv.ParseInt(state.Height, 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			if h > 0 && strings.Contains(constant.GetNormalizedVersion(), "v37") {
+				panic("version v37 not allowed for validators")
+			}
 		}
 	}
+
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
