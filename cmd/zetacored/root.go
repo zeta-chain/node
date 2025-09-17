@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -43,6 +45,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	zevmserver "github.com/zeta-chain/node/server"
 	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
@@ -387,6 +390,13 @@ func (ac appCreator) newApp(
 		panic(err)
 	}
 
+	// check if it's validator and version and panic before creating new app if version is v37
+	privValStatePath := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "priv_validator_state.json")
+	if _, err := os.Stat(privValStatePath); err != nil {
+		if strings.Contains(constant.GetNormalizedVersion(), "v37") {
+			panic("version v37 not allowed for validators")
+		}
+	}
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
