@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
-	"strings"
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -47,7 +46,6 @@ import (
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/constant"
 	zevmserver "github.com/zeta-chain/node/server"
 	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
@@ -398,17 +396,17 @@ func (ac appCreator) newApp(
 		panic(err)
 	}
 
-	// check if it's validator and version and panic before creating new app if version is v37
+	// this version is not allowed for validators
 	privValStatePath := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "priv_validator_state.json")
-	if data, err := os.ReadFile(privValStatePath); err == nil {
+	if data, err := os.ReadFile(privValStatePath); err == nil { // #nosec G304 -- this is file present on every node
 		var state PrivValidatorState
 		if err := json.Unmarshal(data, &state); err == nil {
 			h, err := strconv.ParseInt(state.Height, 10, 64)
 			if err != nil {
 				panic(err)
 			}
-			if h > 0 && strings.Contains(constant.GetNormalizedVersion(), "v37") {
-				panic("version v37 not allowed for validators")
+			if h > 0 {
+				panic("version not allowed for validators")
 			}
 		}
 	}
