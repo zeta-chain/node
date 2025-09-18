@@ -92,7 +92,6 @@ func (k Keeper) FindBallot(
 		}
 
 		ballot = types.Ballot{
-			Index:                "",
 			BallotIdentifier:     index,
 			VoterList:            observerSet.ObserverList,
 			Votes:                types.CreateVotes(len(observerSet.ObserverList)),

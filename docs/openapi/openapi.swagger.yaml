@@ -55028,8 +55028,6 @@ definitions:
   zetachain.zetacore.observer.Ballot:
     type: object
     properties:
-      index:
-        type: string
       ballotIdentifier:
         type: string
       voterList:
