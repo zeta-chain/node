@@ -288,6 +288,9 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 		// create test event
 		receiver := sample.EthAddress()
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dymmy"), &memo.InboundMemo{
+			Header: memo.Header{
+				OpCode: memo.OpCodeDepositAndCall,
+			},
 			FieldsV0: memo.FieldsV0{
 				Receiver:      receiver,
 				Payload:       []byte("some payload"),
@@ -310,7 +313,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			Receiver:           event.MemoStd.Receiver.Hex(),
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
 			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
-			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
+			Message:            hex.EncodeToString(memoBytesExpected),
 			InboundHash:        event.TxHash,
 			InboundBlockHeight: event.BlockNumber,
 			CallOptions: &crosschaintypes.CallOptions{
@@ -323,12 +326,22 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 				AbortAddress:  revertOptions.AbortAddress,  // should use abort address
 				RevertMessage: revertOptions.RevertMessage, // should use revert message
 			},
+			IsCrossChainCall: true,
 			Status:           crosschaintypes.InboundStatus_SUCCESS,
 			ConfirmationMode: crosschaintypes.ConfirmationMode_SAFE,
 		}
 
 		// create new inbound vote V2 with standard memo
 		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
+		require.Equal(t, expectedVote, *vote)
+
+		// modify memo and expected vote msg to test NoAssetCall
+		event.MemoStd.OpCode = memo.OpCodeCall
+		expectedVote.CoinType = coin.CoinType_NoAssetCall
+		expectedVote.Amount = cosmosmath.NewUint(0)
+
+		// create new inbound vote V2 with NoAssetCall
+		vote = ob.NewInboundVoteFromStdMemo(&event, amountSats)
 		require.Equal(t, expectedVote, *vote)
 	})
 }

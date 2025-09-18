@@ -137,12 +137,6 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 
 // ValidateStandardMemo validates the standard memo in Bitcoin context
 func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
-	// NoAssetCall will be disabled for Bitcoin until full V2 support
-	// https://github.com/zeta-chain/node/issues/2711
-	if memoStd.OpCode == memo.OpCodeCall {
-		return errors.New("NoAssetCall is disabled for Bitcoin")
-	}
-
 	// ensure the revert address is a valid and supported BTC address
 	revertAddress := memoStd.RevertOptions.RevertAddress
 	if revertAddress != "" {

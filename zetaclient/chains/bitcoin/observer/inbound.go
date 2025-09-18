@@ -265,6 +265,13 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
+	// determine amount and coin type according to operation code
+	coinType := coin.CoinType_Gas
+	if event.MemoStd.OpCode == memo.OpCodeCall {
+		amountSats = big.NewInt(0)
+		coinType = coin.CoinType_NoAssetCall
+	}
+
 	// inject revert options specified by the memo
 	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
 	revertOptions := crosschaintypes.RevertOptions{
@@ -294,7 +301,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		event.TxHash,
 		event.BlockNumber,
 		0,
-		coin.CoinType_Gas,
+		coinType,
 		"",
 		0,
 		crosschaintypes.ProtocolContractVersion_V2,

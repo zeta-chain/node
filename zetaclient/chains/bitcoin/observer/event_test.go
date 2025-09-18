@@ -210,10 +210,11 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			name:    "should return error if standard memo validation failed",
 			chainID: chains.BitcoinTestnet.ChainId,
 			event: &BTCInboundEvent{
-				// a no asset call opCode passed, not supported at the moment
+				// a no asset call opCode passed with payload and revert address
+				// the revert address passed is an invalid BTC address: "abcd"
 				MemoBytes: testutil.HexToBytes(
 					t,
-					"5a0120032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
+					"5a0120072d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f7368690461626364",
 				),
 			},
 			errMsg: "invalid standard memo for bitcoin",
@@ -269,15 +270,6 @@ func Test_ValidateStandardMemo(t *testing.T) {
 					},
 				},
 			},
-		},
-		{
-			name: "NoAssetCall is disabled for Bitcoin",
-			memo: memo.InboundMemo{
-				Header: memo.Header{
-					OpCode: memo.OpCodeCall,
-				},
-			},
-			errMsg: "NoAssetCall is disabled for Bitcoin",
 		},
 		{
 			name: "should return error on invalid revert address",
