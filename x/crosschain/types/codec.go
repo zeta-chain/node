@@ -28,6 +28,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "crosschain/GasPriceVoter", nil)
+	cdc.RegisterConcrete(&MsgMigrateERC20CustodyFunds{}, "crosschain/MigrateERC20CustodyFunds", nil)
+	cdc.RegisterConcrete(&MsgUpdateERC20CustodyPauseStatus{}, "crosschain/UpdateERC20CustodyPauseStatus", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -52,6 +54,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgVoteOnObservedOutboundTx{},
 		&MsgVoteOnObservedInboundTx{},
 		&MsgGasPriceVoter{},
+		&MsgMigrateERC20CustodyFunds{},
+		&MsgUpdateERC20CustodyPauseStatus{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
