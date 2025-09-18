@@ -28,7 +28,12 @@ func (k Keeper) GetGasStabilityPoolBalance(
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return nil, fmt.Errorf("error getting gas zrc20 contract %s, chain ID %d: %s", gasZRC20.Hex(), chainID, err.Error())
+		return nil, fmt.Errorf(
+			"error getting gas zrc20 contract %s, chain ID %d: %s",
+			gasZRC20.Hex(),
+			chainID,
+			err.Error(),
+		)
 	}
 
 	return k.BalanceOfZRC4(ctx, gasZRC20, types.GasStabilityPoolAddressEVM())
