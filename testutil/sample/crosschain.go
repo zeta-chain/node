@@ -324,18 +324,6 @@ func CustomCctxsInBlockRange(
 	return cctxs
 }
 
-func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.LastBlockHeight{
-		Creator:            AccAddress(),
-		Index:              index,
-		Chain:              StringRandom(r, 32),
-		LastInboundHeight:  r.Uint64(),
-		LastOutboundHeight: r.Uint64(),
-	}
-}
-
 func InboundHashToCctx(t *testing.T, inboundHash string) types.InboundHashToCctx {
 	r := newRandFromStringSeed(t, inboundHash)
 

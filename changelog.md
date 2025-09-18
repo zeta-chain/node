@@ -14,6 +14,9 @@
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 * [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
 * [4199](https://github.com/zeta-chain/node/pull/4199) - remove `MsgUpdateERC20CustodyPauseStatus` and `MsgMigrateERC20CustodyFunds`
+* [4205](https://github.com/zeta-chain/node/pull/4205) - remove index field in ballot
+* [4200](https://github.com/zeta-chain/node/pull/4200) - remove `LastBlockHeight` state variable
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
 
 ### Fixes
 
@@ -25,6 +28,7 @@
 * [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
 * [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4217](https://github.com/zeta-chain/node/pull/4217) - remove ZetaChain chain ID from GasStabilityPoolBalances query
 
 ### Tests
 
