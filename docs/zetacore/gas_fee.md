@@ -2,14 +2,14 @@
 
 ## Overview
 
-Gas fees in ZetaChain refer to the amount paid by users to execute messages on connected chains. These fees **do not** include any gas payments that users make on the source chain to initiate transactions.
+Gas fees in ZetaChain refer to the amount paid by users to execute transactions on connected chains. These fees **do not** include any gas payments that users make on the source chain to initiate transactions.
 
 ## Key Concepts
 
 - **Deposit**: Transfer tokens from a connected chain to ZetaChain
 - **Withdraw**: Transfer tokens from ZetaChain to a connected chain
-- **Coin Types**: Different token types used for transactions (Gas, ERC20, Zeta)
-- **Revert**: When a transaction fails and needs to be reversed
+- **Coin Types**: Different token types used for transactions (Gas, ERC20, ZETA, No Asset)
+- **Revert**: When a transaction fails and needs to be reverted
 
 ## V2 Protocol Flows
 
@@ -39,7 +39,7 @@ Deposits transfer tokens from connected chains to ZetaChain.
    - Gas token can be directly burned to pay for the gas fee
 
 3. **NoAssetCall**
-   - No revert processing in this case
+   - No revert processing in this case, the cross-chain transaction is aborted
 
 ### Withdraw Transactions
 
@@ -52,7 +52,7 @@ Withdrawals transfer tokens from ZetaChain to connected chains.
 | Call | User Pays based on withdraw type | Free call to OnRevert using fixed GasLimit | Initiated through Gateway smart contract |
 
 - Withdrawals are initiated by users through zEVM smart contract calls
-- Fees are always paid in the GAS ZRC20 token for the target connected chain
+- Fees are always paid in the GAS ZRC20 token for the target connected chain, this fees is paid separately by the user an is not deducted from the amount.However when the transaction reverts, the revert fee is deducted from the amount
 - CCTX type is either GAS or ERC20 depending on the token
 
 **Gas Fee Payment by withdraw type:**
@@ -67,6 +67,9 @@ Withdrawals transfer tokens from ZetaChain to connected chains.
    - `Gateway Smart contract` calculates expected gas cost on connected chain based on `gasPrice` * `ZRC20.GasLimit` + Protocol Flat Fee
 
 ## V1 Protocol Flows
+
+- V1 flows for ERC20/ZRC20 and GAS tokens have already been deprecated
+- V1 flows for ZETA token deposits and withdrawals are still supported but are planned to be deprecated soon.
 
 ### Deposit Transactions
 

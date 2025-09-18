@@ -25,7 +25,7 @@ For overpayment scenarios, we implement the following refund logic:
 
 ### Fee Tracking
 
-- We track the initial gas fee paid by the user when initiating the transaction.This does not include the Protocol Fee.
+- We track the initial gas fee paid by the user when initiating the transaction. This does not include the Protocol Fee.
 - When an outbound transaction completes (regardless of status), we calculate the actual fee used:
   ```
   actualFee = receipt.GasUsed * transaction.GasPrice()
@@ -50,11 +50,11 @@ For overpayment scenarios, we implement the following refund logic:
 The remaining fees are distributed as follows:
 
 1. **Stability Pool Allocation**
-    - For non-zEVM chains or invalid addresses: 100% of this amount goes to the stability pool
-    - For zEVM chains with valid addresses: A configurable percentage (from chain parameters) goes to the stability pool
+    - For non-EVM chains: 100% of this amount goes to the stability pool
+    - For EVM chains: A configurable percentage (defined in the chain parameters) goes to the stability pool
 
 2. **User Refund**
-    - For zEVM chains with valid addresses: The remaining amount after stability pool allocation is refunded to the user
+    - For EVM chains: The remaining amount after stability pool allocation is refunded to the user
     - Refunds are provided as ZRC20 gas tokens of the connected chain
 
 3. **Fallback**

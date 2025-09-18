@@ -144,20 +144,25 @@ func (k msgServer) VoteOutbound(
 // Event if the funding fails, the outbound tx is still processed.
 func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	outboundParams := cctx.GetCurrentOutboundParam()
-	// If the userGasFeePaid is nil, it means that this cctx was created before the userGasFeePaid was added.
-	err := k.FundGasStabilityPoolFromRemainingFees(
-		ctx,
-		*outboundParams,
-		outboundParams.ReceiverChainId,
-	)
-	if err != nil {
-		ctx.Logger().Error("Failed to fund gas stability pool (Legacy) with remaining fees",
-			"voteOutboundID", voteOutboundID,
-			"cctxIndex", cctx.Index,
-			"error", err,
+	// We skip funding the gas stability pool if the userGasFeePaid is nil or zero.
+	// This is a legacy outbound where the user fee was not recorded as part of the cctx struct. This is only to handle cctxs which might be in pending outbound state when the upgrade happens and get finalized after the upgrade
+	if outboundParams.UserGasFeePaid.IsNil() || outboundParams.UserGasFeePaid.IsZero() {
+		err := k.FundGasStabilityPoolFromRemainingFees(
+			ctx,
+			*outboundParams,
+			outboundParams.ReceiverChainId,
 		)
+		if err != nil {
+			ctx.Logger().Error("Failed to fund gas stability pool (Legacy) with remaining fees",
+				"voteOutboundID", voteOutboundID,
+				"cctxIndex", cctx.Index,
+				"error", err,
+			)
+
+		}
 		return
 	}
+
 	if err := k.useRemainingGasFee(ctx, cctx); err != nil {
 		ctx.Logger().Error("Failed to fund gas stability pool with remaining fees",
 			"voteOutboundID", voteOutboundID,
