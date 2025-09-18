@@ -333,7 +333,7 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 		txHash,
 		inbound.sender.ToRaw(),
 		inbound.receiver.Hex(),
-		inbound.coinType.String(),
+		&inbound.coinType,
 	)
 
 	return true
