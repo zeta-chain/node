@@ -230,12 +230,6 @@ func AddCrosschainData(
 			},
 		)
 	}
-	for i := 0; i < n; i++ {
-		state.LastBlockHeightList = append(
-			state.LastBlockHeightList,
-			&types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)},
-		)
-	}
 
 	for i := 0; i < n; i++ {
 		inboundTracker := types.InboundTracker{
