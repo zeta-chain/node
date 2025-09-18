@@ -625,11 +625,11 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	hash2 = msg.Digest()
 	require.Equal(t, hash, hash2, "confirmation mode should not change hash")
 
-	// error message used
+	// error message not used
 	msg = getMsg()
 	msg.ErrorMessage = "a sample error message"
 	hash2 = msg.Digest()
-	require.NotEqual(t, hash, hash2, "error message should change hash")
+	require.Equal(t, hash, hash2, "error message should not change hash")
 }
 
 func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
