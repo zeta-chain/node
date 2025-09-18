@@ -57,6 +57,10 @@ func (k Keeper) GasStabilityPoolBalanceAll(
 	chains := k.observerKeeper.GetSupportedChains(ctx)
 	balances := make([]types.QueryAllGasStabilityPoolBalanceResponse_Balance, 0, len(chains))
 	for _, chain := range chains {
+		if chain.IsZetaChain() {
+			continue
+		}
+
 		chainID := chain.ChainId
 
 		balance, err := k.GetGasStabilityPoolBalance(ctx, chainID)
