@@ -266,6 +266,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
 	// determine amount and coin type according to operation code
+	// NoAssetCall expects no asset transfer; any excess amount above depositor fee is ignored
 	coinType := coin.CoinType_Gas
 	if event.MemoStd.OpCode == memo.OpCodeCall {
 		amountSats = big.NewInt(0)
