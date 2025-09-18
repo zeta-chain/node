@@ -20,16 +20,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &cctxA)
 			cdc.MustUnmarshal(kvB.Value, &cctxB)
 			return fmt.Sprintf("key %s value A %v value B %v", types.CCTXKey, cctxA, cctxB)
-		case bytes.Equal(kvA.Key, types.KeyPrefix(types.LastBlockHeightKey)):
-			var lastBlockHeightA, lastBlockHeightB types.LastBlockHeight
-			cdc.MustUnmarshal(kvA.Value, &lastBlockHeightA)
-			cdc.MustUnmarshal(kvB.Value, &lastBlockHeightB)
-			return fmt.Sprintf(
-				"key %s value A %v value B %v",
-				types.LastBlockHeightKey,
-				lastBlockHeightA,
-				lastBlockHeightB,
-			)
 		case bytes.Equal(kvA.Key, types.KeyPrefix(types.FinalizedInboundsKey)):
 			var finalizedInboundsA, finalizedInboundsB []byte
 			finalizedInboundsA = kvA.Value

@@ -49,7 +49,6 @@ const (
 	// CounterIndexKey is the prefix to use for the counter index
 	CounterIndexKey = "ctr-idx-"
 
-	LastBlockHeightKey   = "LastBlockHeight-value-"
 	FinalizedInboundsKey = "FinalizedInbounds-value-"
 
 	GasPriceKey = "GasPrice-value-"
