@@ -86,8 +86,8 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			), nil, nil
 		}
 
-		medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
-		priorityFee = priorityFee.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
+		medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
+		priorityFee = priorityFee.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
 
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
