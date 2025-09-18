@@ -14,6 +14,7 @@
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 * [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
 * [4200](https://github.com/zeta-chain/node/pull/4200) - remove `LastBlockHeight` state variable
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
 
 ### Fixes
 
