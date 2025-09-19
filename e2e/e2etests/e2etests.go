@@ -286,7 +286,7 @@ var (
 )
 
 // v2ZetaVersion is the minimum version that supports ZETA transfers using the gateway (v2 protocol contracts)
-const v2ZetaVersion = "v37.0.0"
+const v2ZetaVersion = "v38.0.0"
 
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
