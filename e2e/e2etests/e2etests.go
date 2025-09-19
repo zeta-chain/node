@@ -195,7 +195,7 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestWhitelistAssetName               = "whitelist_asset"
+	TestWhitelistERC20Name               = "whitelist_erc20"
 	TestDepositEtherLiquidityCapName     = "deposit_eth_liquidity_cap"
 	TestMigrateChainSupportName          = "migrate_chain_support"
 	TestPauseZRC20Name                   = "pause_zrc20"
@@ -1551,10 +1551,10 @@ var AllE2ETests = []runner.E2ETest{
 	 Admin tests
 	*/
 	runner.NewE2ETest(
-		TestWhitelistAssetName,
+		TestWhitelistERC20Name,
 		"whitelist a new ERC20 token",
 		[]runner.ArgDefinition{},
-		TestWhitelistAsset,
+		TestWhitelistERC20,
 	),
 	runner.NewE2ETest(
 		TestDepositEtherLiquidityCapName,

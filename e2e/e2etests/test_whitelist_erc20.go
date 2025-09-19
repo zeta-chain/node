@@ -18,8 +18,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestWhitelistAsset tests the whitelist asset functionality
-func TestWhitelistAsset(r *runner.E2ERunner, _ []string) {
+// TestWhitelistERC20 tests the whitelist asset functionality for erc20
+func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	// Deploy a new ERC20 on the new EVM chain
 	r.Logger.Info("Deploying new ERC20 contract")
 	erc20Addr, txERC20, _, err := erc20.DeployERC20(r.EVMAuth, r.EVMClient, "NEWERC20", "NEWERC20", 6)
@@ -46,7 +46,7 @@ func TestWhitelistAsset(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	event, ok := txserver.EventOfType[*crosschaintypes.EventAssetWhitelist](res.Events)
-	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	require.True(r, ok, "no EventAssetWhitelist in %s", res.TxHash)
 	erc20zrc20Addr := event.Zrc20Address
 	whitelistCCTXIndex := event.WhitelistCctxIndex
 

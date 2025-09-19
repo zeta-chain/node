@@ -166,7 +166,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	event, ok := txserver.EventOfType[*crosschaintypes.EventAssetWhitelist](res.Events)
-	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	require.True(r, ok, "no EventAssetWhitelist in %s", res.TxHash)
 	erc20zrc20Addr := event.Zrc20Address
 	whitelistCCTXIndex := event.WhitelistCctxIndex
 

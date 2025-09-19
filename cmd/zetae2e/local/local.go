@@ -358,7 +358,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateZRC20NameName,
 			e2etests.TestZetaclientSignerOffsetName,
 			e2etests.TestZetaclientRestartHeightName,
-			e2etests.TestWhitelistAssetName,
+			e2etests.TestWhitelistERC20Name,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
 			e2etests.TestUpdateBytecodeConnectorName,
