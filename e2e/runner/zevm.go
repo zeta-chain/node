@@ -274,6 +274,7 @@ func (r *E2ERunner) ZEVMToEMVCall(
 	receiver ethcommon.Address,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
+	gasLimit *big.Int,
 ) *ethtypes.Transaction {
 	tx, err := r.GatewayZEVM.Call(
 		r.ZEVMAuth,
@@ -281,7 +282,7 @@ func (r *E2ERunner) ZEVMToEMVCall(
 		r.ETHZRC20Addr,
 		payload,
 		gatewayzevm.CallOptions{
-			GasLimit:        defaultGasLimit,
+			GasLimit:        gasLimit,
 			IsArbitraryCall: false,
 		},
 		revertOptions,
