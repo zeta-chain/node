@@ -18,7 +18,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestWhitelistERC20 tests the whitelist ERC20 functionality
+// TestWhitelistERC20 tests the whitelist asset functionality for erc20
 func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	// Deploy a new ERC20 on the new EVM chain
 	r.Logger.Info("Deploying new ERC20 contract")
@@ -33,7 +33,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	r.Logger.Info("whitelisting ERC20 on new network")
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		erc20Addr.Hex(),
 		chains.GoerliLocalnet.ChainId,
@@ -45,8 +45,8 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 	))
 	require.NoError(r, err)
 
-	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20Whitelist](res.Events)
-	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventAssetWhitelist](res.Events)
+	require.True(r, ok, "no EventAssetWhitelist in %s", res.TxHash)
 	erc20zrc20Addr := event.Zrc20Address
 	whitelistCCTXIndex := event.WhitelistCctxIndex
 

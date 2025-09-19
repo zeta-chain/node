@@ -27,7 +27,7 @@ var (
 	AdminPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
 		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
-		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
+		"/zetachain.zetacore.crosschain.MsgWhitelistAsset",
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
 		"/zetachain.zetacore.fungible.MsgUpdateGatewayContract",

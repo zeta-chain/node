@@ -366,17 +366,16 @@ message MsgVoteInbound {
 }
 ```
 
-#### MsgWhitelistERC20
+#### MsgWhitelistAsset
 
-WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+WhitelistAsset deploys a new zrc20, create a foreign coin object for the asset
 and emit a crosschain tx to whitelist the ERC20 on the external chain
-
-Authorized: admin policy group 1.
+an asset can be erc20 on EVM chains, SPL on Solana, etc
 
 ```proto
-message MsgWhitelistERC20 {
+message MsgWhitelistAsset {
 	string creator = 1;
-	string erc20_address = 2;
+	string asset_address = 2;
 	int64 chain_id = 3;
 	string name = 4;
 	string symbol = 5;

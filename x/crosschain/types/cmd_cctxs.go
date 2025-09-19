@@ -23,15 +23,15 @@ const (
 	// TSSMigrationBufferAmountEVM is the buffer amount added to the gas price for the tss migration transaction
 	TSSMigrationBufferAmountEVM = "2100000000"
 
-	// ERC20CustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
-	ERC20CustodyWhitelistGasMultiplierEVM = 2
+	// AssetCustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
+	AssetCustodyWhitelistGasMultiplierEVM = 2
 )
 
-// WhitelistERC20CmdCCTX returns a CCTX allowing to whitelist an ERC20 token on an external chain
-func WhitelistERC20CmdCCTX(
+// WhitelistAssetCmdCCTX returns a CCTX allowing to whitelist an ERC20 token on an external chain
+func WhitelistAssetCmdCCTX(
 	creator string,
 	zrc20Address ethcommon.Address,
-	erc20Address string,
+	assetAddress string,
 	custodyContractAddress string,
 	chainID int64,
 	gasPrice string,
@@ -41,12 +41,12 @@ func WhitelistERC20CmdCCTX(
 	// calculate the cctx index
 	// we use the deployed zrc20 contract address to generate a unique index
 	// since other parts of the system may use the zrc20 for the index, we add a message specific suffix
-	hash := crypto.Keccak256Hash(zrc20Address.Bytes(), []byte("WhitelistERC20"))
+	hash := crypto.Keccak256Hash(zrc20Address.Bytes(), []byte("WhitelistAsset"))
 
 	return newCmdCCTX(
 		creator,
 		hash.Hex(),
-		fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, erc20Address),
+		fmt.Sprintf("%s:%s", constant.CmdWhitelistAsset, assetAddress),
 		creator,
 		hash.Hex(),
 		custodyContractAddress,

@@ -20,7 +20,7 @@ func (signer *Signer) SignAdminTx(
 	params string,
 ) (*ethtypes.Transaction, error) {
 	switch cmd {
-	case constant.CmdWhitelistERC20:
+	case constant.CmdWhitelistAsset:
 		return signer.signWhitelistERC20Cmd(ctx, txData, params)
 	case constant.CmdMigrateTSSFunds:
 		return signer.signMigrateTSSFundsCmd(ctx, txData)

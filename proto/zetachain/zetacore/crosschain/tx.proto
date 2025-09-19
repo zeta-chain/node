@@ -27,7 +27,7 @@ service Msg {
   rpc VoteOutbound(MsgVoteOutbound) returns (MsgVoteOutboundResponse);
   rpc VoteInbound(MsgVoteInbound) returns (MsgVoteInboundResponse);
 
-  rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc WhitelistAsset(MsgWhitelistAsset) returns (MsgWhitelistAssetResponse);
   rpc UpdateTssAddress(MsgUpdateTssAddress)
       returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
@@ -88,11 +88,10 @@ message MsgRemoveInboundTracker {
 
 message MsgRemoveInboundTrackerResponse {}
 
-// TODO: https://github.com/zeta-chain/node/issues/3083
-message MsgWhitelistERC20 {
+message MsgWhitelistAsset {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string erc20_address = 2;
+  string asset_address = 2;
   int64 chain_id = 3;
   string name = 4;
   string symbol = 5;
@@ -104,7 +103,7 @@ message MsgWhitelistERC20 {
   ];
 }
 
-message MsgWhitelistERC20Response {
+message MsgWhitelistAssetResponse {
   string zrc20_address = 1;
   string cctx_index = 2;
 }

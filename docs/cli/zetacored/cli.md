@@ -11069,7 +11069,7 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain vote-gas-price](#zetacored-tx-crosschain-vote-gas-price)	 - Broadcast message to vote gas price
 * [zetacored tx crosschain vote-inbound](#zetacored-tx-crosschain-vote-inbound)	 - Broadcast message to vote an inbound
 * [zetacored tx crosschain vote-outbound](#zetacored-tx-crosschain-vote-outbound)	 - Broadcast message to vote an outbound
-* [zetacored tx crosschain whitelist-erc20](#zetacored-tx-crosschain-whitelist-erc20)	 - Add a new erc20 token to whitelist
+* [zetacored tx crosschain whitelist-asset](#zetacored-tx-crosschain-whitelist-asset)	 - Add a new asset token to whitelist
 
 ## zetacored tx crosschain abort-stuck-cctx
 
@@ -11689,12 +11689,12 @@ zetacored tx crosschain vote-outbound 0x12044bec3b050fb28996630e9f2e9cc8d6cf9ef0
 
 * [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
 
-## zetacored tx crosschain whitelist-erc20
+## zetacored tx crosschain whitelist-asset
 
-Add a new erc20 token to whitelist
+Add a new asset token to whitelist
 
 ```
-zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap] [flags]
+zetacored tx crosschain whitelist-asset [assetAddress] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap] [flags]
 ```
 
 ### Options
@@ -11713,7 +11713,7 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol]
       --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                        help for whitelist-erc20
+  -h, --help                        help for whitelist-asset
       --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                      Use a connected Ledger device
