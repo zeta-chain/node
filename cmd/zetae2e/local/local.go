@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -311,8 +312,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
-		//err = OverwriteAccountData(cmd, &conf)
-		//require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		err = OverwriteAccountData(cmd, &conf)
+		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 		if !testSui || deployerRunner.IsRunningTssMigration() {
 			return
