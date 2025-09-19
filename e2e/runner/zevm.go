@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -559,4 +560,24 @@ func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
 	)
 	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msg)
 	require.NoError(r, err)
+}
+
+func (r *E2ERunner) UpdateGatewayGasLimit(newGasLimit uint64) {
+	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	require.NoError(r, err)
+	require.NotEqual(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
+
+	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		newGasLimit,
+	)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
+	require.NoError(r, err)
+
+	r.WaitForBlocks(1)
+
+	// Verify that the gas limit has been updated
+	systemContract, err = r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	require.NoError(r, err)
+	require.Equal(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 }
