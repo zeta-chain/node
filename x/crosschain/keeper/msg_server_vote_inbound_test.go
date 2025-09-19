@@ -192,9 +192,9 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		r := rand.New(rand.NewSource(42))
 		numberOfValidators := 10
 		validators := make([]stakingtypes.Validator, numberOfValidators)
-		observerlist := make([]string, numberOfValidators)
+		observerList := make([]string, numberOfValidators)
 
-		for i := 0; i < numberOfValidators; i++ {
+		for i := range numberOfValidators {
 			validator := sample.Validator(t, r)
 			err := sdkk.StakingKeeper.SetValidator(ctx, validator)
 			require.NoError(t, err)
@@ -202,11 +202,11 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
 			addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
 			validatorAddr := addresstmp.String()
-			observerlist[i] = validatorAddr
+			observerList[i] = validatorAddr
 			validators[i] = validator
 		}
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
-			ObserverList: observerlist,
+			ObserverList: observerList,
 		})
 		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
@@ -253,8 +253,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		}
 
 		// Act
-		// Crate two ballots for the same inbound tx
-		ballotCreator := observerlist[0]
+		// Create two ballots for the same inbound tx
+		ballotCreator := observerList[0]
 		msgCreation1 := baseMsg1
 		msgCreation1.Creator = ballotCreator
 		_, err := msgServer.VoteInbound(
@@ -279,8 +279,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		require.True(t, found2)
 		require.Equal(t, ballot2.BallotStatus, observertypes.BallotStatus_BallotInProgress)
 
-		for i := 1; i < len(observerlist); i++ {
-			observer := observerlist[i]
+		for i := 1; i < len(observerList); i++ {
+			observer := observerList[i]
 			msg := baseMsg1
 			msg.Creator = observer
 			_, err := msgServer.VoteInbound(
