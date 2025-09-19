@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v11 "github.com/zeta-chain/node/x/observer/migrations/v11"
 	v12 "github.com/zeta-chain/node/x/observer/migrations/v12"
 )
 
@@ -17,11 +16,6 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{
 		observerKeeper: keeper,
 	}
-}
-
-// Migrate10to11 migrates the store from consensus version 10 to 11
-func (m Migrator) Migrate10to11(ctx sdk.Context) error {
-	return v11.MigrateStore(ctx, m.observerKeeper)
 }
 
 // Migrate11to12 migrates the store from consensus version 11 to 12

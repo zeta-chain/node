@@ -121,7 +121,7 @@ func (k msgServer) VoteOutbound(
 	}
 
 	// Fund the gas stability pool with the remaining funds.
-	k.ManageUnusedGasFee(ctx, &cctx)
+	k.RefundUnusedGasFee(ctx, &cctx)
 
 	// Validate and process the observed outbound
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
@@ -138,11 +138,11 @@ func (k msgServer) VoteOutbound(
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
-// ManageUnusedGasFee funds the stability pool with the remaining fees of an outbound tx
+// RefundUnusedGasFee funds the stability pool with the remaining fees of an outbound tx
 // The funds are sent to the gas stability pool associated with the receiver chain and the user is refunded if possible.
-// This wraps the UseRemainingGasFee function and logs an error if it fails.We do not return an error here.
+// This wraps the RefundUnusedGas function and logs an error if it fails.We do not return an error here.
 // Event if the funding fails, the outbound tx is still processed.
-func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
+func (k Keeper) RefundUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	outboundParams := cctx.GetCurrentOutboundParam()
 	// We skip funding the gas stability pool if the userGasFeePaid is nil or zero.
 	// This is a legacy outbound where the user fee was not recorded as part of the cctx struct. This is only to handle cctxs which might be in pending outbound state when the upgrade happens and get finalized after the upgrade
@@ -162,7 +162,7 @@ func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 		return
 	}
 
-	if err := k.useRemainingGasFee(ctx, cctx); err != nil {
+	if err := k.refundUnusedGas(ctx, cctx); err != nil {
 		ctx.Logger().Error("Failed to fund gas stability pool with remaining fees",
 			"voteOutboundID", voteOutboundID,
 			"cctxIndex", cctx.Index,
@@ -171,8 +171,8 @@ func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	}
 }
 
-// UseRemainingGasFee uses the remaining fees of an outbound tx to fund the gas stability pool and refund the user if possible
-func (k Keeper) useRemainingGasFee(
+// RefundUnusedGas uses the remaining fees of an outbound tx to fund the gas stability pool and refund the user if possible
+func (k Keeper) refundUnusedGas(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 ) error {
@@ -226,7 +226,7 @@ func (k Keeper) useRemainingGasFee(
 	}
 
 	if refundAmount.GT(math.ZeroUint()) && refundToUser {
-		if err := k.fungibleKeeper.RefundRemainingGasFees(ctx, outboundParams.ReceiverChainId, refundAmount.BigInt(), ethcommon.HexToAddress(cctx.InboundParams.Sender)); err != nil {
+		if err := k.fungibleKeeper.DepositChainGasToken(ctx, outboundParams.ReceiverChainId, refundAmount.BigInt(), ethcommon.HexToAddress(cctx.InboundParams.Sender)); err != nil {
 			return err
 		}
 	}
@@ -235,7 +235,7 @@ func (k Keeper) useRemainingGasFee(
 }
 
 // TODO : Remove this function
-// https://github.com/zeta-chain/node/issues/3768
+// This function handles the legacy flow for funcding the gas stability pool with the remaining fees.
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
 func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	ctx sdk.Context,

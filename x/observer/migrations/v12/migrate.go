@@ -22,7 +22,7 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams != nil {
-			chainParams.StabilityPoolPercentage = 60
+			chainParams.StabilityPoolPercentage = 100
 		}
 	}
 

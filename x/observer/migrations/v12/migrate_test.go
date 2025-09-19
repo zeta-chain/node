@@ -39,10 +39,10 @@ func TestMigrateStore(t *testing.T) {
 			oldParam := oldChainParams.ChainParams[i]
 
 			// Check StabilityPoolPercentage is set to 60
-			require.Equal(t, uint64(60), newParam.StabilityPoolPercentage)
+			require.Equal(t, uint64(100), newParam.StabilityPoolPercentage)
 
 			// Ensure nothing else has changed
-			oldParam.StabilityPoolPercentage = 60
+			oldParam.StabilityPoolPercentage = 100
 			require.Equal(t, newParam, oldParam)
 		}
 	})

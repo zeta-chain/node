@@ -27,8 +27,8 @@ func (k Keeper) GetNextCctxCounter(ctx sdk.Context) uint64 {
 	return k.getNextCctxCounter(ctx)
 }
 
-func (k Keeper) UseRemainingGasFee(ctx sdk.Context, cctx *types.CrossChainTx) error {
-	return k.useRemainingGasFee(ctx, cctx)
+func (k Keeper) RefundUnusedGas(ctx sdk.Context, cctx *types.CrossChainTx) error {
+	return k.refundUnusedGas(ctx, cctx)
 }
 
 func (k Keeper) GetZETAInboundDetails(

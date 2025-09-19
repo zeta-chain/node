@@ -152,6 +152,24 @@ func (_m *CrosschainFungibleKeeper) DeployZRC20Contract(ctx types.Context, name 
 	return r0, r1
 }
 
+// DepositChainGasToken provides a mock function with given fields: ctx, chainID, amount, receiver
+func (_m *CrosschainFungibleKeeper) DepositChainGasToken(ctx types.Context, chainID int64, amount *big.Int, receiver common.Address) error {
+	ret := _m.Called(ctx, chainID, amount, receiver)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DepositChainGasToken")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, int64, *big.Int, common.Address) error); ok {
+		r0 = rf(ctx, chainID, amount, receiver)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DepositCoinZeta provides a mock function with given fields: ctx, to, amount
 func (_m *CrosschainFungibleKeeper) DepositCoinZeta(ctx types.Context, to common.Address, amount *big.Int) error {
 	ret := _m.Called(ctx, to, amount)
@@ -688,24 +706,6 @@ func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx typ
 	}
 
 	return r0, r1
-}
-
-// RefundRemainingGasFees provides a mock function with given fields: ctx, chainID, amount, receiver
-func (_m *CrosschainFungibleKeeper) RefundRemainingGasFees(ctx types.Context, chainID int64, amount *big.Int, receiver common.Address) error {
-	ret := _m.Called(ctx, chainID, amount, receiver)
-
-	if len(ret) == 0 {
-		panic("no return value specified for RefundRemainingGasFees")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, int64, *big.Int, common.Address) error); ok {
-		r0 = rf(ctx, chainID, amount, receiver)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 // SetForeignCoins provides a mock function with given fields: ctx, foreignCoins

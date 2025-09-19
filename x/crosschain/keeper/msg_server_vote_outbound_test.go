@@ -407,7 +407,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 
 			if tc.expectRefundRemainingFeesCall {
 				fungibleMock.On(
-					"RefundRemainingGasFees",
+					"DepositChainGasToken",
 					mock.Anything,
 					tc.receiverChainID,
 					tc.refundRemainingFeesExpectedAmount,
@@ -416,7 +416,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			}
 
 			// Act
-			k.ManageUnusedGasFee(ctx, cctx)
+			k.RefundUnusedGasFee(ctx, cctx)
 
 			// Assert
 			fungibleMock.AssertExpectations(t)
