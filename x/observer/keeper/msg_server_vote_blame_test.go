@@ -117,7 +117,6 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 			BlameInfo: blameInfo,
 		}
 		ballot := types.Ballot{
-			Index:            vote.Digest(),
 			BallotIdentifier: vote.Digest(),
 			VoterList:        []string{accAddressOfValidator.String()},
 			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
@@ -164,7 +163,6 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 			BlameInfo: blameInfo,
 		}
 		ballot := types.Ballot{
-			Index:            vote.Digest(),
 			BallotIdentifier: vote.Digest(),
 			VoterList:        []string{accAddressOfValidator.String()},
 			Votes:            []types.VoteType{types.VoteType_NotYetVoted},

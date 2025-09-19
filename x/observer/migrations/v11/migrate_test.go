@@ -54,7 +54,6 @@ func SaveBallotsToState(
 			for j := 0; j < ballotPerBlock; j++ {
 				index := fmt.Sprintf("ballot-%d-%d", i, j)
 				ballot := &types.Ballot{
-					Index:                index,
 					BallotIdentifier:     index,
 					BallotCreationHeight: i,
 				}

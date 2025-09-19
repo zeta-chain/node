@@ -23,110 +23,11 @@ const (
 	// TSSMigrationBufferAmountEVM is the buffer amount added to the gas price for the tss migration transaction
 	TSSMigrationBufferAmountEVM = "2100000000"
 
-	// ERC20CustodyMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody migration
-	// NOTE: this is a integer type unlike type above because the message logic is slightly different and an integer is needed
-	ERC20CustodyMigrationGasMultiplierEVM = 2
-
-	// AssetCustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the asset custody whitelist
+	// AssetCustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
 	AssetCustodyWhitelistGasMultiplierEVM = 2
-
-	// ERC20CustodyPausingGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody pausing
-	ERC20CustodyPausingGasMultiplierEVM = 2
 )
 
-// MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds
-func MigrateERC20CustodyFundsCmdCCTX(
-	creator string,
-	erc20Address string,
-	custodyContractAddress string,
-	newCustodyContractAddress string,
-	chainID int64,
-	amount sdkmath.Uint,
-	gasPrice string,
-	priorityFee string,
-	tssPubKey string,
-	currentNonce uint64,
-) CrossChainTx {
-	indexString := GetERC20CustodyMigrationCCTXIndexString(tssPubKey, currentNonce, chainID, erc20Address)
-	hash := crypto.Keccak256Hash([]byte(indexString))
-
-	return newCmdCCTX(
-		creator,
-		hash.Hex(),
-		fmt.Sprintf(
-			"%s:%s,%s,%s",
-			constant.CmdMigrateERC20CustodyFunds,
-			newCustodyContractAddress,
-			erc20Address,
-			amount.String(),
-		),
-		creator,
-		hash.Hex(),
-		custodyContractAddress,
-		chainID,
-		sdkmath.NewUint(0),
-		100_000,
-		gasPrice,
-		priorityFee,
-		tssPubKey,
-	)
-}
-
-// GetERC20CustodyMigrationCCTXIndexString returns the index string of the CCTX for migrating ERC20 custody funds
-func GetERC20CustodyMigrationCCTXIndexString(
-	tssPubKey string,
-	nonce uint64,
-	chainID int64,
-	erc20Address string,
-) string {
-	return fmt.Sprintf("%s-%s-%d-%d-%s", constant.CmdMigrateERC20CustodyFunds, tssPubKey, nonce, chainID, erc20Address)
-}
-
-// UpdateERC20CustodyPauseStatusCmdCCTX returns a CCTX allowing to update the pause status of the ERC20 custody contract
-func UpdateERC20CustodyPauseStatusCmdCCTX(
-	creator string,
-	custodyContractAddress string,
-	chainID int64,
-	pause bool,
-	gasPrice string,
-	priorityFee string,
-	tssPubKey string,
-	currentNonce uint64,
-) CrossChainTx {
-	indexString := GetERC20CustodyPausingCmdCCTXIndexString(tssPubKey, currentNonce, chainID)
-	hash := crypto.Keccak256Hash([]byte(indexString))
-
-	params := constant.OptionUnpause
-	if pause {
-		params = constant.OptionPause
-	}
-
-	return newCmdCCTX(
-		creator,
-		hash.Hex(),
-		fmt.Sprintf("%s:%s", constant.CmdUpdateERC20CustodyPauseStatus, params),
-		creator,
-		hash.Hex(),
-		custodyContractAddress,
-		chainID,
-		sdkmath.NewUint(0),
-		100_000,
-		gasPrice,
-		priorityFee,
-		tssPubKey,
-	)
-}
-
-// GetERC20CustodyPausingCmdCCTXIndexString returns the index string of the CCTX for updating the pause status of the ERC20 custody contract
-func GetERC20CustodyPausingCmdCCTXIndexString(
-	tssPubKey string,
-	nonce uint64,
-	chainID int64,
-) string {
-	return fmt.Sprintf("%s-%s-%d-%d", constant.CmdUpdateERC20CustodyPauseStatus, tssPubKey, nonce, chainID)
-}
-
-// WhitelistAssetCmdCCTX returns a CCTX allowing to whitelist an asset token on an external chain
+// WhitelistAssetCmdCCTX returns a CCTX allowing to whitelist an ERC20 token on an external chain
 func WhitelistAssetCmdCCTX(
 	creator string,
 	zrc20Address ethcommon.Address,
@@ -241,7 +142,7 @@ func MigrateFundCmdCCTX(
 	return newCmdCCTX(
 		creator,
 		hash.Hex(),
-		fmt.Sprintf("%s:%s", constant.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
+		fmt.Sprintf("%s:%s", constant.CmdMigrateTSSFunds, "Funds Migrator Admin Cmd"),
 		sender,
 		inboundHash,
 		receiver,

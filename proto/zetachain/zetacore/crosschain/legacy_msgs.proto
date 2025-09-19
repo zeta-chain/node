@@ -124,3 +124,26 @@ message MsgGasPriceVoter {
   uint64 block_number = 4;
   string supply = 5;
 }
+
+// legacy MsgMigrateERC20CustodyFunds
+// defined to keep codec compatibility
+message MsgMigrateERC20CustodyFunds {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  int64 chain_id = 2;
+  string new_custody_address = 3;
+  string erc20_address = 4;
+  string amount = 5 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// legacy MsgUpdateERC20CustodyPauseStatus
+// defined to keep codec compatibility
+message MsgUpdateERC20CustodyPauseStatus {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  int64 chain_id = 2;
+  bool pause = 3;
+}

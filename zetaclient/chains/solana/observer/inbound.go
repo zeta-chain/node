@@ -213,7 +213,7 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 		return false
 	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
+			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, &event.CoinType)
 		return false
 	default:
 		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")

@@ -364,8 +364,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
 			e2etests.TestCriticalAdminTransactionsName,
-			e2etests.TestPauseERC20CustodyName,
-			e2etests.TestMigrateERC20CustodyFundsName,
 			e2etests.TestUpdateOperationalChainParamsName,
 			e2etests.TestBurnFungibleModuleAssetName,
 

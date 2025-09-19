@@ -14,14 +14,8 @@ const (
 	// CmdWhitelistAsset is used for CCTX of type cmd to give the instruction to the TSS to whitelist an ERC20 on an exeternal chain
 	CmdWhitelistAsset = "cmd_whitelist_asset"
 
-	// CmdMigrateERC20CustodyFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
-	CmdMigrateERC20CustodyFunds = "cmd_migrate_erc20_custody_funds"
-
-	// CmdUpdateERC20CustodyPauseStatus is used for CCTX of type cmd to give the instruction to the TSS to update the pause status of the ERC20 custody contract
-	CmdUpdateERC20CustodyPauseStatus = "cmd_update_erc20_custody_pause_status"
-
-	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
-	CmdMigrateTssFunds = "cmd_migrate_tss_funds"
+	// CmdMigrateTSSFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
+	CmdMigrateTSSFunds = "cmd_migrate_tss_funds"
 	// BTCWithdrawalDustAmount is the minimum satoshis that can be withdrawn from zEVM to avoid outbound dust output
 	// The Bitcoin protocol sets a minimum output value to 546 satoshis (dust limit) but we set it to 1000 satoshis
 	BTCWithdrawalDustAmount = 1000
