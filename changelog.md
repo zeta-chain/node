@@ -11,7 +11,6 @@
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
 * [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
-* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ### Refactor
 
@@ -32,7 +31,6 @@
 * [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
-* [4183](https://github.com/zeta-chain/node/pull/4183) - force rescan if inbound vote monitoring fails
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 * [4217](https://github.com/zeta-chain/node/pull/4217) - remove ZetaChain chain ID from GasStabilityPoolBalances query
 
@@ -44,6 +42,18 @@
 * [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 * [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
 * [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
+
+## v36.0.2
+
+### Fixes
+
+* [4202](https://github.com/zeta-chain/node/pull/4202) - force rescan if inbound vote monitoring fails using a context that can timeout
+
+## v36.0.0
+
+### Features
+
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ## v33.0.0
 
