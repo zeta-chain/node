@@ -12,16 +12,16 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
+func TestMsgWhitelistAsset_ValidateBasic(t *testing.T) {
 	sdkconfig.SetDefault(false)
 	tests := []struct {
 		name  string
-		msg   *types.MsgWhitelistERC20
+		msg   *types.MsgWhitelistAsset
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				"invalid_address",
 				"0x0",
 				1,
@@ -35,7 +35,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid asset",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				"",
 				1,
@@ -49,7 +49,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid decimals",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				sample.EthAddress().Hex(),
 				1,
@@ -63,7 +63,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid gas limit",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				sample.EthAddress().Hex(),
 				1,
@@ -77,7 +77,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "evm asset address with invalid checksum format",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				"0x5a4f260a7d716c859a2736151cb38b9c58c32c64",
 				1,
@@ -91,9 +91,9 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid liquidity cap",
-			msg: &types.MsgWhitelistERC20{
+			msg: &types.MsgWhitelistAsset{
 				Creator:      sample.AccAddress(),
-				Erc20Address: "0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
+				AssetAddress: "0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
 				ChainId:      1,
 				Name:         "name",
 				Symbol:       "symbol",
@@ -104,7 +104,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid message with evm asset address",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				"0x5a4f260A7D716c859A2736151cB38b9c58C32c64",
 				1,
@@ -118,7 +118,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid message with solana asset address",
-			msg: types.NewMsgWhitelistERC20(
+			msg: types.NewMsgWhitelistAsset(
 				sample.AccAddress(),
 				"Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
 				1,
@@ -145,23 +145,23 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgWhitelistERC20_GetSigners(t *testing.T) {
+func TestMsgWhitelistAsset_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgWhitelistERC20
+		msg    types.MsgWhitelistAsset
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgWhitelistERC20{
+			msg: types.MsgWhitelistAsset{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgWhitelistERC20{
+			msg: types.MsgWhitelistAsset{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -182,22 +182,22 @@ func TestMsgWhitelistERC20_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgWhitelistERC20_Type(t *testing.T) {
-	msg := types.MsgWhitelistERC20{
+func TestMsgWhitelistAsset_Type(t *testing.T) {
+	msg := types.MsgWhitelistAsset{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgWhitelistERC20, msg.Type())
+	require.Equal(t, types.TypeMsgWhitelistAsset, msg.Type())
 }
 
-func TestMsgWhitelistERC20_Route(t *testing.T) {
-	msg := types.MsgWhitelistERC20{
+func TestMsgWhitelistAsset_Route(t *testing.T) {
+	msg := types.MsgWhitelistAsset{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgWhitelistERC20_GetSignBytes(t *testing.T) {
-	msg := types.MsgWhitelistERC20{
+func TestMsgWhitelistAsset_GetSignBytes(t *testing.T) {
+	msg := types.MsgWhitelistAsset{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {
