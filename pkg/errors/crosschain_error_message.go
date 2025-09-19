@@ -159,8 +159,8 @@ func SplitErrorMessage(input string) []string {
 	// Extract errors after the json part
 	if end+1 < len(input) {
 		suffix := strings.TrimSpace(input[end+1:])
-		if strings.HasPrefix(suffix, ":") {
-			suffix = strings.TrimSpace(strings.TrimPrefix(suffix, ":"))
+		if after, ok := strings.CutPrefix(suffix, ":"); ok {
+			suffix = strings.TrimSpace(after)
 			suffixParts := strings.Split(suffix, ":")
 			if suffix != "" && len(suffixParts) > 0 {
 				for _, part := range suffixParts {

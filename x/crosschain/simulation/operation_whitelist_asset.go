@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -10,18 +11,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// SimulateUpdateERC20CustodyPauseStatus generates a MsgUpdateERC20CustodyPauseStatus with random values and delivers it
-func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
+// SimulateMsgWhitelistAsset generates a MsgWhitelistAsset with random values and delivers it
+func SimulateMsgWhitelistAsset(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateERC20CustodyPauseStatus, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistAsset, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -31,30 +33,37 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
+				TypeMsgWhitelistAsset,
 				"no supported chains found",
 			), nil, nil
 		}
 
-		filteredChains := chains.FilterChains(supportedChains, chains.FilterExternalChains)
-
-		//pick a random chain
-		randomChain := filteredChains[r.Intn(len(filteredChains))]
-
-		_, found := k.GetObserverKeeper().GetChainNonces(ctx, randomChain.ChainId)
-		if !found {
+		filteredChains := chains.FilterChains(supportedChains, chains.FilterByVM(chains.Vm_evm))
+		if len(filteredChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
-				"no chain nonces found",
+				TypeMsgWhitelistAsset,
+				"no EVM-compatible chains found",
 			), nil, nil
 		}
 
-		_, found = k.GetObserverKeeper().GetTSS(ctx)
+		//pick a random chain
+		// Keep the switch case to add solana support in future
+		// TODO : https://github.com/zeta-chain/node/issues/3287
+		randomChain := filteredChains[r.Intn(len(filteredChains))]
+		var tokenAddress string
+		switch {
+		case randomChain.IsEVMChain():
+			tokenAddress = sample.EthAddressFromRand(r).String()
+		default:
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistAsset, "unsupported chain"), nil, nil
+		}
+
+		_, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
+				TypeMsgWhitelistAsset,
 				"no TSS found",
 			), nil, nil
 		}
@@ -63,41 +72,61 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
+				TypeMsgWhitelistAsset,
 				"no chain params found",
 			), nil, nil
 		}
-		medianGasPrice, priorityFee, found := k.GetMedianGasValues(ctx, randomChain.ChainId)
-		if !found {
+
+		medianGasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, randomChain.ChainId)
+		if !isFound {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
-				"no median gas values found",
+				TypeMsgWhitelistAsset,
+				"median gas price not found",
 			), nil, nil
 		}
-		medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
-		priorityFee = priorityFee.MulUint64(types.ERC20CustodyPausingGasMultiplierEVM)
+
+		medianGasPrice = medianGasPrice.MulUint64(types.AssetCustodyWhitelistGasMultiplierEVM)
+		priorityFee = priorityFee.MulUint64(types.AssetCustodyWhitelistGasMultiplierEVM)
 
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
+				TypeMsgWhitelistAsset,
 				"priorityFee is greater than median gasPrice",
 			), nil, nil
 		}
 
-		msg := types.MsgUpdateERC20CustodyPauseStatus{
-			Creator: policyAccount.Address.String(),
-			ChainId: randomChain.ChainId,
-			Pause:   r.Intn(2) == 0,
+		foreignCoins := k.GetFungibleKeeper().GetAllForeignCoins(ctx)
+		for _, fCoin := range foreignCoins {
+			if fCoin.Asset == tokenAddress && fCoin.ForeignChainId == randomChain.ChainId {
+				return simtypes.NoOpMsg(
+					types.ModuleName,
+					TypeMsgWhitelistAsset,
+					"ERC20 already whitelisted",
+				), nil, nil
+			}
+		}
+
+		gasLimit := r.Int63n(1000000000) + 1
+		nameLength := r.Intn(97) + 3
+		msg := types.MsgWhitelistAsset{
+			Creator:      policyAccount.Address.String(),
+			ChainId:      randomChain.ChainId,
+			AssetAddress: tokenAddress,
+			GasLimit:     gasLimit,
+			Decimals:     18,
+			Name:         sample.StringRandom(r, nameLength),
+			Symbol:       sample.StringRandom(r, 3),
+			LiquidityCap: sdkmath.NewUint(sample.Uint64InRangeFromRand(r, 1, 1000000000000000000)),
 		}
 
 		err = msg.ValidateBasic()
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				TypeMsgUpdateERC20CustodyPauseStatus,
-				"unable to validate MsgUpdateERC20CustodyPauseStatus msg",
+				TypeMsgWhitelistAsset,
+				"unable to validate MsgWhitelistAsset",
 			), nil, err
 		}
 

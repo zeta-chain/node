@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -47,6 +48,15 @@ type BTCInboundEvent struct {
 
 	// Status is the status of the inbound event
 	Status crosschaintypes.InboundStatus
+
+	// ErrorMessage carries error information that caused non-SUCCESS 'Status'
+	ErrorMessage string
+}
+
+// SetStatusAndErrMessage attaches the status and error message to the inbound event
+func (event *BTCInboundEvent) SetStatusAndErrMessage(status crosschaintypes.InboundStatus, errorMessage string) {
+	event.Status = status
+	event.ErrorMessage = errorMessage
 }
 
 // Category returns the category of the inbound event
@@ -115,6 +125,12 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		event.MemoStd = memoStd
 		receiver = memoStd.Receiver
 	} else {
+		// legacy memo, ensure the it is no less than ZEVM address length (20-byte receiver)
+		// checking upfront is to return more informative error message in the CCTX struct
+		if len(event.MemoBytes) < ethcommon.AddressLength {
+			return errors.New("legacy memo length must be at least 20 bytes")
+		}
+
 		parsedAddress, payload, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
 		if err != nil { // unreachable code
 			return errors.Wrap(err, "invalid legacy memo")
@@ -168,8 +184,9 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 		logger.Info().Msg("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
-		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
+		coinType := coin.CoinType_Gas
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance, false,
+			ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, &coinType)
 		return false
 	default:
 		logger.Error().Any("category", category).Msg("unreachable code got InboundCategory")
