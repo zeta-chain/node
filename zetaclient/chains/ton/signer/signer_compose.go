@@ -64,7 +64,7 @@ func (s *Signer) composeOutbound(cctx *cctypes.CrossChainTx) (outbound, error) {
 			cctx.Index,
 			cctx.InboundParams.Sender,
 			params.Receiver,
-			params.CoinType.String(),
+			&params.CoinType,
 		)
 	}
 

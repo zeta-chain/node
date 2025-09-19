@@ -22,8 +22,7 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.Ballot{
-		Index:                index,
-		BallotIdentifier:     StringRandom(r, 32),
+		BallotIdentifier:     index,
 		VoterList:            []string{AccAddress(), AccAddress()},
 		Votes:                []types.VoteType{types.VoteType_FailureObservation, types.VoteType_SuccessObservation},
 		ObservationType:      types.ObservationType_EmptyObserverType,
@@ -280,7 +279,6 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 	for i := 0; i < n; i++ {
 		identifier := crypto.Keccak256Hash(fmt.Appendf(nil, "%d-%d-%d", r.Int63(), r.Int63(), r.Int63()))
 		ballotList[i] = types.Ballot{
-			Index:                identifier.Hex(),
 			BallotIdentifier:     identifier.Hex(),
 			VoterList:            observerSet,
 			Votes:                VotesSuccessOnly(len(observerSet)),

@@ -17,14 +17,13 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
-// WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+// WhitelistAsset deploys a new zrc20, create a foreign coin object for the asset
 // and emit a crosschain tx to whitelist the ERC20 on the external chain
-//
-// Authorized: admin policy group 1.
-func (k msgServer) WhitelistERC20(
+// an asset can be erc20 on EVM chains, SPL on Solana, etc
+func (k msgServer) WhitelistAsset(
 	goCtx context.Context,
-	msg *types.MsgWhitelistERC20,
-) (*types.MsgWhitelistERC20Response, error) {
+	msg *types.MsgWhitelistAsset,
+) (*types.MsgWhitelistAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
@@ -40,22 +39,22 @@ func (k msgServer) WhitelistERC20(
 
 	switch {
 	case chain.IsEVMChain():
-		erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
-		if erc20Addr == (ethcommon.Address{}) {
+		assetAddr := ethcommon.HexToAddress(msg.AssetAddress)
+		if assetAddr == (ethcommon.Address{}) {
 			return nil, errorsmod.Wrapf(
 				sdkerrors.ErrInvalidAddress,
-				"invalid ERC20 contract address (%s)",
-				msg.Erc20Address,
+				"invalid asset contract address (%s)",
+				msg.AssetAddress,
 			)
 		}
 
 	case chain.IsSolanaChain():
-		_, err := solana.PublicKeyFromBase58(msg.Erc20Address)
+		_, err := solana.PublicKeyFromBase58(msg.AssetAddress)
 		if err != nil {
 			return nil, errorsmod.Wrapf(
 				sdkerrors.ErrInvalidAddress,
 				"invalid solana contract address (%s)",
-				msg.Erc20Address,
+				msg.AssetAddress,
 			)
 		}
 
@@ -70,11 +69,11 @@ func (k msgServer) WhitelistERC20(
 	// check if the asset is already whitelisted
 	foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
 	for _, fCoin := range foreignCoins {
-		if fCoin.Asset == msg.Erc20Address && fCoin.ForeignChainId == msg.ChainId {
+		if fCoin.Asset == msg.AssetAddress && fCoin.ForeignChainId == msg.ChainId {
 			return nil, errorsmod.Wrapf(
 				fungibletypes.ErrForeignCoinAlreadyExist,
-				"ERC20 contract address (%s) already whitelisted on chain (%d)",
-				msg.Erc20Address,
+				"asset contract address (%s) already whitelisted on chain (%d)",
+				msg.AssetAddress,
 				msg.ChainId,
 			)
 		}
@@ -97,15 +96,15 @@ func (k msgServer) WhitelistERC20(
 		uint8(msg.Decimals),
 		chain.ChainId,
 		coin.CoinType_ERC20,
-		msg.Erc20Address,
+		msg.AssetAddress,
 		big.NewInt(msg.GasLimit),
 		ptr.Ptr(msg.LiquidityCap),
 	)
 	if err != nil {
 		return nil, errorsmod.Wrapf(
 			types.ErrDeployContract,
-			"failed to deploy ZRC20 contract for ERC20 contract address (%s) on chain (%d)",
-			msg.Erc20Address,
+			"failed to deploy ZRC20 contract for asset contract address (%s) on chain (%d)",
+			msg.AssetAddress,
 			msg.ChainId,
 		)
 	}
@@ -113,8 +112,8 @@ func (k msgServer) WhitelistERC20(
 	if zrc20Addr == (ethcommon.Address{}) {
 		return nil, errorsmod.Wrapf(
 			types.ErrDeployContract,
-			"deployed ZRC20 return 0 address for ERC20 contract address (%s) on chain (%d)",
-			msg.Erc20Address,
+			"deployed ZRC20 return 0 address for asset contract address (%s) on chain (%d)",
+			msg.AssetAddress,
 			msg.ChainId,
 		)
 	}
@@ -134,8 +133,8 @@ func (k msgServer) WhitelistERC20(
 	}
 
 	// overpays gas price by 2x
-	medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
-	priorityFee = priorityFee.MulUint64(types.ERC20CustodyWhitelistGasMultiplierEVM)
+	medianGasPrice = medianGasPrice.MulUint64(types.AssetCustodyWhitelistGasMultiplierEVM)
+	priorityFee = priorityFee.MulUint64(types.AssetCustodyWhitelistGasMultiplierEVM)
 
 	// should not happen
 	if priorityFee.GT(medianGasPrice) {
@@ -148,10 +147,10 @@ func (k msgServer) WhitelistERC20(
 	}
 
 	// create the cctx
-	cctx := types.WhitelistERC20CmdCCTX(
+	cctx := types.WhitelistAssetCmdCCTX(
 		msg.Creator,
 		zrc20Addr,
-		msg.Erc20Address,
+		msg.AssetAddress,
 		params.Erc20CustodyContractAddress,
 		msg.ChainId,
 		medianGasPrice.String(),
@@ -167,7 +166,7 @@ func (k msgServer) WhitelistERC20(
 	// add to the foreign coins
 	foreignCoin := fungibletypes.ForeignCoins{
 		Zrc20ContractAddress: zrc20Addr.Hex(),
-		Asset:                msg.Erc20Address,
+		Asset:                msg.AssetAddress,
 		ForeignChainId:       msg.ChainId,
 		Decimals:             msg.Decimals,
 		Name:                 msg.Name,
@@ -183,7 +182,7 @@ func (k msgServer) WhitelistERC20(
 	commit()
 
 	err = ctx.EventManager().EmitTypedEvent(
-		&types.EventERC20Whitelist{
+		&types.EventAssetWhitelist{
 			Zrc20Address:       zrc20Addr.Hex(),
 			WhitelistCctxIndex: cctx.Index,
 		},
@@ -192,7 +191,7 @@ func (k msgServer) WhitelistERC20(
 		return nil, errorsmod.Wrapf(err, "failed to emit event")
 	}
 
-	return &types.MsgWhitelistERC20Response{
+	return &types.MsgWhitelistAssetResponse{
 		Zrc20Address: zrc20Addr.Hex(),
 		CctxIndex:    cctx.Index,
 	}, nil
