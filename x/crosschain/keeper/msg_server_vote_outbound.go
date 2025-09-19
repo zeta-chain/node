@@ -158,7 +158,6 @@ func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 				"cctxIndex", cctx.Index,
 				"error", err,
 			)
-
 		}
 		return
 	}
