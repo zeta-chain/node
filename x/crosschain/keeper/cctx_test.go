@@ -402,6 +402,7 @@ func Test_NewCCTX(t *testing.T) {
 			ProtocolContractVersion: types.ProtocolContractVersion_V2,
 			ConfirmationMode:        types.ConfirmationMode_FAST,
 			Status:                  types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage:            "deposited amount is less than depositor fee",
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
 		require.NoError(t, err)
@@ -424,6 +425,7 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, types.ConfirmationMode_FAST, cctx.GetInboundParams().ConfirmationMode)
 		require.Equal(t, types.ConfirmationMode_SAFE, cctx.GetCurrentOutboundParam().ConfirmationMode)
 		require.Equal(t, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.GetInboundParams().Status)
+		require.Equal(t, "deposited amount is less than depositor fee", cctx.GetInboundParams().ErrorMessage)
 	})
 
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {

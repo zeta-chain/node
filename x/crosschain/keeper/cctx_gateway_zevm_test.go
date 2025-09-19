@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"math/big"
 	"strings"
 	"testing"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
@@ -71,6 +72,7 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
 		cctx.InboundParams.Status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		cctx.InboundParams.ErrorMessage = "deposited amount is less than depositor fee"
 
 		// ACT
 		// call InitiateOutbound
@@ -83,6 +85,8 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "insufficient depositor fee:")
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "deposited amount is less than depositor fee")
 	})
 
 	t.Run("should return aborted status on unknown inbound status", func(t *testing.T) {
@@ -147,8 +151,9 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		// mock up CCTX data
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
-		cctx.InboundParams.Status = types.InboundStatus_INVALID_MEMO
 		cctx.InboundParams.SenderChainId = 1
+		cctx.InboundParams.Status = types.InboundStatus_INVALID_MEMO
+		cctx.InboundParams.ErrorMessage = "invalid revert address in memo"
 		cctx.OutboundParams = []*types.OutboundParams{cctx.OutboundParams[0]}
 
 		// ACT
@@ -162,6 +167,8 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, types.CctxStatus_PendingRevert, newStatus)
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "invalid memo:")
+		require.Contains(t, cctx.CctxStatus.ErrorMessage, "invalid revert address in memo")
 	})
 
 	t.Run(

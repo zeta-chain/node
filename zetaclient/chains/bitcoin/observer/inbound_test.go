@@ -163,6 +163,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		name              string
 		event             *BTCInboundEvent
 		observationStatus crosschaintypes.InboundStatus
+		errorMessage      string
 		nilVote           bool
 	}{
 		{
@@ -188,10 +189,20 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return vote for invalid memo",
 			event: &BTCInboundEvent{
-				// standard memo that carries payload only, receiver address is empty
+				// standard memo that carries payload only, receiver address flag is NOT set
 				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
 			},
 			observationStatus: crosschaintypes.InboundStatus_INVALID_MEMO,
+			errorMessage:      "must set receiver address flag",
+		},
+		{
+			name: "should return vote for invalid legacy memo",
+			event: &BTCInboundEvent{
+				// only 19 bytes
+				MemoBytes: sample.EthAddress().Bytes()[:19],
+			},
+			observationStatus: crosschaintypes.InboundStatus_INVALID_MEMO,
+			errorMessage:      "legacy memo length must be at least 20 bytes",
 		},
 		{
 			name: "should return nil on donation message",
@@ -218,6 +229,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 			} else {
 				require.NotNil(t, msg)
 				require.EqualValues(t, tt.observationStatus, msg.Status)
+				require.Contains(t, msg.ErrorMessage, tt.errorMessage)
 			}
 		})
 	}

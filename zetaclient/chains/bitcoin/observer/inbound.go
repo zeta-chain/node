@@ -192,13 +192,12 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// decode event memo bytes
 	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
-	err := event.DecodeMemoBytes(ob.Chain().ChainId)
-	if err != nil {
+	if err := event.DecodeMemoBytes(ob.Chain().ChainId); err != nil {
 		logger.Info().
 			Err(err).
 			Str("memo", hex.EncodeToString(event.MemoBytes)).
 			Msg("invalid memo")
-		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
+		event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, err.Error())
 	}
 
 	// check if the event is processable
@@ -257,6 +256,7 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		event.Status,
 		confirmationMode,
 		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+		crosschaintypes.WithErrorMessage(event.ErrorMessage),
 	)
 }
 
@@ -303,5 +303,6 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		confirmationMode,
 		crosschaintypes.WithRevertOptions(revertOptions),
 		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+		crosschaintypes.WithErrorMessage(event.ErrorMessage),
 	)
 }
