@@ -13,10 +13,10 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func CmdWhitelistERC20() *cobra.Command {
+func CmdWhitelistAsset() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap]",
-		Short: "Add a new erc20 token to whitelist",
+		Use:   "whitelist-asset [assetAddress] [chainID] [name] [symbol] [decimals] [gasLimit] [liquidityCap]",
+		Short: "Add a new asset token to whitelist",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -24,7 +24,7 @@ func CmdWhitelistERC20() *cobra.Command {
 				return err
 			}
 
-			erc20Address := args[0]
+			assetAddress := args[0]
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -47,9 +47,9 @@ func CmdWhitelistERC20() *cobra.Command {
 
 			liquidityCap := sdkmath.NewUintFromString(args[6])
 
-			msg := types.NewMsgWhitelistERC20(
+			msg := types.NewMsgWhitelistAsset(
 				clientCtx.GetFromAddress().String(),
-				erc20Address,
+				assetAddress,
 				chainID,
 				name,
 				symbol,
