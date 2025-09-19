@@ -146,7 +146,7 @@ func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	outboundParams := cctx.GetCurrentOutboundParam()
 	// We skip funding the gas stability pool if the userGasFeePaid is nil or zero.
 	// This is a legacy outbound where the user fee was not recorded as part of the cctx struct. This is only to handle cctxs which might be in pending outbound state when the upgrade happens and get finalized after the upgrade
-	if outboundParams.UserGasFeePaid.IsNil() || outboundParams.UserGasFeePaid.IsZero() {
+	if outboundParams.UserGasFeePaid.IsNil() {
 		err := k.FundGasStabilityPoolFromRemainingFees(
 			ctx,
 			*outboundParams,
@@ -180,11 +180,14 @@ func (k Keeper) useRemainingGasFee(
 	outboundParams := cctx.GetCurrentOutboundParam()
 	outboundTxFeePaid := math.NewUint(outboundParams.GasUsed).
 		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
-	// We already know that the userGasFeePaid is not nil
 	userGasFeePaid := outboundParams.UserGasFeePaid
 
-	// The final fee paid is greater than what the user paid originally.The stability pool would cover the extra cost in this case.
-	if outboundTxFeePaid.GTE(userGasFeePaid) {
+	// Handle cases for not funding the stability pool or refunding the user
+	// 1. If outboundTxFeePaid is nil or zero, we do not fund the stability pool or refund the user.This is for Non EVM chains which do not populate outboundTxFeePaid
+	// 2. If outboundTxFeePaid is greater than or equal to userGasFeePaid, we do not fund the stability pool or refund the user. Since the outbound tx used all the gas paid by the user.The additional gas used is covered by the stability pool.
+	// https://github.com/zeta-chain/node/issues/4219
+	// Enable for non EVM chains once zeta-client supports populating gas used and effective gas price for non EVM chains.
+	if outboundTxFeePaid.IsNil() || outboundTxFeePaid.IsZero() || outboundTxFeePaid.GTE(userGasFeePaid) {
 		return nil
 	}
 
