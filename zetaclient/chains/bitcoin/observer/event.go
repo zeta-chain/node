@@ -48,6 +48,15 @@ type BTCInboundEvent struct {
 
 	// Status is the status of the inbound event
 	Status crosschaintypes.InboundStatus
+
+	// ErrorMessage carries error information that caused non-SUCCESS 'Status'
+	ErrorMessage string
+}
+
+// SetStatusAndErrMessage attaches the status and error message to the inbound event
+func (event *BTCInboundEvent) SetStatusAndErrMessage(status crosschaintypes.InboundStatus, errorMessage string) {
+	event.Status = status
+	event.ErrorMessage = errorMessage
 }
 
 // Category returns the category of the inbound event
@@ -116,6 +125,12 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		event.MemoStd = memoStd
 		receiver = memoStd.Receiver
 	} else {
+		// legacy memo, ensure the it is no less than ZEVM address length (20-byte receiver)
+		// checking upfront is to return more informative error message in the CCTX struct
+		if len(event.MemoBytes) < ethcommon.AddressLength {
+			return errors.New("legacy memo length must be at least 20 bytes")
+		}
+
 		parsedAddress, payload, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
 		if err != nil { // unreachable code
 			return errors.Wrap(err, "invalid legacy memo")

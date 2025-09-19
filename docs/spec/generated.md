@@ -363,6 +363,7 @@ message MsgVoteInbound {
 	bool is_cross_chain_call = 19;
 	InboundStatus status = 20;
 	ConfirmationMode confirmation_mode = 21;
+	string error_message = 22;
 }
 ```
 

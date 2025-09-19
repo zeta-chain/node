@@ -54328,6 +54328,11 @@ definitions:
       confirmationMode:
         $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
         title: confirmation mode used for the inbound
+      errorMessage:
+        type: string
+        title: |-
+          error_message carries information about the error that caused non-SUCCESS
+          status of inbound observation
   zetachain.zetacore.crosschain.InboundStatus:
     type: string
     enum:

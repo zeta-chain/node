@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,14 +30,16 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	case types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE:
 		// abort if CCTX has insufficient depositor fee for Bitcoin, the CCTX can't be reverted in this case
 		// because there is no fund to pay for the revert tx
+		depositErr := fmt.Errorf("insufficient depositor fee: %s", config.CCTX.InboundParams.ErrorMessage)
 		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
-			ErrorMessageOutbound: "insufficient depositor fee",
+			ErrorMessageOutbound: depositErr.Error(),
 			StatusMessage:        "inbound observation failed",
 		})
 		return types.CctxStatus_Aborted, nil
 	case types.InboundStatus_INVALID_MEMO:
 		// when invalid memo is reported, the CCTX is reverted to the sender
-		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, errors.New("invalid memo"), true)
+		depositErr := fmt.Errorf("invalid memo: %s", config.CCTX.InboundParams.ErrorMessage)
+		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, depositErr, true)
 		return newCCTXStatus, nil
 	case types.InboundStatus_SUCCESS:
 		// process the deposit normally
