@@ -27,6 +27,10 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 	r.UpgradeGatewayZEVM()
 	r.UpgradeGatewayEVM()
 	r.UpgradeERC20Custody()
+
+	// Ensure gateway use 4M for gas limit
+	err := r.ZetaTxServer.UpdateGatewayGasLimit(GatewayGasLimit)
+	require.NoError(r, err)
 }
 
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
