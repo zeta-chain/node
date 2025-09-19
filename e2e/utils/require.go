@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,21 @@ func RequireCCTXStatus(
 
 	require.NotNil(t, cctx.CctxStatus)
 	require.Equal(t, expected, cctx.CctxStatus.Status, msg+errSuffix(msgAndArgs...))
+}
+
+// RequireCCTXErrorMessages checks if the CCTX's ErrorMessage contains all the expected error messages
+func RequireCCTXErrorMessages(t require.TestingT, cctx *crosschaintypes.CrossChainTx, wantErrMessages ...string) {
+	mustContainErrMessages(t, cctx.CctxStatus.ErrorMessage, wantErrMessages...)
+}
+
+// RequireCCTXErrorMessageRevert checks if the CCTX's ErrorMessageRevert contains all the expected error messages
+func RequireCCTXErrorMessageRevert(t require.TestingT, cctx *crosschaintypes.CrossChainTx, wantErrMessages ...string) {
+	mustContainErrMessages(t, cctx.CctxStatus.ErrorMessageRevert, wantErrMessages...)
+}
+
+// RequireCCTXErrorMessageAbort checks if the CCTX's ErrorMessageAbort contains all the expected error messages
+func RequireCCTXErrorMessageAbort(t require.TestingT, cctx *crosschaintypes.CrossChainTx, wantErrMessages ...string) {
+	mustContainErrMessages(t, cctx.CctxStatus.ErrorMessageAbort, wantErrMessages...)
 }
 
 // RequireTxSuccessful checks if the receipt status is successful.
@@ -67,4 +83,12 @@ func errSuffix(msgAndArgs ...any) string {
 	}
 
 	return fmt.Sprintf(template, msgAndArgs[1:])
+}
+
+// mustContainErrMessages checks if the given messages are present in the given string
+func mustContainErrMessages(t require.TestingT, gotMessage string, wantMessages ...string) {
+	errMsgFormat := "error message: %s, does not contain: %s"
+	for _, wantMessage := range wantMessages {
+		require.True(t, strings.Contains(gotMessage, wantMessage), fmt.Sprintf(errMsgFormat, gotMessage, wantMessage))
+	}
 }

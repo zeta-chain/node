@@ -36,6 +36,17 @@ func createTestBtcEvent(
 	}
 }
 
+func Test_SetStatusAndErrMessage(t *testing.T) {
+	event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("a memo"), nil)
+	require.Equal(t, crosschaintypes.InboundStatus_SUCCESS, event.Status)
+	require.Empty(t, event.ErrorMessage)
+
+	// update status and error message
+	event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, "memo is invalid")
+	require.Equal(t, crosschaintypes.InboundStatus_INVALID_MEMO, event.Status)
+	require.Equal(t, "memo is invalid", event.ErrorMessage)
+}
+
 func Test_Category(t *testing.T) {
 	// setup compliance config
 	cfg := config.Config{
@@ -218,6 +229,22 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 				),
 			},
 			errMsg: "invalid standard memo for bitcoin",
+		},
+		{
+			name:    "should return error if legacy memo length is less than 20 bytes",
+			chainID: chains.BitcoinTestnet.ChainId,
+			event: &BTCInboundEvent{
+				MemoBytes: []byte("memo too short"),
+			},
+			errMsg: "legacy memo length must be at least 20 bytes",
+		},
+		{
+			name:    "should return error if empty address passed",
+			chainID: chains.BitcoinTestnet.ChainId,
+			event: &BTCInboundEvent{
+				MemoBytes: []byte(common.Address{}.Bytes()),
+			},
+			errMsg: "got empty receiver address from memo",
 		},
 	}
 
