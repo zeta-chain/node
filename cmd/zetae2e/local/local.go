@@ -315,9 +315,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
-		if !testSui || deployerRunner.IsRunningTssMigration() {
-			return
-		}
 	})
 
 	// if a config output is specified, write the config

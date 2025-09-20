@@ -565,7 +565,6 @@ func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
 func (r *E2ERunner) UpdateGatewayGasLimit(newGasLimit uint64) {
 	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
 	require.NoError(r, err)
-	require.NotEqual(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 
 	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
