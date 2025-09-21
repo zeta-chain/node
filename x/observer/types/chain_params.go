@@ -148,7 +148,7 @@ func (cp ChainParams) Validate() error {
 	}
 
 	if cp.StabilityPoolPercentage > 100 {
-		return ErrParamsStabilityPoolPercentage
+		return errors.Wrapf(ErrParamsStabilityPoolPercentage, "stability pool percentage must be in range [0,100], got: %d", cp.StabilityPoolPercentage)
 	}
 	return nil
 }
