@@ -42,6 +42,7 @@ func startBitcoinTests(
 		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 		e2etests.TestBitcoinToZEVMCallName,
 		e2etests.TestBitcoinToZEVMCallAbortName,
+		e2etests.TestBitcoinToZEVMCallExcessiveFundsRevertName,
 		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
 		e2etests.TestBitcoinDepositInvalidMemoRevertName,
 		e2etests.TestCrosschainSwapName,

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"math"
-	"math/big"
 	"path"
 	"testing"
 
@@ -214,7 +213,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return nil on invalid deposit value",
 			event: &BTCInboundEvent{
-				Value:     -1, // invalid value
+				Value:     21000001, // invalid value
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
 			nilVote: true,
@@ -235,7 +234,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	}
 }
 
-func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
+func Test_NewInboundVoteFromEvent_LegacyMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -247,8 +246,11 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 		// create test event
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
 
-		// test amount
-		amountSats := big.NewInt(1000)
+		// given receiver and amount
+		receiver := sample.EthAddress()
+		amountSats := cosmosmath.NewUint(1000)
+		event.ToAddress = receiver.Hex()
+		event.MsgVoteAmount = amountSats
 
 		// mock SAFE confirmed block
 		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
@@ -260,7 +262,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.ToAddress,
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
+			Amount:             amountSats,
 			Message:            hex.EncodeToString(event.MemoBytes),
 			InboundHash:        event.TxHash,
 			InboundBlockHeight: event.BlockNumber,
@@ -275,13 +277,13 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			ConfirmationMode:        crosschaintypes.ConfirmationMode_SAFE,
 		}
 
-		// create new inbound vote V1
-		vote := ob.NewInboundVoteFromLegacyMemo(&event, amountSats)
+		// create new inbound vote V2 with legacy memo
+		vote := ob.NewInboundVoteFromEvent(&event)
 		require.Equal(t, expectedVote, *vote)
 	})
 }
 
-func Test_NewInboundVoteFromStdMemo(t *testing.T) {
+func Test_NewInboundVoteFromEvent_StdMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -310,8 +312,10 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			},
 		})
 
-		// test amount
-		amountSats := big.NewInt(1000)
+		// given receiver and amount
+		amountSats := cosmosmath.NewUint(1000)
+		event.MsgVoteAmount = amountSats
+		event.ToAddress = receiver.Hex()
 
 		// mock SAFE confirmed block
 		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
@@ -324,7 +328,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.MemoStd.Receiver.Hex(),
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
+			Amount:             amountSats,
 			Message:            hex.EncodeToString(memoBytesExpected),
 			InboundHash:        event.TxHash,
 			InboundBlockHeight: event.BlockNumber,
@@ -344,16 +348,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 		}
 
 		// create new inbound vote V2 with standard memo
-		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
-		require.Equal(t, expectedVote, *vote)
-
-		// modify memo and expected vote msg to test NoAssetCall
-		event.MemoStd.OpCode = memo.OpCodeCall
-		expectedVote.CoinType = coin.CoinType_NoAssetCall
-		expectedVote.Amount = cosmosmath.NewUint(0)
-
-		// create new inbound vote V2 with NoAssetCall
-		vote = ob.NewInboundVoteFromStdMemo(&event, amountSats)
+		vote := ob.NewInboundVoteFromEvent(&event)
 		require.Equal(t, expectedVote, *vote)
 	})
 }

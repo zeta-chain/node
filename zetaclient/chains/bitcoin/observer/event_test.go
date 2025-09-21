@@ -1,8 +1,11 @@
 package observer
 
 import (
+	"encoding/hex"
+	"fmt"
 	"testing"
 
+	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -10,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -272,6 +276,312 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 				// if it's a legacy memo, check receiver address only
 				require.Equal(t, tt.expectedReceiver.Hex(), tt.event.ToAddress)
 			}
+		})
+	}
+}
+
+func Test_ResolveMsgVoteAmount(t *testing.T) {
+	tests := []struct {
+		name                  string
+		event                 *BTCInboundEvent
+		returnError           bool
+		expectedMsgVoteAmount cosmosmath.Uint
+		expectedStatus        crosschaintypes.InboundStatus
+		expectedErrorMessage  string
+	}{
+		{
+			name: "should resolve msg vote amount normally",
+			event: &BTCInboundEvent{
+				Value:        0.0002, // 20,000 satoshis
+				DepositorFee: 0.0001, // 10,000 satoshis
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDepositAndCall,
+					},
+				},
+			},
+			expectedMsgVoteAmount: cosmosmath.NewUint(10000), // 20,000 - 10,000 = 10,000
+			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
+		},
+		{
+			name: "deposited value is equal to depositor fee",
+			event: &BTCInboundEvent{
+				Value:        0.0001, // 10,000 satoshis
+				DepositorFee: 0.0001, // 10,000 satoshis
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDeposit,
+					},
+				},
+			},
+			expectedMsgVoteAmount: cosmosmath.NewUint(0),
+			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
+		},
+		{
+			name: "deposited amount is less than depositor fee",
+			event: &BTCInboundEvent{
+				Value:        0.00009999, //  9,999 satoshis
+				DepositorFee: 0.0001,     // 10,000 satoshis
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDeposit,
+					},
+				},
+			},
+			expectedMsgVoteAmount: cosmosmath.NewUint(0),
+			expectedStatus:        crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			expectedErrorMessage:  fmt.Sprintf("deposited amount %v is less than depositor fee %v", 0.00009999, 0.0001),
+		},
+		{
+			name: "should return error if remaining BTC value is invalid",
+			event: &BTCInboundEvent{
+				Value:        21000000.00011, // value too large
+				DepositorFee: 0.0001,         // 10,000 satoshis
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDeposit,
+					},
+				},
+			},
+			returnError: true,
+		},
+		{
+			name: "NoAssetCall - small excessive funds (within limit)",
+			event: &BTCInboundEvent{
+				Value:        0.0001 + 0.001, // 110,000 satoshis
+				DepositorFee: 0.0001,         //  10,000 satoshis (remaining exactly at limit)
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeCall,
+					},
+				},
+			},
+			expectedMsgVoteAmount: cosmosmath.NewUint(0), // NoAssetCall expects no asset transfer
+			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
+		},
+		{
+			name: "NoAssetCall - large excessive funds (beyond limit)",
+			event: &BTCInboundEvent{
+				Value:        0.0001 + 0.00100001, // 110,001 satoshis
+				DepositorFee: 0.0001,              //  10,000 satoshis (remaining: 100,001, exceeds limit)
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeCall,
+					},
+				},
+			},
+			expectedMsgVoteAmount: cosmosmath.NewUint(100_001), // excessive funds will be returned
+			expectedStatus:        crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS,
+			expectedErrorMessage:  "remaining funds of 100001 satoshis exceed 100000 satoshis",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.event.ResolveMsgVoteAmount()
+
+			if tt.returnError {
+				require.Error(t, err)
+				return
+			}
+
+			// check MsgVoteAmount, status and error message
+			require.True(t, tt.expectedMsgVoteAmount.Equal(tt.event.MsgVoteAmount))
+			require.Equal(t, tt.expectedStatus, tt.event.Status)
+			require.Equal(t, tt.expectedErrorMessage, tt.event.ErrorMessage)
+		})
+	}
+}
+
+func Test_Message(t *testing.T) {
+	tests := []struct {
+		name            string
+		event           BTCInboundEvent
+		expectedMessage string
+	}{
+		{
+			name: "should return memo bytes for legacy memo",
+			event: BTCInboundEvent{
+				MemoBytes: []byte("a legacy memo"),
+			},
+			expectedMessage: hex.EncodeToString([]byte("a legacy memo")),
+		},
+		{
+			name: "should return memo bytes for standard memo",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					FieldsV0: memo.FieldsV0{
+						Payload: []byte("a standard memo"),
+					},
+				},
+			},
+			expectedMessage: hex.EncodeToString([]byte("a standard memo")),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			message := tt.event.Message()
+			require.Equal(t, tt.expectedMessage, message)
+		})
+	}
+}
+
+func Test_CoinType(t *testing.T) {
+	tests := []struct {
+		name             string
+		event            BTCInboundEvent
+		expectedCoinType coin.CoinType
+	}{
+		{
+			name: "should return Gas for legacy memo",
+			event: BTCInboundEvent{
+				MemoBytes: []byte("a legacy memo"),
+			},
+			expectedCoinType: coin.CoinType_Gas,
+		},
+		{
+			name: "should return Gas for standard memo",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDeposit,
+					},
+					FieldsV0: memo.FieldsV0{
+						Payload: []byte("a standard memo"),
+					},
+				},
+			},
+			expectedCoinType: coin.CoinType_Gas,
+		},
+		{
+			name: "should return NoAssetCall for successfully observed NoAssetCall operation",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeCall,
+					},
+				},
+				Status: crosschaintypes.InboundStatus_SUCCESS,
+			},
+			expectedCoinType: coin.CoinType_NoAssetCall,
+		},
+		{
+			name: "should return Gas for unsuccessfully observed NoAssetCall operation",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeCall,
+					},
+				},
+				Status: crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS,
+			},
+			expectedCoinType: coin.CoinType_Gas,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			coinType := tt.event.CoinType()
+			require.Equal(t, tt.expectedCoinType, coinType)
+		})
+	}
+}
+
+func Test_RevertOptions(t *testing.T) {
+	// stubs
+	revertAddress := sample.BTCAddressP2WPKH(t, sample.Rand(), &chaincfg.TestNet3Params).String()
+	abortAddress := sample.EthAddress().Hex()
+
+	tests := []struct {
+		name                  string
+		event                 BTCInboundEvent
+		expectedRevertOptions crosschaintypes.RevertOptions
+	}{
+		{
+			name: "should return empty revert options for legacy memo",
+			event: BTCInboundEvent{
+				MemoBytes: []byte("a legacy memo"),
+			},
+			expectedRevertOptions: crosschaintypes.NewEmptyRevertOptions(),
+		},
+		{
+			name: "should return revert options for standard memo",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					FieldsV0: memo.FieldsV0{
+						RevertOptions: crosschaintypes.RevertOptions{
+							RevertAddress: revertAddress,
+							AbortAddress:  abortAddress,
+							RevertMessage: []byte("a revert message"),
+						},
+					},
+				},
+			},
+			expectedRevertOptions: crosschaintypes.RevertOptions{
+				RevertAddress: revertAddress,
+				AbortAddress:  abortAddress,
+				RevertMessage: []byte("a revert message"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			revertOptions := tt.event.RevertOptions()
+			require.Equal(t, tt.expectedRevertOptions, revertOptions)
+		})
+	}
+}
+
+func Test_IsCrossChainCall(t *testing.T) {
+	tests := []struct {
+		name   string
+		event  BTCInboundEvent
+		result bool
+	}{
+		{
+			name: "should return true if legacy payload is not empty",
+			event: BTCInboundEvent{
+				MemoBytes: []byte("a legacy payload"),
+			},
+			result: true,
+		},
+		{
+			name: "should return false if legacy payload is empty",
+			event: BTCInboundEvent{
+				MemoBytes: []byte{},
+			},
+			result: false,
+		},
+		{
+			name: "should return true if standard memo is a NoAssetCall",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeCall,
+					},
+				},
+			},
+			result: true,
+		},
+		{
+			name: "should return true if standard memo is a DepositAndCall",
+			event: BTCInboundEvent{
+				MemoStd: &memo.InboundMemo{
+					Header: memo.Header{
+						OpCode: memo.OpCodeDepositAndCall,
+					},
+				},
+			},
+			result: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.event.IsCrossChainCall()
+			require.Equal(t, tt.result, result)
 		})
 	}
 }

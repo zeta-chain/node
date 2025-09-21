@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
+	cosmosmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -30,6 +33,9 @@ type BTCInboundEvent struct {
 
 	// Value is the amount of BTC
 	Value float64
+
+	// MsgVoteAmount is the amount used in inbound vote message
+	MsgVoteAmount cosmosmath.Uint
 
 	// DepositorFee is the deposit fee
 	DepositorFee float64
@@ -148,6 +154,91 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	event.ToAddress = receiver.Hex()
 
 	return nil
+}
+
+// ResolveMsgVoteAmount resolves the final amount in satoshis to be used in the MsgVoteInbound message.
+// It converts the float BTC value to satoshis, deducts depositor fee, and validates NoAssetCall operation for excessive funds.
+func (event *BTCInboundEvent) ResolveMsgVoteAmount() error {
+	// deduct depositor fee
+	if event.Value < event.DepositorFee {
+		event.MsgVoteAmount = cosmosmath.NewUint(0)
+		event.Status = crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		event.ErrorMessage = fmt.Sprintf(
+			"deposited amount %v is less than depositor fee %v",
+			event.Value,
+			event.DepositorFee,
+		)
+		return nil
+	}
+
+	remainingBTC := event.Value - event.DepositorFee
+	remainingSats, err := zetabtc.GetSatoshis(remainingBTC)
+	if err != nil {
+		return errors.Wrapf(err, "invalid remaining BTC value: %f", remainingBTC)
+	}
+	event.MsgVoteAmount = cosmosmath.NewUintFromBigInt(big.NewInt(remainingSats))
+
+	// check if this is a NoAssetCall operation and validate excessive funds
+	if event.MemoStd != nil && event.MemoStd.OpCode == memo.OpCodeCall {
+		if remainingSats <= maxNoAssetCallExcessAmount {
+			// NoAssetCall expects no asset transfer
+			// small excess amount above depositor fee will not be forwarded to ZEVM
+			event.MsgVoteAmount = cosmosmath.NewUint(0)
+		} else {
+			// large excess amount will be returned to the sender by reverting the tx
+			event.Status = crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS
+			event.ErrorMessage = fmt.Sprintf("remaining funds of %d satoshis exceed %d satoshis", remainingSats, maxNoAssetCallExcessAmount)
+		}
+	}
+
+	return nil
+}
+
+// Message returns the payload Message for the inbound vote
+func (event BTCInboundEvent) Message() string {
+	// the message is MemoBytes for legacy memo
+	if event.MemoStd == nil {
+		return hex.EncodeToString(event.MemoBytes)
+	}
+	return hex.EncodeToString(event.MemoStd.Payload)
+}
+
+// CoinType returns the coin type for the inbound vote message.
+func (event BTCInboundEvent) CoinType() coin.CoinType {
+	// special cases for NoAssetCall operation
+	// 1. For normal call, the coin type NoAssetCall should be used.
+	// 2. For call with excessive funds, the coin type Gas should be used for revert.
+	if event.MemoStd != nil && event.MemoStd.OpCode == memo.OpCodeCall &&
+		event.Status == crosschaintypes.InboundStatus_SUCCESS {
+		return coin.CoinType_NoAssetCall
+	}
+
+	return coin.CoinType_Gas
+}
+
+// RevertOptions returns the revert options for the inbound vote message
+func (event BTCInboundEvent) RevertOptions() crosschaintypes.RevertOptions {
+	// revert options are not supported in legacy memo
+	if event.MemoStd == nil {
+		return crosschaintypes.NewEmptyRevertOptions()
+	}
+
+	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
+	return crosschaintypes.RevertOptions{
+		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
+		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
+	}
+}
+
+// IsCrossChainCall returns true if the inbound is a cross-chain call.
+func (event BTCInboundEvent) IsCrossChainCall() bool {
+	// non-empty payload is considered as a cross-chain call for legacy memo
+	if event.MemoStd == nil {
+		return len(event.MemoBytes) > 0
+	}
+
+	return event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
 }
 
 // ValidateStandardMemo validates the standard memo in Bitcoin context

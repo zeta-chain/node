@@ -54340,12 +54340,14 @@ definitions:
       - INSUFFICIENT_DEPOSITOR_FEE
       - INVALID_RECEIVER_ADDRESS
       - INVALID_MEMO
+      - EXCESSIVE_NOASSETCALL_FUNDS
     default: SUCCESS
     description: |-
       - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
       depositor fee
        - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
        - INVALID_MEMO: parse memo is invalid
+       - EXCESSIVE_NOASSETCALL_FUNDS: Bitcoin NoAssetCall carries too much excess funds beyond the depositor fee
     title: InboundStatus represents the status of an observed inbound
   zetachain.zetacore.crosschain.InboundTracker:
     type: object

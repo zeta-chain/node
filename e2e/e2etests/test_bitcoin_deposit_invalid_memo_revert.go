@@ -30,7 +30,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit without memo")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, crosschaintypes.InboundStatus_INVALID_MEMO, cctx.InboundParams.Status)
-	utils.RequireCCTXErrorMessages(r, cctx, "invalid memo: no memo found in inbound")
+	utils.RequireCCTXErrorMessages(r, cctx, "no memo found in inbound")
 
 	// CASE 2
 	// make a deposit with an empty memo
@@ -42,7 +42,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit empty memo")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, crosschaintypes.InboundStatus_INVALID_MEMO, cctx.InboundParams.Status)
-	utils.RequireCCTXErrorMessages(r, cctx, "invalid memo: legacy memo length must be at least 20 bytes")
+	utils.RequireCCTXErrorMessages(r, cctx, "legacy memo length must be at least 20 bytes")
 
 	// CASE 3
 	// make a deposit with an invalid standard memo
@@ -75,7 +75,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXErrorMessages(
 		r,
 		cctx,
-		"invalid memo: standard memo contains improper data",
+		"standard memo contains improper data",
 		"payload is not allowed for deposit operation",
 	)
 
@@ -111,7 +111,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXErrorMessages(
 		r,
 		cctx,
-		"invalid memo: invalid standard memo for bitcoin",
+		"invalid standard memo for bitcoin",
 		"invalid revert address in memo",
 	)
 }

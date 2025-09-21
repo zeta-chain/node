@@ -36,7 +36,6 @@ func TestBitcoinDepositAndAbortWithLowDepositFee(r *runner.E2ERunner, args []str
 	utils.RequireCCTXErrorMessages(
 		r,
 		&cctx,
-		"insufficient depositor fee",
 		fmt.Sprintf("deposited amount %v is less than depositor fee", depositAmount),
 	)
 }
