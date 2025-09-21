@@ -562,21 +562,19 @@ func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
 	require.NoError(r, err)
 }
 
+// UpdateGatewayGasLimit updates the gateway gas limit used by the fungible module for ZEVM calls
 func (r *E2ERunner) UpdateGatewayGasLimit(newGasLimit uint64) {
-	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
-	require.NoError(r, err)
-
 	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		newGasLimit,
 	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
 	require.NoError(r, err)
 
 	r.WaitForBlocks(1)
 
 	// Verify that the gas limit has been updated
-	systemContract, err = r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
 	require.NoError(r, err)
 	require.Equal(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 }
