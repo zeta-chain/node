@@ -137,18 +137,6 @@ which accepts a path for the resulting pprof file.
 			if err == nil {
 				skipOverwrite = val
 			}
-			//zevmChainID, err := genesisChainID(serverCtx.Config.GenesisFile())
-			//if err != nil {
-			//	return errorsmod.Wrapf(err, "failed to get genesis chain ID from genesis file")
-			//}
-			//
-			//// Cannot skip over writing the config file for ZetaChain mainnet
-			//if zevmChainID == chains.ZetaChainMainnet.ChainId && skipOverwrite {
-			//	return fmt.Errorf(
-			//		"config overwrite is required for ZetaChain mainnet , please run the command without the --%s flag",
-			//		FlagSkipConfigOverwrite,
-			//	)
-			//}
 
 			if !skipOverwrite {
 				err := overWriteConfig(cmd)
