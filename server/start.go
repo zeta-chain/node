@@ -132,10 +132,9 @@ which accepts a path for the resulting pprof file.
 					return err
 				}
 			}
-			skipOverwrite := false
-			val, err := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
-			if err == nil {
-				skipOverwrite = val
+			skipOverwrite, err := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
+			if err != nil {
+				return err
 			}
 
 			if !skipOverwrite {
