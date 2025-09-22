@@ -11,6 +11,8 @@
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
 * [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
 
 ### Refactor
 
@@ -32,6 +34,7 @@
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 * [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4197](https://github.com/zeta-chain/node/pull/4197) - re-check for finalized ballot when executing inbound vote to create cctx
 * [4217](https://github.com/zeta-chain/node/pull/4217) - remove ZetaChain chain ID from GasStabilityPoolBalances query
 
 ### Tests
