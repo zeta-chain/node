@@ -200,6 +200,7 @@ func (event BTCInboundEvent) Message() string {
 	if event.MemoStd == nil {
 		return hex.EncodeToString(event.MemoBytes)
 	}
+
 	return hex.EncodeToString(event.MemoStd.Payload)
 }
 

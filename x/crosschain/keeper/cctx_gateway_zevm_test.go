@@ -169,7 +169,7 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		require.Contains(t, cctx.CctxStatus.ErrorMessage, "invalid revert address in memo")
 	})
 
-	t.Run("should return reverted status on invalid memo inbound or excessive NoAssetCall funds status", func(t *testing.T) {
+	t.Run("should return reverted status on excessive NoAssetCall funds status", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,

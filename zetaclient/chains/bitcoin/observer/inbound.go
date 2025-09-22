@@ -202,15 +202,15 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 		event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, err.Error())
 	}
 
+	// check if the event is processable
+	if !ob.IsEventProcessable(*event) {
+		return nil
+	}
+
 	// resolve the amount to be used in inbound vote message
 	if err := event.ResolveMsgVoteAmount(); err != nil {
 		// should never happen, otherwise skip this tx
 		logger.Error().Err(err).Msg("unable to resolve msg vote amount")
-		return nil
-	}
-
-	// check if the event is processable
-	if !ob.IsEventProcessable(*event) {
 		return nil
 	}
 
