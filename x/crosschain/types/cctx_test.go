@@ -76,6 +76,32 @@ func TestCrossChainTx_GetConnectedChainID(t *testing.T) {
 	})
 }
 
+func TestCrossChainTx_IsWithdrawTx(t *testing.T) {
+	t.Run("withdraw tx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.GetChainId()
+		isZeta, err := cctx.IsWithdrawTx()
+		require.NoError(t, err)
+		require.True(t, isZeta)
+	})
+
+	t.Run("not withdraw tx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams.SenderChainId = chains.BitcoinMainnet.GetChainId()
+		isZeta, err := cctx.IsWithdrawTx()
+		require.NoError(t, err)
+		require.False(t, isZeta)
+	})
+
+	t.Run("no inbound params", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = nil
+		_, err := cctx.IsWithdrawTx()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "inbound params cannot be nil")
+	})
+}
+
 func TestCrossChainTx_GetEVMRevertAddress(t *testing.T) {
 	t.Run("use revert address if revert options", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample")
@@ -90,7 +116,6 @@ func TestCrossChainTx_GetEVMRevertAddress(t *testing.T) {
 		cctx.InboundParams.Sender = addr.Hex()
 		require.EqualValues(t, addr, cctx.GetEVMRevertAddress())
 	})
-
 }
 
 func TestCrossChainTx_GetEVMAbortAddress(t *testing.T) {

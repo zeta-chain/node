@@ -11,7 +11,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
@@ -200,12 +199,16 @@ func (k Keeper) refundUnusedGas(
 	}
 
 	// Send all tokens to stability pool by default
-	stabilityPoolPercentage := uint64(100)
+	stabilityPoolPercentage := types.DefaultStabilityPoolFundPercentage
 	refundToUser := false
 
+	isWithdrawTx, err := cctx.IsWithdrawTx()
+	if err != nil {
+		return errors.Wrap(err, "failed to determine if the tx is a withdrawal")
+	}
+
 	// Refund to the sender irrespective of whether its EOA or contract address if it's a withdrawal originating from zEVM.
-	if chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) &&
-		ethcommon.IsHexAddress(cctx.InboundParams.Sender) {
+	if isWithdrawTx && ethcommon.IsHexAddress(cctx.InboundParams.Sender) {
 		chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, outboundParams.ReceiverChainId)
 		if !found {
 			return errors.Wrap(
@@ -217,14 +220,13 @@ func (k Keeper) refundUnusedGas(
 		stabilityPoolPercentage = chainParams.StabilityPoolPercentage
 	}
 	stabilityPoolAmount := PercentOf(usableRemainingFees, stabilityPoolPercentage)
-	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
-
 	if stabilityPoolAmount.GT(math.ZeroUint()) {
 		if err := k.fungibleKeeper.FundGasStabilityPool(ctx, outboundParams.ReceiverChainId, stabilityPoolAmount.BigInt()); err != nil {
 			return err
 		}
 	}
 
+	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
 	if refundAmount.GT(math.ZeroUint()) && refundToUser {
 		if err := k.fungibleKeeper.DepositChainGasToken(ctx, outboundParams.ReceiverChainId, refundAmount.BigInt(), ethcommon.HexToAddress(cctx.InboundParams.Sender)); err != nil {
 			return err

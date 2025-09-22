@@ -100,7 +100,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 		expectFundStabilityPoolCall        bool
 		expectRefundRemainingFeesCall      bool
 		expectGetChainParamsCall           bool
-		expectIsZetaChainCall              bool
 		fundStabilityPoolExpectedAmount    *big.Int
 		refundRemainingFeesExpectedAmount  *big.Int
 		refundRemainingFeesExpectedAddress ethcommon.Address
@@ -163,7 +162,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectFundStabilityPoolCall:   false,
 			expectRefundRemainingFeesCall: false,
 			expectGetChainParamsCall:      false,
-			expectIsZetaChainCall:         false,
 		},
 		{
 			name:                          "updated flow: sender non-zEVM chain sends 100% of 95% remaining fees to stability pool",
@@ -180,7 +178,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:      false,
 			expectFundStabilityPoolCall:   true,
 			expectRefundRemainingFeesCall: false,
-			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				902,
 			), // 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
@@ -201,7 +198,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:      true,
 			expectFundStabilityPoolCall:   true,
 			expectRefundRemainingFeesCall: true,
-			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				360,
 			),
@@ -220,7 +216,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectFundStabilityPoolCall:   false,
 			expectRefundRemainingFeesCall: false,
 			expectGetChainParamsCall:      false,
-			expectIsZetaChainCall:         false,
 		},
 		{
 			name:                          "updated flow: simulated non evm chain",
@@ -235,7 +230,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectFundStabilityPoolCall:   false,
 			expectRefundRemainingFeesCall: false,
 			expectGetChainParamsCall:      false,
-			expectIsZetaChainCall:         false,
 		},
 		{
 			name:                          "updated flow: chain params not found returns error",
@@ -250,7 +244,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:      true,
 			expectFundStabilityPoolCall:   false,
 			expectRefundRemainingFeesCall: false,
-			expectIsZetaChainCall:         true,
 			isError:                       true,
 		},
 		{
@@ -268,7 +261,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:        false,
 			expectFundStabilityPoolCall:     true,
 			expectRefundRemainingFeesCall:   false,
-			expectIsZetaChainCall:           true,
 			fundStabilityPoolExpectedAmount: big.NewInt(902),
 			isError:                         true,
 		},
@@ -288,7 +280,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:           true,
 			expectFundStabilityPoolCall:        true,
 			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
 			fundStabilityPoolExpectedAmount:    big.NewInt(360),
 			refundRemainingFeesExpectedAmount:  big.NewInt(542),
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
@@ -309,7 +300,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:        false,
 			expectFundStabilityPoolCall:     true,
 			expectRefundRemainingFeesCall:   false,
-			expectIsZetaChainCall:           true,
 			fundStabilityPoolExpectedAmount: big.NewInt(902),
 		},
 		{
@@ -328,7 +318,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:           true,
 			expectFundStabilityPoolCall:        false,
 			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
 			refundRemainingFeesExpectedAmount:  big.NewInt(475),
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
@@ -348,7 +337,6 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectGetChainParamsCall:        true,
 			expectFundStabilityPoolCall:     true,
 			expectRefundRemainingFeesCall:   false,
-			expectIsZetaChainCall:           true,
 			fundStabilityPoolExpectedAmount: big.NewInt(475),
 		},
 	}
@@ -392,12 +380,12 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 				).Return(chainParams, tc.chainParamsFound)
 			}
 
-			if tc.expectIsZetaChainCall {
-				additionalChainList := []chains.Chain{}
-				authorityMock.On(
-					"GetAdditionalChainList", mock.Anything,
-				).Return(additionalChainList)
-			}
+			//if tc.expectIsZetaChainCall {
+			//	additionalChainList := []chains.Chain{}
+			//	authorityMock.On(
+			//		"GetAdditionalChainList", mock.Anything,
+			//	).Return(additionalChainList)
+			//}
 
 			if tc.expectFundStabilityPoolCall {
 				fungibleMock.On(
