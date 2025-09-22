@@ -349,6 +349,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
 	}
 
+	deployerRunner.UpdateGatewayGasLimit(4_000_000)
+
 	// run tests
 	var eg errgroup.Group
 
