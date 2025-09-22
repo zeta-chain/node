@@ -17,7 +17,6 @@ func TestKeeper_GetBallot(t *testing.T) {
 
 	identifier := sample.ZetaIndex(t)
 	b := &types.Ballot{
-		Index:                "123",
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
@@ -36,7 +35,6 @@ func TestKeeper_GetBallot(t *testing.T) {
 
 	// overwrite existing ballot
 	b = &types.Ballot{
-		Index:                "123",
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      1,
@@ -59,7 +57,6 @@ func TestKeeper_GetBallotList(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		identifier := sample.ZetaIndex(t)
 		b := &types.Ballot{
-			Index:                "",
 			BallotIdentifier:     identifier,
 			VoterList:            nil,
 			ObservationType:      0,
@@ -81,7 +78,6 @@ func TestKeeper_GetBallotList(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		identifier := sample.ZetaIndex(t)
 		b := &types.Ballot{
-			Index:                "",
 			BallotIdentifier:     identifier,
 			VoterList:            nil,
 			ObservationType:      0,
@@ -104,7 +100,6 @@ func TestKeeper_GetMaturedBallots(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	identifier := sample.ZetaIndex(t)
 	b := &types.Ballot{
-		Index:                "",
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
@@ -127,7 +122,6 @@ func TestKeeper_GetAllBallots(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	identifier := sample.ZetaIndex(t)
 	b := &types.Ballot{
-		Index:                "",
 		BallotIdentifier:     identifier,
 		VoterList:            nil,
 		ObservationType:      0,
@@ -194,7 +188,6 @@ func TestKeeper_DeleteBallotList(t *testing.T) {
 		numberOfBallotLists := 10
 		for i := 0; i < numberOfBallotLists; i++ {
 			k.AddBallotToList(ctx, types.Ballot{
-				Index:                sample.ZetaIndex(t),
 				BallotCreationHeight: 1,
 			})
 		}
@@ -216,7 +209,6 @@ func TestKeeper_DeleteBallotList(t *testing.T) {
 		numberOfBallotLists := 10
 		for i := 0; i < numberOfBallotLists; i++ {
 			k.AddBallotToList(ctx, types.Ballot{
-				Index:                sample.ZetaIndex(t),
 				BallotCreationHeight: 1,
 			})
 		}

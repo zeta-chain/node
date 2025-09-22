@@ -611,6 +611,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
+		coinType := coin.CoinType_ERC20
 		compliance.PrintComplianceLog(
 			ob.Logger().Inbound,
 			ob.Logger().Compliance,
@@ -619,7 +620,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 			event.Raw.TxHash.Hex(),
 			sender.Hex(),
 			clienttypes.BytesToEthHex(event.Recipient),
-			"ERC20",
+			&coinType,
 		)
 		return nil
 	}
@@ -681,8 +682,9 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	// https://github.com/zeta-chain/node/issues/4057
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
+		coinType := coin.CoinType_Zeta
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
+			false, ob.Chain().ChainId, event.Raw.TxHash.Hex(), sender, destAddr, &coinType)
 		return nil
 	}
 
@@ -737,8 +739,9 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
+		coinType := coin.CoinType_Gas
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, tx.Hash, sender.Hex(), sender.Hex(), "Gas")
+			false, ob.Chain().ChainId, tx.Hash, sender.Hex(), sender.Hex(), &coinType)
 		return nil
 	}
 

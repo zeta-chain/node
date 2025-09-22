@@ -38,7 +38,7 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 
 	// whitelist sol zrc20
 	r.Logger.Info("whitelisting spl on new network")
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		spl.PublicKey().String(),
 		chains.SolanaLocalnet.ChainId,
@@ -50,8 +50,8 @@ func TestSolanaWhitelistSPL(r *runner.E2ERunner, _ []string) {
 	))
 	require.NoError(r, err)
 
-	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20Whitelist](res.Events)
-	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventAssetWhitelist](res.Events)
+	require.True(r, ok, "no EventAssetWhitelist in %s", res.TxHash)
 	erc20zrc20Addr := event.Zrc20Address
 	whitelistCCTXIndex := event.WhitelistCctxIndex
 
