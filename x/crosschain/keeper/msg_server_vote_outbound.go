@@ -234,9 +234,9 @@ func (k Keeper) refundUnusedGas(
 	return nil
 }
 
-// TODO : Remove this function
-// This function handles the legacy flow for funcding the gas stability pool with the remaining fees.
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
+// TODO: Remove this function
+// This function handles the legacy flow for funcding the gas stability pool with the remaining fees.
 func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	ctx sdk.Context,
 	OutboundParams types.OutboundParams,
