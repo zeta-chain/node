@@ -250,7 +250,7 @@ func Test_NewInboundVoteFromEvent_LegacyMemo(t *testing.T) {
 		receiver := sample.EthAddress()
 		amountSats := cosmosmath.NewUint(1000)
 		event.ToAddress = receiver.Hex()
-		event.MsgVoteAmount = amountSats
+		event.AmountForMsgVoteInbound = amountSats
 
 		// mock SAFE confirmed block
 		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
@@ -314,7 +314,7 @@ func Test_NewInboundVoteFromEvent_StdMemo(t *testing.T) {
 
 		// given receiver and amount
 		amountSats := cosmosmath.NewUint(1000)
-		event.MsgVoteAmount = amountSats
+		event.AmountForMsgVoteInbound = amountSats
 		event.ToAddress = receiver.Hex()
 
 		// mock SAFE confirmed block

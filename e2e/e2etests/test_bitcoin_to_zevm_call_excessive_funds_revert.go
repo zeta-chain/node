@@ -50,7 +50,7 @@ func TestBitcoinToZEVMCallExcessiveFundsRevert(r *runner.E2ERunner, args []strin
 	// check cctx details
 	// the revert amount should be less than amount because a withdrawal fee is charged
 	require.EqualValues(r, amountSats, cctx.InboundParams.Amount.Uint64())
-	require.Less(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(amountSats))
+	require.Less(r, cctx.GetCurrentOutboundParam().Amount.BigInt().Int64(), amountSats)
 
 	// check cctx status and error message
 	require.EqualValues(r, crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS, cctx.InboundParams.Status)

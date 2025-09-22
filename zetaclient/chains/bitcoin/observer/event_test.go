@@ -280,7 +280,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 	}
 }
 
-func Test_ResolveMsgVoteAmount(t *testing.T) {
+func Test_ResolveAmountForMsgVoteInbound(t *testing.T) {
 	tests := []struct {
 		name                  string
 		event                 *BTCInboundEvent
@@ -378,7 +378,7 @@ func Test_ResolveMsgVoteAmount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.event.ResolveMsgVoteAmount()
+			err := tt.event.ResolveAmountForMsgVoteInbound()
 
 			if tt.returnError {
 				require.Error(t, err)
@@ -386,7 +386,7 @@ func Test_ResolveMsgVoteAmount(t *testing.T) {
 			}
 
 			// check MsgVoteAmount, status and error message
-			require.True(t, tt.expectedMsgVoteAmount.Equal(tt.event.MsgVoteAmount))
+			require.True(t, tt.expectedMsgVoteAmount.Equal(tt.event.AmountForMsgVoteInbound))
 			require.Equal(t, tt.expectedStatus, tt.event.Status)
 			require.Equal(t, tt.expectedErrorMessage, tt.event.ErrorMessage)
 		})

@@ -208,7 +208,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// resolve the amount to be used in inbound vote message
-	if err := event.ResolveMsgVoteAmount(); err != nil {
+	if err := event.ResolveAmountForMsgVoteInbound(); err != nil {
 		// should never happen, otherwise skip this tx
 		logger.Error().Err(err).Msg("unable to resolve msg vote amount")
 		return nil
@@ -232,7 +232,7 @@ func (ob *Observer) NewInboundVoteFromEvent(event *BTCInboundEvent) *crosschaint
 		event.FromAddress,
 		event.ToAddress,
 		ob.ZetacoreClient().Chain().ChainId,
-		event.MsgVoteAmount,
+		event.AmountForMsgVoteInbound,
 		event.Message(),
 		event.TxHash,
 		event.BlockNumber,

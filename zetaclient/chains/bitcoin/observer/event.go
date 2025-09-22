@@ -34,8 +34,8 @@ type BTCInboundEvent struct {
 	// Value is the amount of BTC
 	Value float64
 
-	// MsgVoteAmount is the amount used in inbound vote message
-	MsgVoteAmount cosmosmath.Uint
+	// AmountForMsgVoteInbound is the amount to be used in MsgVoteInbound
+	AmountForMsgVoteInbound cosmosmath.Uint
 
 	// DepositorFee is the deposit fee
 	DepositorFee float64
@@ -156,12 +156,12 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	return nil
 }
 
-// ResolveMsgVoteAmount resolves the final amount in satoshis to be used in the MsgVoteInbound message.
+// ResolveAmountForMsgVoteInbound resolves the final amount in satoshis to be used in the MsgVoteInbound message.
 // It converts the float BTC value to satoshis, deducts depositor fee, and validates NoAssetCall operation for excessive funds.
-func (event *BTCInboundEvent) ResolveMsgVoteAmount() error {
+func (event *BTCInboundEvent) ResolveAmountForMsgVoteInbound() error {
 	// deduct depositor fee
 	if event.Value < event.DepositorFee {
-		event.MsgVoteAmount = cosmosmath.NewUint(0)
+		event.AmountForMsgVoteInbound = cosmosmath.NewUint(0)
 		event.Status = crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 		event.ErrorMessage = fmt.Sprintf(
 			"deposited amount %v is less than depositor fee %v",
@@ -176,14 +176,14 @@ func (event *BTCInboundEvent) ResolveMsgVoteAmount() error {
 	if err != nil {
 		return errors.Wrapf(err, "invalid remaining BTC value: %f", remainingBTC)
 	}
-	event.MsgVoteAmount = cosmosmath.NewUintFromBigInt(big.NewInt(remainingSats))
+	event.AmountForMsgVoteInbound = cosmosmath.NewUintFromBigInt(big.NewInt(remainingSats))
 
 	// check if this is a NoAssetCall operation and validate excessive funds
 	if event.MemoStd != nil && event.MemoStd.OpCode == memo.OpCodeCall {
 		if remainingSats <= maxNoAssetCallExcessAmount {
 			// NoAssetCall expects no asset transfer
 			// small excess amount above depositor fee will not be forwarded to ZEVM
-			event.MsgVoteAmount = cosmosmath.NewUint(0)
+			event.AmountForMsgVoteInbound = cosmosmath.NewUint(0)
 		} else {
 			// large excess amount will be returned to the sender by reverting the tx
 			event.Status = crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS
