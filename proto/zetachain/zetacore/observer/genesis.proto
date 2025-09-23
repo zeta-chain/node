@@ -10,7 +10,7 @@ import "zetachain/zetacore/observer/keygen.proto";
 import "zetachain/zetacore/observer/node_account.proto";
 import "zetachain/zetacore/observer/nonce_to_cctx.proto";
 import "zetachain/zetacore/observer/observer.proto";
-import "zetachain/zetacore/observer/params.proto";
+import "zetachain/zetacore/observer/chain_params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/tss_funds_migrator.proto";
@@ -19,12 +19,13 @@ import "zetachain/zetacore/observer/operational.proto";
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 message GenesisState {
+  reserved 5;
+  reserved "params";
+
   repeated Ballot ballots = 1;
   ObserverSet observers = 2 [ (gogoproto.nullable) = false ];
   repeated NodeAccount nodeAccountList = 3;
   CrosschainFlags crosschain_flags = 4;
-  // Deprecated(v17) removed
-  Params params = 5;
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
   ChainParamsList chain_params_list = 8 [ (gogoproto.nullable) = false ];

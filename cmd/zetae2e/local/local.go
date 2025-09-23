@@ -314,7 +314,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy || testAdmin)
+		deployerRunner.RunSetup(testLegacy)
 	})
 
 	// if a config output is specified, write the config

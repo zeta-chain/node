@@ -9,9 +9,10 @@ option go_package = "github.com/zeta-chain/node/x/observer/types";
 message ChainParamsList { repeated ChainParams chain_params = 1; }
 
 message ChainParams {
+  reserved 1;
+  reserved "confirmation_count";
+
   int64 chain_id = 11;
-  // Deprecated(v28): use confirmation_params instead
-  uint64 confirmation_count = 1 [ deprecated = true ];
   uint64 gas_price_ticker = 2;
   uint64 inbound_ticker = 3;
   uint64 outbound_ticker = 4;
@@ -38,10 +39,4 @@ message ChainParams {
   // Skip actions that require scanning the contents of each block.
   // The main thing this disables is transfers directly to the TSS address.
   bool disable_tss_block_scan = 19;
-}
-
-// Deprecated(v17)
-message Params {
-  // Deprecated(v17):Moved into the emissions module
-  int64 ballot_maturity_blocks = 3;
 }
