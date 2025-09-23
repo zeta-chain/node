@@ -3,6 +3,7 @@ package zetacore
 import (
 	"context"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/go-tss/blame"
 
@@ -177,6 +178,27 @@ func (c *Client) PostVoteInbound(
 		return "", ballotIndex, nil
 	}
 
+	ballot, err := c.GetBallot(ctx, ballotIndex)
+	if err != nil {
+		return "", ballotIndex, errors.Wrapf(err,
+			"PostVoteInbound: unable to get ballot for ballot %s voter %s",
+			ballotIndex,
+			msg.Creator,
+		)
+	}
+
+	chainParams, err := c.GetChainParamsForChainID(ctx, msg.SenderChainId)
+	if err != nil {
+		return "", ballotIndex, errors.Wrapf(err,
+			"PostVoteInbound: unable to get chain params for chain id %d",
+			msg.SenderChainId,
+		)
+	}
+
+	if isFinalizingVote(ballot, chainParams.BallotThreshold) {
+		gasLimit = retryGasLimit
+	}
+
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
 		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
 	})
@@ -208,4 +230,38 @@ func (c *Client) PostVoteInbound(
 	}()
 
 	return zetaTxHash, ballotIndex, nil
+}
+
+// IsFinalizingVote checks if a ballot is finalizing based on the votes it has received.
+// This function replicates the logic in x/observer/types/ballot.go IsFinalizingVote method but usinsg QueryBallotByIdentifierResponse instead of a ballot type as that is not available
+func isFinalizingVote(ballot *observertypes.QueryBallotByIdentifierResponse, ballotThreshold sdkmath.LegacyDec) bool {
+	if ballot.BallotStatus != observertypes.BallotStatus_BallotInProgress {
+		return false
+	}
+
+	success, failure := sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()
+	total := sdkmath.LegacyNewDec(int64(len(ballot.Voters)))
+
+	updateGasLimit := false
+	for _, vote := range ballot.Voters {
+		if vote.VoteType == observertypes.VoteType_SuccessObservation {
+			success = success.Add(sdkmath.LegacyOneDec())
+		}
+		if vote.VoteType == observertypes.VoteType_FailureObservation {
+			failure = failure.Add(sdkmath.LegacyOneDec())
+		}
+	}
+
+	if failure.IsPositive() {
+		if failure.Quo(total).GTE(total) {
+			updateGasLimit = true
+		}
+	}
+	if success.IsPositive() {
+		if success.Quo(total).GTE(ballotThreshold) {
+			updateGasLimit = true
+		}
+	}
+
+	return updateGasLimit
 }
