@@ -55101,10 +55101,6 @@ definitions:
       chainId:
         type: string
         format: int64
-      confirmationCount:
-        type: string
-        format: uint64
-        title: 'Deprecated(v28): use confirmation_params instead'
       gasPriceTicker:
         type: string
         format: uint64

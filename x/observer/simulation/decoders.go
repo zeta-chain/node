@@ -110,11 +110,6 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &nonceToCctxA)
 			cdc.MustUnmarshal(kvB.Value, &nonceToCctxB)
 			return fmt.Sprintf("key %s value A %v value B %v", types.NonceToCctxKeyPrefix, nonceToCctxA, nonceToCctxB)
-		case bytes.Equal(kvA.Key, types.KeyPrefix(types.ParamsKey)):
-			var paramsA, paramsB types.Params
-			cdc.MustUnmarshal(kvA.Value, &paramsA)
-			cdc.MustUnmarshal(kvB.Value, &paramsB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.ParamsKey, paramsA, paramsB)
 		default:
 			panic(
 				fmt.Sprintf(

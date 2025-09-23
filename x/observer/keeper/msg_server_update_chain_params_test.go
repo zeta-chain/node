@@ -87,7 +87,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 
 		// chain params can be updated
-		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
+		chainParams2.ConfirmationParams.SafeInboundCount = chainParams2.ConfirmationParams.SafeInboundCount + 1
 		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,

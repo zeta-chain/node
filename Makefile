@@ -395,6 +395,7 @@ start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
+	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 

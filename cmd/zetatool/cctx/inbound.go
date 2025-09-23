@@ -128,7 +128,6 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
 
 	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
 		ctx,
@@ -162,7 +161,6 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
 
 	evmClient, err := zetatoolchains.GetEvmClient(ctx, inboundChain)
 	if err != nil {
@@ -312,7 +310,6 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
@@ -373,16 +370,4 @@ func compareAddress(a string, b string) bool {
 	lowerA := strings.ToLower(a)
 	lowerB := strings.ToLower(b)
 	return strings.EqualFold(lowerA, lowerB)
-}
-
-// createConfirmationParamsIfAbsent sets the confirmation params if they are not already set
-// TODO: Remove this once the confirmation migration is done
-// https://github.com/zeta-chain/node/issues/3466
-func createConfirmationParamsIfAbsent(chainParams *types.ChainParams) {
-	if chainParams != nil && chainParams.ConfirmationParams == nil {
-		chainParams.ConfirmationParams = &types.ConfirmationParams{
-			SafeInboundCount:  chainParams.ConfirmationCount,
-			SafeOutboundCount: chainParams.ConfirmationCount,
-		}
-	}
 }
