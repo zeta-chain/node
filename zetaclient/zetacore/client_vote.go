@@ -201,7 +201,7 @@ func (c *Client) PostVoteInbound(
 			c.logger.Info().
 				Str(logs.FieldBallot, ballotIndex).
 				Uint64("originalGasLimit", gasLimit).
-				Uint64("updatedGasLimit", retryGasLimit).
+				Uint64("updatedGasLimit", PostVoteInboundExecutionGasLimit).
 				Msg("updated gas limit for finalizing inbound vote")
 			gasLimit = PostVoteInboundExecutionGasLimit
 		}
