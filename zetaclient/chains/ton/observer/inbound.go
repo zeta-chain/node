@@ -34,7 +34,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get last scanned tx")
 	}
 
-	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
+	txs, err := ob.tonClient.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
@@ -144,7 +144,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		raw, err := ob.rpc.GetTransaction(ctx, gatewayAccountID, lt, hash)
+		raw, err := ob.tonClient.GetTransaction(ctx, gatewayAccountID, lt, hash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_get_tx", err)
 			continue
@@ -333,7 +333,7 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 		txHash,
 		inbound.sender.ToRaw(),
 		inbound.receiver.Hex(),
-		inbound.coinType.String(),
+		&inbound.coinType,
 	)
 
 	return true
@@ -349,7 +349,7 @@ func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits25
 	// get last txs from RPC and pick the oldest one
 	const limit = 20
 
-	txs, err := ob.rpc.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
+	txs, err := ob.tonClient.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
 	switch {
 	case err != nil:
 		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")

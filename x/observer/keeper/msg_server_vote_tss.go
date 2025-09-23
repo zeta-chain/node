@@ -55,7 +55,6 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		}
 
 		ballot = types.Ballot{
-			Index:                "",
 			BallotIdentifier:     index,
 			VoterList:            voterList,
 			Votes:                types.CreateVotes(len(voterList)),

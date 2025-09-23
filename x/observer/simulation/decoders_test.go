@@ -36,7 +36,6 @@ func TestNewDecodeStore(t *testing.T) {
 	pendingNonce := sample.PendingNoncesList(t, "index", 10)[0]
 	chainNonces := sample.ChainNonces(chains.Ethereum.ChainId)
 	nonceToCctx := sample.NonceToCCTX(t, "index")
-	params := types.Params{BallotMaturityBlocks: 100}
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
@@ -54,7 +53,6 @@ func TestNewDecodeStore(t *testing.T) {
 			{Key: types.KeyPrefix(types.PendingNoncesKeyPrefix), Value: cdc.MustMarshal(&pendingNonce)},
 			{Key: types.KeyPrefix(types.ChainNoncesKey), Value: cdc.MustMarshal(&chainNonces)},
 			{Key: types.KeyPrefix(types.NonceToCctxKeyPrefix), Value: cdc.MustMarshal(&nonceToCctx)},
-			{Key: types.KeyPrefix(types.ParamsKey), Value: cdc.MustMarshal(&params)},
 		},
 	}
 
@@ -99,7 +97,6 @@ func TestNewDecodeStore(t *testing.T) {
 			"NonceToCctx",
 			fmt.Sprintf("key %s value A %v value B %v", types.NonceToCctxKeyPrefix, nonceToCctx, nonceToCctx),
 		},
-		{"Params", fmt.Sprintf("key %s value A %v value B %v", types.ParamsKey, params, params)},
 	}
 
 	for i, tt := range tests {

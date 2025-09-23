@@ -27,7 +27,7 @@ service Msg {
   rpc VoteOutbound(MsgVoteOutbound) returns (MsgVoteOutboundResponse);
   rpc VoteInbound(MsgVoteInbound) returns (MsgVoteInboundResponse);
 
-  rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc WhitelistAsset(MsgWhitelistAsset) returns (MsgWhitelistAssetResponse);
   rpc UpdateTssAddress(MsgUpdateTssAddress)
       returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
@@ -38,12 +38,6 @@ service Msg {
 
   rpc UpdateRateLimiterFlags(MsgUpdateRateLimiterFlags)
       returns (MsgUpdateRateLimiterFlagsResponse);
-
-  rpc MigrateERC20CustodyFunds(MsgMigrateERC20CustodyFunds)
-      returns (MsgMigrateERC20CustodyFundsResponse);
-
-  rpc UpdateERC20CustodyPauseStatus(MsgUpdateERC20CustodyPauseStatus)
-      returns (MsgUpdateERC20CustodyPauseStatusResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -94,11 +88,10 @@ message MsgRemoveInboundTracker {
 
 message MsgRemoveInboundTrackerResponse {}
 
-// TODO: https://github.com/zeta-chain/node/issues/3083
-message MsgWhitelistERC20 {
+message MsgWhitelistAsset {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string erc20_address = 2;
+  string asset_address = 2;
   int64 chain_id = 3;
   string name = 4;
   string symbol = 5;
@@ -110,7 +103,7 @@ message MsgWhitelistERC20 {
   ];
 }
 
-message MsgWhitelistERC20Response {
+message MsgWhitelistAssetResponse {
   string zrc20_address = 1;
   string cctx_index = 2;
 }
@@ -223,6 +216,10 @@ message MsgVoteInbound {
 
   // confirmation mode used for the inbound
   ConfirmationMode confirmation_mode = 21;
+
+  // error_message carries information about the error that caused non-SUCCESS
+  // status of inbound observation
+  string error_message = 22;
 }
 
 message MsgVoteInboundResponse {}
@@ -252,29 +249,3 @@ message MsgUpdateRateLimiterFlags {
 }
 
 message MsgUpdateRateLimiterFlagsResponse {}
-
-message MsgMigrateERC20CustodyFunds {
-  option (cosmos.msg.v1.signer) = "creator";
-  string creator = 1;
-  int64 chain_id = 2;
-  string new_custody_address = 3;
-  string erc20_address = 4;
-  string amount = 5 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message MsgMigrateERC20CustodyFundsResponse { string cctx_index = 1; }
-
-message MsgUpdateERC20CustodyPauseStatus {
-  option (cosmos.msg.v1.signer) = "creator";
-  string creator = 1;
-  int64 chain_id = 2;
-
-  // pause or unpause
-  // true = pause, false = unpause
-  bool pause = 3;
-}
-
-message MsgUpdateERC20CustodyPauseStatusResponse { string cctx_index = 1; }

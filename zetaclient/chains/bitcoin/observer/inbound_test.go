@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"math"
-	"math/big"
 	"path"
 	"testing"
 
@@ -31,7 +30,7 @@ import (
 
 // mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
 func mockDepositFeeCalculator(fee float64, err error) common.DepositorFeeCalculator {
-	return func(_ context.Context, _ common.RPC, _ *btcjson.TxRawResult, _ *chaincfg.Params) (float64, error) {
+	return func(_ context.Context, _ common.BitcoinClient, _ *btcjson.TxRawResult, _ *chaincfg.Params) (float64, error) {
 		return fee, err
 	}
 }
@@ -163,6 +162,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		name              string
 		event             *BTCInboundEvent
 		observationStatus crosschaintypes.InboundStatus
+		errorMessage      string
 		nilVote           bool
 	}{
 		{
@@ -188,10 +188,20 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return vote for invalid memo",
 			event: &BTCInboundEvent{
-				// standard memo that carries payload only, receiver address is empty
+				// standard memo that carries payload only, receiver address flag is NOT set
 				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
 			},
 			observationStatus: crosschaintypes.InboundStatus_INVALID_MEMO,
+			errorMessage:      "must set receiver address flag",
+		},
+		{
+			name: "should return vote for invalid legacy memo",
+			event: &BTCInboundEvent{
+				// only 19 bytes
+				MemoBytes: sample.EthAddress().Bytes()[:19],
+			},
+			observationStatus: crosschaintypes.InboundStatus_INVALID_MEMO,
+			errorMessage:      "legacy memo length must be at least 20 bytes",
 		},
 		{
 			name: "should return nil on donation message",
@@ -203,7 +213,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		{
 			name: "should return nil on invalid deposit value",
 			event: &BTCInboundEvent{
-				Value:     -1, // invalid value
+				Value:     21000001, // invalid value
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
 			nilVote: true,
@@ -218,12 +228,13 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 			} else {
 				require.NotNil(t, msg)
 				require.EqualValues(t, tt.observationStatus, msg.Status)
+				require.Contains(t, msg.ErrorMessage, tt.errorMessage)
 			}
 		})
 	}
 }
 
-func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
+func Test_NewInboundVoteFromEvent_LegacyMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -235,8 +246,11 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 		// create test event
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
 
-		// test amount
-		amountSats := big.NewInt(1000)
+		// given receiver and amount
+		receiver := sample.EthAddress()
+		amountSats := cosmosmath.NewUint(1000)
+		event.ToAddress = receiver.Hex()
+		event.AmountForMsgVoteInbound = amountSats
 
 		// mock SAFE confirmed block
 		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
@@ -248,7 +262,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.ToAddress,
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
+			Amount:             amountSats,
 			Message:            hex.EncodeToString(event.MemoBytes),
 			InboundHash:        event.TxHash,
 			InboundBlockHeight: event.BlockNumber,
@@ -263,13 +277,13 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			ConfirmationMode:        crosschaintypes.ConfirmationMode_SAFE,
 		}
 
-		// create new inbound vote V1
-		vote := ob.NewInboundVoteFromLegacyMemo(&event, amountSats)
+		// create new inbound vote V2 with legacy memo
+		vote := ob.NewInboundVoteFromEvent(&event)
 		require.Equal(t, expectedVote, *vote)
 	})
 }
 
-func Test_NewInboundVoteFromStdMemo(t *testing.T) {
+func Test_NewInboundVoteFromEvent_StdMemo(t *testing.T) {
 	// can use any bitcoin chain for testing
 	chain := chains.BitcoinMainnet
 
@@ -288,6 +302,9 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 		// create test event
 		receiver := sample.EthAddress()
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dymmy"), &memo.InboundMemo{
+			Header: memo.Header{
+				OpCode: memo.OpCodeDepositAndCall,
+			},
 			FieldsV0: memo.FieldsV0{
 				Receiver:      receiver,
 				Payload:       []byte("some payload"),
@@ -295,8 +312,10 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			},
 		})
 
-		// test amount
-		amountSats := big.NewInt(1000)
+		// given receiver and amount
+		amountSats := cosmosmath.NewUint(1000)
+		event.AmountForMsgVoteInbound = amountSats
+		event.ToAddress = receiver.Hex()
 
 		// mock SAFE confirmed block
 		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
@@ -309,8 +328,8 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.MemoStd.Receiver.Hex(),
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
-			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
+			Amount:             amountSats,
+			Message:            hex.EncodeToString(memoBytesExpected),
 			InboundHash:        event.TxHash,
 			InboundBlockHeight: event.BlockNumber,
 			CallOptions: &crosschaintypes.CallOptions{
@@ -323,12 +342,13 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 				AbortAddress:  revertOptions.AbortAddress,  // should use abort address
 				RevertMessage: revertOptions.RevertMessage, // should use revert message
 			},
+			IsCrossChainCall: true,
 			Status:           crosschaintypes.InboundStatus_SUCCESS,
 			ConfirmationMode: crosschaintypes.ConfirmationMode_SAFE,
 		}
 
 		// create new inbound vote V2 with standard memo
-		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
+		vote := ob.NewInboundVoteFromEvent(&event)
 		require.Equal(t, expectedVote, *vote)
 	})
 }

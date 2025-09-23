@@ -11,42 +11,41 @@ import (
 	"github.com/rs/zerolog"
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-const (
-	// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
-	MaxSignaturesPerTicker = 100
-)
+// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
+const MaxSignaturesPerTicker = 100
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	pageLimit := solanarpc.DefaultPageLimit
+	pageLimit := repo.DefaultPageLimit
 
 	// scan from gateway 1st signature if last scanned tx is absent in the database
 	// the 1st gateway signature is typically the program initialization
 	if ob.LastTxScanned() == "" {
-		lastSig, err := solanarpc.GetFirstSignatureForAddress(ctx, ob.solClient, ob.gatewayID, pageLimit)
+		lastSig, err := ob.solanaRepo.GetFirstSignatureForAddress(ctx, ob.gatewayID, pageLimit)
 		if err != nil {
-			return errors.Wrapf(err, "error GetFirstSignatureForAddress for chain %d address %s", chainID, ob.gatewayID)
+			format := "error GetFirstSignatureForAddress for chain %d address %s"
+			return errors.Wrapf(err, format, chainID, ob.gatewayID)
 		}
 		ob.WithLastTxScanned(lastSig.String())
 	}
 
 	// query last finalized slot
-	lastSlot, errSlot := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	lastSlot, errSlot := ob.solanaClient.GetSlot(ctx, rpc.CommitmentFinalized)
 	if errSlot != nil {
 		ob.Logger().Inbound.Err(errSlot).Msg("unable to get last slot")
 	}
 
 	// get all signatures for the gateway address since last scanned signature
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
-	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
+	signatures, err := ob.solanaRepo.GetSignaturesForAddressUntil(ctx, ob.gatewayID, lastSig, pageLimit)
 	if err != nil {
 		ob.Logger().Inbound.Err(err).Msg("error calling GetSignaturesForAddressUntil")
 		return err
@@ -70,9 +69,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, sig.Signature)
+			txResult, err := ob.solanaRepo.GetTransaction(ctx, sig.Signature)
 			switch {
-			case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+			case errors.Is(err, repo.ErrUnsupportedTxVersion):
 				ob.Logger().Inbound.Warn().
 					Stringer("tx_signature", sig.Signature).
 					Msg("observe inbound: skip unsupported transaction")
@@ -213,7 +212,7 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 		return false
 	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
+			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, &event.CoinType)
 		return false
 	default:
 		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")

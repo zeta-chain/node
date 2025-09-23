@@ -40,7 +40,7 @@ func (ob *Observer) isEventProcessable(
 			txHash.Hex(),
 			sender.Hex(),
 			receiver.Hex(),
-			"Deposit",
+			nil,
 		)
 		return false
 	}
@@ -347,22 +347,22 @@ func (ob *Observer) observeGatewayDepositAndCall(
 
 // parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositAndCallEvents(
-	rawLogs []ethtypes.Log,
+	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
 ) []*gatewayevm.GatewayEVMDepositedAndCalled {
 	// collect and sort validEvents by block number, then tx index, then log index (ascending)
 	validEvents := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
-	for _, log := range rawLogs {
-		err := common.ValidateEvmTxLog(&log, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
+	for _, ethlog := range ethlogs {
+		err := common.ValidateEvmTxLog(&ethlog, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
 		if err != nil {
 			continue
 		}
-		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(log)
+		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
 		if err != nil {
 			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, log.TxHash).
-				Uint64(logs.FieldBlock, log.BlockNumber).
+				Stringer(logs.FieldTx, ethlog.TxHash).
+				Uint64(logs.FieldBlock, ethlog.BlockNumber).
 				Msg("invalid DepositedAndCall event")
 			continue
 		}

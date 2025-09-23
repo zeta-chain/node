@@ -300,6 +300,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		IsCrossChainCall:       msg.IsCrossChainCall,
 		Status:                 msg.Status,
 		ConfirmationMode:       msg.ConfirmationMode,
+		ErrorMessage:           msg.ErrorMessage,
 	}
 
 	outboundParams := &OutboundParams{

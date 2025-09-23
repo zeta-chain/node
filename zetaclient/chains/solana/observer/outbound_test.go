@@ -67,8 +67,8 @@ const (
 func createTestObserver(
 	t *testing.T,
 	chain chains.Chain,
-	solClient interfaces.SolanaRPCClient,
-	tss interfaces.TSSSigner,
+	solanaClient observer.SolanaClient,
+	tssSigner interfaces.TSSSigner,
 ) *observer.Observer {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -80,10 +80,10 @@ func createTestObserver(
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
 
-	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tss, 1000, nil, database, logger)
+	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tssSigner, 1000, nil, database, logger)
 	require.NoError(t, err)
 
-	ob, err := observer.New(baseObserver, solClient, chainParams.GatewayAddress)
+	ob, err := observer.New(baseObserver, solanaClient, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	return ob
