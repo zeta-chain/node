@@ -14,6 +14,7 @@ import (
 type initializeConfigOptions struct {
 	peer               string
 	publicIP           string
+	publicDNS          string
 	logFormat          string
 	logSampler         bool
 	preParamsPath      string
@@ -50,6 +51,7 @@ func setupInitializeConfigOptions() {
 
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
+	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
 	// support both old argument name 'zetacore-url' and new argument name 'zetacore-ip' for backward compatibility
@@ -60,7 +62,7 @@ func setupInitializeConfigOptions() {
 		"zetacore node gRPC URL (e.g., zetachain.node-provider.com:433)")
 	f.StringVar(&cfg.zetacoreWSSURL, "zetacore-wss-url", "",
 		"zetacore node websocket URL (e.g., wss://node-provider.com:433/zetachain/websocket)")
-	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
+	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization, this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
 	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
@@ -91,6 +93,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	// Populate new struct with cli arguments
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
+	configData.PublicDNS = opts.publicDNS
 	configData.PreParamsPath = opts.preParamsPath
 	configData.ChainID = opts.chainID
 	configData.ZetacoreIP = opts.zetacoreIP

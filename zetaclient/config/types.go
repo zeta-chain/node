@@ -98,6 +98,7 @@ type ComplianceConfig struct {
 type Config struct {
 	Peer          string `json:"Peer"`
 	PublicIP      string `json:"PublicIP"`
+	PublicDNS     string `json:"PublicDNS"`
 	LogFormat     string `json:"LogFormat"`
 	LogLevel      int8   `json:"LogLevel"`
 	LogSampler    bool   `json:"LogSampler"`

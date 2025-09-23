@@ -107,6 +107,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
+    extra_hosts:
+      - "zetaclient0.com:172.20.0.21"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -128,6 +130,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
+    extra_hosts:
+      - "zetaclient1.com:172.20.0.22"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -148,6 +152,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
+    extra_hosts:
+      - "zetaclient2.com:172.20.0.23"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
@@ -166,6 +172,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
+    extra_hosts:
+      - "zetaclient3.com:172.20.0.24"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
