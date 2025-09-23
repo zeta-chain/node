@@ -43,14 +43,9 @@ const (
 	sharedOwner = "Shared"
 )
 
-// NewFromEndpoint Client constructor based on endpoint string.
-func NewFromEndpoint(endpoint string) *Client {
-	return New(sui.NewSuiClient(endpoint))
-}
-
-// New Client constructor.
-func New(client sui.ISuiAPI) *Client {
-	return &Client{ISuiAPI: client}
+// New constructs a new client given an endpoint.
+func New(endpoint string) *Client {
+	return &Client{ISuiAPI: sui.NewSuiClient(endpoint)}
 }
 
 // HealthCheck queries latest checkpoint and returns its timestamp.

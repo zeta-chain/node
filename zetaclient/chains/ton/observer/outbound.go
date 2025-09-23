@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -53,7 +52,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		zetacore = ob.ZetacoreClient()
 	)
 
-	trackers, err := zetacore.GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := zetacore.GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to get outbound trackers")
 	}
@@ -105,7 +104,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
 
-	rawTx, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
+	rawTx, err := ob.tonClient.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
 		return errors.Wrap(err, "unable to get tx")
 	}

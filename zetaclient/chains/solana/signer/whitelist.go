@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -25,13 +25,13 @@ func (signer *Signer) prepareWhitelistTx(
 		return nil, fmt.Errorf("TryProcessOutbound: invalid relayed msg")
 	}
 
-	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+	pk, err := sol.PublicKeyFromBase58(relayedMsg[1])
 	if err != nil {
 		return nil, errors.Wrapf(err, "publicKeyFromBase58 %s error", relayedMsg[1])
 	}
 
 	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
-	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+	whitelistEntryPDA, _, err := sol.FindProgramAddress(seed, signer.gatewayID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "findProgramAddress error for seed %s", seed)
 	}
@@ -62,8 +62,8 @@ func (signer *Signer) createAndSignMsgWhitelist(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
-	whitelistCandidate solana.PublicKey,
-	whitelistEntry solana.PublicKey,
+	whitelistCandidate sol.PublicKey,
+	whitelistEntry sol.PublicKey,
 ) (*contracts.MsgWhitelist, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
@@ -86,7 +86,7 @@ func (signer *Signer) createAndSignMsgWhitelist(
 }
 
 // createWhitelistInstruction wraps the whitelist 'msg' into a Solana instruction.
-func (signer *Signer) createWhitelistInstruction(msg *contracts.MsgWhitelist) (*solana.GenericInstruction, error) {
+func (signer *Signer) createWhitelistInstruction(msg *contracts.MsgWhitelist) (*sol.GenericInstruction, error) {
 	// create whitelist_spl_mint instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.WhitelistInstructionParams{
 		Discriminator: contracts.DiscriminatorWhitelistSplMint,
@@ -99,15 +99,15 @@ func (signer *Signer) createWhitelistInstruction(msg *contracts.MsgWhitelist) (*
 		return nil, errors.Wrap(err, "cannot serialize whitelist_spl_mint instruction")
 	}
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:    signer.gatewayID,
 		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(msg.WhitelistEntry()).WRITE(),
-			solana.Meta(msg.WhitelistCandidate()),
-			solana.Meta(solana.SystemProgramID),
+		AccountValues: []*sol.AccountMeta{
+			sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			sol.Meta(signer.pda).WRITE(),
+			sol.Meta(msg.WhitelistEntry()).WRITE(),
+			sol.Meta(msg.WhitelistCandidate()),
+			sol.Meta(sol.SystemProgramID),
 		},
 	}
 

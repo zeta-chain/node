@@ -50,7 +50,7 @@ func TestOutbound(t *testing.T) {
 			HashList: []*cc.TxHash{{TxHash: rpc.TransactionToHashString(withdrawalTX)}},
 		}
 
-		ts.OnGetAllOutboundTrackerByChain([]cc.OutboundTracker{tracker})
+		ts.OnGetOutboundTrackers([]cc.OutboundTracker{tracker})
 
 		// Given cctx
 		cctx := sample.CrossChainTx(t, "index456")

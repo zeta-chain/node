@@ -757,7 +757,7 @@ func (ts *testSuite) MockCCTXByNonce(cctx *cctypes.CrossChainTx) *mock.Call {
 
 func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *mock.Call {
 	return ts.zetaMock.
-		On("GetAllOutboundTrackerByChain", mock.Anything, ts.Chain().ChainId, mock.Anything).
+		On("GetOutboundTrackers", mock.Anything, ts.Chain().ChainId).
 		Return(trackers, nil)
 }
 

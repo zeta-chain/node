@@ -6,7 +6,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
 
-	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 )
 
 // ProcessInboundTrackers processes inbound trackers
@@ -20,9 +20,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
-		txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, signature)
+		txResult, err := ob.solanaRepo.GetTransaction(ctx, signature)
 		switch {
-		case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+		case errors.Is(err, repo.ErrUnsupportedTxVersion):
 			ob.Logger().Inbound.Warn().
 				Stringer("tx_signature", signature).
 				Msg("skip inbound tracker hash")
