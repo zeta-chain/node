@@ -619,20 +619,26 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestZEVMToEVMCallName,
 		"zevm -> evm call",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCall,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertName,
 		"zevm -> evm call that reverts and call onRevert",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCallRevert,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertAndAbortName,
 		"zevm -> evm call that reverts and abort with onAbort",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "gas limit for call", DefaultValue: "250000"},
+		},
 		TestZEVMToEVMCallRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
@@ -1230,7 +1236,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM and call a contract with standard memo; revert and abort with onAbort",
 		[]runner.ArgDefinition{},
 		TestBitcoinStdMemoDepositAndCallRevertAndAbort,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoInscribedDepositAndCallName,

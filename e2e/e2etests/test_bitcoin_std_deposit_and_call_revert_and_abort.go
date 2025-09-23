@@ -27,6 +27,7 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	require.NoError(r, err)
 
 	// Create a memo to call non-existing contract
+	abortMessage := "abort message"
 	inboundMemo := &memo.InboundMemo{
 		Header: memo.Header{
 			Version:     0,
@@ -37,7 +38,9 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 			Receiver: sample.EthAddress(), // non-existing contract
 			Payload:  []byte("a payload"),
 			RevertOptions: types.RevertOptions{
-				AbortAddress: testAbortAddr.Hex(),
+				CallOnRevert:  false,
+				AbortAddress:  testAbortAddr.Hex(),
+				RevertMessage: []byte(abortMessage),
 			},
 		},
 	}
@@ -60,4 +63,9 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.True(r, aborted)
+
+	// check revert message was used
+	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, abortMessage)
+	require.NoError(r, err)
+	require.EqualValues(r, []byte(abortMessage), abortContext.RevertMessage)
 }

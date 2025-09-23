@@ -27,7 +27,8 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 	// create a random payload exactly fit max OP_RETURN data size 80 bytes
 	// memo size: 4b header + 20b receiver + 1b length + 55b payload == 80 bytes
 	payload := randomPayloadWithSize(r, 55)
-	r.AssertTestDAppZEVMCalled(false, payload, big.NewInt(amountSats))
+	sender := r.GetBtcAddress().EncodeAddress()
+	r.AssertTestDAppZEVMCalled(false, payload, []byte(sender), big.NewInt(amountSats))
 
 	// wrap the payload in a standard memo
 	memo := &memo.InboundMemo{
@@ -62,5 +63,5 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
+	r.AssertTestDAppZEVMCalled(true, payload, []byte(sender), big.NewInt(receivedAmount))
 }

@@ -55,7 +55,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 	// Checking example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, exampleContract, value, r.EVMAddress().Bytes())
+	utils.WaitAndVerifyExampleContractCall(r, exampleContract, value, r.EVMAddress().Bytes())
 	r.Logger.Info("Cross-chain call succeeded")
 
 	r.Logger.Info("Deploying reverter contract")
