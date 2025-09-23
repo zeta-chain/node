@@ -24,6 +24,7 @@
 * [4205](https://github.com/zeta-chain/node/pull/4205) - remove index field in ballot
 * [4200](https://github.com/zeta-chain/node/pull/4200) - remove `LastBlockHeight` state variable
 * [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4210](https://github.com/zeta-chain/node/pull/4210) - skip writing config file to the filesystem when updating consensus timeout deltas
 
 ### Fixes
 
