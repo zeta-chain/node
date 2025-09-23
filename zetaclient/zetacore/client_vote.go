@@ -261,7 +261,7 @@ func isFinalizingVote(ballot *observertypes.QueryBallotByIdentifierResponse, bal
 	}
 
 	if failure.IsPositive() {
-		if failure.Quo(total).GTE(total) {
+		if failure.Quo(total).GTE(ballotThreshold) {
 			updateGasLimit = true
 		}
 	}
