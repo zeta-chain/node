@@ -37,7 +37,7 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	// create fee bumper
 	fb, err := NewCPFPFeeBumper(
 		ctx,
-		signer.rpc,
+		signer.bitcoinClient,
 		signer.Chain(),
 		lastTx,
 		cctxRate,
@@ -63,7 +63,7 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	inAmounts := make([]int64, len(result.NewTx.TxIn))
 	for i, input := range result.NewTx.TxIn {
 		preOut := input.PreviousOutPoint
-		preTx, err := signer.rpc.GetRawTransaction(ctx, &preOut.Hash)
+		preTx, err := signer.bitcoinClient.GetRawTransaction(ctx, &preOut.Hash)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to get previous tx %s", preOut.Hash)
 		}

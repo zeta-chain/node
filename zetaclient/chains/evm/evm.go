@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/signer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -266,7 +265,7 @@ func (e *EVM) updateChainParams(ctx context.Context) error {
 func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
 	chainID := e.observer.Chain().ChainId
 
-	trackers, err := e.observer.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := e.observer.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get outbound trackers")
 	}

@@ -22,7 +22,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -30,9 +29,9 @@ import (
 
 // ProcessOutboundTrackers processes outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, ob.Chain().ChainId)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+		return errors.Wrap(err, "GetOutboundTrackers error")
 	}
 
 	// keep last block up-to-date

@@ -57,7 +57,7 @@ var (
 	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
 )
 
-type RPC interface {
+type BitcoinClient interface {
 	GetBlockCount(ctx context.Context) (int64, error)
 	GetBlockHash(ctx context.Context, blockHeight int64) (*chainhash.Hash, error)
 	GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wire.BlockHeader, error)
@@ -66,7 +66,7 @@ type RPC interface {
 }
 
 // DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
-type DepositorFeeCalculator func(context.Context, RPC, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
+type DepositorFeeCalculator func(context.Context, BitcoinClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
 
 // FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/vB.
 func FeeRateToSatPerByte(rate float64) (uint64, error) {
@@ -237,7 +237,7 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 // CalcDepositorFee calculates the depositor fee for a given tx result
 func CalcDepositorFee(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	rawResult *btcjson.TxRawResult,
 	netParams *chaincfg.Params,
 ) (float64, error) {
@@ -247,7 +247,7 @@ func CalcDepositorFee(
 	}
 
 	// get fee rate of the transaction
-	_, feeRate, err := rpc.GetTransactionFeeAndRate(ctx, rawResult)
+	_, feeRate, err := bitcoinClient.GetTransactionFeeAndRate(ctx, rawResult)
 	if err != nil {
 		return 0, errors.Wrapf(err, "error getting fee rate for tx %s", rawResult.Txid)
 	}
@@ -261,14 +261,17 @@ func CalcDepositorFee(
 
 // GetRecentFeeRate gets the highest fee rate from recent blocks
 // Note: this method should be used for testnet ONLY
-func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) (uint64, error) {
+func GetRecentFeeRate(ctx context.Context,
+	bitcoinClient BitcoinClient,
+	netParams *chaincfg.Params,
+) (uint64, error) {
 	// should avoid using this method for mainnet
 	if netParams.Name == chaincfg.MainNetParams.Name {
 		return 0, errors.New("GetRecentFeeRate should not be used for mainnet")
 	}
 
 	// get the current block number
-	blockNumber, err := rpc.GetBlockCount(ctx)
+	blockNumber, err := bitcoinClient.GetBlockCount(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -277,11 +280,11 @@ func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) 
 	highestRate := int64(0)
 	for i := int64(0); i < feeRateCountBackBlocks; i++ {
 		// get the block
-		hash, err := rpc.GetBlockHash(ctx, blockNumber-i)
+		hash, err := bitcoinClient.GetBlockHash(ctx, blockNumber-i)
 		if err != nil {
 			return 0, err
 		}
-		block, err := rpc.GetBlockVerbose(ctx, hash)
+		block, err := bitcoinClient.GetBlockVerbose(ctx, hash)
 		if err != nil {
 			return 0, err
 		}

@@ -75,7 +75,7 @@ func newTestSuite(t *testing.T) *testSuite {
 }
 
 func (ts *testSuite) EvmSigner() ethtypes.Signer {
-	return ts.client.Signer
+	return ts.client.Signer()
 }
 
 func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {

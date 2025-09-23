@@ -20,49 +20,64 @@ import (
 // Signer Sui outbound transaction signer.
 type Signer struct {
 	*base.Signer
-	client         RPC
+
+	zetacoreClient interfaces.ZetacoreClient
+	suiClient      SuiClient
+
 	gateway        *sui.Gateway
 	withdrawCap    *tssOwnedObject
 	messageContext *tssOwnedObject
-
-	zetacore interfaces.ZetacoreClient
 }
 
-// RPC represents Sui rpc.
-type RPC interface {
+// SuiClient represents the Sui RPC client.
+type SuiClient interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
-	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
-	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
-	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
-	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
+	GetOwnedObjectID(_ context.Context,
+		ownerAddress string,
+		structType string,
+	) (string, error)
+
+	GetObjectParsedData(_ context.Context, objectID string) (models.SuiParsedData, error)
+
+	SuiMultiGetObjects(context.Context,
+		models.SuiMultiGetObjectsRequest,
+	) ([]*models.SuiObjectResponse, error)
+
+	GetSuiCoinObjectRefs(_ context.Context,
+		owner string,
+		minBalanceMist uint64,
+	) ([]*suiptb.ObjectRef, error)
+
+	MoveCall(context.Context, models.MoveCallRequest) (models.TxnMetaData, error)
+
 	SuiExecuteTransactionBlock(
-		ctx context.Context,
-		req models.SuiExecuteTransactionBlockRequest,
+		context.Context,
+		models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
+
 	InspectTransactionBlock(
-		ctx context.Context,
-		req models.SuiDevInspectTransactionBlockRequest,
+		context.Context,
+		models.SuiDevInspectTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
+
 	SuiGetTransactionBlock(
-		ctx context.Context,
-		req models.SuiGetTransactionBlockRequest,
+		context.Context,
+		models.SuiGetTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 }
 
 // New Signer constructor.
-func New(
-	baseSigner *base.Signer,
-	client RPC,
+func New(baseSigner *base.Signer,
+	zetacoreClient interfaces.ZetacoreClient,
+	suiClient SuiClient,
 	gateway *sui.Gateway,
-	zetacore interfaces.ZetacoreClient,
 ) *Signer {
 	return &Signer{
 		Signer:         baseSigner,
-		client:         client,
+		zetacoreClient: zetacoreClient,
+		suiClient:      suiClient,
 		gateway:        gateway,
-		zetacore:       zetacore,
 		withdrawCap:    &tssOwnedObject{},
 		messageContext: &tssOwnedObject{},
 	}

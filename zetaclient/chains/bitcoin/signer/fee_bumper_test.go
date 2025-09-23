@@ -112,7 +112,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				require.Nil(t, bumper)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
-				bumper.rpc = nil // ignore the RPC
+				bumper.bitcoinClient = nil // ignore the RPC
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, bumper)
 			}

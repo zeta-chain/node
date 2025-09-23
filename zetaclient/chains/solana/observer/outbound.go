@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -50,9 +49,9 @@ var (
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+		return errors.Wrap(err, "GetOutboundTrackers error")
 	}
 
 	logger := ob.Logger().Outbound
@@ -259,7 +258,7 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// query transaction using "finalized" commitment to avoid re-org
-	txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+	txResult, err := ob.solanaClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
 		Commitment: rpc.CommitmentFinalized,
 	})
 	if err != nil {

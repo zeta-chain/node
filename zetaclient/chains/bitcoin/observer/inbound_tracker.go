@@ -39,7 +39,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", errors.Wrap(err, "error parsing btc tx hash")
 	}
 
-	tx, err := ob.rpc.GetRawTransactionVerbose(ctx, hash)
+	tx, err := ob.bitcoinClient.GetRawTransactionVerbose(ctx, hash)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting btc raw tx verbose")
 	}
@@ -49,7 +49,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", errors.Wrap(err, "error parsing btc block hash")
 	}
 
-	blockVb, err := ob.rpc.GetBlockVerbose(ctx, blockHash)
+	blockVb, err := ob.bitcoinClient.GetBlockVerbose(ctx, blockHash)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting btc block verbose")
 	}
@@ -72,7 +72,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	// #nosec G115 always positive
 	event, err := GetBtcEventWithWitness(
 		ctx,
-		ob.rpc,
+		ob.bitcoinClient,
 		*tx,
 		tss,
 		uint64(blockVb.Height),

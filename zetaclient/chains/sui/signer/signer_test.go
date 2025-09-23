@@ -342,7 +342,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	require.NoError(t, err)
 
 	baseSigner := base.NewSigner(chain, tss, logger)
-	signer := New(baseSigner, suiMock, gw, zetacore)
+	signer := New(baseSigner, zetacore, suiMock, gw)
 
 	ts := &testSuite{
 		t:        t,

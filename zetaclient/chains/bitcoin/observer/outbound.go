@@ -14,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -28,7 +27,7 @@ const (
 
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to get all outbound trackers")
 	}
@@ -158,7 +157,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	}
 
 	// Get outbound block height
-	blockHeight, err := ob.rpc.GetBlockHeightByStr(ctx, res.BlockHash)
+	blockHeight, err := ob.bitcoinClient.GetBlockHeightByStr(ctx, res.BlockHash)
 	if err != nil {
 		return false, errors.Wrapf(err, "error getting block height by hash %s", res.BlockHash)
 	}
@@ -259,7 +258,7 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64) (s
 	}
 
 	// make sure it's a real Bitcoin txid
-	_, getTxResult, err := ob.rpc.GetTransactionByStr(ctx, txid)
+	_, getTxResult, err := ob.bitcoinClient.GetTransactionByStr(ctx, txid)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "error getting outbound result for nonce %d hash %s", nonce, txid)
@@ -284,7 +283,7 @@ func (ob *Observer) checkTxInclusion(
 		Logger()
 
 	// fetch tx result
-	hash, txResult, err := ob.rpc.GetTransactionByStr(ctx, txHash)
+	hash, txResult, err := ob.bitcoinClient.GetTransactionByStr(ctx, txHash)
 	if err != nil {
 		logger.Warn().Err(err).Msg("call to GetTransactionByStr failed")
 		return nil, false
@@ -381,7 +380,7 @@ func (ob *Observer) checkTssOutboundResult(
 ) error {
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
-	rawResult, err := ob.rpc.GetRawTransactionResult(ctx, hash, res)
+	rawResult, err := ob.bitcoinClient.GetRawTransactionResult(ctx, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTransactionResult %s", hash.String())
 	}
