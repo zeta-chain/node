@@ -269,7 +269,7 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	defer ob.mu.Unlock()
 
 	if ob.lastTxScanned == "" {
-		ob.logger.Chain.Info().Str("tx", txHash).Msg("initializing last tx scanned")
+		ob.logger.Chain.Info().Str(logs.FieldTx, txHash).Msg("initializing last tx scanned")
 	}
 	ob.lastTxScanned = txHash
 

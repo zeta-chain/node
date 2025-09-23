@@ -20,15 +20,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// TODO: move
-func encodeTx(lt uint64, hash ton.Bits256) string {
-	return encoder.EncodeHash(lt, hash)
-}
-
-// TODO: move
-func decodeTx(tx string) (uint64, ton.Bits256, error) {
-	return encoder.DecodeTx(tx)
-}
+// ------------------------------------------------------------------------------------------------
+// ObserveInbound
+// ------------------------------------------------------------------------------------------------
 
 const paginationLimit = 100
 
@@ -40,12 +34,13 @@ const paginationLimit = 100
 //
 // The name `ObserveInbound` is used for consistency with other chains.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	lt, hashBits, err := ob.getLastScannedTx(ctx)
+	lastScannedTx, err := ob.getLastScannedTransaction(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get last scanned tx")
+		return errors.Wrap(err, "failed to get the last scanned transaction")
 	}
+	ob.WithLastTxScanned(lastScannedTx)
 
-	txs, err := ob.tonRepo.Client.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
+	txs, err := ob.tonRepo.GetNextTransactions(ctx, lastScannedTx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
@@ -130,6 +125,29 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	return nil
 }
+
+// getLastScannedTransaction gets the last scanned transaction from the database.
+//
+// If there is no transaction in the database, it queries the blockchain and returns the 20th
+// most recent transaction.
+func (ob *Observer) getLastScannedTransaction(ctx context.Context) (string, error) {
+	encodedTx := ob.LastTxScanned()
+	if encodedTx != "" {
+		return encodedTx, nil
+	}
+
+	const limit = 20 // arbitrary
+	tx, err := ob.tonRepo.GetTransactionByIndex(ctx, limit)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to query the blockchain")
+	}
+
+	return encoder.EncodeTx(*tx), nil
+}
+
+// ------------------------------------------------------------------------------------------------
+// TODO
+// ------------------------------------------------------------------------------------------------
 
 // ProcessInboundTrackers handles adhoc trackers that were somehow missed by
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
@@ -348,32 +366,6 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 	)
 
 	return true
-}
-
-// getLastScannedTx or query the latest tx from RPC
-func (ob *Observer) getLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
-	// always expect init state.
-	if encodedTx := ob.LastTxScanned(); encodedTx != "" {
-		return decodeTx(encodedTx)
-	}
-
-	// get last txs from RPC and pick the oldest one
-	const limit = 20
-
-	txs, err := ob.tonRepo.Client.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
-	if err != nil {
-		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")
-	}
-	if len(txs) == 0 {
-		return 0, ton.Bits256{}, errors.New("no transactions found")
-	}
-
-	tx := txs[len(txs)-1]
-
-	// NOTE: this does not write data to the database unless the transaction gets processed.
-	ob.WithLastTxScanned(encoder.EncodeTx(tx))
-
-	return tx.Lt, ton.Bits256(tx.Hash()), nil
 }
 
 func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {

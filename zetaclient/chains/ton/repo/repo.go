@@ -2,33 +2,12 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
-
-// GetTransactionsSince TODO.
-func (repo *TONRepo) GetTransactionsSince(ctx context.Context,
-	lastTx string,
-) ([]ton.Transaction, error) {
-	accountID := repo.Gateway.AccountID()
-
-	lastLT, lastHash, err := encoder.DecodeTx(lastTx)
-	if err != nil {
-		return nil, errors.Join(ErrTransactionEncoding, err)
-	}
-
-	txs, err := repo.Client.GetTransactionsSince(ctx, accountID, lastLT, lastHash)
-	if err != nil {
-		return nil, errors.Join(ErrGetTransactionsSince, err)
-	}
-
-	return txs, nil
-}
 
 // func (repo *TONRepo) GetInboundTrackers(ctx context.Context) ([]types.InboundTracker, error) {
 // 	chainID := repo.connectedChain.ChainId

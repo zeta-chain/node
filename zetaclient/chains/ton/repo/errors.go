@@ -10,11 +10,11 @@ var (
 
 	ErrPostVoteGasPrice = errors.New("failed to post vote for gas price")
 
-	ErrGetTransactions = errors.New("failed to get transactions")
+	ErrGetTransactions = errors.New("failed to get transactions (by index)")
 	ErrNoTransactions  = errors.New("found no transactions")
 
-	ErrTransactionEncoding  = errors.New("invalid encoding for transaction")
-	ErrGetTransactionsSince = errors.New("failed to get transactions")
+	ErrTransactionEncoding  = errors.New("invalid transaction encoding")
+	ErrGetTransactionsSince = errors.New("failed to get transactions (by last transaction)")
 
 	ErrGetInboundTrackers = errors.New("failed to get inbound trackers")
 )
