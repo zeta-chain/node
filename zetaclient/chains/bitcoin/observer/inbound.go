@@ -3,21 +3,23 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"math/big"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
+)
+
+const (
+	// maxNoAssetCallExcessAmount is the maximum excess amount beyond depositor fee for Bitcoin NoAssetCall
+	// A static value 100K satoshis (0.001 BTC) is used to prevent accidental funds loss exceeding $110 at the time of writing
+	maxNoAssetCallExcessAmount = 100_000
 )
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
@@ -205,31 +207,18 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 		return nil
 	}
 
-	// convert the amount to integer (satoshis)
-	amountSats, err := common.GetSatoshis(event.Value)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Float64("value", event.Value).
-			Msg("cannot convert value to satoshis")
+	// resolve the amount to be used in inbound vote message
+	if err := event.ResolveAmountForMsgVoteInbound(); err != nil {
+		// should never happen, otherwise skip this tx
+		logger.Error().Err(err).Msg("unable to resolve msg vote amount")
 		return nil
 	}
-	amountInt := big.NewInt(amountSats)
 
-	// create inbound vote message contract V1 for legacy memo
-	if event.MemoStd == nil {
-		return ob.NewInboundVoteFromLegacyMemo(event, amountInt)
-	}
-
-	// create inbound vote message for standard memo
-	return ob.NewInboundVoteFromStdMemo(event, amountInt)
+	return ob.NewInboundVoteFromEvent(event)
 }
 
-// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteFromLegacyMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
+// NewInboundVoteFromEvent creates a MsgVoteInbound message from a inbound event
+func (ob *Observer) NewInboundVoteFromEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// determine confirmation mode
 	confirmationMode := crosschaintypes.ConfirmationMode_FAST
 	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
@@ -243,66 +232,20 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		event.FromAddress,
 		event.ToAddress,
 		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		hex.EncodeToString(event.MemoBytes),
+		event.AmountForMsgVoteInbound,
+		event.Message(),
 		event.TxHash,
 		event.BlockNumber,
 		0,
-		coin.CoinType_Gas,
+		event.CoinType(),
 		"",
 		0,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 		confirmationMode,
-		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
-		crosschaintypes.WithErrorMessage(event.ErrorMessage),
-	)
-}
-
-// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
-func (ob *Observer) NewInboundVoteFromStdMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
-	// inject revert options specified by the memo
-	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
-	revertOptions := crosschaintypes.RevertOptions{
-		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
-		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
-		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
-	}
-
-	// check if the memo is a cross-chain call, or simple token deposit
-	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
-
-	// determine confirmation mode
-	confirmationMode := crosschaintypes.ConfirmationMode_FAST
-	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
-		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
-	}
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.MemoStd.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		hex.EncodeToString(event.MemoStd.Payload),
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V2,
-		false, // no arbitrary call for deposit to ZetaChain
-		event.Status,
-		confirmationMode,
-		crosschaintypes.WithRevertOptions(revertOptions),
-		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+		crosschaintypes.WithRevertOptions(event.RevertOptions()),
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall()),
 		crosschaintypes.WithErrorMessage(event.ErrorMessage),
 	)
 }

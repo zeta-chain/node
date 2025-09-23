@@ -143,6 +143,9 @@ const (
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
 	TestBitcoinStdMemoDepositAndCallRevertAndAbortName     = "bitcoin_std_memo_deposit_and_call_revert_and_abort"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
+	TestBitcoinToZEVMCallName                              = "bitcoin_to_zevm_call"
+	TestBitcoinToZEVMCallAbortName                         = "bitcoin_to_zevm_call_abort"
+	TestBitcoinToZEVMCallExcessiveFundsRevertName          = "bitcoin_to_zevm_call_excessive_funds_revert"
 	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
@@ -1316,6 +1319,24 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
 		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBitcoinToZEVMCallName,
+		"bitcoin -> zevm call",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCall,
+	),
+	runner.NewE2ETest(
+		TestBitcoinToZEVMCallAbortName,
+		"bitcoin -> zevm call fails and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCallAbort,
+	),
+	runner.NewE2ETest(
+		TestBitcoinToZEVMCallExcessiveFundsRevertName,
+		"bitcoin -> zevm call revert with excessive funds",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCallExcessiveFundsRevert,
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,

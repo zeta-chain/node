@@ -12,33 +12,34 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
-func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []string) {
-	// Start mining blocks
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
+func TestBitcoinToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
-	amount := 0.00000001 // 1 satoshi so revert fails because of insufficient gas
 
 	// deploy testabort contract
 	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
-	// Create a memo to call non-existing contract
-	abortMessage := "abort message"
-	inboundMemo := &memo.InboundMemo{
+	// ARRANGE
+	// create a short payload less than max OP_RETURN data size (80 bytes)
+	payload := randomPayloadWithSize(r, 10)
+	sender := r.GetBtcAddress().EncodeAddress()
+	r.AssertTestDAppZEVMCalled(false, payload, []byte(sender), big.NewInt(0))
+
+	// wrap the payload in a standard memo
+	abortMessage := "message abort"
+	memo := &memo.InboundMemo{
 		Header: memo.Header{
 			Version:     0,
 			EncodingFmt: memo.EncodingFmtCompactShort,
-			OpCode:      memo.OpCodeDepositAndCall,
+			OpCode:      memo.OpCodeCall, // NoAssetCall
 		},
 		FieldsV0: memo.FieldsV0{
 			Receiver: sample.EthAddress(), // non-existing contract
-			Payload:  []byte("a payload"),
+			Payload:  []byte(payload),
 			RevertOptions: types.RevertOptions{
-				CallOnRevert:  false,
 				AbortAddress:  testAbortAddr.Hex(),
 				RevertMessage: []byte(abortMessage),
 			},
@@ -46,18 +47,15 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	}
 
 	// ACT
-	// Deposit
-	txHash := r.DepositBTCWithExactAmount(amount, inboundMemo)
+	// make a NoAssetCall to ZEVM with standard memo
+	// the amount matches the exact depositor fee and should be accepted by observers
+	txHash := r.DepositBTCWithAmount(zetabtc.DefaultDepositorFee, memo)
 
 	// ASSERT
-	// now we want to make sure tx is aborted
+	// wait for the cctx to be aborted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "bitcoin_std_memo_deposit")
+	r.Logger.CCTX(*cctx, "call")
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Aborted)
-
-	// wait for the abort contract to receive tokens
-	change := utils.NewBalanceChange(true)
-	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})

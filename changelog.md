@@ -14,6 +14,7 @@
 * [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 * [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
+* [4218](https://github.com/zeta-chain/node/pull/4218) - enable NoAssetCall from Bitcoin chain
 
 ### Refactor
 
