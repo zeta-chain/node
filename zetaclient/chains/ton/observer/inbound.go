@@ -13,11 +13,22 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+// TODO: move
+func encodeTx(lt uint64, hash ton.Bits256) string {
+	return encoder.EncodeHash(lt, hash)
+}
+
+// TODO: move
+func decodeTx(tx string) (uint64, ton.Bits256, error) {
+	return encoder.DecodeTx(tx)
+}
 
 const paginationLimit = 100
 
@@ -29,7 +40,7 @@ const paginationLimit = 100
 //
 // The name `ObserveInbound` is used for consistency with other chains.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	lt, hashBits, err := ob.ensureLastScannedTx(ctx)
+	lt, hashBits, err := ob.getLastScannedTx(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get last scanned tx")
 	}
@@ -74,7 +85,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		if skip {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
-			txHash := rpc.TransactionToHashString(tx.Transaction)
+			txHash := encoder.EncodeTx(tx.Transaction)
 			ob.Logger().Inbound.Warn().
 				Str("transaction_hash", txHash).
 				Msg("observe gateway: skipping tx")
@@ -138,7 +149,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		txHash := tracker.TxHash
 
-		lt, hash, err := rpc.TransactionHashFromString(txHash)
+		lt, hash, err := encoder.DecodeTx(txHash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_parse_hash", err)
 			continue
@@ -219,7 +230,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 
 	var (
 		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-		inboundHash     = rpc.TransactionToHashString(inbound.tx.Transaction)
+		inboundHash     = encoder.EncodeTx(inbound.tx.Transaction)
 		sender          = inbound.sender.ToRaw()
 		receiver        = inbound.receiver.Hex()
 	)
@@ -323,7 +334,7 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 		return false
 	}
 
-	txHash := rpc.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+	txHash := encoder.EncodeHash(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
 
 	compliance.PrintComplianceLog(
 		ob.Logger().Inbound,
@@ -339,28 +350,28 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 	return true
 }
 
-// ensureLastScannedTx or query the latest tx from RPC
-func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
+// getLastScannedTx or query the latest tx from RPC
+func (ob *Observer) getLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
 	// always expect init state.
-	if txHash := ob.LastTxScanned(); txHash != "" {
-		return rpc.TransactionHashFromString(txHash)
+	if encodedTx := ob.LastTxScanned(); encodedTx != "" {
+		return decodeTx(encodedTx)
 	}
 
 	// get last txs from RPC and pick the oldest one
 	const limit = 20
 
 	txs, err := ob.tonRepo.Client.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
-	switch {
-	case err != nil:
+	if err != nil {
 		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")
-	case len(txs) == 0:
+	}
+	if len(txs) == 0 {
 		return 0, ton.Bits256{}, errors.New("no transactions found")
 	}
 
 	tx := txs[len(txs)-1]
 
-	// note this data is not persisted to DB unless real inbound is processed
-	ob.WithLastTxScanned(rpc.TransactionToHashString(tx))
+	// NOTE: this does not write data to the database unless the transaction gets processed.
+	ob.WithLastTxScanned(encoder.EncodeTx(tx))
 
 	return tx.Lt, ton.Bits256(tx.Hash()), nil
 }
@@ -368,7 +379,7 @@ func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits25
 func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
 	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
 
-	txHash := rpc.TransactionToHashString(tx.Transaction)
+	txHash := encoder.EncodeTx(tx.Transaction)
 	ob.WithLastTxScanned(txHash)
 
 	err := ob.WriteLastTxScannedToDB(txHash)
@@ -390,7 +401,7 @@ func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
 
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"transaction_hash":           rpc.TransactionToHashString(tx.Transaction),
+		"transaction_hash":           encoder.EncodeTx(tx.Transaction),
 		"transaction_ton_is_inbound": tx.IsInbound(),
 		"transaction_ton_op_code":    tx.Operation,
 		"transaction_ton_exit_code":  tx.ExitCode,

@@ -2,6 +2,7 @@ package repo
 
 import "errors"
 
+// TODO: organize
 var (
 	ErrFetchGasPrice      = errors.New("failed to fetch gas price")
 	ErrParseGasPrice      = errors.New("failed to parse gas price")

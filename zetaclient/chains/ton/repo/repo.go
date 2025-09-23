@@ -7,51 +7,9 @@ import (
 
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/ton"
-	"github.com/zeta-chain/node/pkg/chains"
-	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
-
-type TONRepo struct {
-	// TODO: make these private before opening the pull request
-	Client  TONClient
-	Gateway *toncontracts.Gateway
-
-	connectedChain chains.Chain
-}
-
-func NewTONRepo(tonClient TONClient,
-	gateway *toncontracts.Gateway,
-	connectedChain chains.Chain,
-) *TONRepo {
-	return &TONRepo{
-		Client:         tonClient,
-		Gateway:        gateway,
-		connectedChain: connectedChain,
-	}
-}
-
-// TODO: this function seems very wrong.
-// GetLastTransaction TODO.
-func (repo *TONRepo) GetLastTransaction(ctx context.Context) (string, error) {
-	const limit = 20
-	accountID := repo.Gateway.AccountID()
-	var zeroLT uint64
-	var zeroHash ton.Bits256
-
-	txs, err := repo.Client.GetTransactions(ctx, limit, accountID, zeroLT, zeroHash)
-	if err != nil {
-		return "", errors.Join(ErrGetTransactions, err)
-	}
-	if len(txs) == 0 {
-		return "", ErrNoTransactions
-	}
-
-	tx := txs[len(txs)-1]
-	hash := rpc.TransactionToHashString(tx)
-
-	return hash, nil
-}
 
 // GetTransactionsSince TODO.
 func (repo *TONRepo) GetTransactionsSince(ctx context.Context,
@@ -59,7 +17,7 @@ func (repo *TONRepo) GetTransactionsSince(ctx context.Context,
 ) ([]ton.Transaction, error) {
 	accountID := repo.Gateway.AccountID()
 
-	lastLT, lastHash, err := rpc.TransactionHashFromString(lastTx)
+	lastLT, lastHash, err := encoder.DecodeTx(lastTx)
 	if err != nil {
 		return nil, errors.Join(ErrTransactionEncoding, err)
 	}

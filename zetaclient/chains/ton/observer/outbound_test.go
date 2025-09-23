@@ -11,7 +11,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -47,7 +47,7 @@ func TestOutbound(t *testing.T) {
 			Index:    "index123",
 			ChainId:  ts.chain.ChainId,
 			Nonce:    nonce,
-			HashList: []*cc.TxHash{{TxHash: rpc.TransactionToHashString(withdrawalTX)}},
+			HashList: []*cc.TxHash{{TxHash: encoder.EncodeTx(withdrawalTX)}},
 		}
 
 		ts.OnGetOutboundTrackers([]cc.OutboundTracker{tracker})

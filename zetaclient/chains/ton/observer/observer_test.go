@@ -18,6 +18,7 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -123,7 +124,7 @@ func (ts *testSuite) SetupLastScannedTX(gw ton.AccountID) ton.Transaction {
 		Amount: tonCoins(ts.t, "1"),
 	})
 
-	txHash := rpc.TransactionHashToString(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
+	txHash := encoder.EncodeHash(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
 
 	ts.baseObserver.WithLastTxScanned(txHash)
 	require.NoError(ts.t, ts.baseObserver.WriteLastTxScannedToDB(txHash))
@@ -195,7 +196,7 @@ func (ts *testSuite) OnGetInboundTrackersForChain(trackers []cc.InboundTracker) 
 func (ts *testSuite) TxToInboundTracker(tx ton.Transaction) cc.InboundTracker {
 	return cc.InboundTracker{
 		ChainId:  ts.chain.ChainId,
-		TxHash:   rpc.TransactionToHashString(tx),
+		TxHash:   encoder.EncodeTx(tx),
 		CoinType: coin.CoinType_Gas,
 	}
 }

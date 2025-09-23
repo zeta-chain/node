@@ -9,6 +9,7 @@ import (
 
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -59,7 +60,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		tx := results[0].Transaction
-		txHash := rpc.TransactionToHashString(results[0].Transaction)
+		txHash := encoder.EncodeTx(results[0].Transaction)
 
 		if !tx.IsSuccess() {
 			// should not happen

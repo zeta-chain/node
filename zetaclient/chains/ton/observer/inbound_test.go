@@ -12,7 +12,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -54,7 +54,7 @@ func TestInbound(t *testing.T) {
 		assert.NoError(t, err)
 
 		// nothing happened, but tx scanned
-		lt, hash, err := rpc.TransactionHashFromString(ob.LastTxScanned())
+		lt, hash, err := encoder.DecodeTx(ob.LastTxScanned())
 		assert.NoError(t, err)
 		assert.Equal(t, donation.Lt, lt)
 		assert.Equal(t, donation.Hash().Hex(), hash.Hex())
@@ -111,7 +111,7 @@ func TestInbound(t *testing.T) {
 		assert.False(t, cctx.IsCrossChainCall)
 
 		// Check hash & block height
-		expectedHash := rpc.TransactionHashToString(depositTX.Lt, txHash(depositTX))
+		expectedHash := encoder.EncodeHash(depositTX.Lt, txHash(depositTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})
@@ -171,7 +171,7 @@ func TestInbound(t *testing.T) {
 		assert.True(t, cctx.IsCrossChainCall)
 
 		// Check hash & block height
-		expectedHash := rpc.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))
+		expectedHash := encoder.EncodeHash(depositAndCallTX.Lt, txHash(depositAndCallTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})
@@ -228,7 +228,7 @@ func TestInbound(t *testing.T) {
 		assert.Equal(t, coin.CoinType_NoAssetCall, cctx.CoinType)
 
 		// Check hash & block height
-		expectedHash := rpc.TransactionHashToString(callTX.Lt, txHash(callTX))
+		expectedHash := encoder.EncodeHash(callTX.Lt, txHash(callTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})
@@ -326,7 +326,7 @@ func TestInbound(t *testing.T) {
 		tracker := ts.trackerBag[0]
 
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
-		assert.Equal(t, rpc.TransactionToHashString(withdrawalTX), tracker.hash)
+		assert.Equal(t, encoder.EncodeTx(withdrawalTX), tracker.hash)
 	})
 
 	t.Run("Multiple transactions", func(t *testing.T) {
@@ -397,8 +397,8 @@ func TestInbound(t *testing.T) {
 		assert.Equal(t, 2, len(ts.votesBag))
 
 		var (
-			hash1 = rpc.TransactionHashToString(txs[1].Lt, txHash(txs[1]))
-			hash2 = rpc.TransactionHashToString(txs[3].Lt, txHash(txs[3]))
+			hash1 = encoder.EncodeHash(txs[1].Lt, txHash(txs[1]))
+			hash2 = encoder.EncodeHash(txs[3].Lt, txHash(txs[3]))
 		)
 
 		assert.Equal(t, hash1, ts.votesBag[0].InboundHash)
@@ -410,7 +410,7 @@ func TestInbound(t *testing.T) {
 			lastScannedHash = ob.LastTxScanned()
 		)
 
-		lastLT, lastHash, err := rpc.TransactionHashFromString(lastScannedHash)
+		lastLT, lastHash, err := encoder.DecodeTx(lastScannedHash)
 		assert.NoError(t, err)
 		assert.Equal(t, lastTX.Lt, lastLT)
 		assert.Equal(t, lastTX.Hash().Hex(), lastHash.Hex())
@@ -420,7 +420,7 @@ func TestInbound(t *testing.T) {
 		tracker := ts.trackerBag[0]
 
 		assert.Equal(t, uint64(withdrawal.Seqno), tracker.nonce)
-		assert.Equal(t, rpc.TransactionToHashString(txs[4]), tracker.hash)
+		assert.Equal(t, encoder.EncodeTx(txs[4]), tracker.hash)
 	})
 }
 
