@@ -7,12 +7,12 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -134,20 +134,15 @@ func (c *Client) PostVoteOutbound(
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
 		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
 	})
-
 	if err != nil {
 		return "", ballotIndex, errors.Wrap(err, "unable to broadcast vote outbound")
 	}
 
 	go func() {
 		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
-		if errMonitor != nil {
-			c.logger.Error().
-				Err(err).
-				Str(logs.FieldMethod, "PostVoteOutbound").
-				Msg("failed to monitor vote outbound result")
+		err := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if err != nil {
+			c.logger.Error().Err(err).Msg("failed to monitor vote outbound result")
 		}
 	}()
 
@@ -161,6 +156,7 @@ func (c *Client) PostVoteInbound(
 	ctx context.Context,
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) (string, string, error) {
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -190,14 +186,24 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		// Use the passed context directly instead of creating a new one
+		// This ensures the monitoring goroutine respects the same timeout as the error handler
+		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
-			c.logger.Error().
-				Err(err).
-				Str(logs.FieldMethod, "PostVoteInbound").
-				Msg("failed to monitor vote inbound result")
+			c.logger.Error().Err(errMonitor).Msg("failed to monitor vote inbound result")
+
+			if monitorErrCh != nil {
+				select {
+				case monitorErrCh <- zetaerrors.ErrTxMonitor{
+					Err:                errMonitor,
+					InboundBlockHeight: msg.InboundBlockHeight,
+					ZetaTxHash:         zetaTxHash,
+					BallotIndex:        ballotIndex,
+				}:
+				case <-ctx.Done():
+					c.logger.Error().Msg("context cancelled: timeout")
+				}
+			}
 		}
 	}()
 

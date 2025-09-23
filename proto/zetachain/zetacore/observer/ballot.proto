@@ -24,7 +24,9 @@ enum BallotStatus {
 
 // https://github.com/zeta-chain/node/issues/939
 message Ballot {
-  string index = 1;
+  reserved 1;
+  reserved "index";
+
   string ballot_identifier = 2;
   repeated string voter_list = 3;
   repeated VoteType votes = 4;

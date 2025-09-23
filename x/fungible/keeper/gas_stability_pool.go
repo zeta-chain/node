@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,8 @@ func (k Keeper) GetGasStabilityPoolBalance(
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"error getting gas zrc20 contract for chain ID %d: %w", chainID, err)
 	}
 
 	return k.BalanceOfZRC4(ctx, gasZRC20, types.GasStabilityPoolAddressEVM())

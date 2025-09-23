@@ -92,7 +92,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	gasBudget := gasPrice * params.CallOptions.GasLimit
 
 	// Retrieve withdraw cap ID
-	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
+	withdrawCapID, err := s.withdrawCapID(ctx)
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
@@ -144,7 +144,7 @@ func (s *Signer) buildWithdrawTx(
 		GasBudget:       gasBudgetStr,
 	}
 
-	return s.client.MoveCall(ctx, req)
+	return s.suiClient.MoveCall(ctx, req)
 }
 
 // buildWithdrawAndCallTx builds unsigned withdrawAndCall
@@ -191,7 +191,6 @@ func (s *Signer) buildWithdrawAndCallTx(
 
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
-		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
 		Uint64("tx_amount", args.amount).
@@ -245,7 +244,7 @@ func (s *Signer) createCancelTxBuilder(
 	}
 
 	return func(ctx context.Context) (models.TxnMetaData, string, error) {
-		tx, err := s.client.MoveCall(ctx, req)
+		tx, err := s.suiClient.MoveCall(ctx, req)
 		if err != nil {
 			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build cancel tx")
 		}
@@ -265,7 +264,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	ctx context.Context,
 	withdrawTxBuilder, cancelTxBuilder txBuilder,
 ) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// should not happen
 	if withdrawTxBuilder == nil || cancelTxBuilder == nil {
@@ -299,7 +298,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// broadcast tx
 	// Note: this is the place where the gateway object version mismatch error happens
-	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
+	res, err := s.suiClient.SuiExecuteTransactionBlock(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute tx block")
 	}
@@ -330,7 +329,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 // broadcastCancelTx broadcasts a cancel tx and returns the tx digest
 func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder(ctx)
@@ -345,7 +344,7 @@ func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilde
 	}
 
 	// broadcast cancel tx
-	res, err := s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
+	res, err := s.suiClient.SuiExecuteTransactionBlock(ctx, reqCancel)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}
@@ -371,7 +370,7 @@ func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, string, error
 
 // getGatewayNonce reads the nonce of the gateway object
 func (s *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
-	data, err := s.client.GetObjectParsedData(ctx, s.gateway.ObjectID())
+	data, err := s.suiClient.GetObjectParsedData(ctx, s.gateway.ObjectID())
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get parsed data of gateway object")
 	}

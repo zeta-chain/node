@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -50,15 +49,12 @@ var (
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+		return errors.Wrap(err, "GetOutboundTrackers error")
 	}
 
-	// prepare logger fields
-	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Logger()
+	logger := ob.Logger().Outbound
 
 	// process outbound trackers
 	for _, tracker := range trackers {
@@ -169,7 +165,6 @@ func (ob *Observer) PostVoteOutbound(
 	coinType coin.CoinType,
 ) {
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "PostVoteOutbound").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, outboundHash).
 		Logger()
@@ -197,7 +192,7 @@ func (ob *Observer) PostVoteOutbound(
 	if zetaTxHash != "" {
 		logger.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 }
@@ -251,7 +246,6 @@ func (ob *Observer) CheckFinalizedTx(
 	// prepare logger fields
 	chainID := ob.Chain().ChainId
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "CheckFinalizedTx").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).Logger()
@@ -264,7 +258,7 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// query transaction using "finalized" commitment to avoid re-org
-	txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+	txResult, err := ob.solanaClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
 		Commitment: rpc.CommitmentFinalized,
 	})
 	if err != nil {

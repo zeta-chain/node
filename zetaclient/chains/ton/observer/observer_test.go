@@ -161,9 +161,9 @@ func (ts *testSuite) OnGetTransactionsSince(
 		Return(txs, err)
 }
 
-func (ts *testSuite) OnGetAllOutboundTrackerByChain(trackers []cc.OutboundTracker) *mock.Call {
+func (ts *testSuite) OnGetOutboundTrackers(trackers []cc.OutboundTracker) *mock.Call {
 	return ts.zetacore.
-		On("GetAllOutboundTrackerByChain", mock.Anything, ts.chain.ChainId, mock.Anything).
+		On("GetOutboundTrackers", mock.Anything, ts.chain.ChainId).
 		Return(trackers, nil)
 }
 
@@ -244,7 +244,7 @@ func setupVotesBag(ts *testSuite) {
 		ts.votesBag = append(ts.votesBag, cctx)
 	}
 	ts.zetacore.
-		On("PostVoteInbound", ts.ctx, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Maybe().
 		Run(catcher).
 		Return("", "", nil) // zeta hash, ballot index, error

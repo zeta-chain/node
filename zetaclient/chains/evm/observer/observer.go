@@ -7,9 +7,11 @@ import (
 	"math"
 	"math/big"
 	"strings"
+	"time"
 
+	ethbind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -19,9 +21,39 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
+
+// EVMClient is the interface for the EVM RPC client
+//
+//go:generate mockery --name EVMClient --filename evm_client.go --case underscore --output ../../testutils/mocks
+type EVMClient interface {
+	ethbind.ContractBackend
+
+	SendTransaction(context.Context, *eth.Transaction) error
+
+	SuggestGasPrice(context.Context) (*big.Int, error)
+
+	BlockNumber(context.Context) (uint64, error)
+
+	BlockByNumberCustom(context.Context, *big.Int) (*client.Block, error)
+
+	HeaderByNumber(context.Context, *big.Int) (*eth.Header, error)
+
+	TransactionByHash(context.Context, ethcommon.Hash) (_ *eth.Transaction, isPending bool, _ error)
+
+	TransactionByHashCustom(context.Context, string) (*client.Transaction, error)
+
+	TransactionReceipt(context.Context, ethcommon.Hash) (*eth.Receipt, error)
+
+	TransactionSender(_ context.Context,
+		_ *eth.Transaction,
+		block ethcommon.Hash,
+		index uint,
+	) (ethcommon.Address, error)
+
+	HealthCheck(ctx context.Context) (time.Time, error)
+}
 
 // Observer is the observer for evm chains
 type Observer struct {
@@ -31,13 +63,13 @@ type Observer struct {
 	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
-	evmClient interfaces.EVMRPCClient
+	evmClient EVMClient
 
 	// outboundConfirmedReceipts is the map to index confirmed receipts by hash
-	outboundConfirmedReceipts map[string]*ethtypes.Receipt
+	outboundConfirmedReceipts map[string]*eth.Receipt
 
 	// outboundConfirmedTransactions is the map to index confirmed transactions by hash
-	outboundConfirmedTransactions map[string]*ethtypes.Transaction
+	outboundConfirmedTransactions map[string]*eth.Transaction
 }
 
 // priorityFeeConfig is the configuration for priority fee
@@ -51,13 +83,13 @@ type priorityFeeConfig struct {
 }
 
 // New Observer constructor
-func New(baseObserver *base.Observer, client interfaces.EVMRPCClient) (*Observer, error) {
+func New(baseObserver *base.Observer, evmClient EVMClient) (*Observer, error) {
 	// create evm observer
 	ob := &Observer{
 		Observer:                      baseObserver,
-		evmClient:                     client,
-		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
-		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
+		evmClient:                     evmClient,
+		outboundConfirmedReceipts:     make(map[string]*eth.Receipt),
+		outboundConfirmedTransactions: make(map[string]*eth.Transaction),
 		priorityFeeConfig:             priorityFeeConfig{},
 	}
 
@@ -107,7 +139,7 @@ func (ob *Observer) getGatewayContract() (ethcommon.Address, *gatewayevm.Gateway
 }
 
 // setTxNReceipt sets the receipt and transaction in memory
-func (ob *Observer) setTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
+func (ob *Observer) setTxNReceipt(nonce uint64, receipt *eth.Receipt, transaction *eth.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] = receipt
@@ -115,7 +147,7 @@ func (ob *Observer) setTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, trans
 }
 
 // getTxNReceipt gets the receipt and transaction from memory
-func (ob *Observer) getTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
+func (ob *Observer) getTxNReceipt(nonce uint64) (*eth.Receipt, *eth.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	receipt := ob.outboundConfirmedReceipts[ob.OutboundID(nonce)]
@@ -133,7 +165,7 @@ func (ob *Observer) isTxConfirmed(nonce uint64) bool {
 }
 
 // checkTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
-func (ob *Observer) checkTxInclusion(ctx context.Context, tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
+func (ob *Observer) checkTxInclusion(ctx context.Context, tx *eth.Transaction, receipt *eth.Receipt) error {
 	block, err := ob.GetBlockByNumberCached(ctx, receipt.BlockNumber.Uint64())
 	if err != nil {
 		return errors.Wrapf(err, "GetBlockByNumberCached error for block %d txHash %s nonce %d",
@@ -229,7 +261,7 @@ func (ob *Observer) loadLastBlockScanned(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrapf(err, "error BlockNumber for chain %d", ob.Chain().ChainId)
 		}
-		ob.WithLastBlockScanned(blockNumber)
+		ob.WithLastBlockScanned(blockNumber, false)
 	}
 	ob.Logger().Chain.Info().
 		Uint64("last_block_scanned", ob.LastBlockScanned()).

@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"testing"
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,34 +24,76 @@ func Test_ActiveMessageContextDynamicFieldName(t *testing.T) {
 func TestNewGatewayFromPairID(t *testing.T) {
 	// stubs
 	const (
-		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	tests := []struct {
-		name    string
-		triplet string
-		wantErr string
+		name                    string
+		pair                    string
+		wantErr                 string
+		wantWithdrawCapID       string
+		wantPreviousPackageID   string
+		wantOriginalPackageID   string
+		wantSupportedPackageIDs []string
 	}{
 		{
-			name:    "valid pair",
-			triplet: fmt.Sprintf("%s,%s", packageID, gatewayID),
+			name:                    "valid pair",
+			pair:                    MakePairID(packageID, gatewayID, "", "", ""),
+			wantWithdrawCapID:       "",
+			wantPreviousPackageID:   "",
+			wantOriginalPackageID:   packageID,
+			wantSupportedPackageIDs: []string{packageID},
 		},
 		{
-			name:    "invalid pair, missing gateway object id",
-			triplet: "0x123",
+			name:                    "valid pair id with 5 parts",
+			pair:                    MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+			wantWithdrawCapID:       withdrawCapID,
+			wantPreviousPackageID:   previousPackageID,
+			wantOriginalPackageID:   originalPackageID,
+			wantSupportedPackageIDs: []string{packageID, previousPackageID},
+		},
+		{
+			name:                    "valid pair id with 5 parts (previous package id is empty)",
+			pair:                    MakePairID(packageID, gatewayID, withdrawCapID, "", originalPackageID),
+			wantWithdrawCapID:       withdrawCapID,
+			wantPreviousPackageID:   "",
+			wantOriginalPackageID:   originalPackageID,
+			wantSupportedPackageIDs: []string{packageID},
+		},
+		{
+			name:    "invalid pair, empty string",
+			pair:    "",
+			wantErr: "invalid pair",
+		},
+		{
+			name:    "invalid pair, contains 1 part",
+			pair:    "0x123",
+			wantErr: "invalid pair",
+		},
+		{
+			name:    "invalid pair, contains 3 parts",
+			pair:    fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID),
+			wantErr: "invalid pair",
+		},
+		{
+			name:    "invalid pair, contains 4 parts",
+			pair:    fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayID, previousPackageID, originalPackageID),
 			wantErr: "invalid pair",
 		},
 		{
 			name:    "invalid Sui address",
-			triplet: fmt.Sprintf("%s,0xabc", packageID),
+			pair:    fmt.Sprintf("%s,0xabc", packageID),
 			wantErr: "invalid Sui address",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gw, err := NewGatewayFromPairID(tt.triplet)
+			gw, err := NewGatewayFromPairID(tt.pair)
 			if tt.wantErr != "" {
 				require.Nil(t, gw)
 				require.ErrorContains(t, err, tt.wantErr)
@@ -59,25 +101,175 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, packageID, gw.PackageID())
-			assert.Equal(t, gatewayID, gw.ObjectID())
+			require.Equal(t, packageID, gw.PackageID())
+			require.Equal(t, gatewayID, gw.ObjectID())
+			require.Equal(t, tt.wantWithdrawCapID, gw.WithdrawCapID())
+			if tt.wantPreviousPackageID != "" {
+				require.Equal(t, tt.wantPreviousPackageID, gw.Previous().PackageID())
+			} else {
+				require.Nil(t, gw.Previous())
+			}
+			require.Equal(t, tt.wantOriginalPackageID, gw.Original().PackageID())
+			require.True(t, slices.Equal(tt.wantSupportedPackageIDs, gw.SupportedPackageIDs()))
 		})
 	}
+}
+
+func Test_MakePairID(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("original package id is empty", func(t *testing.T) {
+		gatewayAddress := MakePairID(packageID, gatewayID, "", "", "")
+		require.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gatewayAddress)
+	})
+
+	t.Run("original package id is not empty", func(t *testing.T) {
+		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID)
+		require.Equal(t, fmt.Sprintf("%s,%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID), gatewayAddress)
+	})
+
+	t.Run("original package id is not empty, but previous package id is empty", func(t *testing.T) {
+		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, "", originalPackageID)
+		require.Equal(t, fmt.Sprintf("%s,%s,%s,,%s", packageID, gatewayID, withdrawCapID, originalPackageID), gatewayAddress)
+	})
+}
+
+func Test_ToPairID(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("original package id is empty", func(t *testing.T) {
+		gw := NewGateway(packageID, gatewayID)
+		require.Equal(t, MakePairID(packageID, gatewayID, withdrawCapID, "", ""), gw.ToPairID())
+	})
+
+	t.Run("original package id is not empty", func(t *testing.T) {
+		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID)
+		gw, err := NewGatewayFromPairID(gatewayAddress)
+		require.NoError(t, err)
+		require.Equal(t, gatewayAddress, gw.ToPairID())
+	})
+}
+
+func Test_Previous(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("previous package id is not empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+		require.NoError(t, err)
+
+		gwPrevious := gw.Previous()
+		require.Equal(t, previousPackageID, gwPrevious.PackageID())
+		require.Equal(t, gatewayID, gwPrevious.ObjectID())
+		require.Equal(t, withdrawCapID, gwPrevious.WithdrawCapID())
+		require.Empty(t, gwPrevious.previousPackageID)
+		require.Empty(t, gwPrevious.originalPackageID)
+	})
+
+	t.Run("previous package id is empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, "", originalPackageID))
+		require.NoError(t, err)
+		require.Nil(t, gw.Previous())
+	})
+}
+
+func Test_Original(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("original package id is not empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+		require.NoError(t, err)
+
+		gwOriginal := gw.Original()
+		require.Equal(t, originalPackageID, gwOriginal.PackageID())
+		require.Equal(t, gatewayID, gwOriginal.ObjectID())
+		require.Equal(t, withdrawCapID, gwOriginal.WithdrawCapID())
+		require.Empty(t, gwOriginal.previousPackageID)
+		require.Empty(t, gwOriginal.originalPackageID)
+	})
+
+	t.Run("original package id is empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, "", ""))
+		require.NoError(t, err)
+
+		gwOriginal := gw.Original()
+		require.Equal(t, packageID, gwOriginal.PackageID())
+		require.Equal(t, gatewayID, gwOriginal.ObjectID())
+		require.Empty(t, gwOriginal.WithdrawCapID())
+		require.Empty(t, gwOriginal.previousPackageID)
+		require.Empty(t, gwOriginal.originalPackageID)
+	})
+}
+
+func Test_UpdateIDs(t *testing.T) {
+	const (
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+
+		packageID2        = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		gatewayID2        = "0xaf52affd195806d9aa9d967462cbda411bfed9a6efc4a032bf8e34a391469878"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	// before update
+	gw := NewGateway(packageID, gatewayID)
+	require.Equal(t, packageID, gw.PackageID())
+	require.Equal(t, gatewayID, gw.ObjectID())
+	require.Empty(t, gw.WithdrawCapID())
+	require.Empty(t, gw.previousPackageID)
+	require.Empty(t, gw.originalPackageID)
+
+	// after update
+	require.NoError(t, gw.UpdateIDs(MakePairID(packageID2, gatewayID2, withdrawCapID, previousPackageID, originalPackageID)))
+	require.Equal(t, packageID2, gw.PackageID())
+	require.Equal(t, gatewayID2, gw.ObjectID())
+	require.Equal(t, withdrawCapID, gw.WithdrawCapID())
+	require.Equal(t, previousPackageID, gw.Previous().PackageID())
+	require.Equal(t, originalPackageID, gw.Original().PackageID())
 }
 
 func TestParseEvent(t *testing.T) {
 	// stubs
 	const (
-		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
-		sender    = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
-		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
+		previousPackageID = "0x903b713792ee26d4f57e31a7bed113563f3c427506579e9f38bff5adf5524dfd"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		sender            = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
+		txHash            = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw := NewGateway(packageID, gatewayID)
+	gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+	require.NoError(t, err)
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
+		return fmt.Sprintf("%s::%s::%s", originalPackageID, GatewayModule, t)
 	}
 
 	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
@@ -98,7 +290,7 @@ func TestParseEvent(t *testing.T) {
 		assert      func(t *testing.T, raw models.SuiEventResponse, out Event)
 	}{
 		{
-			name: "deposit",
+			name: "deposit from current gateway",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId: packageID,
@@ -112,26 +304,26 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositEvent, out.EventType)
-				assert.Equal(t, uint64(0), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositEvent, out.EventType)
+				require.Equal(t, uint64(0), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(100).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverAlice, deposit.Receiver)
-				assert.False(t, deposit.IsCrossChainCall)
-				assert.True(t, deposit.IsGas())
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(100).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverAlice, deposit.Receiver)
+				require.False(t, deposit.IsCrossChainCall)
+				require.True(t, deposit.IsGas())
 			},
 		},
 		{
-			name: "depositAndCall with bytes payload",
+			name: "depositAndCall with bytes payload from previous package",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -143,23 +335,23 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{0, 1, 2}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{0, 1, 2}, deposit.Payload)
 			},
 		},
 		{
-			name: "depositAndCall with Base64 formatted payload",
+			name: "depositAndCall with Base64 formatted payload from current package",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
 				PackageId: packageID,
@@ -174,26 +366,26 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{3, 4, 5}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{3, 4, 5}, deposit.Payload)
 			},
 		},
 		{
-			name: "depositAndCall_empty_payload",
+			name: "depositAndCall_empty_payload from previous package",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -205,23 +397,23 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCallEvent, out.EventType)
-				assert.Equal(t, uint64(1), out.EventIndex)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, DepositAndCallEvent, out.EventType)
+				require.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, deposit.CoinType)
-				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
-				assert.Equal(t, sender, deposit.Sender)
-				assert.Equal(t, receiverBob, deposit.Receiver)
-				assert.True(t, deposit.IsCrossChainCall)
-				assert.Equal(t, []byte{}, deposit.Payload)
+				require.Equal(t, SUI, deposit.CoinType)
+				require.True(t, math.NewUint(200).Equal(deposit.Amount))
+				require.Equal(t, sender, deposit.Sender)
+				require.Equal(t, receiverBob, deposit.Receiver)
+				require.True(t, deposit.IsCrossChainCall)
+				require.Equal(t, []byte{}, deposit.Payload)
 			},
 		},
 		{
-			name: "withdraw",
+			name: "withdraw from current package",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
 				PackageId: packageID,
@@ -236,17 +428,17 @@ func TestParseEvent(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
-				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, WithdrawEvent, out.EventType)
+				require.Equal(t, txHash, out.TxHash)
+				require.Equal(t, WithdrawEvent, out.EventType)
 
 				wd, err := out.Withdrawal()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, wd.CoinType)
-				assert.True(t, math.NewUint(200).Equal(wd.Amount))
-				assert.Equal(t, sender, wd.Sender)
-				assert.Equal(t, receiverBob.String(), wd.Receiver)
-				assert.True(t, wd.IsGas())
+				require.Equal(t, SUI, wd.CoinType)
+				require.True(t, math.NewUint(200).Equal(wd.Amount))
+				require.Equal(t, sender, wd.Sender)
+				require.Equal(t, receiverBob.String(), wd.Receiver)
+				require.True(t, wd.IsGas())
 			},
 		},
 		// ERRORS
@@ -287,7 +479,7 @@ func TestParseEvent(t *testing.T) {
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId:         packageID,
-				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", DepositEvent),
+				Type:              fmt.Sprintf("%s::%s::%s", originalPackageID, "not_a_gateway", DepositEvent),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",
@@ -332,7 +524,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid sender",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -347,7 +539,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid receiver",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -363,7 +555,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -380,7 +572,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid payload float64",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: previousPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{

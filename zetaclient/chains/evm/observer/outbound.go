@@ -22,7 +22,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -30,9 +29,9 @@ import (
 
 // ProcessOutboundTrackers processes outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, ob.Chain().ChainId)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+		return errors.Wrap(err, "GetOutboundTrackers error")
 	}
 
 	// keep last block up-to-date
@@ -40,10 +39,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return err
 	}
 
-	// prepare logger fields
-	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Logger()
+	logger := ob.Logger().Outbound
 
 	// process outbound trackers
 	for _, tracker := range trackers {
@@ -143,7 +139,7 @@ func (ob *Observer) postVoteOutbound(
 	if zetaTxHash != "" {
 		logger.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 }
@@ -160,7 +156,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
-	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
+	logger := ob.Logger().Outbound.With().Str("send_id", sendID).Logger()
 	// get connector and erc20Custody contracts
 	// Only one of these connector contracts will be used at one time.
 	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2
@@ -223,7 +219,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	if err != nil {
 		logger.Error().
 			Err(err).
-			Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
 			Stringer(logs.FieldTx, receipt.TxHash).
 			Msg("error parsing outbound event")
 		return true, err
@@ -461,7 +456,6 @@ func (ob *Observer) checkConfirmedTx(
 
 	// prepare logger
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "checkConfirmedTx").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Logger()

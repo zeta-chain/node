@@ -34,7 +34,7 @@ const (
 // Note:  OP_RETURN based memo is prioritized over tapscript memo if both are present.
 func GetBtcEventWithWitness(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -42,10 +42,7 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	lf := map[string]any{
-		logs.FieldMethod: "GetBtcEventWithWitness",
-		logs.FieldTx:     tx.Txid,
-	}
+	lf := map[string]any{logs.FieldTx: tx.Txid}
 
 	if len(tx.Vout) < 1 {
 		logger.Debug().Fields(lf).Msg("no output")
@@ -66,7 +63,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// event found, get sender address
-	fromAddress, err := rpc.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
+	fromAddress, err := bitcoinClient.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
@@ -83,20 +80,9 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, rpc, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
-	}
-
-	// deduct depositor fee
-	// to allow developers to track failed deposit caused by insufficient depositor fee,
-	// the error message will be forwarded to zetacore to register a failed CCTX
-	status := types.InboundStatus_SUCCESS
-	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
-	if err != nil {
-		amount = 0
-		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
-		logger.Error().Err(err).Fields(lf).Msg("unable to deduct depositor fee")
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
@@ -111,7 +97,7 @@ func GetBtcEventWithWitness(
 		logger.Debug().Fields(lf).Str("memo", hex.EncodeToString(memo)).Msg("found inscription memo")
 
 		// override the sender address with the initiator of the inscription's commit tx
-		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
+		if fromAddress, err = bitcoinClient.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
 			return nil, errors.Wrap(err, "unable to get inscription initiator")
 		}
 	} else {
@@ -121,12 +107,14 @@ func GetBtcEventWithWitness(
 	return &BTCInboundEvent{
 		FromAddress:  fromAddress,
 		ToAddress:    tssAddress,
-		Value:        amount,
+		Value:        tx.Vout[0].Value,
 		DepositorFee: depositorFee,
 		MemoBytes:    memo,
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
-		Status:       status,
+		// placeholder status, whether successful or not will be determined later by memo contents
+		Status:       types.InboundStatus_SUCCESS,
+		ErrorMessage: "",
 	}, nil
 }
 
@@ -171,8 +159,6 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 
 // Try to extract the memo from the OP_RETURN
 func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
-	logger = logger.With().Str(logs.FieldMethod, "tryExtractOpRet").Logger()
-
 	if len(tx.Vout) < 2 {
 		logger.Debug().
 			Str(logs.FieldBtcTxid, tx.Txid).
@@ -225,15 +211,6 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 	}
 
 	return nil
-}
-
-// DeductDepositorFee returns the inbound amount after deducting the depositor fee.
-// returns an error if the deposited amount is lower than the depositor fee.
-func DeductDepositorFee(deposited, depositorFee float64) (float64, error) {
-	if deposited < depositorFee {
-		return 0, fmt.Errorf("deposited amount %v is less than depositor fee %v", deposited, depositorFee)
-	}
-	return deposited - depositorFee, nil
 }
 
 func isValidRecipient(

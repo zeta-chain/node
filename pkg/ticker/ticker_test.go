@@ -351,6 +351,6 @@ func TestTicker(t *testing.T) {
 
 		// ARRANGE
 		require.ErrorContains(t, err, "hey")
-		require.Contains(t, out.String(), `{"level":"info","ticker.name":"my-task","message":"Ticker stopped"}`)
+		require.Contains(t, out.String(), `{"level":"info","ticker_name":"my-task","message":"Ticker stopped"}`)
 	})
 }

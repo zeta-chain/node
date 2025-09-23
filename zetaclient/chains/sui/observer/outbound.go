@@ -11,7 +11,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -32,7 +31,7 @@ func (ob *Observer) OutboundCreated(nonce uint64) bool {
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to get outbound trackers")
 	}
@@ -45,15 +44,12 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		logger := ob.Logger().Outbound.With().
-			Str(logs.FieldMethod, "ProcessOutboundTrackers").
-			Uint64(logs.FieldNonce, nonce).
-			Logger()
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, nonce).Logger()
 
 		// should not happen
 		if len(tracker.HashList) == 0 {
 			// we don't want to block other cctxs, so let's error and continue
-			logger.Error().Str(logs.FieldTracker, tracker.Index).Msg("tracker hash list is empty")
+			logger.Error().Str("tracker_id", tracker.Index).Msg("tracker hash list is empty")
 			continue
 		}
 
@@ -92,8 +88,11 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 
 	// used checkpoint instead of block height
 	checkpoint, err := strconv.ParseUint(tx.Checkpoint, 10, 64)
-	if err != nil || checkpoint == 0 {
+	if err != nil {
 		return errors.Wrapf(err, "invalid checkpoint: %s", tx.Checkpoint)
+	}
+	if checkpoint == 0 {
+		return errors.New("checkpoint is zero")
 	}
 
 	// parse outbound event
@@ -160,7 +159,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 
 // loadOutboundTx loads cross-chain outbound tx by digest and ensures its authenticity.
 func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cctypes.CrossChainTx, digest string) error {
-	res, err := ob.client.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
+	res, err := ob.suiClient.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
 		Digest: digest,
 		Options: models.SuiTransactionBlockOptions{
 			ShowEvents:  true,
@@ -234,8 +233,9 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 	case zetaTxHash != "":
 		ob.Logger().Outbound.Info().
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
+			Uint64(logs.FieldNonce, msg.OutboundTssNonce).
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 

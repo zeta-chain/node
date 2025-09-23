@@ -18,12 +18,10 @@ import (
 //   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
 func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastTx *btcutil.Tx) (*wire.MsgTx, error) {
 	var (
-		lf = map[string]any{
-			logs.FieldMethod: "SignRBFTx",
-			logs.FieldNonce:  txData.nonce,
-			logs.FieldTx:     lastTx.MsgTx().TxID(),
-		}
-		logger = signer.Logger().Std.With().Fields(lf).Logger()
+		logger = signer.Logger().Std.With().
+			Uint64(logs.FieldNonce, txData.nonce).
+			Str(logs.FieldTx, lastTx.MsgTx().TxID()).
+			Logger()
 
 		cctxRate = txData.feeRateLatest
 	)
@@ -39,7 +37,7 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	// create fee bumper
 	fb, err := NewCPFPFeeBumper(
 		ctx,
-		signer.rpc,
+		signer.bitcoinClient,
 		signer.Chain(),
 		lastTx,
 		cctxRate,
@@ -65,7 +63,7 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	inAmounts := make([]int64, len(result.NewTx.TxIn))
 	for i, input := range result.NewTx.TxIn {
 		preOut := input.PreviousOutPoint
-		preTx, err := signer.rpc.GetRawTransaction(ctx, &preOut.Hash)
+		preTx, err := signer.bitcoinClient.GetRawTransaction(ctx, &preOut.Hash)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to get previous tx %s", preOut.Hash)
 		}

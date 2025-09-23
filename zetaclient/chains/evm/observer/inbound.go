@@ -101,7 +101,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
+	logger := ob.Logger().Inbound
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
@@ -145,8 +145,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 // It returns the last successfully scanned block height, so the caller knows where to resume next time
 func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, toBlock uint64) uint64 {
 	logger := ob.Logger().Inbound.With().
-		Str(logs.FieldMethod, "observeInboundInBlockRange").
-		Uint64("start_block", startBlock).Uint64("to_block", toBlock).Logger()
+		Uint64("start_block", startBlock).Uint64("to_block", toBlock).
+		Logger()
 
 	var (
 		lastScannedTssRecvd              = toBlock
@@ -292,7 +292,6 @@ func (ob *Observer) observeZetaSent(
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Str(logs.FieldMethod, "observeZetaSent").
 			Stringer(logs.FieldTx, ethlog.TxHash).
 			Uint64(logs.FieldBlock, ethlog.BlockNumber).
 			Msg("invalid ZetaSent event")
@@ -321,7 +320,6 @@ func (ob *Observer) observeZetaSent(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Str(logs.FieldMethod, "observeZetaSent").
 				Stringer(logs.FieldTx, event.Raw.TxHash).
 				Msg("multiple remote call events detected in a tx")
 			continue
@@ -373,7 +371,6 @@ func (ob *Observer) observeERC20Deposited(
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Str(logs.FieldMethod, "observeERC20Deposited").
 			Stringer(logs.FieldTx, ethlog.TxHash).
 			Uint64(logs.FieldBlock, ethlog.BlockNumber).
 			Msg("invalid Deposited event")
@@ -409,7 +406,6 @@ func (ob *Observer) observeERC20Deposited(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Str(logs.FieldMethod, "observeERC20Deposited").
 				Stringer(logs.FieldTx, event.Raw.TxHash).
 				Msg("multiple remote call events detected in a tx")
 			continue
@@ -615,6 +611,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
+		coinType := coin.CoinType_ERC20
 		compliance.PrintComplianceLog(
 			ob.Logger().Inbound,
 			ob.Logger().Compliance,
@@ -623,7 +620,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 			event.Raw.TxHash.Hex(),
 			sender.Hex(),
 			clienttypes.BytesToEthHex(event.Recipient),
-			"ERC20",
+			&coinType,
 		)
 		return nil
 	}
@@ -685,8 +682,9 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	// https://github.com/zeta-chain/node/issues/4057
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
+		coinType := coin.CoinType_Zeta
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
+			false, ob.Chain().ChainId, event.Raw.TxHash.Hex(), sender, destAddr, &coinType)
 		return nil
 	}
 
@@ -741,8 +739,9 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
+		coinType := coin.CoinType_Gas
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, tx.Hash, sender.Hex(), sender.Hex(), "Gas")
+			false, ob.Chain().ChainId, tx.Hash, sender.Hex(), sender.Hex(), &coinType)
 		return nil
 	}
 

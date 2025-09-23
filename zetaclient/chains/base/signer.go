@@ -20,8 +20,8 @@ type Signer struct {
 	// chain contains static information about the external chain
 	chain chains.Chain
 
-	// tss is the TSS signer
-	tss interfaces.TSSSigner
+	// tssSigner is the TSS signer
+	tssSigner interfaces.TSSSigner
 
 	// logger contains the loggers used by signer
 	logger Logger
@@ -37,17 +37,17 @@ type Signer struct {
 }
 
 // NewSigner creates a new base signer.
-func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Signer {
+func NewSigner(chain chains.Chain, tssSigner interfaces.TSSSigner, logger Logger) *Signer {
 	withLogFields := func(log zerolog.Logger) zerolog.Logger {
 		return log.With().
+			Str(logs.FieldModule, logs.ModNameSigner).
 			Int64(logs.FieldChain, chain.ChainId).
-			Str(logs.FieldModule, "signer").
 			Logger()
 	}
 
 	return &Signer{
 		chain:                 chain,
-		tss:                   tss,
+		tssSigner:             tssSigner,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
 		logger: Logger{
@@ -64,7 +64,7 @@ func (s *Signer) Chain() chains.Chain {
 
 // TSS returns the tss signer for the signer.
 func (s *Signer) TSS() interfaces.TSSSigner {
-	return s.tss
+	return s.tssSigner
 }
 
 // Logger returns the logger for the signer.
@@ -171,7 +171,7 @@ func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
 		cctx.Index,
 		cctx.InboundParams.Sender,
 		params.Receiver,
-		params.CoinType.String(),
+		&params.CoinType,
 	)
 
 	return false

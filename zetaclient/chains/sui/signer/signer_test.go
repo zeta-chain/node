@@ -322,7 +322,18 @@ type testSuite struct {
 	TrackerBag []testTracker
 }
 
-func newTestSuite(t *testing.T) *testSuite {
+type testSuiteConfig struct {
+	withdrawCapID     string
+	previousPackageID string
+	originalPackageID string
+}
+
+func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
+	var cfg testSuiteConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	var (
 		ctx = context.Background()
 
@@ -336,13 +347,18 @@ func newTestSuite(t *testing.T) *testSuite {
 		logger     = base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 	)
 
+	// append withdraw cap ID, previous package ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
+	}
+
 	suiMock := mocks.NewSuiClient(t)
 
 	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	baseSigner := base.NewSigner(chain, tss, logger)
-	signer := New(baseSigner, suiMock, gw, zetacore)
+	signer := New(baseSigner, zetacore, suiMock, gw)
 
 	ts := &testSuite{
 		t:        t,

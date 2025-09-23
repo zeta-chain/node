@@ -186,7 +186,6 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 
 	chainParams := &observertypes.ChainParams{
 		ChainId:                     chainID,
-		ConfirmationCount:           32,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,

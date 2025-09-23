@@ -18,7 +18,9 @@ import (
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
-	client  RPC
+
+	suiClient SuiClient
+
 	gateway *sui.Gateway
 
 	// nonce -> sui outbound tx
@@ -29,8 +31,8 @@ type Observer struct {
 	gasPriceMu     sync.RWMutex
 }
 
-// RPC represents subset of Sui RPC methods.
-type RPC interface {
+// SuiClient represents subset of Sui SuiClient methods.
+type SuiClient interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
@@ -43,12 +45,12 @@ type RPC interface {
 }
 
 // New Observer constructor.
-func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observer {
+func New(baseObserver *base.Observer, suiClient SuiClient, gateway *sui.Gateway) *Observer {
 	ob := &Observer{
-		Observer: baseObserver,
-		client:   client,
-		gateway:  gateway,
-		txMap:    make(map[uint64]models.SuiTransactionBlockResponse),
+		Observer:  baseObserver,
+		suiClient: suiClient,
+		gateway:   gateway,
+		txMap:     make(map[uint64]models.SuiTransactionBlockResponse),
 	}
 
 	ob.LoadLastTxScanned()
@@ -61,13 +63,48 @@ func (ob *Observer) Gateway() *sui.Gateway { return ob.gateway }
 
 // CheckRPCStatus checks the RPC status of the chain.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	blockTime, err := ob.client.HealthCheck(ctx)
+	blockTime, err := ob.suiClient.HealthCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to check rpc health")
+		return errors.Wrap(err, "unable to check Sui client health")
 	}
 
 	// It's not a "real" block latency as Sui uses concept of "checkpoints"
 	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
+
+	return nil
+}
+
+// MigrateCursorForAuthenticatedCallUpgrade migrates inbound cursor in the database to adopt Sui authenticated call upgrade
+//   - before upgrade, there is only one cursor stored as 'LastTransactionSQLType' for gateway package.
+//   - after  upgrade, we might face scenarios where multiple cursors need to be stored for versioned packages,
+//     so we need to migrate the single cursor model to a multi-cursor model. Moving forward, the cursors will
+//     be stored under separate keys - the package IDs.
+func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
+	// get old cursor
+	oldCursor := ob.LastTxScanned()
+	if oldCursor == "" {
+		// nothing to migrate or already migrated
+		return nil
+	}
+
+	// Sui chain params may or may not contain new gateway package ID
+	// the 'originalPackageID' should be used as the DB key for old cursor
+	originalPackageID := ob.gateway.Original().PackageID()
+	if err := ob.WriteAuxStringToDB(originalPackageID, oldCursor); err != nil {
+		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", originalPackageID)
+	}
+	ob.WithAuxString(originalPackageID, oldCursor)
+
+	// set old cursor to empty value
+	if err := ob.WriteLastTxScannedToDB(""); err != nil {
+		return errors.Wrap(err, "unable to clean last tx scanned from db")
+	}
+	ob.WithLastTxScanned("")
+
+	ob.Logger().Inbound.Info().
+		Str("package", originalPackageID).
+		Str("cursor", oldCursor).
+		Msgf("Migrated inbound cursor")
 
 	return nil
 }
@@ -85,7 +122,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 // - "Validators update the ReferencePrice every epoch (~24h)"
 // - "Storage price is updated infrequently through gov proposals"
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	checkpoint, err := ob.client.GetLatestCheckpoint(ctx)
+	checkpoint, err := ob.suiClient.GetLatestCheckpoint(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get latest checkpoint")
 	}
@@ -97,7 +134,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 	// gas price in MIST. 1 SUI = 10^9 MIST (a billion)
 	// e.g. { "jsonrpc": "2.0", "id": 1, "result": "750" }
-	gasPrice, err := ob.client.SuiXGetReferenceGasPrice(ctx)
+	gasPrice, err := ob.suiClient.SuiXGetReferenceGasPrice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get ref gas price")
 	}
@@ -128,16 +165,19 @@ func (ob *Observer) setLatestGasPrice(price uint64) {
 	ob.latestGasPrice = price
 }
 
-func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
+// getCursor retrieves the inbound cursor for a given packageID
+func (ob *Observer) getCursor(packageID string) string {
+	return ob.GetAuxString(packageID)
+}
 
-func (ob *Observer) setCursor(eventID models.EventId) error {
+// setCursor saves the inbound cursor for a given packageID
+func (ob *Observer) setCursor(packageID string, eventID models.EventId) error {
 	cursor := client.EncodeCursor(eventID)
 
-	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
-		return errors.Wrap(err, "unable to write last tx scanned to db")
+	if err := ob.WriteAuxStringToDB(packageID, cursor); err != nil {
+		return errors.Wrapf(err, "unable to write cursor to db for package %s", packageID)
 	}
-
-	ob.WithLastTxScanned(cursor)
+	ob.WithAuxString(packageID, cursor)
 
 	return nil
 }

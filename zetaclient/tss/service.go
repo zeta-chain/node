@@ -150,7 +150,7 @@ func NewService(
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Service, error) {
-	logger = logger.With().Str(logs.FieldModule, "tss_service").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssService).Logger()
 
 	// defaults, can be overridden by opts
 	cfg := serviceConfig{
@@ -414,9 +414,9 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 
 	return map[string]any{
 		msgField:           must(req.MsgID()),
-		"tss.chain_id":     chainID,
-		"tss.block_height": blockHeight,
-		"tss.nonce":        nonce,
+		"tss_chain_id":     chainID,
+		"tss_block_height": blockHeight,
+		"tss_nonce":        nonce,
 	}
 }
 

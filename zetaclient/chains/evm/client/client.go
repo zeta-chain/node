@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/common"
+	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -15,7 +15,8 @@ import (
 
 type Client struct {
 	*ethclient.Client
-	ethtypes.Signer
+
+	signer eth.Signer
 }
 
 // NewFromEndpoint new Client constructor based on endpoint URL.
@@ -25,25 +26,25 @@ func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
 		return nil, errors.Wrap(err, "unable to get instrumented HTTP client")
 	}
 
-	rpc, err := ethrpc.DialOptions(ctx, endpoint, ethrpc.WithHTTPClient(httpClient))
+	ethRPC, err := rpc.DialOptions(ctx, endpoint, rpc.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to dial EVM client (endpoint %q)", endpoint)
 	}
 
-	client := ethclient.NewClient(rpc)
+	client := ethclient.NewClient(ethRPC)
 
 	chainID, err := client.ChainID(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get chain ID")
 	}
 
-	ethSigner := ethtypes.LatestSignerForChainID(chainID)
+	ethSigner := eth.LatestSignerForChainID(chainID)
 
 	return New(client, ethSigner), nil
 }
 
 // New Client constructor.
-func New(client *ethclient.Client, signer ethtypes.Signer) *Client {
+func New(client *ethclient.Client, signer eth.Signer) *Client {
 	return &Client{client, signer}
 }
 
@@ -53,7 +54,7 @@ func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations
 		return false, errors.New("confirmations must be greater than 0")
 	}
 
-	hash := ethcommon.HexToHash(txHash)
+	hash := common.HexToHash(txHash)
 
 	// query the tx
 	_, isPending, err := c.TransactionByHash(ctx, hash)
@@ -103,4 +104,9 @@ func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 	blockTime := time.Unix(int64(header.Time), 0).UTC()
 
 	return blockTime, nil
+}
+
+// Overrides c.Client ChainID method.
+func (c *Client) Signer() eth.Signer {
+	return c.signer
 }

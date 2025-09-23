@@ -117,8 +117,8 @@ func (chain Chain) IsTONChain() bool {
 
 func (chain Chain) LogFields() map[string]any {
 	return map[string]any{
-		logs.FieldChain:        chain.ChainId,
-		logs.FieldChainNetwork: chain.Network.String(),
+		logs.FieldChain:   chain.ChainId,
+		logs.FieldNetwork: chain.Network.String(),
 	}
 }
 

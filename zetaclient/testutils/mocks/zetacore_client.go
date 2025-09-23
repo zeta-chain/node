@@ -12,9 +12,11 @@ import (
 
 	context "context"
 
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
-	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	errors "github.com/zeta-chain/node/pkg/errors"
+
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 
@@ -22,9 +24,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	observertypes "github.com/zeta-chain/node/x/observer/types"
-
-	types "github.com/zeta-chain/node/x/crosschain/types"
+	types "github.com/zeta-chain/node/x/observer/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -52,9 +52,9 @@ func (_m *ZetacoreClient) Chain() chains.Chain {
 	return r0
 }
 
-// GetAdditionalChains provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetAdditionalChains(ctx context.Context) ([]chains.Chain, error) {
-	ret := _m.Called(ctx)
+// GetAdditionalChains provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetAdditionalChains(_a0 context.Context) ([]chains.Chain, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAdditionalChains")
@@ -63,10 +63,10 @@ func (_m *ZetacoreClient) GetAdditionalChains(ctx context.Context) ([]chains.Cha
 	var r0 []chains.Chain
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) ([]chains.Chain, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) []chains.Chain); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]chains.Chain)
@@ -74,7 +74,7 @@ func (_m *ZetacoreClient) GetAdditionalChains(ctx context.Context) ([]chains.Cha
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -82,39 +82,9 @@ func (_m *ZetacoreClient) GetAdditionalChains(ctx context.Context) ([]chains.Cha
 	return r0, r1
 }
 
-// GetAllOutboundTrackerByChain provides a mock function with given fields: ctx, chainID, order
-func (_m *ZetacoreClient) GetAllOutboundTrackerByChain(ctx context.Context, chainID int64, order interfaces.Order) ([]types.OutboundTracker, error) {
-	ret := _m.Called(ctx, chainID, order)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllOutboundTrackerByChain")
-	}
-
-	var r0 []types.OutboundTracker
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, interfaces.Order) ([]types.OutboundTracker, error)); ok {
-		return rf(ctx, chainID, order)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, interfaces.Order) []types.OutboundTracker); ok {
-		r0 = rf(ctx, chainID, order)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.OutboundTracker)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, int64, interfaces.Order) error); ok {
-		r1 = rf(ctx, chainID, order)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetBTCTSSAddress provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error) {
-	ret := _m.Called(ctx, chainID)
+// GetBTCTSSAddress provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetBTCTSSAddress(_a0 context.Context, _a1 int64) (string, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBTCTSSAddress")
@@ -123,16 +93,16 @@ func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, int64) (string, error)); ok {
-		return rf(ctx, chainID)
+		return rf(_a0, _a1)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, int64) string); ok {
-		r0 = rf(ctx, chainID)
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, chainID)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -140,29 +110,29 @@ func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (
 	return r0, r1
 }
 
-// GetBallotByID provides a mock function with given fields: ctx, id
-func (_m *ZetacoreClient) GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
-	ret := _m.Called(ctx, id)
+// GetBallotByID provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetBallotByID(_a0 context.Context, _a1 string) (*types.QueryBallotByIdentifierResponse, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBallotByID")
 	}
 
-	var r0 *observertypes.QueryBallotByIdentifierResponse
+	var r0 *types.QueryBallotByIdentifierResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*observertypes.QueryBallotByIdentifierResponse, error)); ok {
-		return rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.QueryBallotByIdentifierResponse, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *observertypes.QueryBallotByIdentifierResponse); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.QueryBallotByIdentifierResponse); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*observertypes.QueryBallotByIdentifierResponse)
+			r0 = ret.Get(0).(*types.QueryBallotByIdentifierResponse)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, id)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -170,9 +140,9 @@ func (_m *ZetacoreClient) GetBallotByID(ctx context.Context, id string) (*observ
 	return r0, r1
 }
 
-// GetBlockHeight provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
-	ret := _m.Called(ctx)
+// GetBlockHeight provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetBlockHeight(_a0 context.Context) (int64, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBlockHeight")
@@ -181,16 +151,16 @@ func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 	var r0 int64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -198,29 +168,29 @@ func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 	return r0, r1
 }
 
-// GetCctxByHash provides a mock function with given fields: ctx, sendHash
-func (_m *ZetacoreClient) GetCctxByHash(ctx context.Context, sendHash string) (*types.CrossChainTx, error) {
-	ret := _m.Called(ctx, sendHash)
+// GetCctxByHash provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetCctxByHash(_a0 context.Context, _a1 string) (*crosschaintypes.CrossChainTx, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetCctxByHash")
 	}
 
-	var r0 *types.CrossChainTx
+	var r0 *crosschaintypes.CrossChainTx
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.CrossChainTx, error)); ok {
-		return rf(ctx, sendHash)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*crosschaintypes.CrossChainTx, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *types.CrossChainTx); ok {
-		r0 = rf(ctx, sendHash)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *crosschaintypes.CrossChainTx); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.CrossChainTx)
+			r0 = ret.Get(0).(*crosschaintypes.CrossChainTx)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, sendHash)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -228,29 +198,29 @@ func (_m *ZetacoreClient) GetCctxByHash(ctx context.Context, sendHash string) (*
 	return r0, r1
 }
 
-// GetCctxByNonce provides a mock function with given fields: ctx, chainID, nonce
-func (_m *ZetacoreClient) GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
-	ret := _m.Called(ctx, chainID, nonce)
+// GetCctxByNonce provides a mock function with given fields: _a0, _a1, _a2
+func (_m *ZetacoreClient) GetCctxByNonce(_a0 context.Context, _a1 int64, _a2 uint64) (*crosschaintypes.CrossChainTx, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetCctxByNonce")
 	}
 
-	var r0 *types.CrossChainTx
+	var r0 *crosschaintypes.CrossChainTx
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) (*types.CrossChainTx, error)); ok {
-		return rf(ctx, chainID, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) (*crosschaintypes.CrossChainTx, error)); ok {
+		return rf(_a0, _a1, _a2)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) *types.CrossChainTx); ok {
-		r0 = rf(ctx, chainID, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) *crosschaintypes.CrossChainTx); ok {
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.CrossChainTx)
+			r0 = ret.Get(0).(*crosschaintypes.CrossChainTx)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64, uint64) error); ok {
-		r1 = rf(ctx, chainID, nonce)
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -258,29 +228,29 @@ func (_m *ZetacoreClient) GetCctxByNonce(ctx context.Context, chainID int64, non
 	return r0, r1
 }
 
-// GetChainParams provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error) {
-	ret := _m.Called(ctx)
+// GetChainParams provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetChainParams(_a0 context.Context) ([]*types.ChainParams, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetChainParams")
 	}
 
-	var r0 []*observertypes.ChainParams
+	var r0 []*types.ChainParams
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*observertypes.ChainParams, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*types.ChainParams, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*observertypes.ChainParams); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) []*types.ChainParams); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*observertypes.ChainParams)
+			r0 = ret.Get(0).([]*types.ChainParams)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -288,27 +258,27 @@ func (_m *ZetacoreClient) GetChainParams(ctx context.Context) ([]*observertypes.
 	return r0, r1
 }
 
-// GetCrosschainFlags provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error) {
-	ret := _m.Called(ctx)
+// GetCrosschainFlags provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetCrosschainFlags(_a0 context.Context) (types.CrosschainFlags, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetCrosschainFlags")
 	}
 
-	var r0 observertypes.CrosschainFlags
+	var r0 types.CrosschainFlags
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (observertypes.CrosschainFlags, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (types.CrosschainFlags, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) observertypes.CrosschainFlags); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) types.CrosschainFlags); ok {
+		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(observertypes.CrosschainFlags)
+		r0 = ret.Get(0).(types.CrosschainFlags)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -316,9 +286,9 @@ func (_m *ZetacoreClient) GetCrosschainFlags(ctx context.Context) (observertypes
 	return r0, r1
 }
 
-// GetForeignCoinsFromAsset provides a mock function with given fields: ctx, chainID, assetAddress
-func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID int64, assetAddress common.Address) (fungibletypes.ForeignCoins, error) {
-	ret := _m.Called(ctx, chainID, assetAddress)
+// GetForeignCoinsFromAsset provides a mock function with given fields: _a0, _a1, _a2
+func (_m *ZetacoreClient) GetForeignCoinsFromAsset(_a0 context.Context, _a1 int64, _a2 common.Address) (fungibletypes.ForeignCoins, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetForeignCoinsFromAsset")
@@ -327,16 +297,16 @@ func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID 
 	var r0 fungibletypes.ForeignCoins
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) (fungibletypes.ForeignCoins, error)); ok {
-		return rf(ctx, chainID, assetAddress)
+		return rf(_a0, _a1, _a2)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) fungibletypes.ForeignCoins); ok {
-		r0 = rf(ctx, chainID, assetAddress)
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64, common.Address) error); ok {
-		r1 = rf(ctx, chainID, assetAddress)
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -344,29 +314,29 @@ func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID 
 	return r0, r1
 }
 
-// GetInboundTrackersForChain provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]types.InboundTracker, error) {
-	ret := _m.Called(ctx, chainID)
+// GetInboundTrackersForChain provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetInboundTrackersForChain(_a0 context.Context, _a1 int64) ([]crosschaintypes.InboundTracker, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetInboundTrackersForChain")
 	}
 
-	var r0 []types.InboundTracker
+	var r0 []crosschaintypes.InboundTracker
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]types.InboundTracker, error)); ok {
-		return rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]crosschaintypes.InboundTracker, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) []types.InboundTracker); ok {
-		r0 = rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) []crosschaintypes.InboundTracker); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.InboundTracker)
+			r0 = ret.Get(0).([]crosschaintypes.InboundTracker)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, chainID)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -374,27 +344,27 @@ func (_m *ZetacoreClient) GetInboundTrackersForChain(ctx context.Context, chainI
 	return r0, r1
 }
 
-// GetKeyGen provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetKeyGen(ctx context.Context) (observertypes.Keygen, error) {
-	ret := _m.Called(ctx)
+// GetKeyGen provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetKeyGen(_a0 context.Context) (types.Keygen, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetKeyGen")
 	}
 
-	var r0 observertypes.Keygen
+	var r0 types.Keygen
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (observertypes.Keygen, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (types.Keygen, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) observertypes.Keygen); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) types.Keygen); ok {
+		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(observertypes.Keygen)
+		r0 = ret.Get(0).(types.Keygen)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -422,9 +392,9 @@ func (_m *ZetacoreClient) GetKeys() keysinterfaces.ObserverKeys {
 	return r0
 }
 
-// GetObserverList provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetObserverList(ctx context.Context) ([]string, error) {
-	ret := _m.Called(ctx)
+// GetObserverList provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetObserverList(_a0 context.Context) ([]string, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetObserverList")
@@ -433,10 +403,10 @@ func (_m *ZetacoreClient) GetObserverList(ctx context.Context) ([]string, error)
 	var r0 []string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) ([]string, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) []string); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]string)
@@ -444,7 +414,7 @@ func (_m *ZetacoreClient) GetObserverList(ctx context.Context) ([]string, error)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -452,27 +422,27 @@ func (_m *ZetacoreClient) GetObserverList(ctx context.Context) ([]string, error)
 	return r0, r1
 }
 
-// GetOperationalFlags provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error) {
-	ret := _m.Called(ctx)
+// GetOperationalFlags provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetOperationalFlags(_a0 context.Context) (types.OperationalFlags, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOperationalFlags")
 	}
 
-	var r0 observertypes.OperationalFlags
+	var r0 types.OperationalFlags
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (observertypes.OperationalFlags, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (types.OperationalFlags, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) observertypes.OperationalFlags); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) types.OperationalFlags); ok {
+		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(observertypes.OperationalFlags)
+		r0 = ret.Get(0).(types.OperationalFlags)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -480,29 +450,29 @@ func (_m *ZetacoreClient) GetOperationalFlags(ctx context.Context) (observertype
 	return r0, r1
 }
 
-// GetOutboundTracker provides a mock function with given fields: ctx, chainID, nonce
-func (_m *ZetacoreClient) GetOutboundTracker(ctx context.Context, chainID int64, nonce uint64) (*types.OutboundTracker, error) {
-	ret := _m.Called(ctx, chainID, nonce)
+// GetOutboundTracker provides a mock function with given fields: _a0, _a1, _a2
+func (_m *ZetacoreClient) GetOutboundTracker(_a0 context.Context, _a1 int64, _a2 uint64) (*crosschaintypes.OutboundTracker, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOutboundTracker")
 	}
 
-	var r0 *types.OutboundTracker
+	var r0 *crosschaintypes.OutboundTracker
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) (*types.OutboundTracker, error)); ok {
-		return rf(ctx, chainID, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) (*crosschaintypes.OutboundTracker, error)); ok {
+		return rf(_a0, _a1, _a2)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) *types.OutboundTracker); ok {
-		r0 = rf(ctx, chainID, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) *crosschaintypes.OutboundTracker); ok {
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.OutboundTracker)
+			r0 = ret.Get(0).(*crosschaintypes.OutboundTracker)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64, uint64) error); ok {
-		r1 = rf(ctx, chainID, nonce)
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -510,27 +480,57 @@ func (_m *ZetacoreClient) GetOutboundTracker(ctx context.Context, chainID int64,
 	return r0, r1
 }
 
-// GetPendingNoncesByChain provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) GetPendingNoncesByChain(ctx context.Context, chainID int64) (observertypes.PendingNonces, error) {
-	ret := _m.Called(ctx, chainID)
+// GetOutboundTrackers provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetOutboundTrackers(_a0 context.Context, _a1 int64) ([]crosschaintypes.OutboundTracker, error) {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOutboundTrackers")
+	}
+
+	var r0 []crosschaintypes.OutboundTracker
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]crosschaintypes.OutboundTracker, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) []crosschaintypes.OutboundTracker); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]crosschaintypes.OutboundTracker)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPendingNoncesByChain provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) GetPendingNoncesByChain(_a0 context.Context, _a1 int64) (types.PendingNonces, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPendingNoncesByChain")
 	}
 
-	var r0 observertypes.PendingNonces
+	var r0 types.PendingNonces
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (observertypes.PendingNonces, error)); ok {
-		return rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (types.PendingNonces, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) observertypes.PendingNonces); ok {
-		r0 = rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) types.PendingNonces); ok {
+		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Get(0).(observertypes.PendingNonces)
+		r0 = ret.Get(0).(types.PendingNonces)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, chainID)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -538,27 +538,27 @@ func (_m *ZetacoreClient) GetPendingNoncesByChain(ctx context.Context, chainID i
 	return r0, r1
 }
 
-// GetRateLimiterFlags provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetRateLimiterFlags(ctx context.Context) (types.RateLimiterFlags, error) {
-	ret := _m.Called(ctx)
+// GetRateLimiterFlags provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetRateLimiterFlags(_a0 context.Context) (crosschaintypes.RateLimiterFlags, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRateLimiterFlags")
 	}
 
-	var r0 types.RateLimiterFlags
+	var r0 crosschaintypes.RateLimiterFlags
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (types.RateLimiterFlags, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (crosschaintypes.RateLimiterFlags, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) types.RateLimiterFlags); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) crosschaintypes.RateLimiterFlags); ok {
+		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(types.RateLimiterFlags)
+		r0 = ret.Get(0).(crosschaintypes.RateLimiterFlags)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -566,29 +566,29 @@ func (_m *ZetacoreClient) GetRateLimiterFlags(ctx context.Context) (types.RateLi
 	return r0, r1
 }
 
-// GetRateLimiterInput provides a mock function with given fields: ctx, window
-func (_m *ZetacoreClient) GetRateLimiterInput(ctx context.Context, window int64) (*types.QueryRateLimiterInputResponse, error) {
-	ret := _m.Called(ctx, window)
+// GetRateLimiterInput provides a mock function with given fields: _a0, window
+func (_m *ZetacoreClient) GetRateLimiterInput(_a0 context.Context, window int64) (*crosschaintypes.QueryRateLimiterInputResponse, error) {
+	ret := _m.Called(_a0, window)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetRateLimiterInput")
 	}
 
-	var r0 *types.QueryRateLimiterInputResponse
+	var r0 *crosschaintypes.QueryRateLimiterInputResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (*types.QueryRateLimiterInputResponse, error)); ok {
-		return rf(ctx, window)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (*crosschaintypes.QueryRateLimiterInputResponse, error)); ok {
+		return rf(_a0, window)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) *types.QueryRateLimiterInputResponse); ok {
-		r0 = rf(ctx, window)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) *crosschaintypes.QueryRateLimiterInputResponse); ok {
+		r0 = rf(_a0, window)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.QueryRateLimiterInputResponse)
+			r0 = ret.Get(0).(*crosschaintypes.QueryRateLimiterInputResponse)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, window)
+		r1 = rf(_a0, window)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -596,9 +596,9 @@ func (_m *ZetacoreClient) GetRateLimiterInput(ctx context.Context, window int64)
 	return r0, r1
 }
 
-// GetSupportedChains provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chain, error) {
-	ret := _m.Called(ctx)
+// GetSupportedChains provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetSupportedChains(_a0 context.Context) ([]chains.Chain, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSupportedChains")
@@ -607,10 +607,10 @@ func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chai
 	var r0 []chains.Chain
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) ([]chains.Chain, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) []chains.Chain); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]chains.Chain)
@@ -618,7 +618,7 @@ func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chai
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -626,27 +626,27 @@ func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chai
 	return r0, r1
 }
 
-// GetTSS provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetTSS(ctx context.Context) (observertypes.TSS, error) {
-	ret := _m.Called(ctx)
+// GetTSS provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetTSS(_a0 context.Context) (types.TSS, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTSS")
 	}
 
-	var r0 observertypes.TSS
+	var r0 types.TSS
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (observertypes.TSS, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (types.TSS, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) observertypes.TSS); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) types.TSS); ok {
+		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(observertypes.TSS)
+		r0 = ret.Get(0).(types.TSS)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -654,29 +654,29 @@ func (_m *ZetacoreClient) GetTSS(ctx context.Context) (observertypes.TSS, error)
 	return r0, r1
 }
 
-// GetTSSHistory provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetTSSHistory(ctx context.Context) ([]observertypes.TSS, error) {
-	ret := _m.Called(ctx)
+// GetTSSHistory provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetTSSHistory(_a0 context.Context) ([]types.TSS, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTSSHistory")
 	}
 
-	var r0 []observertypes.TSS
+	var r0 []types.TSS
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]observertypes.TSS, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) ([]types.TSS, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []observertypes.TSS); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) []types.TSS); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]observertypes.TSS)
+			r0 = ret.Get(0).([]types.TSS)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -684,9 +684,9 @@ func (_m *ZetacoreClient) GetTSSHistory(ctx context.Context) ([]observertypes.TS
 	return r0, r1
 }
 
-// GetUpgradePlan provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error) {
-	ret := _m.Called(ctx)
+// GetUpgradePlan provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetUpgradePlan(_a0 context.Context) (*upgradetypes.Plan, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUpgradePlan")
@@ -695,10 +695,10 @@ func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (*upgradetypes.Pla
 	var r0 *upgradetypes.Plan
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (*upgradetypes.Plan, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) *upgradetypes.Plan); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*upgradetypes.Plan)
@@ -706,7 +706,7 @@ func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (*upgradetypes.Pla
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -714,9 +714,9 @@ func (_m *ZetacoreClient) GetUpgradePlan(ctx context.Context) (*upgradetypes.Pla
 	return r0, r1
 }
 
-// GetZetaHotKeyBalance provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, error) {
-	ret := _m.Called(ctx)
+// GetZetaHotKeyBalance provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetZetaHotKeyBalance(_a0 context.Context) (math.Int, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetZetaHotKeyBalance")
@@ -725,16 +725,16 @@ func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, e
 	var r0 math.Int
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (math.Int, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) math.Int); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -742,36 +742,36 @@ func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, e
 	return r0, r1
 }
 
-// ListPendingCCTX provides a mock function with given fields: ctx, chain
-func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*types.CrossChainTx, uint64, error) {
-	ret := _m.Called(ctx, chain)
+// ListPendingCCTX provides a mock function with given fields: _a0, _a1
+func (_m *ZetacoreClient) ListPendingCCTX(_a0 context.Context, _a1 chains.Chain) ([]*crosschaintypes.CrossChainTx, uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListPendingCCTX")
 	}
 
-	var r0 []*types.CrossChainTx
+	var r0 []*crosschaintypes.CrossChainTx
 	var r1 uint64
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) ([]*types.CrossChainTx, uint64, error)); ok {
-		return rf(ctx, chain)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) ([]*crosschaintypes.CrossChainTx, uint64, error)); ok {
+		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) []*types.CrossChainTx); ok {
-		r0 = rf(ctx, chain)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) []*crosschaintypes.CrossChainTx); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*types.CrossChainTx)
+			r0 = ret.Get(0).([]*crosschaintypes.CrossChainTx)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain) uint64); ok {
-		r1 = rf(ctx, chain)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Get(1).(uint64)
 	}
 
 	if rf, ok := ret.Get(2).(func(context.Context, chains.Chain) error); ok {
-		r2 = rf(ctx, chain)
+		r2 = rf(_a0, _a1)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -779,29 +779,29 @@ func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chain chains.Chai
 	return r0, r1, r2
 }
 
-// ListPendingCCTXWithinRateLimit provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(ctx context.Context) (*types.QueryListPendingCctxWithinRateLimitResponse, error) {
-	ret := _m.Called(ctx)
+// ListPendingCCTXWithinRateLimit provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(_a0 context.Context) (*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListPendingCCTXWithinRateLimit")
 	}
 
-	var r0 *types.QueryListPendingCctxWithinRateLimitResponse
+	var r0 *crosschaintypes.QueryListPendingCctxWithinRateLimitResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (*types.QueryListPendingCctxWithinRateLimitResponse, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) (*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse, error)); ok {
+		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) *types.QueryListPendingCctxWithinRateLimitResponse); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context) *crosschaintypes.QueryListPendingCctxWithinRateLimitResponse); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.QueryListPendingCctxWithinRateLimitResponse)
+			r0 = ret.Get(0).(*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -809,9 +809,9 @@ func (_m *ZetacoreClient) ListPendingCCTXWithinRateLimit(ctx context.Context) (*
 	return r0, r1
 }
 
-// NewBlockSubscriber provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error) {
-	ret := _m.Called(ctx)
+// NewBlockSubscriber provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) NewBlockSubscriber(_a0 context.Context) (chan cometbfttypes.EventDataNewBlock, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewBlockSubscriber")
@@ -820,10 +820,10 @@ func (_m *ZetacoreClient) NewBlockSubscriber(ctx context.Context) (chan cometbft
 	var r0 chan cometbfttypes.EventDataNewBlock
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (chan cometbfttypes.EventDataNewBlock, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) chan cometbfttypes.EventDataNewBlock); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(chan cometbfttypes.EventDataNewBlock)
@@ -831,7 +831,7 @@ func (_m *ZetacoreClient) NewBlockSubscriber(ctx context.Context) (chan cometbft
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -839,9 +839,9 @@ func (_m *ZetacoreClient) NewBlockSubscriber(ctx context.Context) (chan cometbft
 	return r0, r1
 }
 
-// PostOutboundTracker provides a mock function with given fields: ctx, chainID, nonce, txHash
-func (_m *ZetacoreClient) PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error) {
-	ret := _m.Called(ctx, chainID, nonce, txHash)
+// PostOutboundTracker provides a mock function with given fields: _a0, _a1, _a2, txHash
+func (_m *ZetacoreClient) PostOutboundTracker(_a0 context.Context, _a1 int64, _a2 uint64, txHash string) (string, error) {
+	ret := _m.Called(_a0, _a1, _a2, txHash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostOutboundTracker")
@@ -850,16 +850,16 @@ func (_m *ZetacoreClient) PostOutboundTracker(ctx context.Context, chainID int64
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64, string) (string, error)); ok {
-		return rf(ctx, chainID, nonce, txHash)
+		return rf(_a0, _a1, _a2, txHash)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64, string) string); ok {
-		r0 = rf(ctx, chainID, nonce, txHash)
+		r0 = rf(_a0, _a1, _a2, txHash)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64, uint64, string) error); ok {
-		r1 = rf(ctx, chainID, nonce, txHash)
+		r1 = rf(_a0, _a1, _a2, txHash)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -867,9 +867,9 @@ func (_m *ZetacoreClient) PostOutboundTracker(ctx context.Context, chainID int64
 	return r0, r1
 }
 
-// PostVoteBlameData provides a mock function with given fields: ctx, _a1, chainID, index
-func (_m *ZetacoreClient) PostVoteBlameData(ctx context.Context, _a1 *blame.Blame, chainID int64, index string) (string, error) {
-	ret := _m.Called(ctx, _a1, chainID, index)
+// PostVoteBlameData provides a mock function with given fields: _a0, _a1, _a2, index
+func (_m *ZetacoreClient) PostVoteBlameData(_a0 context.Context, _a1 *blame.Blame, _a2 int64, index string) (string, error) {
+	ret := _m.Called(_a0, _a1, _a2, index)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteBlameData")
@@ -878,16 +878,16 @@ func (_m *ZetacoreClient) PostVoteBlameData(ctx context.Context, _a1 *blame.Blam
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, *blame.Blame, int64, string) (string, error)); ok {
-		return rf(ctx, _a1, chainID, index)
+		return rf(_a0, _a1, _a2, index)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, *blame.Blame, int64, string) string); ok {
-		r0 = rf(ctx, _a1, chainID, index)
+		r0 = rf(_a0, _a1, _a2, index)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *blame.Blame, int64, string) error); ok {
-		r1 = rf(ctx, _a1, chainID, index)
+		r1 = rf(_a0, _a1, _a2, index)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -895,9 +895,9 @@ func (_m *ZetacoreClient) PostVoteBlameData(ctx context.Context, _a1 *blame.Blam
 	return r0, r1
 }
 
-// PostVoteGasPrice provides a mock function with given fields: ctx, chain, gasPrice, priorityFee, blockNum
-func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Chain, gasPrice uint64, priorityFee uint64, blockNum uint64) (string, error) {
-	ret := _m.Called(ctx, chain, gasPrice, priorityFee, blockNum)
+// PostVoteGasPrice provides a mock function with given fields: _a0, _a1, gasPrice, priorityFee, blockNum
+func (_m *ZetacoreClient) PostVoteGasPrice(_a0 context.Context, _a1 chains.Chain, gasPrice uint64, priorityFee uint64, blockNum uint64) (string, error) {
+	ret := _m.Called(_a0, _a1, gasPrice, priorityFee, blockNum)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteGasPrice")
@@ -906,16 +906,16 @@ func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Cha
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, uint64, uint64) (string, error)); ok {
-		return rf(ctx, chain, gasPrice, priorityFee, blockNum)
+		return rf(_a0, _a1, gasPrice, priorityFee, blockNum)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64, uint64, uint64) string); ok {
-		r0 = rf(ctx, chain, gasPrice, priorityFee, blockNum)
+		r0 = rf(_a0, _a1, gasPrice, priorityFee, blockNum)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain, uint64, uint64, uint64) error); ok {
-		r1 = rf(ctx, chain, gasPrice, priorityFee, blockNum)
+		r1 = rf(_a0, _a1, gasPrice, priorityFee, blockNum)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -923,9 +923,9 @@ func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Cha
 	return r0, r1
 }
 
-// PostVoteInbound provides a mock function with given fields: ctx, gasLimit, retryGasLimit, msg
-func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, retryGasLimit uint64, msg *types.MsgVoteInbound) (string, string, error) {
-	ret := _m.Called(ctx, gasLimit, retryGasLimit, msg)
+// PostVoteInbound provides a mock function with given fields: _a0, gasLimit, retryGasLimit, _a3, _a4
+func (_m *ZetacoreClient) PostVoteInbound(_a0 context.Context, gasLimit uint64, retryGasLimit uint64, _a3 *crosschaintypes.MsgVoteInbound, _a4 chan<- errors.ErrTxMonitor) (string, string, error) {
+	ret := _m.Called(_a0, gasLimit, retryGasLimit, _a3, _a4)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteInbound")
@@ -934,23 +934,23 @@ func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, 
 	var r0 string
 	var r1 string
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) (string, string, error)); ok {
-		return rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) (string, string, error)); ok {
+		return rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) string); ok {
-		r0 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
+		r0 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) string); ok {
-		r1 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
+		r1 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) error); ok {
-		r2 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) error); ok {
+		r2 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -958,9 +958,9 @@ func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, 
 	return r0, r1, r2
 }
 
-// PostVoteOutbound provides a mock function with given fields: ctx, gasLimit, retryGasLimit, msg
-func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64, retryGasLimit uint64, msg *types.MsgVoteOutbound) (string, string, error) {
-	ret := _m.Called(ctx, gasLimit, retryGasLimit, msg)
+// PostVoteOutbound provides a mock function with given fields: _a0, gasLimit, retryGasLimit, _a3
+func (_m *ZetacoreClient) PostVoteOutbound(_a0 context.Context, gasLimit uint64, retryGasLimit uint64, _a3 *crosschaintypes.MsgVoteOutbound) (string, string, error) {
+	ret := _m.Called(_a0, gasLimit, retryGasLimit, _a3)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteOutbound")
@@ -969,23 +969,23 @@ func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64,
 	var r0 string
 	var r1 string
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteOutbound) (string, string, error)); ok {
-		return rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteOutbound) (string, string, error)); ok {
+		return rf(_a0, gasLimit, retryGasLimit, _a3)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteOutbound) string); ok {
-		r0 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteOutbound) string); ok {
+		r0 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *types.MsgVoteOutbound) string); ok {
-		r1 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteOutbound) string); ok {
+		r1 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *types.MsgVoteOutbound) error); ok {
-		r2 = rf(ctx, gasLimit, retryGasLimit, msg)
+	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteOutbound) error); ok {
+		r2 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -993,9 +993,9 @@ func (_m *ZetacoreClient) PostVoteOutbound(ctx context.Context, gasLimit uint64,
 	return r0, r1, r2
 }
 
-// PostVoteTSS provides a mock function with given fields: ctx, tssPubKey, keyGenZetaHeight, status
-func (_m *ZetacoreClient) PostVoteTSS(ctx context.Context, tssPubKey string, keyGenZetaHeight int64, status chains.ReceiveStatus) (string, error) {
-	ret := _m.Called(ctx, tssPubKey, keyGenZetaHeight, status)
+// PostVoteTSS provides a mock function with given fields: _a0, tssPubKey, keyGenZetaHeight, _a3
+func (_m *ZetacoreClient) PostVoteTSS(_a0 context.Context, tssPubKey string, keyGenZetaHeight int64, _a3 chains.ReceiveStatus) (string, error) {
+	ret := _m.Called(_a0, tssPubKey, keyGenZetaHeight, _a3)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteTSS")
@@ -1004,16 +1004,16 @@ func (_m *ZetacoreClient) PostVoteTSS(ctx context.Context, tssPubKey string, key
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, int64, chains.ReceiveStatus) (string, error)); ok {
-		return rf(ctx, tssPubKey, keyGenZetaHeight, status)
+		return rf(_a0, tssPubKey, keyGenZetaHeight, _a3)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, int64, chains.ReceiveStatus) string); ok {
-		r0 = rf(ctx, tssPubKey, keyGenZetaHeight, status)
+		r0 = rf(_a0, tssPubKey, keyGenZetaHeight, _a3)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, int64, chains.ReceiveStatus) error); ok {
-		r1 = rf(ctx, tssPubKey, keyGenZetaHeight, status)
+		r1 = rf(_a0, tssPubKey, keyGenZetaHeight, _a3)
 	} else {
 		r1 = ret.Error(1)
 	}

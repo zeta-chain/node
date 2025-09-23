@@ -40,6 +40,17 @@ func (wc *tssOwnedObject) set(objectID string) {
 	wc.fetchedAt = time.Now()
 }
 
+// withdrawCapID returns the objectID of the WithdrawCap.
+func (s *Signer) withdrawCapID(ctx context.Context) (string, error) {
+	// withdraw cap ID in the chain params is preferred
+	if withdrawCapID := s.gateway.WithdrawCapID(); withdrawCapID != "" {
+		return withdrawCapID, nil
+	}
+
+	// query from Sui network for backward compatibility
+	return s.getWithdrawCapIDCached(ctx)
+}
+
 // getWithdrawCapIDCached getWithdrawCapID with tssOwnedObjectTTL cache.
 func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 	if s.withdrawCap.valid() {
@@ -65,7 +76,7 @@ func (s *Signer) getWithdrawCapID(ctx context.Context) (string, error) {
 	owner := s.TSS().PubKey().AddressSui()
 	structType := s.gateway.WithdrawCapType()
 
-	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
+	objectID, err := s.suiClient.GetOwnedObjectID(ctx, owner, structType)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to get owned object ID")
 	}
@@ -100,7 +111,7 @@ func (s *Signer) getMessageContextID(ctx context.Context) (string, error) {
 		return "", errors.Wrap(err, "unable to get dynamic field name")
 	}
 
-	response, err := s.client.SuiXGetDynamicFieldObject(ctx, models.SuiXGetDynamicFieldObjectRequest{
+	response, err := s.suiClient.SuiXGetDynamicFieldObject(ctx, models.SuiXGetDynamicFieldObjectRequest{
 		ObjectId: s.gateway.ObjectID(),
 		DynamicFieldName: models.DynamicFieldObjectName{
 			Type:  "vector<u8>",

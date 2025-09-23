@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
@@ -21,12 +21,11 @@ func (signer *Signer) reportToOutboundTracker(
 	zetacoreClient interfaces.ZetacoreClient,
 	chainID int64,
 	nonce uint64,
-	txSig solana.Signature,
+	txSig sol.Signature,
 	logger zerolog.Logger,
 ) {
 	// prepare logger
 	logger = logger.With().
-		Str(logs.FieldMethod, "reportToOutboundTracker").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txSig.String()).
@@ -60,7 +59,7 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// query tx using optimistic commitment level "confirmed"
-			tx, err := signer.client.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
+			tx, err := signer.solanaClient.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
 				// commitment "processed" seems to be a better choice but it's not supported
 				// see: https://solana.com/docs/rpc/http/gettransaction
 				Commitment: rpc.CommitmentConfirmed,

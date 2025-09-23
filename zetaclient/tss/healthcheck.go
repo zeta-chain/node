@@ -39,7 +39,7 @@ func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckPro
 		p.Interval = 30 * time.Second
 	}
 
-	logger = logger.With().Str(logs.FieldModule, "tss_healthcheck").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssHealthCheck).Logger()
 
 	// Ping & collect round trip time
 	var (

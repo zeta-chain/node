@@ -21,6 +21,11 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
+// GatewayGasLimit is the gas limit used for calls from the gateway
+// In our tests we use 4M to replicate live network environment
+// This value is set either when we initialize the contracts or when we upgrade the gateway to ensure the tests pass in regular or upgrade tests
+const GatewayGasLimit = 4000000
+
 // SetupZEVM setup protocol contracts for the ZEVM
 func (r *E2ERunner) SetupZEVM() {
 	r.Logger.Print("⚙️ setting up ZEVM protocol contracts")
@@ -36,6 +41,10 @@ func (r *E2ERunner) SetupZEVM() {
 	r.deployGatewayZEVM()
 	r.DeployCoreRegistry()
 	r.DeployTestDAppV2ZEVM()
+
+	// Increase gateway gas limit
+	err := r.ZetaTxServer.UpdateGatewayGasLimit(GatewayGasLimit)
+	require.NoError(r, err)
 }
 
 // ensureTxReceipt is a helper function to ensure transaction success

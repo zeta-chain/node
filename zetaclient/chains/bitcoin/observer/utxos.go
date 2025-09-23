@@ -43,7 +43,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	utxos, err := ob.rpc.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
+	utxos, err := ob.bitcoinClient.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (ob *Observer) SelectUTXOs(
 
 // findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "findNonceMarkUTXO").Logger()
+	logger := ob.logger.Outbound
 
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)

@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 	"sync"
 
@@ -179,9 +180,7 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 
 	// deep copy evm configs
 	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
-	for chainID, evmConfig := range c.EVMChainConfigs {
-		copied[chainID] = evmConfig
-	}
+	maps.Copy(copied, c.EVMChainConfigs)
 	return copied
 }
 

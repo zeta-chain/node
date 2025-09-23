@@ -20,7 +20,8 @@ import (
 type Observer struct {
 	*base.Observer
 
-	rpc     RPC
+	tonClient TONClient
+
 	gateway *toncontracts.Gateway
 
 	outbounds *lru.Cache
@@ -30,30 +31,47 @@ type Observer struct {
 
 const outboundsCacheSize = 1024
 
-type RPC interface {
-	GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error)
-	GetBlockHeader(ctx context.Context, blockID rpc.BlockIDExt) (rpc.BlockHeader, error)
-	GetMasterchainInfo(ctx context.Context) (rpc.MasterchainInfo, error)
-	HealthCheck(ctx context.Context) (time.Time, error)
-	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
-	GetTransactions(
-		ctx context.Context,
+type TONClient interface {
+	GetConfigParam(_ context.Context, index uint32) (*boc.Cell, error)
+
+	GetBlockHeader(_ context.Context, blockID rpc.BlockIDExt) (rpc.BlockHeader, error)
+
+	GetMasterchainInfo(context.Context) (rpc.MasterchainInfo, error)
+
+	HealthCheck(context.Context) (time.Time, error)
+
+	GetTransaction(_ context.Context,
+		_ ton.AccountID,
+		lt uint64,
+		hash ton.Bits256,
+	) (ton.Transaction, error)
+
+	GetTransactions(_ context.Context,
 		count uint32,
-		accountID ton.AccountID,
+		_ ton.AccountID,
 		lt uint64,
 		hash ton.Bits256,
 	) ([]ton.Transaction, error)
-	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
+
+	GetTransactionsSince(_ context.Context,
+		_ ton.AccountID,
+		lt uint64,
+		hash ton.Bits256,
+	) ([]ton.Transaction, error)
 }
 
 // New constructor for TON Observer.
-func New(bo *base.Observer, rpc RPC, gateway *toncontracts.Gateway) (*Observer, error) {
-	switch {
-	case !bo.Chain().IsTONChain():
+func New(baseObserver *base.Observer,
+	tonClient TONClient,
+	gateway *toncontracts.Gateway,
+) (*Observer, error) {
+	if !baseObserver.Chain().IsTONChain() {
 		return nil, errors.New("base observer chain is not TON")
-	case rpc == nil:
-		return nil, errors.New("rpc is nil")
-	case gateway == nil:
+	}
+	if tonClient == nil {
+		return nil, errors.New("ton client is nil")
+	}
+	if gateway == nil {
 		return nil, errors.New("gateway is nil")
 	}
 
@@ -62,11 +80,11 @@ func New(bo *base.Observer, rpc RPC, gateway *toncontracts.Gateway) (*Observer, 
 		return nil, err
 	}
 
-	bo.LoadLastTxScanned()
+	baseObserver.LoadLastTxScanned()
 
 	return &Observer{
-		Observer:  bo,
-		rpc:       rpc,
+		Observer:  baseObserver,
+		tonClient: tonClient,
 		gateway:   gateway,
 		outbounds: outbounds,
 	}, nil
@@ -74,7 +92,7 @@ func New(bo *base.Observer, rpc RPC, gateway *toncontracts.Gateway) (*Observer, 
 
 // PostGasPrice fetches on-chain gas config and reports it to Zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	cfg, err := rpc.FetchGasConfigRPC(ctx, ob.rpc)
+	cfg, err := rpc.FetchGasConfigRPC(ctx, ob.tonClient)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch gas config")
 	}
@@ -84,7 +102,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse gas price")
 	}
 
-	info, err := ob.rpc.GetMasterchainInfo(ctx)
+	info, err := ob.tonClient.GetMasterchainInfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get masterchain info")
 	}
@@ -106,9 +124,9 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 // CheckRPCStatus checks TON RPC status and alerts if necessary.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	blockTime, err := ob.rpc.HealthCheck(ctx)
+	blockTime, err := ob.tonClient.HealthCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to check rpc health")
+		return errors.Wrap(err, "unable to check TON client health")
 	}
 
 	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)

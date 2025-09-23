@@ -78,10 +78,12 @@ func (k msgServer) VoteInbound(
 		return nil, sdkerrors.Wrap(err, "failed to vote on inbound ballot")
 	}
 
-	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
+	// Check if this inbound has already been finalized. This is checked twice during the life-cucle of an inbound ballot
+	// 1. When the first vote its casted, which creates the ballot.
+	// 2. When the ballot is finalized, which means the threshold has been reached.
 	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
 	// This check prevents double spending
-	if isNew {
+	if isNew || finalized {
 		if k.IsFinalizedInbound(tmpCtx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, sdkerrors.Wrapf(
 				types.ErrObservedTxAlreadyFinalized,
@@ -95,7 +97,10 @@ func (k msgServer) VoteInbound(
 	}
 	commit()
 
-	// If the ballot is not finalized return nil here to add vote to commit state
+	// If the ballot is not finalized, return nil here to add a vote to commit state
+	// finalized in this context means that the ballot is finalized by the current vote that we are processing
+	// if we have 9 observers and a threshold is 6, this means that this is the 6th vote.
+	// The logic following this check will be executed only by this vote.
 	if !finalized {
 		return &types.MsgVoteInboundResponse{}, nil
 	}
@@ -110,14 +115,12 @@ func (k msgServer) VoteInbound(
 	return &types.MsgVoteInboundResponse{}, nil
 }
 
-/* SaveObservedInboundInformation saves the inbound CCTX to the store.It does the following:
-    - Emits an event for the finalized inbound CCTX.
-	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
-	- Updates the CCTX with the finalized height and finalization status.
-	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via Inbound tracker suggestions
-	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
-*/
-
+// SaveObservedInboundInformation saves the inbound CCTX to the store.It does the following:
+//   - Emits an event for the finalized inbound CCTX.
+//   - Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
+//   - Updates the CCTX with the finalized height and finalization status.
+//   - Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via Inbound tracker suggestions
+//   - Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
 func (k Keeper) SaveObservedInboundInformation(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)
 	k.AddFinalizedInbound(ctx,

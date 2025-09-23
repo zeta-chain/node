@@ -14,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -28,12 +27,12 @@ const (
 
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to get all outbound trackers")
 	}
 
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "ProcessOutboundTrackers").Logger()
+	logger := ob.logger.Outbound
 
 	for _, tracker := range trackers {
 		// get the CCTX
@@ -112,7 +111,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger     = ob.logger.Outbound.With().
 				Uint64(logs.FieldNonce, nonce).
 				Str(logs.FieldOutboundID, outboundID).
-				Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
 				Logger()
 	)
 
@@ -159,7 +157,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	}
 
 	// Get outbound block height
-	blockHeight, err := ob.rpc.GetBlockHeightByStr(ctx, res.BlockHash)
+	blockHeight, err := ob.bitcoinClient.GetBlockHeightByStr(ctx, res.BlockHash)
 	if err != nil {
 		return false, errors.Wrapf(err, "error getting block height by hash %s", res.BlockHash)
 	}
@@ -200,9 +198,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
 	logFields := map[string]any{
-		logs.FieldTx:     res.TxID,
-		logs.FieldZetaTx: zetaHash,
-		logs.FieldBallot: ballot,
+		logs.FieldTx:          res.TxID,
+		logs.FieldZetaTx:      zetaHash,
+		logs.FieldBallotIndex: ballot,
 	}
 
 	if err != nil {
@@ -222,7 +220,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce(ctx context.Context) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refresh_pending_nonce").Logger()
+	logger := ob.logger.Outbound
 
 	// get pending nonces from zetacore
 	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
@@ -260,7 +258,7 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64) (s
 	}
 
 	// make sure it's a real Bitcoin txid
-	_, getTxResult, err := ob.rpc.GetTransactionByStr(ctx, txid)
+	_, getTxResult, err := ob.bitcoinClient.GetTransactionByStr(ctx, txid)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "error getting outbound result for nonce %d hash %s", nonce, txid)
@@ -280,13 +278,12 @@ func (ob *Observer) checkTxInclusion(
 ) (*btcjson.GetTransactionResult, bool) {
 	// logger fields
 	logger := ob.logger.Outbound.With().
-		Str(logs.FieldMethod, "checkTxInclusion").
 		Uint64(logs.FieldNonce, cctx.GetCurrentOutboundParam().TssNonce).
 		Str(logs.FieldTx, txHash).
 		Logger()
 
 	// fetch tx result
-	hash, txResult, err := ob.rpc.GetTransactionByStr(ctx, txHash)
+	hash, txResult, err := ob.bitcoinClient.GetTransactionByStr(ctx, txHash)
 	if err != nil {
 		logger.Warn().Err(err).Msg("call to GetTransactionByStr failed")
 		return nil, false
@@ -319,7 +316,6 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	)
 
 	logger := ob.logger.Outbound.With().
-		Str(logs.FieldMethod, "SetIncludedTx").
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).
 		Str(logs.FieldOutboundID, outboundID).
@@ -384,7 +380,7 @@ func (ob *Observer) checkTssOutboundResult(
 ) error {
 	params := cctx.GetCurrentOutboundParam()
 	nonce := params.TssNonce
-	rawResult, err := ob.rpc.GetRawTransactionResult(ctx, hash, res)
+	rawResult, err := ob.bitcoinClient.GetRawTransactionResult(ctx, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutboundResult: error GetRawTransactionResult %s", hash.String())
 	}
