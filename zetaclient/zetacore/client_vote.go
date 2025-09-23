@@ -6,7 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/go-tss/blame"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
@@ -14,6 +13,7 @@ import (
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -196,6 +196,11 @@ func (c *Client) PostVoteInbound(
 	}
 
 	if isFinalizingVote(ballot, chainParams.BallotThreshold) {
+		c.logger.Info().
+			Str(logs.FieldBallotIndex, ballotIndex).
+			Uint64("originalGasLimit", gasLimit).
+			Uint64("updatedGasLimit", retryGasLimit).
+			Msg("updated gas limit for finalizing inbound vote")
 		gasLimit = retryGasLimit
 	}
 
