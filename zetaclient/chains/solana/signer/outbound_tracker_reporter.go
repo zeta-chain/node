@@ -62,7 +62,8 @@ func (signer *Signer) reportToOutboundTracker(
 			tx, err := signer.client.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
 				// commitment "processed" seems to be a better choice but it's not supported
 				// see: https://solana.com/docs/rpc/http/gettransaction
-				Commitment: rpc.CommitmentConfirmed,
+				Commitment:                     rpc.CommitmentConfirmed,
+				MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 			})
 			if err != nil {
 				continue

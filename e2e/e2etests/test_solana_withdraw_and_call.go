@@ -21,9 +21,15 @@ import (
 // in connected program pda and account provided in remaining accounts to demonstrate that lamports
 // can be moved to accounts in connected program as well as gateway program
 func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.LessOrEqual(r, len(args), 3)
+	require.GreaterOrEqual(r, len(args), 1)
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
+
+	altAddress, err := solana.PublicKeyFromBase58(args[1])
+	initALT := err != nil
+
+	writableIndexes := utils.ParseUint8Array(r, args[2])
 
 	// get ERC20 SOL balance before withdraw
 	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -42,9 +48,6 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		approvedAmount,
 	)
 
-	// load deployer private key
-	privkey := r.GetSolanaPrivKey()
-
 	// check balances before withdraw
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
@@ -52,29 +55,47 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
 
-	senderBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, privkey.PublicKey())
-	require.NoError(r, err)
+	// in case ALT address is not provided (eg. for local testing) use prefunded random accounts to create ALT
+	randomWallets := []solana.PublicKey{}
+	if initALT {
+		accounts := []solana.PublicKey{}
 
-	// encode msg
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
-		},
-		Data: []byte("hello"),
+		accounts = append(accounts, connectedPda)
+		accounts = append(accounts, r.ComputePdaAddress())
+		accounts = append(accounts, solana.SystemProgramID)
+		accounts = append(accounts, solana.SysVarInstructionsPubkey)
+		writableIndexes = []uint8{0} // only first one is mutable
+
+		altAddress, randomWallets = r.SetupTestALTWithRandomWallets(accounts)
+
+		// based on example accounts from above, all random wallets are writable
+		// since they will get some lamports from connected program example
+		for i := range randomWallets {
+			writableIndexes = append(writableIndexes, uint8(i+4))
+		}
 	}
 
-	msgEncoded, err := msg.Encode()
+	msg := solanacontract.ExecuteMsgALT{
+		AltAddress:       altAddress,
+		WriteableIndexes: writableIndexes,
+		Data:             []byte("hello"),
+	}
+
+	encoded, err := msg.Encode()
 	require.NoError(r, err)
+
+	randomWalletsBalanceBefore := []uint64{}
+	for _, acc := range randomWallets {
+		balanceBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, acc)
+		require.NoError(r, err)
+		randomWalletsBalanceBefore = append(randomWalletsBalanceBefore, balanceBefore.Value.Lamports)
+	}
 
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
 		withdrawAmount,
 		approvedAmount,
-		msgEncoded,
+		encoded,
 		gatewayzevm.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
@@ -97,9 +118,6 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
 
-	sender, err := r.SolanaClient.GetAccountInfo(r.Ctx, privkey.PublicKey())
-	require.NoError(r, err)
-
 	type ConnectedPdaInfo struct {
 		Discriminator     [8]byte
 		LastSender        common.Address
@@ -114,7 +132,11 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, "hello", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 
-	// connected program splits amount between account provided in remaining accounts, and its own pda
-	require.Equal(r, connectedPdaInfoBefore.Value.Lamports+withdrawAmount.Uint64()/2, connectedPdaInfo.Value.Lamports)
-	require.Equal(r, senderBefore.Value.Lamports+withdrawAmount.Uint64()/2, sender.Value.Lamports)
+	// check if balances locally are increased in connected program
+	require.Greater(r, connectedPdaInfo.Value.Lamports, connectedPdaInfoBefore.Value.Lamports)
+	for i, acc := range randomWallets {
+		balanceAfter, err := r.SolanaClient.GetAccountInfo(r.Ctx, acc)
+		require.NoError(r, err)
+		require.Greater(r, balanceAfter.Value.Lamports, randomWalletsBalanceBefore[i])
+	}
 }

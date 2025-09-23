@@ -49,7 +49,7 @@ func (signer *Signer) prepareWhitelistTx(
 			return nil, errors.Wrap(err, "error creating whitelist instruction")
 		}
 
-		tx, err := signer.signTx(ctx, inst, 0)
+		tx, err := signer.signTx(ctx, inst, 0, nil, nil)
 		if err != nil {
 			return nil, errors.Wrap(err, "error signing whitelist instruction")
 		}

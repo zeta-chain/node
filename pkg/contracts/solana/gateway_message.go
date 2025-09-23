@@ -265,6 +265,12 @@ type MsgExecute struct {
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
+
+	// Address of ALT
+	altAddress *solana.PublicKey
+
+	// Addresses in ALT state
+	altStateAddresses solana.PublicKeySlice
 }
 
 // NewMsgExecute returns a new execute message
@@ -275,6 +281,8 @@ func NewMsgExecute(
 	data []byte,
 	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
+	altAddress *solana.PublicKey,
+	altStateAddresses solana.PublicKeySlice,
 ) *MsgExecute {
 	return &MsgExecute{
 		chainID:           chainID,
@@ -285,6 +293,8 @@ func NewMsgExecute(
 		data:              data,
 		executeType:       executeType,
 		remainingAccounts: remainingAccounts,
+		altAddress:        altAddress,
+		altStateAddresses: altStateAddresses,
 	}
 }
 
@@ -326,6 +336,16 @@ func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
 // ExecuteType returns the type of execute operation
 func (msg *MsgExecute) ExecuteType() ExecuteType {
 	return msg.executeType
+}
+
+// ALT return address of ALT
+func (msg *MsgExecute) ALT() *solana.PublicKey {
+	return msg.altAddress
+}
+
+// ALTStateAddresses returns addresses from ALT state
+func (msg *MsgExecute) ALTStateAddresses() solana.PublicKeySlice {
+	return msg.altStateAddresses
 }
 
 // Hash packs the execute message and computes the hash
@@ -562,6 +582,12 @@ type MsgExecuteSPL struct {
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
+
+	// Address of ALT
+	altAddress *solana.PublicKey
+
+	// Addresses in ALT state
+	altStateAddresses solana.PublicKeySlice
 }
 
 // NewMsgExecuteSPL returns a new execute spl message
@@ -573,6 +599,8 @@ func NewMsgExecuteSPL(
 	data []byte,
 	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
+	altAddress *solana.PublicKey,
+	altStateAddresses solana.PublicKeySlice,
 ) *MsgExecuteSPL {
 	return &MsgExecuteSPL{
 		chainID:           chainID,
@@ -586,6 +614,8 @@ func NewMsgExecuteSPL(
 		data:              data,
 		executeType:       executeType,
 		remainingAccounts: remainingAccounts,
+		altAddress:        altAddress,
+		altStateAddresses: altStateAddresses,
 	}
 }
 
@@ -634,6 +664,16 @@ func (msg *MsgExecuteSPL) Data() []byte {
 // RemainingAccounts returns the remaining accounts of the message
 func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
+}
+
+// ALT return address of ALT
+func (msg *MsgExecuteSPL) ALT() *solana.PublicKey {
+	return msg.altAddress
+}
+
+// ALTStateAddresses returns addresses from ALT state
+func (msg *MsgExecuteSPL) ALTStateAddresses() solana.PublicKeySlice {
+	return msg.altStateAddresses
 }
 
 // ExecuteType returns the type of execute operation

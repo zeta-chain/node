@@ -771,6 +771,8 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SOL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "ALT address", DefaultValue: ""},
+			{Description: "indexes of ALT accounts that are mutable", DefaultValue: ""},
 		},
 		TestSolanaWithdrawAndCall,
 		runner.WithMinimumVersion("v29.0.0"),

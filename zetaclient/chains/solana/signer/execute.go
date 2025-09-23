@@ -2,11 +2,14 @@ package signer
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
@@ -26,7 +29,7 @@ func (signer *Signer) prepareExecuteTx(
 	params := cctx.GetCurrentOutboundParam()
 
 	// create msg execute
-	msg, msgIn, err := signer.createMsgExecute(cctx, cancelTx)
+	msg, msgIn, err := signer.createMsgExecute(ctx, cctx, cancelTx)
 	if err != nil {
 		return signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 	}
@@ -43,12 +46,91 @@ func (signer *Signer) prepareExecuteTx(
 			return nil, errors.Wrap(err, "error creating execute instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, params.CallOptions.GasLimit)
+		return signer.createOutboundWithFallback(
+			ctx,
+			inst,
+			msgIn,
+			params.CallOptions.GasLimit,
+			msg.ALT(),
+			msg.ALTStateAddresses(),
+		)
 	}, nil
+}
+
+func (signer *Signer) prepareExecuteMsg(
+	cctx *types.CrossChainTx,
+) (contracts.ExecuteType, *contracts.GenericExecuteMsg, error) {
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return executeType, nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	msg, err := contracts.DecodeExecuteMsg(message)
+	if err != nil {
+		return executeType, nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	return executeType, msg, nil
+}
+
+func (signer *Signer) prepareExecuteMsgParams(
+	ctx context.Context,
+	msg *contracts.GenericExecuteMsg,
+) ([]*solana.AccountMeta, solana.PublicKeySlice, error) {
+	remainingAccounts := []*solana.AccountMeta{}
+	if msg.ALTAddress() == nil {
+		for _, a := range msg.Legacy.Accounts {
+			remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+				PublicKey:  solana.PublicKey(a.PublicKey),
+				IsWritable: a.IsWritable,
+			})
+		}
+
+		return remainingAccounts, nil, nil
+	}
+
+	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
+		ctx,
+		signer.client.(*rpc.Client),
+		*msg.ALTAddress(),
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
+	)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot get alt")
+	}
+
+	writableSet := make(map[int]struct{}, len(msg.Alt.WriteableIndexes))
+	for _, j := range msg.Alt.WriteableIndexes {
+		writableSet[int(j)] = struct{}{}
+	}
+
+	for i, a := range alt.Addresses {
+		_, isWritable := writableSet[i]
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a),
+			IsWritable: isWritable,
+		})
+	}
+
+	return remainingAccounts, alt.Addresses, nil
 }
 
 // createMsgExecute creates execute and increment nonce messages
 func (signer *Signer) createMsgExecute(
+	ctx context.Context,
 	cctx *types.CrossChainTx,
 	cancelTx bool,
 ) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
@@ -81,12 +163,9 @@ func (signer *Signer) createMsgExecute(
 		return nil, nil, errors.Wrap(err, "cannot validate sender")
 	}
 
-	remainingAccounts := []*solana.AccountMeta{}
-	for _, a := range msg.Accounts {
-		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
-			PublicKey:  solana.PublicKey(a.PublicKey),
-			IsWritable: a.IsWritable,
-		})
+	remainingAccounts, altAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot prepare execute msg params")
 	}
 
 	msgExecute := contracts.NewMsgExecute(
@@ -95,9 +174,11 @@ func (signer *Signer) createMsgExecute(
 		amount,
 		to,
 		sender,
-		msg.Data,
+		msg.Data(),
 		executeType,
 		remainingAccounts,
+		msg.ALTAddress(),
+		altAddresses,
 	)
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
 

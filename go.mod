@@ -29,7 +29,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-getter v1.7.9
+	github.com/hashicorp/go-getter v1.7.8
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250801180815-efd3b6fca488
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250728071033-90592fb858dd
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
@@ -254,7 +254,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
-	github.com/ulikunitz/xz v0.5.14 // indirect
+	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
@@ -331,7 +331,7 @@ require (
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
-	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect
 	github.com/pion/logging v0.2.2 // indirect
@@ -415,7 +415,8 @@ replace (
 	// which is a fork of https://github.com/threshold-network/tss-lib
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
-	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250917210719-515bbca4d348
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250821154530-f0addce1e5ac
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 )
