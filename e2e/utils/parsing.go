@@ -3,6 +3,7 @@ package utils
 import (
 	"math/big"
 	"strconv"
+	"strings"
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
@@ -29,6 +30,30 @@ func ParseBigInt(t require.TestingT, s string) *big.Int {
 	require.True(t, ok, "unable to parse big.Int from %q", s)
 
 	return v
+}
+
+func ParseUint8Array(t require.TestingT, s string) []uint8 {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+
+	parts := strings.Split(s, ",")
+	indexes := make([]uint8, 0, len(parts))
+
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+
+		u, err := strconv.ParseUint(p, 10, 8)
+		require.NoError(t, err, "invalid uint8: %q", p)
+
+		indexes = append(indexes, uint8(u))
+	}
+
+	return indexes
 }
 
 func ParseUint(t require.TestingT, s string) math.Uint {

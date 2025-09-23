@@ -46,7 +46,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 			return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0)
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0, nil, nil)
 	}, nil
 }
 

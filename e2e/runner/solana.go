@@ -1,12 +1,14 @@
 package runner
 
 import (
+	"encoding/binary"
 	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -664,9 +666,9 @@ func (r *E2ERunner) CallSOLZRC20(
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 		},
 		Data: data,
 	}
@@ -812,4 +814,122 @@ func (r *E2ERunner) WaitAndVerifySPLBalanceChange(
 
 		return
 	}
+}
+
+// SetupTestALTWithRandomWallets sets up ALT with random accounts provided in setup solana script, with accounts provided as argument
+// used to test ALTs with large amount of accounts
+func (r *E2ERunner) SetupTestALTWithRandomWallets(accounts []solana.PublicKey) (solana.PublicKey, []solana.PublicKey) {
+	privkey := r.GetSolanaPrivKey()
+
+	recentSlot, err := r.SolanaClient.GetSlot(r.Ctx, rpc.CommitmentFinalized)
+	require.NoError(r, err)
+
+	// prefunded random wallets used for testing big number of accounts in payload
+	randomWallets := []solana.PublicKey{
+		solana.MustPublicKeyFromBase58("4C2kkMnqXMfPJ8PPK5v6TCg42k5z16f2kzqVocXoSDcq"),
+		solana.MustPublicKeyFromBase58("3tqcVCVz5Jztwnku1H9zpvjaWshSpHakMuX4xUJQuuuA"),
+		solana.MustPublicKeyFromBase58("7duGsuv6nB3yr15EuWuHEDD7rWovpAnjuveXJ5ySZuFV"),
+		solana.MustPublicKeyFromBase58("8vjuCrCKVfnBGinWjc33zLRnG8iy53wj3YWHhKqvTE7o"),
+		solana.MustPublicKeyFromBase58("bzkoxG5YMeWxKfNcjzbEHb3XaGTY4NLKfejjDmxVhhY"),
+		solana.MustPublicKeyFromBase58("GUjKWPmnXNwPLR6kcrkLSBARmQdYnySPpxVNEUGFLs72"),
+		solana.MustPublicKeyFromBase58("5oqdTyA78hpeP8RTwRBmoxCvp1V7DFicKj7T2DvtDDQM"),
+		solana.MustPublicKeyFromBase58("C481t79gpWbsWwPD9eJZTAo5TSaTBet8icEkiPhwKLDx"),
+		solana.MustPublicKeyFromBase58("EJvNNovWkfQYrmyMncqVvHNde2QJpSA4EJk355vyQWph"),
+		solana.MustPublicKeyFromBase58("EkUpd7HFbSYPJEDbXZeDsCG19Hj5vbKTUt4rzpPYKsTM"),
+		solana.MustPublicKeyFromBase58("7c7TqqdbKRWDNLVAxNa481F355AAij1fdSRttzUNVNeD"),
+		solana.MustPublicKeyFromBase58("FuefjNTywey57U2zW6SmBWaJsCx7E84jmWUCbk52sBHR"),
+		solana.MustPublicKeyFromBase58("fczqc5N5arnKbvMj1kgg9P1FpYPQBmJsyTXcrmK9bbp"),
+		solana.MustPublicKeyFromBase58("GyH4mpobR6g2npNo5vRNcs2Cv8CxDKbK82p34kNCB4p2"),
+		solana.MustPublicKeyFromBase58("9XYF8U1srAkUETkywtFrZsApipENiMU3C8Rnz5aPib94"),
+		solana.MustPublicKeyFromBase58("ABnm3PMB4onvCFriWg7eBcNSmiye9iq9rRdeBViJqWif"),
+		solana.MustPublicKeyFromBase58("AEydLk3RXZv67wry7EMZmS1uHLYdH8ia6xdsYri4hyB2"),
+		solana.MustPublicKeyFromBase58("ArDNFdmDzrRP13UTJ4nyP11NfjV6aiQrxNwFUnwm3h8N"),
+		solana.MustPublicKeyFromBase58("FzAt9aPKFUy1D2Qq8u7myYW8HFqKLzbQS2paaWz8iAmZ"),
+		solana.MustPublicKeyFromBase58("9RybduN4CJHaZXvUiHoZ7KsHS9dgv1NCSAdJZaRJDW5U"),
+		solana.MustPublicKeyFromBase58("C54jMgtk2umaJYoPD8aF3hmuH8XkAz2xA4sxr2ZtJABV"),
+		solana.MustPublicKeyFromBase58("8kRqLbezvj4apyaK6fanurQJjhDQwn6wnW1Yr9H96gsT"),
+		solana.MustPublicKeyFromBase58("2fddFSJoGJ2YuAZWxEvK9pRXXWLSKJ44rfJNVZg5WHBn"),
+		solana.MustPublicKeyFromBase58("GW9oi4yqAUFBcUNUHqz56FRdfHU6Md1t9o7i2svL1XcG"),
+		solana.MustPublicKeyFromBase58("Gre1nqrE1KyBbBH2Xb4qVQWFFdyXetLR5rruJpJkNhkV"),
+		solana.MustPublicKeyFromBase58("BUrJRTsFVqnuLeq4Vfs7NrrU6EsL957n4tBZGoRRxkza"),
+		solana.MustPublicKeyFromBase58("3tE2kKyPfuwC5rZUpJ9NaKMBf5og7G3rVTzE9CNMm9Q9"),
+		solana.MustPublicKeyFromBase58("CFEQ79VSAupXWmdzvmjNtef5BybDVYXBKeh8frNHZiYe"),
+		solana.MustPublicKeyFromBase58("bTnsajQuybXV6Wf9V7a8wQrwaWZ1WskkmUUChimkWmc"),
+		solana.MustPublicKeyFromBase58("4dpxhhomWY3A9ey9g7EfxRQKfXnikfM4tRrFAgQf8Y8n"),
+		solana.MustPublicKeyFromBase58("aQJPrcj4LNNHh9UK41sfcACFspaFR7wgcUTgmSKRXiB"),
+		solana.MustPublicKeyFromBase58("5ndhaFZ48eKyU7f66vq7WSbjZRh9WhpnbgdMwDRrvgj4"),
+		solana.MustPublicKeyFromBase58("G7m7dSWH5tb1WC2g86vqA1UvdKJVNCU9td1TR8j8wQXo"),
+		solana.MustPublicKeyFromBase58("3tf2MkQzmLHBjnsmRwKnJQgASrmUggxK2Q3PiFd99tDn"),
+		solana.MustPublicKeyFromBase58("3X31YYsRw8We2YhsK29QtVwXXk783HbbYDGAV1HBjcBD"),
+		solana.MustPublicKeyFromBase58("FhDjU5r4MWx6KdfY7MVx6w1YJf6tvRJyj6mbxqU8N3F7"),
+		solana.MustPublicKeyFromBase58("57xqRiBeQjHgrYqhXUHRKh9WU9Ukya79U3hM7QPr13Gy"),
+		solana.MustPublicKeyFromBase58("7pjSLC42Er4KPdVLZW7VGkxU9tLZKBqt4apwyZzuWyYU"),
+		solana.MustPublicKeyFromBase58("jyDrCsnuvxGM9H7YE2rLsBYoFoSHWABFoi7P61FaQ3Q"),
+		solana.MustPublicKeyFromBase58("GUHXNHugMc22rkX6Mz4GMU4Vj1hbPa3DCrfCDRQFWQ2b"),
+		solana.MustPublicKeyFromBase58("2azGMpfp91pqd5gXpZJWK8egdpgUxDkhXK8UYHtRjiZa"),
+		solana.MustPublicKeyFromBase58("CPH4QdmL4yNB9KBpr3bQwUQxdQbMeUKsUyos2ViHaNTB"),
+		solana.MustPublicKeyFromBase58("GKNqfGFsK1Th32GSRkT9kaiA7w89GKJJmGVV5ibo8xn2"),
+		solana.MustPublicKeyFromBase58("GzuWB5nf2NH15Ssk15n3Zd72iykMoPm8Qx5TPCUS99LC"),
+		solana.MustPublicKeyFromBase58("7eAojuq3vcrev41DuVFgpZ1yagQhpUNhUn2uXnKo7A41"),
+		solana.MustPublicKeyFromBase58("BCuFo9AhTREJ5bgJzCrhXzckmAoyscrDDkggixX6t3c5"),
+		solana.MustPublicKeyFromBase58("FUnpGc7v43bvBvC584gQXiRdcuCMnDoXLXbJmMNkg3wQ"),
+		solana.MustPublicKeyFromBase58("FtFPeHGXZhgacdNoXh2dYKBZkgmTq9YYoUZX97hyjgh4"),
+		solana.MustPublicKeyFromBase58("2f3V4h5z9jds59EeFVqViVKuZrMoYM3xb3eq8fWWuN7Y"),
+		solana.MustPublicKeyFromBase58("BEvgtgRX7DdUrZ8Jrw5SMLctA7pQ76ScGry73mEzH869"),
+		solana.MustPublicKeyFromBase58("FD8pHBAwhq2VtHQQSTpdpnmiEoMNfFzJhQXGhSQVkdcQ"),
+		solana.MustPublicKeyFromBase58("HqQuQ9wF3QE7RwiYdgB88SnHwi1n5Q2ogidy7WfZJGgb"),
+		solana.MustPublicKeyFromBase58("Dg2fDYcuvRxCBtZtf1rB2bgbc4KTmy8KMC22Y4JFX7Qd"),
+		solana.MustPublicKeyFromBase58("p6pGSE2rLDH7yiiZ7bKoNZcB3YaszRsRDQ5rVRuTXiz"),
+		solana.MustPublicKeyFromBase58("HEg2w4Ev5ouoZB51Tmhj4DBPG7jrxKaTrf9GfKYubBbG"),
+		solana.MustPublicKeyFromBase58("A5mcmJHSMARvaQcYXGQ96Nx1h4sFeReJNTCBxqxxMqrF"),
+	}
+
+	accounts = append(accounts, randomWallets...)
+
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, recentSlot)
+
+	altAddress, bump, err := solana.FindProgramAddress(
+		[][]byte{privkey.PublicKey().Bytes(), buf},
+		solana.AddressLookupTableProgramID,
+	)
+	require.NoError(r, err)
+
+	// create ALT and extend 2 times due to large amount of accounts
+	createALTInstruction := addresslookuptable.NewCreateAddressLookupTableInstruction(recentSlot, bump, altAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createALTInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	// need to wait a bit for ALT to be active
+	time.Sleep(1 * time.Second)
+
+	extendALTInstruction := addresslookuptable.NewExtendAddressLookupTableInstruction(accounts[:30], altAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendALTInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	time.Sleep(1 * time.Second)
+
+	extendALTInstruction = addresslookuptable.NewExtendAddressLookupTableInstruction(accounts[30:], altAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendALTInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	return altAddress, randomWallets
 }

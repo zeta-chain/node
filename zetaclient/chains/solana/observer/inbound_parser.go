@@ -212,7 +212,12 @@ func (p *InboundEventParser) Parse() error {
 	if p.txResult.Meta != nil && p.txResult.Meta.InnerInstructions != nil {
 		for _, inner := range p.txResult.Meta.InnerInstructions {
 			for j, instruction := range inner.Instructions {
-				if err := p.parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
+				compiledInstruction := solana.CompiledInstruction{
+					ProgramIDIndex: instruction.ProgramIDIndex,
+					Accounts:       instruction.Accounts,
+					Data:           instruction.Data,
+				}
+				if err := p.parseInstruction(compiledInstruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
 					return err
 				}
 			}
