@@ -12,6 +12,7 @@ import (
 
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -20,7 +21,7 @@ import (
 type Observer struct {
 	*base.Observer
 
-	tonClient TONClient
+	tonRepo *repo.TONRepo
 
 	gateway *toncontracts.Gateway
 
@@ -84,47 +85,15 @@ func New(baseObserver *base.Observer,
 
 	return &Observer{
 		Observer:  baseObserver,
-		tonClient: tonClient,
+		tonRepo:   repo.NewTONRepo(tonClient, gateway, baseObserver.Chain()),
 		gateway:   gateway,
 		outbounds: outbounds,
 	}, nil
 }
 
-// PostGasPrice fetches on-chain gas config and reports it to Zetacore.
-func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	cfg, err := rpc.FetchGasConfigRPC(ctx, ob.tonClient)
-	if err != nil {
-		return errors.Wrap(err, "failed to fetch gas config")
-	}
-
-	gasPrice, err := rpc.ParseGasPrice(cfg)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse gas price")
-	}
-
-	info, err := ob.tonClient.GetMasterchainInfo(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get masterchain info")
-	}
-
-	blockNum := uint64(info.Last.Seqno)
-
-	// There's no concept of priority fee in TON
-	const priorityFee = 0
-
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, blockNum)
-	if err != nil {
-		return errors.Wrap(err, "failed to post gas price")
-	}
-
-	ob.setLatestGasPrice(gasPrice)
-
-	return nil
-}
-
 // CheckRPCStatus checks TON RPC status and alerts if necessary.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	blockTime, err := ob.tonClient.HealthCheck(ctx)
+	blockTime, err := ob.tonRepo.Client.HealthCheck(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to check TON Client health")
 	}

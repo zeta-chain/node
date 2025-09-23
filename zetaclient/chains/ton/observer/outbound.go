@@ -104,7 +104,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
 
-	rawTx, err := ob.tonClient.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
+	rawTx, err := ob.tonRepo.Client.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
 		return errors.Wrap(err, "unable to get tx")
 	}

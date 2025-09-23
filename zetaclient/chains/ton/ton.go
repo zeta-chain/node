@@ -90,10 +90,10 @@ func (t *TON) Start(ctx context.Context) error {
 		t.scheduler.Register(ctx, exec, opts...)
 	}
 
+	register(t.observer.CheckRPCStatus, "check_rpc_status")
+	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGenericSkipper)
 	register(t.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(t.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
-	register(t.observer.CheckRPCStatus, "check_rpc_status")
 	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
