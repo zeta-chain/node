@@ -188,7 +188,7 @@ func (c *Client) PostVoteInbound(
 	// verify if the ballot is finalizing to increase gas limit
 	// if the ballot is not found proceed with the original gas limit as this might be the first vote
 	ballot, err := c.GetBallot(ctx, ballotIndex)
-	if err == nil {
+	if err == nil && ballot != nil {
 		chainParams, err := c.GetChainParamsForChainID(ctx, msg.SenderChainId)
 		if err != nil {
 			return "", ballotIndex, errors.Wrapf(err,
@@ -203,7 +203,7 @@ func (c *Client) PostVoteInbound(
 				Uint64("originalGasLimit", gasLimit).
 				Uint64("updatedGasLimit", retryGasLimit).
 				Msg("updated gas limit for finalizing inbound vote")
-			gasLimit = retryGasLimit
+			gasLimit = PostVoteInboundExecutionGasLimit
 		}
 	}
 
