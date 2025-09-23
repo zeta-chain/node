@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
@@ -58,6 +59,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 		nil,
 		database,
 		base.DefaultLogger(),
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
@@ -196,6 +198,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 		nil,
 		database,
 		base.DefaultLogger(),
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

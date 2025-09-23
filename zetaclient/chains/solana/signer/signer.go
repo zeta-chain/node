@@ -15,7 +15,7 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -151,7 +151,7 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -332,7 +332,7 @@ func (signer *Signer) broadcastOutbound(
 	chainID int64,
 	nonce uint64,
 	logger zerolog.Logger,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 ) {
 	tx := outbound.Tx
 	// prepare logger fields
@@ -476,7 +476,7 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 // TODO(revamp): move to another package more general for cctx functions
 func IsPendingOutboundFromZetaChain(
 	cctx *types.CrossChainTx,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
 		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound

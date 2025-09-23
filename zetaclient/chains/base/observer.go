@@ -18,9 +18,11 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -44,7 +46,7 @@ type Observer struct {
 	chainParams observertypes.ChainParams
 
 	// zetacoreClient is the client to interact with ZetaChain
-	zetacoreClient interfaces.ZetacoreClient
+	zetacoreClient zrepo.ZetacoreClient
 
 	// tssSigner is the TSS signer
 	tssSigner interfaces.TSSSigner
@@ -76,18 +78,21 @@ type Observer struct {
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
+
+	clientMode mode.ClientMode
 }
 
 // NewObserver creates a new base observer.
 func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	tssSigner interfaces.TSSSigner,
 	blockCacheSize int,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
+	clientMode mode.ClientMode,
 ) (*Observer, error) {
 	blockCache, err := lru.New(blockCacheSize)
 	if err != nil {
@@ -108,6 +113,7 @@ func NewObserver(
 		mu:               &sync.Mutex{},
 		logger:           newObserverLogger(chain, logger),
 		stop:             make(chan struct{}),
+		clientMode:       clientMode,
 	}, nil
 }
 
@@ -177,7 +183,7 @@ func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 }
 
 // ZetacoreClient returns the zetacore client for the observer.
-func (ob *Observer) ZetacoreClient() interfaces.ZetacoreClient {
+func (ob *Observer) ZetacoreClient() zrepo.ZetacoreClient {
 	return ob.zetacoreClient
 }
 
@@ -235,6 +241,12 @@ func (ob *Observer) LastTxScanned() string {
 func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
+
+	if ob.lastTxScanned == "" {
+		ob.logger.Chain.Info().
+			Str(logs.FieldTx, txHash).
+			Msg("initializing last scanned transaction")
+	}
 
 	ob.lastTxScanned = txHash
 	return ob
@@ -415,12 +427,13 @@ func (ob *Observer) PostVoteInbound(
 	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
 	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
 	if err == nil {
-		// The cctx exists we should still vote if the ballot is present
+		// The CCTX exists, and we should still vote if there is a ballot
 		_, ballotErr := ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
 		if ballotErr != nil {
-			// Verify ballot is not found
-			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
-				// Query for ballot failed, the ballot does not exist we can return
+			// Verify that there is no ballot
+			st, ok := status.FromError(ballotErr)
+			if ok && st.Code() == codes.NotFound {
+				// Query for ballot failed, the ballot does not exist and we can return
 				logger.Info().Msg("inbound detected: CCTX exists but the ballot does not")
 				return cctxIndex, nil
 			}
@@ -433,6 +446,12 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
+	// Does not vote in dry mode.
+	if ob.clientMode == mode.DryMode {
+		ob.Logger().Inbound.Info().Msg("dry-mode: skipping inbound vote")
+		return "", nil
+	}
+
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
 
@@ -441,13 +460,14 @@ func (ob *Observer) PostVoteInbound(
 		Str(logs.FieldBallotIndex, ballot).
 		Logger()
 
-	switch {
-	case err != nil:
+	if err != nil {
 		logger.Error().Err(err).Msg("inbound detected: error posting vote")
 		return "", err
-	case zetaHash == "":
+	}
+
+	if zetaHash == "" {
 		logger.Info().Msg("inbound detected: already voted on ballot")
-	default:
+	} else {
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 

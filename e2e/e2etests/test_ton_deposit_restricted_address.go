@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 )
 
 func TestTONDepositRestricted(r *runner.E2ERunner, args []string) {
@@ -42,7 +42,7 @@ func TestTONDepositRestricted(r *runner.E2ERunner, args []string) {
 	tx, err := r.TONDepositRaw(gw, sender, amount, recipient)
 	require.NoError(r, err)
 
-	tonHash := rpc.TransactionToHashString(tx)
+	tonHash := encoder.EncodeTx(tx)
 
 	r.WaitForBlocks(5)
 

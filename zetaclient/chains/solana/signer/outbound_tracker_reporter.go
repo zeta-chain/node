@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -18,7 +18,7 @@ import (
 // it reports tx to outbound tracker only if it's confirmed by the Solana network.
 func (signer *Signer) reportToOutboundTracker(
 	ctx context.Context,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	chainID int64,
 	nonce uint64,
 	txSig sol.Signature,
