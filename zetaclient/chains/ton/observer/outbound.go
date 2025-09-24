@@ -134,35 +134,6 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 	return nil
 }
 
-// addOutboundTracker publishes outbound tracker to Zetacore.
-// In most cases will be a noop because the tracker is already published by the signer.
-// See Signer{}.trackOutbound(...) for more details.
-func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Transaction) error {
-	auth, err := tx.OutboundAuth()
-	switch {
-	case err != nil:
-		return err
-	case auth.Signer != ob.TSS().PubKey().AddressEVM():
-		ob.Logger().Inbound.Warn().
-			Fields(txLogFields(tx)).
-			Str("transaction_ton_signer", auth.Signer.String()).
-			Msg("observe gateway: signer is not TSS; skipping")
-
-		return nil
-	}
-
-	var (
-		chainID = ob.Chain().ChainId
-		nonce   = uint64(auth.Seqno)
-		hash    = encoder.EncodeTx(tx.Transaction)
-	)
-
-	// note it has a check for noop
-	_, err = ob.ZetacoreClient().PostOutboundTracker(ctx, chainID, nonce, hash)
-
-	return err
-}
-
 // getOutboundByNonce returns outbound by nonce
 func (ob *Observer) getOutboundByNonce(nonce uint64) (outbound, bool) {
 	v, ok := ob.outbounds.Get(nonce)

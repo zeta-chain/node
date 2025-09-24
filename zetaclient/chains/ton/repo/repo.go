@@ -9,15 +9,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
-// func (repo *TONRepo) GetInboundTrackers(ctx context.Context) ([]types.InboundTracker, error) {
-// 	chainID := repo.connectedChain.ChainId
-// 	trackers, err := repo.ZetacoreClient.GetInboundTrackersForChain(ctx, chainID)
-// 	if err != nil {
-// 		return nil, errors.Join(ErrGetInboundTrackers, err)
-// 	}
-// 	return trackers, nil
-// }
-
 // ------------------------------------------------------------------------------------------------
 
 // TODO: Duplicate; remove this before merge.

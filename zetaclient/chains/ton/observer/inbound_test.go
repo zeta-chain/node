@@ -48,7 +48,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -88,7 +88,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -148,7 +148,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -205,7 +205,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -270,7 +270,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -312,7 +312,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		// ACT
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)
@@ -388,7 +388,7 @@ func TestInbound(t *testing.T) {
 
 		// ACT
 		// Observe inbounds once
-		err = ob.ObserveInbound(ts.ctx)
+		err = ob.ObserveInbounds(ts.ctx)
 
 		// ASSERT
 		assert.NoError(t, err)

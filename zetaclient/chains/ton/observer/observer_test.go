@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -269,4 +270,14 @@ func setupTrackersBag(ts *testSuite) {
 		mock.Anything,
 		mock.Anything,
 	).Maybe().Run(catcher).Return("", nil)
+}
+
+func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
+	return rpc.BlockIDExt{
+		Workchain: int(id.Workchain),
+		Seqno:     id.Seqno,
+		Shard:     fmt.Sprintf("%d", id.Shard),
+		RootHash:  id.RootHash.Base64(),
+		FileHash:  id.FileHash.Base64(),
+	}
 }
