@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/ton"
@@ -16,10 +17,10 @@ const PaginationLimit = 100
 
 type TONRepo struct {
 	// TODO: make these private before opening the pull request
-	Client  TONClient
-	Gateway *toncontracts.Gateway
+	client TONClient
 
-	connectedChain chains.Chain
+	gatewayAccountID ton.AccountID
+	connectedChain   chains.Chain
 }
 
 func NewTONRepo(tonClient TONClient,
@@ -27,15 +28,25 @@ func NewTONRepo(tonClient TONClient,
 	connectedChain chains.Chain,
 ) *TONRepo {
 	return &TONRepo{
-		Client:         tonClient,
-		Gateway:        gateway,
-		connectedChain: connectedChain,
+		client:           tonClient,
+		gatewayAccountID: gateway.AccountID(),
+		connectedChain:   connectedChain,
 	}
+}
+
+// CheckHealth checks the client's health and returns the most recent block time.
+func (repo *TONRepo) CheckHealth(ctx context.Context) (*time.Time, error) {
+	blockTime, err := repo.client.HealthCheck(ctx)
+	if err != nil {
+		return nil, errors.Join(ErrHealthCheck, err)
+	}
+
+	return &blockTime, nil
 }
 
 // GetGasPrice returns the most recent gas price and the number of the last block.
 func (repo *TONRepo) GetGasPrice(ctx context.Context) (uint64, uint64, error) {
-	rawGasPrice, err := rpc.FetchGasConfigRPC(ctx, repo.Client)
+	rawGasPrice, err := rpc.FetchGasConfigRPC(ctx, repo.client)
 	if err != nil {
 		return 0, 0, errors.Join(ErrFetchGasPrice, err)
 	}
@@ -45,7 +56,7 @@ func (repo *TONRepo) GetGasPrice(ctx context.Context) (uint64, uint64, error) {
 		return 0, 0, errors.Join(ErrParseGasPrice, err)
 	}
 
-	info, err := repo.Client.GetMasterchainInfo(ctx)
+	info, err := repo.client.GetMasterchainInfo(ctx)
 	if err != nil {
 		return gasPrice, 0, errors.Join(ErrGetMasterchainInfo, err)
 	}
@@ -63,9 +74,7 @@ func (repo *TONRepo) GetTransactionByHash(ctx context.Context,
 		return nil, errors.Join(ErrEncoding, err)
 	}
 
-	gatewayAccountID := repo.Gateway.AccountID()
-
-	raw, err := repo.Client.GetTransaction(ctx, gatewayAccountID, lt, hash)
+	raw, err := repo.client.GetTransaction(ctx, repo.gatewayAccountID, lt, hash)
 	if err != nil {
 		return nil, errors.Join(ErrGetTransaction, err)
 	}
@@ -78,11 +87,10 @@ func (repo *TONRepo) GetTransactionByHash(ctx context.Context,
 func (repo *TONRepo) GetTransactionByIndex(ctx context.Context,
 	n uint32,
 ) (*ton.Transaction, error) {
-	gatewayAccountID := repo.Gateway.AccountID()
 	var zeroLT uint64
 	var zeroHash ton.Bits256
 
-	txs, err := repo.Client.GetTransactions(ctx, n, gatewayAccountID, zeroLT, zeroHash)
+	txs, err := repo.client.GetTransactions(ctx, n, repo.gatewayAccountID, zeroLT, zeroHash)
 	if err != nil {
 		return nil, errors.Join(ErrGetTransactions, err)
 	}
@@ -99,14 +107,12 @@ func (repo *TONRepo) GetTransactionByIndex(ctx context.Context,
 func (repo *TONRepo) GetNextTransactions(ctx context.Context, logger zerolog.Logger,
 	encodedHash string,
 ) ([]ton.Transaction, error) {
-	gatewayAccountID := repo.Gateway.AccountID()
-
 	lastLT, lastHash, err := encoder.DecodeTx(encodedHash)
 	if err != nil {
 		return nil, errors.Join(ErrEncoding, err)
 	}
 
-	txs, err := repo.Client.GetTransactionsSince(ctx, gatewayAccountID, lastLT, lastHash)
+	txs, err := repo.client.GetTransactionsSince(ctx, repo.gatewayAccountID, lastLT, lastHash)
 	if err != nil {
 		return nil, errors.Join(ErrGetTransactionsSince, err)
 	}

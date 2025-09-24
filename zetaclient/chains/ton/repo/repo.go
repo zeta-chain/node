@@ -9,8 +9,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
-// ------------------------------------------------------------------------------------------------
-
 // TODO: Duplicate; remove this before merge.
 type TONClient interface {
 	GetConfigParam(_ context.Context, index uint32) (*boc.Cell, error)

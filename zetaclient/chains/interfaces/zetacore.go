@@ -60,6 +60,7 @@ type ZetacoreWriter interface {
 	) (string, error)
 }
 
+// TODO: move this inside zrepo package.
 // ZetacoreClient is the client interface that interacts with zetacore.
 //
 //go:generate mockery --name ZetacoreClient --filename zetacore_client.go --case underscore --output ../../testutils/mocks

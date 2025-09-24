@@ -66,8 +66,8 @@ func TestOutbound(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that tx exists in outbounds
-		res, exists := ob.getOutboundByNonce(nonce)
-		assert.True(t, exists)
+		res := ob.getOutbound(nonce)
+		assert.NotNil(t, res)
 
 		assert.Equal(t, nonce, res.nonce)
 		assert.Equal(t, chains.ReceiveStatus_success, res.receiveStatus)

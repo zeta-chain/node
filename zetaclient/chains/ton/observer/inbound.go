@@ -153,6 +153,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	nonce := uint64(auth.Seqno)
 	hash := encoder.EncodeTx(tx.Transaction)
 
+	// TODO
 	_, err = ob.ZetacoreClient().PostOutboundTracker(ctx, chainID, nonce, hash)
 
 	return err
