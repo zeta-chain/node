@@ -12,8 +12,6 @@ import (
 
 	context "context"
 
-	errors "github.com/zeta-chain/node/pkg/errors"
-
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -925,9 +923,9 @@ func (_m *ZetacoreClient) PostVoteGasPrice(ctx context.Context, chain chains.Cha
 	return r0, r1
 }
 
-// PostVoteInbound provides a mock function with given fields: ctx, gasLimit, retryGasLimit, msg, monitorErrCh
-func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, retryGasLimit uint64, msg *types.MsgVoteInbound, monitorErrCh chan<- errors.ErrTxMonitor) (string, string, error) {
-	ret := _m.Called(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
+// PostVoteInbound provides a mock function with given fields: ctx, gasLimit, retryGasLimit, msg
+func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, retryGasLimit uint64, msg *types.MsgVoteInbound) (string, string, error) {
+	ret := _m.Called(ctx, gasLimit, retryGasLimit, msg)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteInbound")
@@ -936,23 +934,23 @@ func (_m *ZetacoreClient) PostVoteInbound(ctx context.Context, gasLimit uint64, 
 	var r0 string
 	var r1 string
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound, chan<- errors.ErrTxMonitor) (string, string, error)); ok {
-		return rf(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) (string, string, error)); ok {
+		return rf(ctx, gasLimit, retryGasLimit, msg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
-		r0 = rf(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) string); ok {
+		r0 = rf(ctx, gasLimit, retryGasLimit, msg)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *types.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
-		r1 = rf(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) string); ok {
+		r1 = rf(ctx, gasLimit, retryGasLimit, msg)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *types.MsgVoteInbound, chan<- errors.ErrTxMonitor) error); ok {
-		r2 = rf(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
+	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *types.MsgVoteInbound) error); ok {
+		r2 = rf(ctx, gasLimit, retryGasLimit, msg)
 	} else {
 		r2 = ret.Error(2)
 	}

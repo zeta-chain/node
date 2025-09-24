@@ -7,7 +7,6 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
@@ -158,7 +157,6 @@ func (c *Client) PostVoteInbound(
 	ctx context.Context,
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
-	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) (string, string, error) {
 	// zetaclient patch
 	// force use SAFE mode for all inbound votes (both fast and slow votes)
@@ -192,24 +190,11 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		// Use the passed context directly instead of creating a new one
-		// This ensures the monitoring goroutine respects the same timeout as the error handler
-		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
-		if errMonitor != nil {
-			c.logger.Error().Err(errMonitor).Msg("failed to monitor vote inbound result")
+		ctxForWorker := zctx.Copy(ctx, context.Background())
 
-			if monitorErrCh != nil {
-				select {
-				case monitorErrCh <- zetaerrors.ErrTxMonitor{
-					Err:                errMonitor,
-					InboundBlockHeight: msg.InboundBlockHeight,
-					ZetaTxHash:         zetaTxHash,
-					BallotIndex:        ballotIndex,
-				}:
-				case <-ctx.Done():
-					c.logger.Error().Msg("context cancelled: timeout")
-				}
-			}
+		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if errMonitor != nil {
+			c.logger.Error().Err(err).Msg("PostVoteInbound: failed to monitor vote inbound result")
 		}
 	}()
 
