@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +16,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"go.nhat.io/grpcmock"
 )
 
 const (
@@ -230,26 +228,6 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 	method := "/zetachain.zetacore.observer.Query/HasVoted"
 
 	extraGRPC := withDummyServer(100)
-
-	extraGRPC = append(extraGRPC, func(s *grpcmock.Server) {
-		s.ExpectUnary("/zetachain.zetacore.observer.Query/BallotByIdentifier").
-			WithPayload(observertypes.QueryBallotByIdentifierRequest{
-				BallotIdentifier: "0xd204175fc8500bcea563049cce918fa55134bd2d415d3fe137144f55e572b5ff",
-			}).
-			Return(observertypes.QueryBallotByIdentifierResponse{
-				BallotIdentifier: "0xd204175fc8500bcea563049cce918fa55134bd2d415d3fe137144f55e572b5ff",
-				BallotStatus:     observertypes.BallotStatus_BallotFinalized_SuccessObservation,
-				Voters:           []*observertypes.VoterList{},
-				ObservationType:  observertypes.ObservationType_InboundTx,
-			})
-		s.ExpectUnary("/zetachain.zetacore.observer.Query/GetChainParamsForChain").
-			WithPayload(observertypes.QueryGetChainParamsForChainRequest{ChainId: 0}).
-			Return(observertypes.QueryGetChainParamsForChainResponse{
-				ChainParams: &observertypes.ChainParams{
-					BallotThreshold: sdkmath.LegacyNewDec(66),
-				},
-			})
-	})
 	setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput, extraGRPC...)
 
 	client := setupZetacoreClient(t,
