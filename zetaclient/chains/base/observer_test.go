@@ -194,7 +194,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 
 		// update last block scanned
 		newLastBlockScanned := uint64(100)
-		ob.Observer.WithLastBlockScanned(newLastBlockScanned, false)
+		ob.Observer.WithLastBlockScanned(newLastBlockScanned)
 		require.Equal(t, newLastBlockScanned, ob.LastBlockScanned())
 	})
 
