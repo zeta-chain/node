@@ -17,6 +17,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	// Test happy paths for gas token workflow
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
+		e2etests.TestETHMultipleDepositsName,
 		e2etests.TestETHDepositAndCallName,
 		e2etests.TestETHDepositAndCallBigPayloadName,
 		e2etests.TestETHDepositFastConfirmationName,
@@ -40,6 +41,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
+		e2etests.TestERC20MultipleDepositsName,
 		e2etests.TestERC20DepositAndCallName,
 		e2etests.TestERC20WithdrawName,
 		e2etests.TestERC20WithdrawAndArbitraryCallName,
