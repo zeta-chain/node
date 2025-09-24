@@ -8,7 +8,7 @@ import (
 
 const V36Version = "v36.0.0"
 
-func (r *E2ERunner) RunSetup(testLegacy bool) {
+func (r *E2ERunner) RunSetup() {
 	r.UpgradeGatewayEVM()
 	updateAdditionalFeeTx, err := r.GatewayEVM.UpdateAdditionalActionFee(r.EVMAuth, big.NewInt(2e5))
 	require.NoError(r, err)
