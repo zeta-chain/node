@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
 * `confirmation_count` in the chain params has been entirely removed. It was made deprecated in v28. Use `confirmation_params` instead.
 * The message `MsgWhitelistERC20` has been renamed to `MsgWhitelistAsset`. The message parameters remain unchanged.
   * The event `EventERC20Whitelist` has been renamed to `EventAssetWhitelist`. The event parameters remain unchanged.
@@ -13,6 +15,7 @@
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
 * [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4157](https://github.com/zeta-chain/node/pull/4157) - multiple evm calls in single tx
 * [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
 * [4218](https://github.com/zeta-chain/node/pull/4218) - enable NoAssetCall from Bitcoin chain
 * [4234](https://github.com/zeta-chain/node/pull/4234) - add additional support for zetaclient public DNS name
