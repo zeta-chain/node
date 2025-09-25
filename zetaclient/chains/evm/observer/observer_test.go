@@ -238,7 +238,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obOther := newTestSuite(t)
 
 		// reset last block scanned to 0 so that it will be loaded from RPC
-		obOther.WithLastBlockScanned(0, false)
+		obOther.WithLastBlockScanned(0)
 
 		// attach mock evm client to observer
 		obOther.evmMock.On("BlockNumber", mock.Anything).Unset()

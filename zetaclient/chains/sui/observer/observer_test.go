@@ -14,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -724,13 +723,13 @@ func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse) {
 }
 
 func (ts *testSuite) CatchInboundVotes() {
-	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound, _ chan<- zetaerrors.ErrTxMonitor) (string, string, error) {
+	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
 		ts.inboundVotesBag = append(ts.inboundVotesBag, msg)
 		return "", "", nil
 	}
 
 	ts.zetaMock.
-		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
 }

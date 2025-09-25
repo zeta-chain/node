@@ -261,7 +261,7 @@ func (ob *Observer) loadLastBlockScanned(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrapf(err, "error BlockNumber for chain %d", ob.Chain().ChainId)
 		}
-		ob.WithLastBlockScanned(blockNumber, false)
+		ob.WithLastBlockScanned(blockNumber)
 	}
 	ob.Logger().Chain.Info().
 		Uint64("last_block_scanned", ob.LastBlockScanned()).
