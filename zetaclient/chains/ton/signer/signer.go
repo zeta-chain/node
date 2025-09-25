@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 type TONClient interface {
@@ -106,6 +107,10 @@ func (s *Signer) ProcessOutbound(
 	}
 
 	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
+
+	if s.ClientMode == mode.DryMode {
+		return Success, nil
+	}
 
 	err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce)
 	if err != nil {

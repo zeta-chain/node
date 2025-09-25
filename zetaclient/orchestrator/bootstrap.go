@@ -78,7 +78,7 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner := oc.newBaseSigner(chain, mode.StandardMode)
 	signer := btcsigner.New(baseSigner, bitcoinClient)
 
 	return bitcoin.New(oc.scheduler, observer, signer), nil
@@ -123,7 +123,7 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 	)
 
 	signer, err := evmsigner.New(
-		oc.newBaseSigner(chain),
+		oc.newBaseSigner(chain, mode.StandardMode),
 		evmClient,
 		zetaConnectorAddress,
 		erc20CustodyAddress,
@@ -178,7 +178,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 		return nil, errors.Wrap(err, "unable to load relayer key")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner := oc.newBaseSigner(chain, mode.StandardMode)
 
 	// create Solana signer
 	signer, err := solanasigner.New(baseSigner, solanaClient, gwAddress, relayerKey)
@@ -231,7 +231,8 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 		return nil, errors.Wrap(err, "unable to migrate inbound cursor")
 	}
 
-	signer := suisigner.New(oc.newBaseSigner(chain), oc.deps.Zetacore, suiClient, gateway)
+	signer := suisigner.New(oc.newBaseSigner(chain, mode.StandardMode),
+		oc.deps.Zetacore, suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -286,7 +287,7 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), tonClient, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain, mode.StandardMode), tonClient, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
@@ -324,8 +325,8 @@ func (oc *Orchestrator) newBaseObserver(
 	)
 }
 
-func (oc *Orchestrator) newBaseSigner(chain zctx.Chain) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base)
+func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
+	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {

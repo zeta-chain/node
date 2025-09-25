@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Signer is the base structure for grouping the common logic between chain signers.
@@ -34,10 +35,17 @@ type Signer struct {
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
 	mu sync.Mutex
+
+	ClientMode mode.ClientMode
 }
 
 // NewSigner creates a new base signer.
-func NewSigner(chain chains.Chain, tssSigner interfaces.TSSSigner, logger Logger) *Signer {
+func NewSigner(
+	chain chains.Chain,
+	tssSigner interfaces.TSSSigner,
+	logger Logger,
+	clientMode mode.ClientMode,
+) *Signer {
 	withLogFields := func(log zerolog.Logger) zerolog.Logger {
 		return log.With().
 			Str(logs.FieldModule, logs.ModNameSigner).
@@ -54,6 +62,7 @@ func NewSigner(chain chains.Chain, tssSigner interfaces.TSSSigner, logger Logger
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
 		},
+		ClientMode: clientMode,
 	}
 }
 

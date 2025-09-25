@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -175,7 +176,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		tss:      tss,
 
 		gw:         toncontracts.NewGateway(gwAccountID),
-		baseSigner: base.NewSigner(chain, tss, logger),
+		baseSigner: base.NewSigner(chain, tss, logger, mode.StandardMode),
 	}
 
 	// Setup mocks
