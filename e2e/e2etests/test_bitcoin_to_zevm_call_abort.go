@@ -20,8 +20,8 @@ func TestBitcoinToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 
 	// deploy testabort contract
 	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
-	r.WaitForTxReceiptOnZEVM(txDeploy)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// ARRANGE
 	// create a short payload less than max OP_RETURN data size (80 bytes)

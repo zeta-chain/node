@@ -22,8 +22,9 @@ func TestSolanaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 
 	// deploy a reverter contract in ZEVM
 	// TODO: consider removing repeated deployments of reverter contract
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
+	reverterAddr, txDeploy, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
 	// execute the deposit transaction
