@@ -16,7 +16,7 @@ func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 	// deploy the TestDAppEmpty contract on the EVM chain
 	testDAppAddr, txDeploy, _, err := testdappempty.DeployTestDAppEmpty(r.EVMAuth, r.EVMClient)
 	require.NoError(r, err)
-	r.WaitForTxReceiptOnZEVM(txDeploy)
+	r.WaitForTxReceiptOnEVM(txDeploy)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
