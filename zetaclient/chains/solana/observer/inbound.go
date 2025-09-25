@@ -54,7 +54,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// update metrics if no new signatures found
 	if len(signatures) == 0 {
 		if errSlot == nil {
-			ob.WithLastBlockScanned(lastSlot, false)
+			ob.WithLastBlockScanned(lastSlot)
 		}
 	} else {
 		ob.Logger().Inbound.Info().

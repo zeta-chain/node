@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	zerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschain "github.com/zeta-chain/node/x/crosschain/types"
 	fungible "github.com/zeta-chain/node/x/fungible/types"
 	observer "github.com/zeta-chain/node/x/observer/types"
@@ -50,7 +49,6 @@ type ZetacoreWriter interface {
 		gasLimit uint64,
 		retryGasLimit uint64,
 		_ *crosschain.MsgVoteInbound,
-		_ chan<- zerrors.ErrTxMonitor,
 	) (string, string, error)
 
 	PostOutboundTracker(_ context.Context,

@@ -45,6 +45,7 @@ by calling `updateAdditionalActionFee` admin function.
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 * [4197](https://github.com/zeta-chain/node/pull/4197) - re-check for finalized ballot when executing inbound vote to create cctx
 * [4217](https://github.com/zeta-chain/node/pull/4217) - remove ZetaChain chain ID from GasStabilityPoolBalances query
+* [4251](https://github.com/zeta-chain/node/pull/4251) - check test contracts deployment in E2E tests
 
 ### Tests
 
@@ -54,12 +55,6 @@ by calling `updateAdditionalActionFee` admin function.
 * [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 * [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
 * [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
-
-## v36.0.2
-
-### Fixes
-
-* [4202](https://github.com/zeta-chain/node/pull/4202) - force rescan if inbound vote monitoring fails using a context that can timeout
 
 ## v36.0.0
 

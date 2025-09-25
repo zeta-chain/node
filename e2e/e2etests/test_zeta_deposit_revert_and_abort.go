@@ -21,8 +21,9 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 
 	// deploy testabort contract
-	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// perform the deposit
 	// Deposit (Fails as the address is non-existing)

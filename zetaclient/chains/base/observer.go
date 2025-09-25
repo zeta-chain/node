@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -16,11 +15,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -35,9 +32,6 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
-
-	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
-	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -86,8 +80,6 @@ type Observer struct {
 
 	// stop is the channel to signal the observer to stop
 	stop chan struct{}
-
-	forceResetLastScanned bool
 }
 
 // NewObserver creates a new base observer.
@@ -107,21 +99,20 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:                 chain,
-		chainParams:           chainParams,
-		zetacoreClient:        zetacoreClient,
-		tssSigner:             tssSigner,
-		lastBlock:             0,
-		lastBlockScanned:      0,
-		lastTxScanned:         "",
-		auxStringMap:          make(map[string]string),
-		ts:                    ts,
-		db:                    database,
-		blockCache:            blockCache,
-		mu:                    &sync.Mutex{},
-		logger:                newObserverLogger(chain, logger),
-		stop:                  make(chan struct{}),
-		forceResetLastScanned: false,
+		chain:            chain,
+		chainParams:      chainParams,
+		zetacoreClient:   zetacoreClient,
+		tssSigner:        tssSigner,
+		lastBlock:        0,
+		lastBlockScanned: 0,
+		lastTxScanned:    "",
+		auxStringMap:     make(map[string]string),
+		ts:               ts,
+		db:               database,
+		blockCache:       blockCache,
+		mu:               &sync.Mutex{},
+		logger:           newObserverLogger(chain, logger),
+		stop:             make(chan struct{}),
 	}, nil
 }
 
@@ -229,31 +220,15 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
-// it also set the value of forceResetLastScanned and returns the previous value.
-// If forceResetLastScanned was true before, it means the monitoring thread would have updated it and so it skips updating the last scanned block.
-func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScanned bool) (*Observer, bool) {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
-
-	wasForceReset := ob.forceResetLastScanned
-	ob.forceResetLastScanned = forceResetLastScanned
-
-	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
-	// In this case we should not update the last scanned block and just return
-	if wasForceReset && !forceResetLastScanned {
-		return ob, wasForceReset
-	}
-
+func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
-	return ob, wasForceReset
+	return ob
 }
 
 // LastTxScanned get last transaction scanned.
@@ -335,7 +310,7 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		if err != nil {
 			return errors.Wrapf(err, "unable to parse block number from ENV %s=%s", envvar, scanFromBlock)
 		}
-		ob.WithLastBlockScanned(blockNumber, false)
+		ob.WithLastBlockScanned(blockNumber)
 		return nil
 	}
 
@@ -345,28 +320,14 @@ func (ob *Observer) LoadLastBlockScanned() error {
 		logger.Info().Msg("last scanned block not found in the database")
 		return nil
 	}
-	ob.WithLastBlockScanned(blockNumber, false)
+	ob.WithLastBlockScanned(blockNumber)
 
 	return nil
 }
 
 // SaveLastBlockScanned saves the last scanned block to memory and database.
 func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
-	_, forceResetLastScannedBeforeUpdate := ob.WithLastBlockScanned(blockNumber, false)
-	if forceResetLastScannedBeforeUpdate {
-		return nil
-	}
-	return ob.WriteLastBlockScannedToDB(blockNumber)
-}
-
-// ForceSaveLastBlockScanned saves the last scanned block to memory if the new blocknumber is less than the current last scanned block.
-// It also forces the update of the last scanned block in the database, to makes sure any other the block gets rescanned.
-func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
-	currentLastScanned := ob.LastBlockScanned()
-	if blockNumber > currentLastScanned {
-		return nil
-	}
-	ob.WithLastBlockScanned(blockNumber, true)
+	ob.WithLastBlockScanned(blockNumber)
 	return ob.WriteLastBlockScannedToDB(blockNumber)
 }
 
@@ -420,7 +381,7 @@ func (ob *Observer) SaveLastTxScanned(txHash string, slot uint64) error {
 	ob.WithLastTxScanned(txHash)
 
 	// update last_scanned_block_number metrics
-	ob.WithLastBlockScanned(slot, false)
+	ob.WithLastBlockScanned(slot)
 
 	return ob.WriteLastTxScannedToDB(txHash)
 }
@@ -548,14 +509,8 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
-	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
-
-	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
-	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
-
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().
-		PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
@@ -572,49 +527,7 @@ func (ob *Observer) PostVoteInbound(
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 
-	go func() {
-		ob.handleMonitoringError(ctxWithTimeout, monitorErrCh, zetaHash)
-	}()
-
 	return ballot, nil
-}
-
-func (ob *Observer) handleMonitoringError(
-	ctx context.Context,
-	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
-	zetaHash string,
-) {
-	logger := ob.logger.Inbound
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
-		}
-	}()
-
-	select {
-	case monitorErr := <-monitorErrCh:
-		if monitorErr.Err != nil {
-			logger.Error().
-				Err(monitorErr).
-				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
-				Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
-				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
-				Msg("error monitoring vote transaction")
-
-			if monitorErr.InboundBlockHeight > 0 {
-				err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
-				if err != nil {
-					logger.Error().Err(err).
-						Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
-						Msg("unable to save last scanned block after monitoring error")
-				}
-			}
-		}
-	case <-ctx.Done():
-		logger.Debug().
-			Str(logs.FieldZetaTx, zetaHash).
-			Msg("no error received for the monitoring, the transaction likely succeeded")
-	}
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

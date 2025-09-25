@@ -32,8 +32,9 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 	require.Equal(r, -1, totalWithdrawal.Cmp(approvedAmount), "Total withdrawal amount exceeds approved limit.")
 
 	// deploy withdrawer
-	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient)
+	withdrawerAddr, txDeploy, withdrawer, err := testcontract.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// approve
 	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, withdrawerAddr, approvedAmount)
