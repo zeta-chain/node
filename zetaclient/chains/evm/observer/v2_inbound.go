@@ -248,10 +248,10 @@ func (ob *Observer) parseAndValidateCallEvents(
 		}
 		calledEvent, err := gatewayContract.ParseCalled(log)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, log.TxHash).
-				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Call event")
+			//ob.Logger().Inbound.Warn().
+			//	Stringer(logs.FieldTx, log.TxHash).
+			//	Uint64(logs.FieldBlock, log.BlockNumber).
+			//	Msg("invalid Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -360,10 +360,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		}
 		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, ethlog.TxHash).
-				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("invalid DepositedAndCall event")
+			//ob.Logger().Inbound.Warn().
+			//	Stringer(logs.FieldTx, ethlog.TxHash).
+			//	Uint64(logs.FieldBlock, ethlog.BlockNumber).
+			//	Msg("invalid DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)

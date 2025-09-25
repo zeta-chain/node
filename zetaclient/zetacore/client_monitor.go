@@ -7,7 +7,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
-
 	"github.com/zeta-chain/node/pkg/constant"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
@@ -143,6 +142,7 @@ func (c *Client) monitorVoteInboundResult(
 		return errors.Wrap(err, "failed to query tx result")
 	}
 
+	c.logger.Info().Msgf("got tx result for tx %s , ballot %s", zetaTxHash, msg.Digest())
 	logger := c.logger.With().Str("inbound_raw_log", txResult.RawLog).Logger()
 
 	// There is no error returned from here which mean the MonitorVoteInboundResult would return nil and no error is posted to monitorErrCh

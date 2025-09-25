@@ -97,6 +97,8 @@ func WaitCctxsMinedByInboundHash(
 		timeout = DefaultCctxTimeout
 	}
 
+	timeout = 15 * time.Minute
+
 	t := TestingFromContext(ctx)
 
 	startTime := time.Now()

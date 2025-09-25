@@ -356,7 +356,7 @@ func (ac appCreator) newApp(
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
-		maxTxs = DefaultMaxTxs
+		maxTxs = 10
 	}
 	signerExtractor := app.NewEthSignerExtractionAdapter(mempool.NewDefaultSignerExtractionAdapter())
 	mpool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{

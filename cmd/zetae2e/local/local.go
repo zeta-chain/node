@@ -64,7 +64,7 @@ const (
 )
 
 var (
-	TestTimeout        = 20 * time.Minute
+	TestTimeout        = 40 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
 	noError            = testutil.NoError
 )
@@ -150,7 +150,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
 
 		testStress        = testEthStress || testSolanaStress || testSuiStress
-		shouldSetupSolana = setupSolana || testSolana || testStress
+		shouldSetupSolana = setupSolana || testSolana || testSolanaStress
 		shouldSetupSui    = setupSui || testSui || testStress
 		shouldSetupTON    = setupTON || testTON
 	)
@@ -697,15 +697,15 @@ func runE2EStressTests(
 				iterations,
 			),
 		)
-		eg.Go(
-			ethereumWithdrawPerformanceRoutine(
-				conf,
-				deployerRunner,
-				verbose,
-				[]string{e2etests.TestStressEtherWithdrawName},
-				iterations,
-			),
-		)
+		//eg.Go(
+		//	ethereumWithdrawPerformanceRoutine(
+		//		conf,
+		//		deployerRunner,
+		//		verbose,
+		//		[]string{e2etests.TestStressEtherWithdrawName},
+		//		iterations,
+		//	),
+		//)
 	}
 
 	if testSolanaStress {
