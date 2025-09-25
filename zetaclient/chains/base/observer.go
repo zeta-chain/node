@@ -602,6 +602,11 @@ func (ob *Observer) handleMonitoringError(
 				Msg("error monitoring vote transaction")
 
 			if monitorErr.InboundBlockHeight > 0 {
+				logger.Info().Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight-1).
+					Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
+					Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
+					Msg("reset last scanned block")
+				// save last scanned block as the block before the inbound block height
 				err := ob.ForceSaveLastBlockScanned(monitorErr.InboundBlockHeight - 1)
 				if err != nil {
 					logger.Error().Err(err).

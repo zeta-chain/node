@@ -16,7 +16,9 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
+	crosschain "github.com/zeta-chain/node/x/crosschain/types"
 
+	cosmosauthz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/zetaclient/authz"
@@ -138,10 +140,17 @@ func (c *Client) Broadcast(
 			return "", errors.Wrapf(err, "code 32, cannot parse got seq %q", matches[2])
 		}
 
+		authzMsgExec := authzWrappedMsg.(*cosmosauthz.MsgExec)
+		message, _ := authzMsgExec.GetMessages()
+		digest := "unknown"
+		if messageVote, ok := message[0].(*crosschain.MsgVoteInbound); ok {
+			digest = messageVote.Digest()
+		}
+
 		c.logger.Warn().
 			Uint64("from", gotSeq).
 			Uint64("to", expectedSeq).
-			Msg("reset seq number (from err msg)")
+			Msgf("reset seq number , digest %s", digest)
 
 		c.seqNumber[authzSigner.KeyType] = expectedSeq
 	}

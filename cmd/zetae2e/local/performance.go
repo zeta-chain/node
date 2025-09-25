@@ -57,6 +57,7 @@ func ethereumDepositPerformanceRoutine(
 		}
 
 		r.Logger.Print("🏃 starting Ethereum deposit performance tests")
+		r.Logger.Print("iterations: %d", count)
 		startTime := time.Now()
 
 		tests, err := r.GetE2ETestsToRunByName(

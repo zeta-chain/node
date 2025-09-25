@@ -33,10 +33,10 @@ services:
       # use the zevm endpoint for the healthcheck as it is the slowest to come up
       test: ["CMD", "curl", "-f", "-X", "POST", "--data", '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}', "-H", "Content-Type: application/json", "http://localhost:8545"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: ${ZETACORED_START_PERIOD-30s}
-      start_interval: 1s
+      timeout: 15s
+      retries: 5
+      start_period: ${ZETACORED_START_PERIOD-60s}
+      start_interval: 2s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -107,6 +107,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
+    cap_add:
+      - NET_ADMIN
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -128,6 +130,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
+    cap_add:
+      - NET_ADMIN
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -148,8 +152,11 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
+    cap_add:
+      - NET_ADMIN
     entrypoint: /root/start-zetaclientd.sh
     environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
@@ -166,8 +173,11 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
+    cap_add:
+      - NET_ADMIN
     entrypoint: /root/start-zetaclientd.sh
     environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
     volumes:
@@ -259,7 +269,6 @@ services:
     profiles:
       - solana
       - all
-      - stress
     restart: always
     ports:
       - "8899:8899"
@@ -311,6 +320,14 @@ services:
       zetacore0:
         condition: service_healthy
       eth:
+        condition: service_started
+      zetaclient0:
+        condition: service_started
+      zetaclient1:
+        condition: service_started
+      zetaclient2:
+        condition: service_started
+      zetaclient3:
         condition: service_started
     hostname: orchestrator
     networks:

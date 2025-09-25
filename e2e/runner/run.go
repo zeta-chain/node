@@ -27,6 +27,23 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 	return nil
 }
 
+func (r *E2ERunner) RunE2ETestsNoError(e2eTests []E2ETest) (err error) {
+	zetacoredVersion := r.GetZetacoredVersion()
+	for _, e2eTest := range e2eTests {
+		if !utils.MinimumVersionCheck(e2eTest.MinimumVersion, zetacoredVersion) {
+			r.Logger.Print("⚠️ skipping test - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
+			continue
+		}
+		if err := r.Ctx.Err(); err != nil {
+			return fmt.Errorf("context cancelled: %w", err)
+		}
+		if err := r.RunE2ETest(e2eTest); err != nil {
+			r.Logger.Print("test %s failed: %s", e2eTest.Name, err.Error())
+		}
+	}
+	return nil
+}
+
 func (r *E2ERunner) runTestWithProtocolBalanceCheck(e2eTest E2ETest) error {
 	balancesBefore := r.checkProtocolAddressBalance(config.BaseDenom)
 

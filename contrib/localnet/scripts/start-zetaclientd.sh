@@ -6,6 +6,58 @@
 
 /usr/sbin/sshd
 
+# Setup network latency simulation based on hostname
+setup_network_latency() {
+    local hostname=$(hostname)
+    local latency=""
+    local jitter=""
+    
+    case $hostname in
+        "zetaclient0")
+            latency="10ms"
+            jitter="10ms"
+            ;;
+        "zetaclient1")
+            latency="12ms"
+            jitter="10ms"
+            ;;
+        "zetaclient2")
+            latency="14ms"
+            jitter="10ms"
+            ;;
+        "zetaclient3")
+            latency="15ms"
+            jitter="10ms"
+            ;;
+        *)
+            # No latency simulation for other containers
+            return 0
+            ;;
+    esac
+    
+    echo "Setting up network latency: ${latency} ± ${jitter} for ${hostname}"
+    
+    # Check if we have NET_ADMIN capability and tc command is available
+    if command -v tc >/dev/null 2>&1; then
+        # Clear any existing rules
+        tc qdisc del dev eth0 root 2>/dev/null || true
+        
+        # Add network latency simulation
+        tc qdisc add dev eth0 root netem delay ${latency} ${jitter} distribution normal
+        
+        if [ $? -eq 0 ]; then
+            echo "Network latency simulation applied successfully"
+        else
+            echo "Warning: Failed to apply network latency simulation (may need NET_ADMIN capability)"
+        fi
+    else
+        echo "Warning: tc command not available, skipping network latency simulation"
+    fi
+}
+
+# Apply network latency simulation
+setup_network_latency
+
 HOSTNAME=$(hostname)
 export ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD=true
 

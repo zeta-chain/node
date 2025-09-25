@@ -43,6 +43,8 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 	// update with the new gateway address
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
 
+	//chainParams.GasPriceTicker = 55
+
 	//  update with the new connector address only if not running legacy tests
 	// when running legacy tests the connector address is set by the LegacySetupEVM function
 	if !testLegacy {
@@ -52,6 +54,21 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 	// update the chain params
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
+
+	//btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
+	//for _, cp := range res.ChainParams.ChainParams {
+	//	if cp.ChainId == btcChainID {
+	//		chainParams = cp
+	//		found = true
+	//		break
+	//	}
+	//}
+	//
+	//chainParams.GasPriceTicker = 55
+	//
+	//// update the chain params
+	//err = r.ZetaTxServer.UpdateChainParams(chainParams)
+	//require.NoError(r, err)
 }
 
 // EmissionsPoolFunding represents the amount of ZETA to fund the emissions pool with
