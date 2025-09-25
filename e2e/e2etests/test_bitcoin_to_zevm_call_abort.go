@@ -19,7 +19,8 @@ func TestBitcoinToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	// deploy testabort contract
-	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 	require.NoError(r, err)
 
 	// ARRANGE
@@ -30,7 +31,7 @@ func TestBitcoinToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 
 	// wrap the payload in a standard memo
 	abortMessage := "message abort"
-	memo := &memo.InboundMemo{
+	inboundMemo := &memo.InboundMemo{
 		Header: memo.Header{
 			Version:     0,
 			EncodingFmt: memo.EncodingFmtCompactShort,
@@ -49,7 +50,7 @@ func TestBitcoinToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	// ACT
 	// make a NoAssetCall to ZEVM with standard memo
 	// the amount matches the exact depositor fee and should be accepted by observers
-	txHash := r.DepositBTCWithAmount(zetabtc.DefaultDepositorFee, memo)
+	txHash := r.DepositBTCWithAmount(zetabtc.DefaultDepositorFee, inboundMemo)
 
 	// ASSERT
 	// wait for the cctx to be aborted
