@@ -49,12 +49,12 @@ func (t *TON) Start(ctx context.Context) error {
 
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get app from context")
+		return errors.Wrap(err, "failed to get app from context")
 	}
 
 	newBlockChan, err := t.observer.ZetacoreClient().NewBlockSubscriber(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return errors.Wrap(err, "failed to create new block subscriber")
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -118,12 +118,12 @@ func (t *TON) group() scheduler.Group {
 // It loads pending cctx from zetacore, then tries to sign and broadcast them.
 func (t *TON) scheduleCCTX(ctx context.Context) error {
 	if err := t.updateChainParams(ctx); err != nil {
-		return errors.Wrap(err, "unable to update chain params")
+		return errors.Wrap(err, "failed to update chain params")
 	}
 
 	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get zeta block from context")
+		return errors.Wrap(err, "failed to get zeta block from context")
 	}
 
 	time.Sleep(delay)
@@ -134,7 +134,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending CCTXs")
+		return errors.Wrap(err, "failed to list pending CCTXs")
 	}
 
 	for i := range cctxList {

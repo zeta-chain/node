@@ -50,7 +50,7 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 ) error {
 	receiveStatus, amount, err := receiveStatusWithAmount(cctx, outbound)
 	if err != nil {
-		return errors.Wrap(err, "unable to get status and amount")
+		return errors.Wrap(err, "failed to get status and amount")
 	}
 
 	gasPrice, err := ob.getLatestGasPrice()
@@ -101,7 +101,7 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 
 	zetaTxHash, ballot, err := ob.zetaRepo.VoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
-		logger.Error().Err(err).Msg("unable to post outbound vote")
+		logger.Error().Err(err).Msg("failed to post outbound vote")
 		return err
 	}
 
@@ -123,7 +123,7 @@ func receiveStatusWithAmount(
 	case toncontracts.OpWithdraw:
 		wd, err := outbound.tx.Withdrawal()
 		if err != nil {
-			return 0, math.Uint{}, errors.Wrap(err, "unable to get withdrawal")
+			return 0, math.Uint{}, errors.Wrap(err, "failed to get withdrawal")
 		}
 
 		return outbound.receiveStatus, wd.Amount, nil

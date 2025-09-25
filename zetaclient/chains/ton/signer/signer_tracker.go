@@ -27,8 +27,10 @@ func (s *Signer) trackOutbound(
 	outbound outbound,
 	prevState rpc.Account,
 ) error {
-	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
-	defer metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Dec()
+	chain := s.Chain()
+
+	metrics.NumTrackerReporters.WithLabelValues(chain.Name).Inc()
+	defer metrics.NumTrackerReporters.WithLabelValues(chain.Name).Dec()
 
 	const (
 		timeout = 60 * time.Second
@@ -36,8 +38,7 @@ func (s *Signer) trackOutbound(
 	)
 
 	var (
-		start   = time.Now()
-		chainID = s.Chain().ChainId
+		start = time.Now()
 
 		acc   = s.gateway.AccountID()
 		lt    = prevState.LastTxLT
@@ -50,7 +51,7 @@ func (s *Signer) trackOutbound(
 	for time.Since(start) <= timeout {
 		txs, err := s.tonClient.GetTransactionsSince(ctx, acc, lt, hash)
 		if err != nil {
-			return errors.Wrapf(err, "unable to get transactions (lt %d, hash %s)", lt, hash.Hex())
+			return errors.Wrapf(err, "failed to get transactions (lt %d, hash %s)", lt, hash.Hex())
 		}
 
 		results := s.gateway.ParseAndFilterMany(txs, filter)
@@ -68,9 +69,9 @@ func (s *Signer) trackOutbound(
 		}
 
 		// Note that this method has a check for noop
-		_, err = zetacore.PostOutboundTracker(ctx, chainID, nonce, txHash)
+		_, err = zetacore.PostOutboundTracker(ctx, chain.ChainId, nonce, txHash)
 		if err != nil {
-			return errors.Wrap(err, "unable to add outbound tracker")
+			return errors.Wrap(err, "failed to add outbound tracker")
 		}
 
 		return nil
@@ -83,7 +84,6 @@ func (s *Signer) trackOutbound(
 func outboundFilter(ob outbound) func(tx *toncontracts.Transaction) (found bool) {
 	return func(tx *toncontracts.Transaction) bool {
 		auth, err := tx.OutboundAuth()
-
 		return err == nil && auth.Seqno == ob.seqno && auth.Sig == ob.message.Signature()
 	}
 }

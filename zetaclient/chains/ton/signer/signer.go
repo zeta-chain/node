@@ -103,19 +103,19 @@ func (s *Signer) ProcessOutbound(
 
 	outbound, err := s.composeOutbound(cctx)
 	if err != nil {
-		return Invalid, errors.Wrap(err, "unable to compose message")
+		return Invalid, errors.Wrap(err, "failed to compose message")
 	}
 
 	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
 
 	err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce)
 	if err != nil {
-		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
+		return Fail, errors.Wrap(err, "failed to sign withdrawal message")
 	}
 
 	gwState, err := s.tonClient.GetAccountState(ctx, s.gateway.AccountID())
 	if err != nil {
-		return Fail, errors.Wrap(err, "unable to get gateway state")
+		return Fail, errors.Wrap(err, "failed to get gateway state")
 	}
 
 	// Publishes signed message to Gateway
@@ -130,8 +130,9 @@ func (s *Signer) ProcessOutbound(
 
 	// it's okay to run this in the same goroutine
 	// because TryProcessOutbound method should be called in a goroutine
-	if err = s.trackOutbound(ctx, zetacoreClient, outbound, gwState); err != nil {
-		return Fail, errors.Wrap(err, "unable to track outbound")
+	err = s.trackOutbound(ctx, zetacoreClient, outbound, gwState)
+	if err != nil {
+		return Fail, errors.Wrap(err, "failed to track outbound")
 	}
 
 	return Success, nil
@@ -146,7 +147,7 @@ func (s *Signer) SignMessage(ctx context.Context,
 ) error {
 	hash, err := msg.Hash()
 	if err != nil {
-		return errors.Wrap(err, "unable to hash message")
+		return errors.Wrap(err, "failed to hash message")
 	}
 
 	chainID := s.Chain().ChainId
@@ -154,7 +155,7 @@ func (s *Signer) SignMessage(ctx context.Context,
 	// sig = [65]byte {R, S, V (recovery ID)}
 	sig, err := s.TSS().Sign(ctx, hash[:], zetaHeight, nonce, chainID)
 	if err != nil {
-		return errors.Wrap(err, "unable to sign the message")
+		return errors.Wrap(err, "failed to sign the message")
 	}
 
 	msg.SetSignature(sig)
@@ -181,9 +182,9 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 		s.Logger().Std.Warn().Fields(logFields).Msg("invalid nonce, retry later")
 		return Invalid, nil
 	case err != nil:
-		return Fail, errors.Wrap(err, "unable to send external message")
+		return Fail, errors.Wrap(err, "failed to send external message")
 	default:
-		return Fail, errors.Errorf("unable to send external message: exit code %d", exitCode)
+		return Fail, errors.Errorf("failed to send external message: exit code %d", exitCode)
 	}
 }
 
@@ -201,7 +202,7 @@ func (s *Signer) SetGatewayAddress(addr string) {
 
 	acc, err := ton.ParseAccountID(addr)
 	if err != nil {
-		s.Logger().Std.Error().Err(err).Str("addr", addr).Msg("unable to parse gateway address")
+		s.Logger().Std.Error().Err(err).Str("addr", addr).Msg("failed to parse gateway address")
 		return
 	}
 
