@@ -27,6 +27,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -372,7 +373,8 @@ func (s *testSuite) createObserver(t *testing.T) {
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create observer
-	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, baseLogger)
+	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts,
+		database, baseLogger, mode.StandardMode)
 	require.NoError(t, err)
 
 	s.observer, err = observer.New(baseObserver, s.client, s.Chain())

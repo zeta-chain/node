@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -84,6 +85,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 		nil,
 		database,
 		logger,
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
@@ -153,6 +155,7 @@ func TestNewObserver(t *testing.T) {
 				nil,
 				database,
 				base.DefaultLogger(),
+				mode.StandardMode,
 			)
 			if tt.fail {
 				require.ErrorContains(t, err, tt.message)

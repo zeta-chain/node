@@ -38,7 +38,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context,
 
 	err := ob.voteOutbound(ctx, cctx, outbound)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to vote for outbound transaction")
+		return false, errors.Wrap(err, "unable to vote for outbound transaction")
 	}
 
 	return false, nil
@@ -50,7 +50,7 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 ) error {
 	receiveStatus, amount, err := receiveStatusWithAmount(cctx, outbound)
 	if err != nil {
-		return errors.Wrap(err, "failed to get status and amount")
+		return errors.Wrap(err, "unable to get status and amount")
 	}
 
 	gasPrice, err := ob.getLatestGasPrice()
@@ -101,7 +101,7 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 
 	zetaTxHash, ballot, err := ob.zetaRepo.VoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
-		logger.Error().Err(err).Msg("failed to post outbound vote")
+		logger.Error().Err(err).Msg("unable to post outbound vote")
 		return err
 	}
 
@@ -123,7 +123,7 @@ func receiveStatusWithAmount(
 	case toncontracts.OpWithdraw:
 		wd, err := outbound.tx.Withdrawal()
 		if err != nil {
-			return 0, math.Uint{}, errors.Wrap(err, "failed to get withdrawal")
+			return 0, math.Uint{}, errors.Wrap(err, "unable to get withdrawal")
 		}
 
 		return outbound.receiveStatus, wd.Amount, nil
@@ -146,7 +146,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 	trackers, err := ob.zetaRepo.GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get outbound trackers")
+		return errors.Wrap(err, "unable to get outbound trackers")
 	}
 
 	for _, tracker := range trackers {
@@ -162,7 +162,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			logger.Error().
 				Err(err).
 				Uint64(logs.FieldNonce, nonce).
-				Msg("failed to get CCTX by nonce")
+				Msg("unable to get CCTX by nonce")
 			continue // does not block other CCTXs from being processed
 		}
 
@@ -173,7 +173,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 					Err(err).
 					Str(logs.FieldTx, txHash.TxHash).
 					Uint64(logs.FieldNonce, nonce).
-					Msg("failed to process outbound tracker")
+					Msg("unable to process outbound tracker")
 			}
 		}
 	}
@@ -198,20 +198,20 @@ func (ob *Observer) processOutboundTracker(ctx context.Context,
 
 	rawTx, err := ob.tonRepo.GetTransactionByHash(ctx, encodedHash)
 	if err != nil {
-		return errors.Wrap(err, "failed to get transaction")
+		return errors.Wrap(err, "unable to get transaction")
 	}
 
 	// TODO: why the different behavior from parseTransaction?
 	tx, err := ob.gateway.ParseTransaction(*rawTx)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse transaction")
+		return errors.Wrap(err, "unable to parse transaction")
 	}
 
 	receiveStatus := chains.ReceiveStatus_success
 
 	out, err := tx.OutboundAuth()
 	if err != nil {
-		return errors.Wrap(err, "failed to get outbound auth")
+		return errors.Wrap(err, "unable to get outbound auth")
 	}
 
 	tssSigner := ob.TSS().PubKey().AddressEVM()

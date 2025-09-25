@@ -36,7 +36,7 @@ func (s *Signer) composeOutbound(cctx *cctypes.CrossChainTx) (outbound, error) {
 
 	recipient, err := ton.ParseAccountID(params.Receiver)
 	if err != nil {
-		return outbound{}, errors.Wrapf(err, "failed to parse recipient %q", params.Receiver)
+		return outbound{}, errors.Wrapf(err, "unable to parse recipient %q", params.Receiver)
 	}
 
 	logFields := map[string]any{

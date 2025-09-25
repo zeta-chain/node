@@ -36,12 +36,12 @@ func (ob *Observer) ObserveInbounds(ctx context.Context) error {
 
 	lastScannedTx, err := ob.getLastScannedTransaction(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get the last scanned transaction")
+		return errors.Wrap(err, "unable to get the last scanned transaction")
 	}
 
 	rawTxs, err := ob.tonRepo.GetNextTransactions(ctx, logger, lastScannedTx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get the next transactions to be processed")
+		return errors.Wrap(err, "unable to get the next transactions to be processed")
 	}
 
 	for _, rawTx := range rawTxs {
@@ -73,14 +73,14 @@ func (ob *Observer) ObserveInbounds(ctx context.Context) error {
 		case tx.IsOutbound():
 			err := ob.addOutboundTracker(ctx, tx)
 			if err != nil {
-				msg := "failed to add outbound tracker"
+				msg := "unable to add outbound tracker"
 				txLogger.Error().Err(err).Msg(msg)
 				return errors.Wrapf(err, "%s: %s", msg, tx.Hash().Hex())
 			}
 		case tx.IsInbound():
 			err := ob.voteInbound(ctx, tx)
 			if err != nil {
-				msg := "failed to vote for inbound transaction"
+				msg := "unable to vote for inbound transaction"
 				txLogger.Error().Err(err).Msg(msg)
 				return errors.Wrapf(err, "%s: %s", msg, tx.Hash().Hex())
 			}
@@ -107,7 +107,7 @@ func (ob *Observer) getLastScannedTransaction(ctx context.Context) (string, erro
 	const limit = 20 // arbitrary
 	tx, err := ob.tonRepo.GetTransactionByIndex(ctx, limit)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to query the blockchain")
+		return "", errors.Wrap(err, "unable to query the blockchain")
 	}
 
 	encodedTx = encoder.EncodeTx(*tx)
@@ -169,7 +169,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
-		return errors.Wrap(err, "failed to get inbound trackers")
+		return errors.Wrap(err, "unable to get inbound trackers")
 	}
 
 	logSkippedTracker := func(hash string, reason string, err error) {
@@ -260,7 +260,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 
 	inbound, err := newInbound(tx)
 	if err != nil {
-		return errors.Wrap(err, "failed to extract inbound data")
+		return errors.Wrap(err, "unable to extract inbound data")
 	}
 
 	// Don't vote for inbounds that are not compliant.
@@ -283,7 +283,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 
 	_, err = ob.PostVoteInbound(ctx, msg, retryGasLimit)
 	if err != nil {
-		return errors.Wrap(err, "failed to vote for inbound transaction")
+		return errors.Wrap(err, "unable to vote for inbound transaction")
 	}
 
 	return nil

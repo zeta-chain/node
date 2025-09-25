@@ -24,6 +24,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -88,6 +89,8 @@ type Observer struct {
 	stop chan struct{}
 
 	forceResetLastScanned bool
+
+	clientMode mode.ClientMode
 }
 
 // NewObserver creates a new base observer.
@@ -100,6 +103,7 @@ func NewObserver(
 	ts *metrics.TelemetryServer,
 	database *db.DB,
 	logger Logger,
+	clientMode mode.ClientMode,
 ) (*Observer, error) {
 	blockCache, err := lru.New(blockCacheSize)
 	if err != nil {
@@ -122,6 +126,7 @@ func NewObserver(
 		logger:                newObserverLogger(chain, logger),
 		stop:                  make(chan struct{}),
 		forceResetLastScanned: false,
+		clientMode:            clientMode,
 	}, nil
 }
 
@@ -532,12 +537,13 @@ func (ob *Observer) PostVoteInbound(
 	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
 	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
 	if err == nil {
-		// The cctx exists we should still vote if the ballot is present
+		// The CCTX exists, and we should still vote if there is a ballot
 		_, ballotErr := ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
 		if ballotErr != nil {
-			// Verify ballot is not found
-			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
-				// Query for ballot failed, the ballot does not exist we can return
+			// Verify that there is no ballot
+			st, ok := status.FromError(ballotErr)
+			if ok && st.Code() == codes.NotFound {
+				// Query for ballot failed, the ballot does not exist and we can return
 				logger.Info().Msg("inbound detected: CCTX exists but the ballot does not")
 				return cctxIndex, nil
 			}
@@ -547,6 +553,11 @@ func (ob *Observer) PostVoteInbound(
 	// make sure the message is valid to avoid unnecessary retries
 	if err := msg.ValidateBasic(); err != nil {
 		logger.Warn().Err(err).Msg("invalid inbound vote message")
+		return "", nil
+	}
+
+	// Does not vote in dry mode.
+	if ob.clientMode == mode.DryMode {
 		return "", nil
 	}
 
@@ -564,13 +575,14 @@ func (ob *Observer) PostVoteInbound(
 		Str(logs.FieldBallotIndex, ballot).
 		Logger()
 
-	switch {
-	case err != nil:
+	if err != nil {
 		logger.Error().Err(err).Msg("inbound detected: error posting vote")
 		return "", err
-	case zetaHash == "":
+	}
+
+	if zetaHash == "" {
 		logger.Info().Msg("inbound detected: already voted on ballot")
-	default:
+	} else {
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 

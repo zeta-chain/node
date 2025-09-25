@@ -7,6 +7,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -47,6 +48,7 @@ func MockSolanaObserver(
 		nil,
 		database,
 		base.DefaultLogger(),
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

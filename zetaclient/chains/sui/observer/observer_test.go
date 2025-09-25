@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -660,7 +661,8 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 		Compliance: log.Logger,
 	}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database,
+		logger, mode.StandardMode)
 	require.NoError(t, err)
 
 	suiMock := mocks.NewSuiClient(t)

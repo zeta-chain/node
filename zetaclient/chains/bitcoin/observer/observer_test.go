@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"gorm.io/gorm"
 
@@ -149,6 +150,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.ts,
 				database,
 				tt.logger,
+				mode.StandardMode,
 			)
 			require.NoError(t, err)
 
@@ -330,6 +332,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 		&metrics.TelemetryServer{},
 		database,
 		baseLogger,
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

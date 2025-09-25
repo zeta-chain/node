@@ -26,7 +26,7 @@ import (
 
 // EVMClient is the interface for the EVM RPC client
 //
-//go:generate mockery --name EVMClient --filename evm_client.go --case underscore --output ../../testutils/mocks
+//go:generate mockery --name EVMClient --filename evm_client.go --case underscore --output ../../../testutils/mocks
 type EVMClient interface {
 	ethbind.ContractBackend
 

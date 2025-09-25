@@ -19,7 +19,7 @@ func (ob *Observer) ObserveGasPrice(ctx context.Context) error {
 
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, blockNumber)
 	if err != nil {
-		return errors.Wrap(err, "failed to post gas price")
+		return errors.Wrap(err, "unable to post gas price")
 	}
 
 	ob.setLatestGasPrice(gasPrice)

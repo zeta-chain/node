@@ -51,7 +51,7 @@ func (s *Signer) trackOutbound(
 	for time.Since(start) <= timeout {
 		txs, err := s.tonClient.GetTransactionsSince(ctx, acc, lt, hash)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get transactions (lt %d, hash %s)", lt, hash.Hex())
+			return errors.Wrapf(err, "unable to get transactions (lt %d, hash %s)", lt, hash.Hex())
 		}
 
 		results := s.gateway.ParseAndFilterMany(txs, filter)
@@ -71,7 +71,7 @@ func (s *Signer) trackOutbound(
 		// Note that this method has a check for noop
 		_, err = zetacore.PostOutboundTracker(ctx, chain.ChainId, nonce, txHash)
 		if err != nil {
-			return errors.Wrap(err, "failed to add outbound tracker")
+			return errors.Wrap(err, "unable to add outbound tracker")
 		}
 
 		return nil

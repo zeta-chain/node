@@ -15,6 +15,7 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -192,6 +193,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.ts,
 				database,
 				tt.logger,
+				mode.StandardMode,
 			)
 			require.NoError(t, err)
 			ob, err := New(baseObserver, tt.evmClient)
@@ -429,7 +431,8 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	log := zerolog.New(zerolog.NewTestWriter(t)).With().Caller().Logger()
 	logger := base.Logger{Std: log, Compliance: log}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database,
+		logger, mode.StandardMode)
 	require.NoError(t, err)
 
 	ob, err := New(baseObserver, evmMock)
