@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -35,9 +34,6 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
-
-	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
-	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -550,12 +546,8 @@ func (ob *Observer) PostVoteInbound(
 
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
-	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
-	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
-
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().
-		PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
+	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg, monitorErrCh)
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
@@ -573,7 +565,8 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	go func() {
-		ob.handleMonitoringError(ctxWithTimeout, monitorErrCh, zetaHash)
+		ctxForHandler := zctx.Copy(ctx, context.Background())
+		ob.handleMonitoringError(ctxForHandler, monitorErrCh)
 	}()
 
 	return ballot, nil
@@ -582,7 +575,6 @@ func (ob *Observer) PostVoteInbound(
 func (ob *Observer) handleMonitoringError(
 	ctx context.Context,
 	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
-	zetaHash string,
 ) {
 	logger := ob.logger.Inbound
 	defer func() {
@@ -611,9 +603,7 @@ func (ob *Observer) handleMonitoringError(
 			}
 		}
 	case <-ctx.Done():
-		logger.Debug().
-			Str(logs.FieldZetaTx, zetaHash).
-			Msg("no error received for the monitoring, the transaction likely succeeded")
+		logger.Debug().Msg("context cancelled while waiting for monitoring result")
 	}
 }
 
