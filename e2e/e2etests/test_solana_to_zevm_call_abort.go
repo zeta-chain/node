@@ -16,8 +16,9 @@ func TestSolanaToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	// deploy testabort contract
-	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// execute call transaction, receiver is non existing address
 	data := []byte("hello")
