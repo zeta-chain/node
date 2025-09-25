@@ -292,9 +292,14 @@ start-e2e-performance-test: e2e-images solana
 	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --test-stress-solana --test-stress-sui" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-start-e2e-performance: e2e-images
+start-e2e-performance-4k: e2e-images
 	@echo "--> Starting e2e performance test"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=4000" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-e2e-performance-1k: e2e-images
+	@echo "--> Starting e2e performance test"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=1000" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 

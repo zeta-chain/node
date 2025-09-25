@@ -55,20 +55,20 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 
-	//btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
-	//for _, cp := range res.ChainParams.ChainParams {
-	//	if cp.ChainId == btcChainID {
-	//		chainParams = cp
-	//		found = true
-	//		break
-	//	}
-	//}
-	//
+	btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
+	for _, cp := range res.ChainParams.ChainParams {
+		if cp.ChainId == btcChainID {
+			chainParams = cp
+			found = true
+			break
+		}
+	}
+
 	//chainParams.GasPriceTicker = 55
-	//
-	//// update the chain params
-	//err = r.ZetaTxServer.UpdateChainParams(chainParams)
-	//require.NoError(r, err)
+
+	// update the chain params
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
+	require.NoError(r, err)
 }
 
 // EmissionsPoolFunding represents the amount of ZETA to fund the emissions pool with

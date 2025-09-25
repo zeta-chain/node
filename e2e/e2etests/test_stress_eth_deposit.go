@@ -29,7 +29,8 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	var eg errgroup.Group
 
 	revertOptions := gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
-
+	sleepDuration := time.Millisecond * 500
+	r.Logger.Print("using sleep duration of %s between deposits", sleepDuration.String())
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
@@ -45,7 +46,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 		// slow down submitting transactions a bit.
 		// submitting them as fast as possible does actually work.
 		// but we want to ensure the workload is a bit more representative.
-		time.Sleep(time.Millisecond * 10)
+		time.Sleep(sleepDuration)
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
 	}

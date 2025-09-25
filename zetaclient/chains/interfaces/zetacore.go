@@ -121,4 +121,6 @@ type ZetacoreClient interface {
 	GetUpgradePlan(context.Context) (*upgrade.Plan, error)
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
+
+	HasVoted(ctx context.Context, ballotIndex string, voterAddress string) (bool, error)
 }

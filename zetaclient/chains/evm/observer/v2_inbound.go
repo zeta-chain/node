@@ -88,6 +88,16 @@ func (ob *Observer) observeGatewayDeposit(
 
 		msg := ob.newDepositInboundVote(event)
 
+		// don't post send if has already voted before
+		//ballotIndex := msg.Digest()
+		//hasVoted, err := ob.ZetacoreClient().HasVoted(ctx, ballotIndex, msg.Creator)
+		//if err != nil {
+		//	fmt.Printf("HasVoted check failed for ballot %s voter %s: %v\n", ballotIndex, msg.Creator, err)
+		//}
+		//if hasVoted {
+		//	continue
+		//}
+
 		// skip early observed inbound that is not eligible for fast confirmation
 		if msg.ConfirmationMode == types.ConfirmationMode_FAST {
 			eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, &msg)
