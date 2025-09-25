@@ -134,14 +134,15 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return errors.Wrap(err, "unable to list pending CCTXs")
 	}
 
 	for i := range cctxList {
 		cctx := cctxList[i]
 		outboundID := base.OutboundIDFromCCTX(cctx)
 
-		if err := t.processCCTX(ctx, outboundID, cctx, zetaHeight); err != nil {
+		err := t.processCCTX(ctx, outboundID, cctx, zetaHeight)
+		if err != nil {
 			t.outboundLogger(outboundID).Error().Err(err).Msg("schedule CCTX failed")
 		}
 	}
@@ -149,21 +150,24 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 	return nil
 }
 
-func (t *TON) processCCTX(ctx context.Context, outboundID string, cctx *types.CrossChainTx, zetaHeight uint64) error {
+func (t *TON) processCCTX(ctx context.Context,
+	outboundID string,
+	cctx *types.CrossChainTx,
+	zetaHeight uint64,
+) error {
 	switch {
 	case t.signer.IsOutboundActive(outboundID):
-		//noop
-		return nil
+		return nil //no-op
 	case cctx.GetCurrentOutboundParam().ReceiverChainId != t.observer.Chain().ChainId:
 		return errors.New("chain id mismatch")
 	}
 
 	// vote outbound if it's already confirmed
 	continueKeySign, err := t.observer.VoteOutboundIfConfirmed(ctx, cctx)
-	switch {
-	case err != nil:
+	if err != nil {
 		return errors.Wrap(err, "failed to VoteOutboundIfConfirmed")
-	case !continueKeySign:
+	}
+	if !continueKeySign {
 		t.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 		return nil
 	}

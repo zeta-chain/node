@@ -58,7 +58,7 @@ func TestTONWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	require.Len(r, cctx.OutboundParams, 2, "expected 2 outbound params")
 
 	// Let's query ton tx
-	lt, hash, err := encoder.DecodeTx(cctx.OutboundParams[0].Hash)
+	lt, hash, err := encoder.DecodeHash(cctx.OutboundParams[0].Hash)
 	require.NoError(r, err)
 
 	// And ensure that this is an "increase seqno" transaction

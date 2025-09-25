@@ -69,7 +69,7 @@ func (repo *TONRepo) GetGasPrice(ctx context.Context) (uint64, uint64, error) {
 func (repo *TONRepo) GetTransactionByHash(ctx context.Context,
 	encodedHash string,
 ) (*ton.Transaction, error) {
-	lt, hash, err := encoder.DecodeTx(encodedHash)
+	lt, hash, err := encoder.DecodeHash(encodedHash)
 	if err != nil {
 		return nil, errors.Join(ErrEncoding, err)
 	}
@@ -107,7 +107,7 @@ func (repo *TONRepo) GetTransactionByIndex(ctx context.Context,
 func (repo *TONRepo) GetNextTransactions(ctx context.Context, logger zerolog.Logger,
 	encodedHash string,
 ) ([]ton.Transaction, error) {
-	lastLT, lastHash, err := encoder.DecodeTx(encodedHash)
+	lastLT, lastHash, err := encoder.DecodeHash(encodedHash)
 	if err != nil {
 		return nil, errors.Join(ErrEncoding, err)
 	}

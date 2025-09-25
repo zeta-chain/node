@@ -122,7 +122,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 
 	switch {
 	case active == found:
-		// noop
+		// no-op
 	case active:
 		now := time.Now().UTC()
 		s.activeOutbounds[outboundID] = now

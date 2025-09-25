@@ -54,7 +54,7 @@ func TestInbound(t *testing.T) {
 		assert.NoError(t, err)
 
 		// nothing happened, but tx scanned
-		lt, hash, err := encoder.DecodeTx(ob.LastTxScanned())
+		lt, hash, err := encoder.DecodeHash(ob.LastTxScanned())
 		assert.NoError(t, err)
 		assert.Equal(t, donation.Lt, lt)
 		assert.Equal(t, donation.Hash().Hex(), hash.Hex())
@@ -410,7 +410,7 @@ func TestInbound(t *testing.T) {
 			lastScannedHash = ob.LastTxScanned()
 		)
 
-		lastLT, lastHash, err := encoder.DecodeTx(lastScannedHash)
+		lastLT, lastHash, err := encoder.DecodeHash(lastScannedHash)
 		assert.NoError(t, err)
 		assert.Equal(t, lastTX.Lt, lastLT)
 		assert.Equal(t, lastTX.Hash().Hex(), lastHash.Hex())

@@ -21,7 +21,7 @@ func TestEncoder(t *testing.T) {
 		}
 		tx := sample.TONDeposit(t, accountID, deposit)
 
-		lt, hash, err := DecodeTx(EncodeTx(tx))
+		lt, hash, err := DecodeHash(EncodeTx(tx))
 		require.NoError(t, err)
 		require.Equal(t, tx.Lt, lt)
 		require.Equal(t, tx.Hash().Hex(), hash.Hex())
@@ -31,7 +31,7 @@ func TestEncoder(t *testing.T) {
 		lt1 := uint64(123)
 		hash1 := ton.Bits256(sample.Hash())
 
-		lt2, hash2, err := DecodeTx(EncodeHash(lt1, hash1))
+		lt2, hash2, err := DecodeHash(EncodeHash(lt1, hash1))
 		require.NoError(t, err)
 		require.Equal(t, lt1, lt2)
 		require.Equal(t, hash1.Hex(), hash2.Hex())
@@ -51,7 +51,7 @@ func TestEncoder(t *testing.T) {
 			{"1:abc", ErrInvalidHash},
 		}
 		for _, input := range inputs {
-			_, _, err := DecodeTx(input.value)
+			_, _, err := DecodeHash(input.value)
 			require.Error(t, err)
 			require.ErrorIs(t, err, input.err, "failed input: %q", input.value)
 		}

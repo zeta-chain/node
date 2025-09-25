@@ -58,14 +58,14 @@ func New(baseSigner *base.Signer, tonClient TONClient, gateway *toncontracts.Gat
 func (s *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-	zetacore interfaces.ZetacoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	zetaBlockHeight uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
 	s.MarkOutbound(outboundID, true)
 	defer s.MarkOutbound(outboundID, false)
 
-	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
+	outcome, err := s.ProcessOutbound(ctx, cctx, zetacoreClient, zetaBlockHeight)
 
 	logger := s.Logger().Std.With().
 		Str(logs.FieldOutboundID, outboundID).
@@ -73,21 +73,24 @@ func (s *Signer) TryProcessOutbound(
 		Str("outcome", string(outcome)).
 		Logger()
 
-	switch {
-	case err != nil:
+	if err != nil {
 		logger.Error().Err(err).Msg("error calling ProcessOutbound")
-	case outcome != Success:
-		logger.Warn().Msg("unsuccessful outcome for ProcessOutbound")
-	default:
-		logger.Info().Msg("processed outbound")
+		return
 	}
+
+	if outcome != Success {
+		logger.Warn().Msg("unsuccessful outcome for ProcessOutbound")
+		return
+	}
+
+	logger.Info().Msg("processed outbound")
 }
 
 // ProcessOutbound signs and broadcasts an outbound cross-chain transaction.
 func (s *Signer) ProcessOutbound(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-	zetacore interfaces.ZetacoreClient,
+	zetacoreClient interfaces.ZetacoreClient,
 	zetaHeight uint64,
 ) (Outcome, error) {
 	// TODO: note that *InboundParams* are use used on purpose due to legacy reasons.
@@ -105,7 +108,8 @@ func (s *Signer) ProcessOutbound(
 
 	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
 
-	if err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce); err != nil {
+	err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce)
+	if err != nil {
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
 	}
 
@@ -126,7 +130,7 @@ func (s *Signer) ProcessOutbound(
 
 	// it's okay to run this in the same goroutine
 	// because TryProcessOutbound method should be called in a goroutine
-	if err = s.trackOutbound(ctx, zetacore, outbound, gwState); err != nil {
+	if err = s.trackOutbound(ctx, zetacoreClient, outbound, gwState); err != nil {
 		return Fail, errors.Wrap(err, "unable to track outbound")
 	}
 
@@ -135,7 +139,11 @@ func (s *Signer) ProcessOutbound(
 
 // SignMessage signs TON external message using TSS
 // Note that TSS has in-mem cache for existing signatures to abort duplicate signing requests.
-func (s *Signer) SignMessage(ctx context.Context, msg toncontracts.ExternalMsg, zetaHeight, nonce uint64) error {
+func (s *Signer) SignMessage(ctx context.Context,
+	msg toncontracts.ExternalMsg,
+	zetaHeight,
+	nonce uint64,
+) error {
 	hash, err := msg.Hash()
 	if err != nil {
 		return errors.Wrap(err, "unable to hash message")
