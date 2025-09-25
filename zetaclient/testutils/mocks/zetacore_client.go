@@ -14,8 +14,6 @@ import (
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
-	errors "github.com/zeta-chain/node/pkg/errors"
-
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -924,8 +922,8 @@ func (_m *ZetacoreClient) PostVoteGasPrice(_a0 context.Context, _a1 chains.Chain
 }
 
 // PostVoteInbound provides a mock function with given fields: _a0, gasLimit, retryGasLimit, _a3, _a4
-func (_m *ZetacoreClient) PostVoteInbound(_a0 context.Context, gasLimit uint64, retryGasLimit uint64, _a3 *crosschaintypes.MsgVoteInbound, _a4 chan<- errors.ErrTxMonitor) (string, string, error) {
-	ret := _m.Called(_a0, gasLimit, retryGasLimit, _a3, _a4)
+func (_m *ZetacoreClient) PostVoteInbound(_a0 context.Context, gasLimit uint64, retryGasLimit uint64, _a3 *crosschaintypes.MsgVoteInbound) (string, string, error) {
+	ret := _m.Called(_a0, gasLimit, retryGasLimit, _a3)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PostVoteInbound")
@@ -934,23 +932,23 @@ func (_m *ZetacoreClient) PostVoteInbound(_a0 context.Context, gasLimit uint64, 
 	var r0 string
 	var r1 string
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) (string, string, error)); ok {
-		return rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound) (string, string, error)); ok {
+		return rf(_a0, gasLimit, retryGasLimit, _a3)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
-		r0 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound) string); ok {
+		r0 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) string); ok {
-		r1 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound) string); ok {
+		r1 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound, chan<- errors.ErrTxMonitor) error); ok {
-		r2 = rf(_a0, gasLimit, retryGasLimit, _a3, _a4)
+	if rf, ok := ret.Get(2).(func(context.Context, uint64, uint64, *crosschaintypes.MsgVoteInbound) error); ok {
+		r2 = rf(_a0, gasLimit, retryGasLimit, _a3)
 	} else {
 		r2 = ret.Error(2)
 	}
