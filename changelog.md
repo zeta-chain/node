@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [4254](https://github.com/zeta-chain/node/pull/4234) - add additional support for zetaclient public DNS name
+
 ## v36.0.0
 
 ### Features
