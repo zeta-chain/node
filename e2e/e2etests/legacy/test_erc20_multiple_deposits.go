@@ -48,7 +48,7 @@ func multipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	// deploy depositor
 	depositorAddr, txDeploy, depositor, err := testcontract.DeployDepositor(r.EVMAuth, r.EVMClient, r.ERC20CustodyAddr)
 	require.NoError(r, err)
-	r.WaitForTxReceiptOnZEVM(txDeploy)
+	r.WaitForTxReceiptOnEVM(txDeploy)
 
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
