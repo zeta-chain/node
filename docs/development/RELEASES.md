@@ -1,5 +1,7 @@
 ## Releases
 
+NOTE: This release process will be deprecated as part of the new gitflow process. It will be updated as part of https://github.com/zeta-chain/node/issues/4263.
+
 To start a new major release, begin by creating and pushing a `release/` branch based on `develop`.
 
 <details>
