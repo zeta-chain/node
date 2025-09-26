@@ -12,6 +12,10 @@
 
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 
+### Fixes
+
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+
 ## v33.0.0
 
 ### Features
