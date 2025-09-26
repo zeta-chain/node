@@ -81,6 +81,7 @@ documentation for all the messages in that module.
 
 Find below further documentation for development and running your own ZetaChain node:
 
+- [Get familiar with our release lifecycle](docs/development/RELEASE_LIFECYCLE.md)
 - [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
 - [Make a new ZetaChain release](docs/development/RELEASES.md)
 - [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
