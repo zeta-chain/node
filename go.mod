@@ -306,7 +306,7 @@ require (
 	github.com/showa-93/go-mask v0.6.2
 	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
-	github.com/zeta-chain/go-tss v0.6.3
+	github.com/zeta-chain/go-tss v0.6.4-0.20250924153151-2ae33848328f
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 	go.uber.org/mock v0.5.2
 )
