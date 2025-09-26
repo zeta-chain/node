@@ -54,7 +54,6 @@ func TestPercentage(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			percentage := Percentage(tc.numerator, tc.denominator)
 			fmt.Printf("percentage: %v\n", percentage)
