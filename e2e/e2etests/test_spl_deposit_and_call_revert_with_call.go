@@ -20,8 +20,9 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseInt(r, args[0])
 
 	// deploy a reverter contract in ZEVM
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
+	reverterAddr, txDeploy, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
 	// load deployer private key
