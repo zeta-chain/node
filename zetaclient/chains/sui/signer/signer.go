@@ -92,7 +92,10 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	if gatewayNonce != nonce {
-		logger.Info().Msgf("gateway nonce %d does not match CCTX nonce %d, skip broadcast", gatewayNonce, nonce)
+		logger.Info().
+			Uint64("gateway_nonce", gatewayNonce).
+			Uint64("cctx_nonce", nonce).
+			Msg("gateway nonce does not match CCTX nonce; skip broadcast")
 		return nil
 	}
 
@@ -116,7 +119,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	receiver := cctx.GetCurrentOutboundParam().Receiver
 	if err := sui.ValidateAddress(receiver); err != nil {
 		validReceiver = false
-		logger.Error().Err(err).Str("receiver", receiver).Msg("Invalid receiver address")
+		logger.Error().Err(err).Str("receiver", receiver).Msg("invalid receiver address")
 	}
 
 	// broadcast tx according to compliance check result

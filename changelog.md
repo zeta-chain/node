@@ -8,6 +8,10 @@
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
+### Refactor
+
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+
 ## v33.0.0
 
 ### Features

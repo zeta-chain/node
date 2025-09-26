@@ -128,19 +128,19 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 		s.activeOutbounds[outboundID] = now
 
 		s.logger.Std.Info().
-			Bool("outbound.active", active).
-			Str("outbound.id", outboundID).
-			Time("outbound.timestamp", now).
-			Int("outbound.total", len(s.activeOutbounds)).
+			Bool("outbound_active", active).
+			Str(logs.FieldOutboundID, outboundID).
+			Time("outbound_timestamp", now).
+			Int("outbound_total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
 	default:
 		timeTaken := time.Since(startedAt)
 
 		s.logger.Std.Info().
-			Bool("outbound.active", active).
-			Str("outbound.id", outboundID).
-			Float64("outbound.time_taken", timeTaken.Seconds()).
-			Int("outbound.total", len(s.activeOutbounds)).
+			Bool("outbound_active", active).
+			Str(logs.FieldOutboundID, outboundID).
+			Float64("outbound_time_taken", timeTaken.Seconds()).
+			Int("outbound_total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
 
 		delete(s.activeOutbounds, outboundID)

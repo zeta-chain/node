@@ -194,14 +194,14 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
-		Uint64("tx.amount", args.amount).
-		Str("tx.sender", args.sender).
-		Str("tx.target", args.target).
-		Uint64("tx.gas_budget", args.gasBudget).
-		Strs("tx.type_args", args.payload.TypeArgs).
-		Strs("tx.object_ids", args.payload.ObjectIDs).
-		Hex("tx.payload", args.payload.Message).
-		Int("tx.sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
+		Uint64("tx_amount", args.amount).
+		Str("tx_sender", args.sender).
+		Str("tx_target", args.target).
+		Uint64("tx_gas_budget", args.gasBudget).
+		Strs("tx_type_args", args.payload.TypeArgs).
+		Strs("tx_object_ids", args.payload.ObjectIDs).
+		Hex("tx_payload", args.payload.Message).
+		Int("tx_sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
 		Msg("calling withdrawAndCallPTB")
 
 	// build the PTB transaction
@@ -303,7 +303,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// tx succeeded, return the digest
 	if res.Effects.Status.Status == client.TxStatusSuccess {
-		logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui tx block successfully")
+		logger.Info().Str(logs.FieldTx, res.Digest).Msg("executed sui tx block successfully")
 		return res.Digest, nil
 	}
 
@@ -348,7 +348,7 @@ func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilde
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}
-	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block")
+	logger.Info().Str(logs.FieldTx, res.Digest).Msg("executed sui cancel tx block")
 
 	return res.Digest, nil
 }

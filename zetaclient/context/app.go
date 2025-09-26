@@ -182,17 +182,17 @@ func (a *AppContext) updateChainRegistry(
 	// 2. Compare existing chains with fresh ones
 	if len(existingChainIDs) > 0 && !slices.Equal(existingChainIDs, freshChainIDs) {
 		a.logger.Warn().
-			Ints64("chains.current", existingChainIDs).
-			Ints64("chains.new", freshChainIDs).
-			Msg("Chain list changed at the runtime!")
+			Ints64("chains_current", existingChainIDs).
+			Ints64("chains_new", freshChainIDs).
+			Msg("chain list changed at the runtime")
 	}
 
 	// Log warn if somehow chain doesn't chainParam
 	for _, chainID := range freshChainIDs {
 		if _, ok := freshChainParams[chainID]; !ok && !isZeta(chainID) {
 			a.logger.Warn().
-				Int64("chain.id", chainID).
-				Msg("Chain doesn't have according ChainParams present. Skipping.")
+				Int64("chain_id", chainID).
+				Msg("chain does not have according ChainParams present; skipping")
 		}
 	}
 
@@ -226,8 +226,8 @@ func (a *AppContext) updateChainRegistry(
 	toBeDeleted, _ := lo.Difference(existingChainIDs, freshChainIDs)
 	if len(toBeDeleted) > 0 {
 		a.logger.Warn().
-			Ints64("chains.deleted", toBeDeleted).
-			Msg("Deleting chains that are no longer relevant")
+			Ints64("deleted_chains", toBeDeleted).
+			Msg("deleting chains that are no longer relevant")
 
 		a.chainRegistry.Delete(toBeDeleted...)
 	}

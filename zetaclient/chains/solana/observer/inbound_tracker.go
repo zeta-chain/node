@@ -23,7 +23,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, signature)
 		switch {
 		case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
-			ob.Logger().Inbound.Warn().Stringer("tx.signature", signature).Msg("skip inbound tracker hash")
+			ob.Logger().Inbound.Warn().
+				Stringer("tx_signature", signature).
+				Msg("skip inbound tracker hash")
 			continue
 		case err != nil:
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
