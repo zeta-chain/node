@@ -914,3 +914,27 @@ func (k Keeper) CallEVMWithData(
 
 	return res, nil
 }
+
+// DepositChainGasToken deposits the chain gas token into the receiver address on the given chain
+func (k Keeper) DepositChainGasToken(
+	ctx sdk.Context,
+	chainID int64,
+	amount *big.Int,
+	receiver common.Address,
+) error {
+	// get the gas zrc20 contract from the chain
+	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
+	if err != nil {
+		return err
+	}
+
+	// call deposit ZRC20 method
+	return k.CallZRC20Deposit(
+		ctx,
+		types.ModuleAddressEVM,
+		gasZRC20,
+		receiver,
+		amount,
+		true,
+	)
+}

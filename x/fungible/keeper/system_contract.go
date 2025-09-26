@@ -752,6 +752,7 @@ func (k *Keeper) CallZRC20Deposit(
 	zrc20address ethcommon.Address,
 	to ethcommon.Address,
 	amount *big.Int,
+	noEthereumTxEvent bool,
 ) error {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
@@ -766,7 +767,7 @@ func (k *Keeper) CallZRC20Deposit(
 		big.NewInt(0),
 		DefaultGasLimit,
 		true,
-		false,
+		noEthereumTxEvent,
 		"deposit",
 		to,
 		amount,

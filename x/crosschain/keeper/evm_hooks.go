@@ -220,6 +220,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		types.ConfirmationMode_SAFE,
 	)
 
+	// The gasFee is already paid by the user when creating the ZRC20Withdrawal event.
 	cctx, err := k.ValidateInbound(ctx, msg, false)
 	if err != nil {
 		return err
@@ -304,6 +305,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		types.ConfirmationMode_SAFE,
 	)
 
+	// The gasFee is not paid yet, and we should process the fee payment when validating the inbound
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return err

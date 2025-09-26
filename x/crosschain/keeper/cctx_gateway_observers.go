@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -65,9 +66,16 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 			if !found {
 				return fmt.Errorf("gasprice not found for %d", config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
 			}
+			gasLimit := sdkmath.NewUint(config.CCTX.GetCurrentOutboundParam().CallOptions.GasLimit)
 			config.CCTX.GetCurrentOutboundParam().GasPrice = gasPrice.String()
 			config.CCTX.GetCurrentOutboundParam().GasPriorityFee = priorityFee.String()
 			config.CCTX.GetCurrentOutboundParam().Amount = config.CCTX.InboundParams.Amount
+
+			// Calculate the gas fee paid by the user and add this to the CCTX
+			// This value does not include the protocol fee paid by the user,
+			// as that should not be included in any calculations for stability pool or refund
+			gasFeePaidByUser := gasLimit.Mul(gasPrice)
+			config.CCTX.GetCurrentOutboundParam().UserGasFeePaid = gasFeePaidByUser
 		}
 		return c.crosschainKeeper.SetObserverOutboundInfo(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()

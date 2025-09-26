@@ -27,6 +27,10 @@ func (k Keeper) GetNextCctxCounter(ctx sdk.Context) uint64 {
 	return k.getNextCctxCounter(ctx)
 }
 
+func (k Keeper) RefundUnusedGas(ctx sdk.Context, cctx *types.CrossChainTx) error {
+	return k.refundUnusedGas(ctx, cctx)
+}
+
 func (k Keeper) GetZETAInboundDetails(
 	ctx sdk.Context,
 	receiverChainID *big.Int,

@@ -307,7 +307,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+		err := cctx.UpdateCurrentOutbound(ctx, types.MsgVoteOutbound{
 			ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
 			ObservedOutboundHash:              hash,
 			ObservedOutboundBlockHeight:       10,
@@ -330,7 +330,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+		err := cctx.UpdateCurrentOutbound(ctx, types.MsgVoteOutbound{
 			ObservedOutboundHash:              hash,
 			ObservedOutboundBlockHeight:       10,
 			ObservedOutboundGasUsed:           100,
@@ -353,7 +353,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		err := cctx.AddOutbound(ctx, types.MsgVoteOutbound{
+		err := cctx.UpdateCurrentOutbound(ctx, types.MsgVoteOutbound{
 			ValueReceived:                     sdkmath.NewUint(100),
 			ObservedOutboundHash:              hash,
 			ObservedOutboundBlockHeight:       10,

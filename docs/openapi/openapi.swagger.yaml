@@ -54444,6 +54444,9 @@ definitions:
       confirmationMode:
         $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
         title: confirmation mode used for the outbound
+      userGasFeePaid:
+        type: string
+        description: This field tracks the original gas fee paid by the user.
   zetachain.zetacore.crosschain.OutboundTracker:
     type: object
     properties:
@@ -55141,6 +55144,12 @@ definitions:
         description: |-
           Skip actions that require scanning the contents of each block.
           The main thing this disables is transfers directly to the TSS address.
+      stabilityPoolPercentage:
+        type: string
+        format: uint64
+        description: |-
+          Percentage of unused tokens for outbounds that are are sent to the
+          stability pool. The value should be between 0 and 100.
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:

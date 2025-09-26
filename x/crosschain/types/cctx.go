@@ -34,6 +34,17 @@ func (m CrossChainTx) GetConnectedChainID() (int64, bool, error) {
 	return m.InboundParams.SenderChainId, false, nil
 }
 
+// IsWithdrawTx returns true if the CCTX is an outgoing withdraw transaction originating from ZetaChain.
+func (m CrossChainTx) IsWithdrawTx() (bool, error) {
+	if m.InboundParams == nil {
+		return false, fmt.Errorf("inbound params cannot be nil")
+	}
+
+	// If the sender chain ID is ZetaChain, this is an outgoing CCTX.
+	// Note: additional chains argument is empty, all ZetaChain IDs are hardcoded in the codebase.
+	return chains.IsZetaChain(m.InboundParams.SenderChainId, []chains.Chain{}), nil
+}
+
 // GetEVMRevertAddress returns the EVM revert address
 // If a revert address is specified in the revert options, it returns the address
 // Otherwise returns sender address
@@ -179,8 +190,8 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	return nil
 }
 
-// AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(
+// UpdateCurrentOutbound updates the current outbound using the given vote outbound message.
+func (m *CrossChainTx) UpdateCurrentOutbound(
 	ctx sdk.Context,
 	msg MsgVoteOutbound,
 	ballotStatus observertypes.BallotStatus,

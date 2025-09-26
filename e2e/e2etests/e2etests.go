@@ -1877,7 +1877,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestEtherWithdrawRestricted,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyEtherDepositAndCallRefundName,

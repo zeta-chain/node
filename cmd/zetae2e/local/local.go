@@ -295,7 +295,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
+		deployerRunner.UpdateEVMChainParams(testLegacy)
 
 		if shouldSetupTON {
 			deployerRunner.SetupTON(
@@ -314,7 +314,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy)
+		deployerRunner.RunSetup()
+		if testAdmin {
+			deployerRunner.UpdateEVMChainParams(false)
+		}
 	})
 
 	// if a config output is specified, write the config

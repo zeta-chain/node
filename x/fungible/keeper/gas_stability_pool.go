@@ -56,6 +56,7 @@ func (k Keeper) FundGasStabilityPool(
 		gasZRC20,
 		types.GasStabilityPoolAddressEVM(),
 		amount,
+		true,
 	)
 }
 

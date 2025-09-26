@@ -34,10 +34,10 @@ func TestAppendFVsSprintf(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Generate string using fmt.Sprintf
 			sprintfResult := []byte(fmt.Sprintf(tc.format, tc.values...))
-			
+
 			// Generate string using fmt.Appendf
 			appendResult := fmt.Appendf(nil, tc.format, tc.values...)
-			
+
 			// Assert that both methods produce the same byte slice
 			assert.Equal(t, sprintfResult, appendResult, "[]byte(fmt.Sprintf) and fmt.Appendf should produce identical byte slices")
 		})

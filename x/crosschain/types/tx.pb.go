@@ -1112,9 +1112,9 @@ type MsgVoteInbound struct {
 	SenderChainId int64  `protobuf:"varint,3,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
 	Receiver      string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 	ReceiverChain int64  `protobuf:"varint,5,opt,name=receiver_chain,json=receiverChain,proto3" json:"receiver_chain,omitempty"`
-	// string zeta_burnt = 6;
+	//  string zeta_burnt = 6;
 	Amount cosmossdk_io_math.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=cosmossdk.io/math.Uint" json:"amount"`
-	// string mMint = 7;
+	//  string mMint = 7;
 	Message            string `protobuf:"bytes,8,opt,name=message,proto3" json:"message,omitempty"`
 	InboundHash        string `protobuf:"bytes,9,opt,name=inbound_hash,json=inboundHash,proto3" json:"inbound_hash,omitempty"`
 	InboundBlockHeight uint64 `protobuf:"varint,10,opt,name=inbound_block_height,json=inboundBlockHeight,proto3" json:"inbound_block_height,omitempty"`
