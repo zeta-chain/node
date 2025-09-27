@@ -101,7 +101,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
+	logger := ob.Logger().Inbound
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
@@ -145,8 +145,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 // It returns the last successfully scanned block height, so the caller knows where to resume next time
 func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, toBlock uint64) uint64 {
 	logger := ob.Logger().Inbound.With().
-		Str(logs.FieldMethod, "observeInboundInBlockRange").
-		Uint64("start_block", startBlock).Uint64("to_block", toBlock).Logger()
+		Uint64("start_block", startBlock).Uint64("to_block", toBlock).
+		Logger()
 
 	var (
 		lastScannedTssRecvd              = toBlock
@@ -292,7 +292,6 @@ func (ob *Observer) observeZetaSent(
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Str(logs.FieldMethod, "observeZetaSent").
 			Stringer(logs.FieldTx, ethlog.TxHash).
 			Uint64(logs.FieldBlock, ethlog.BlockNumber).
 			Msg("invalid ZetaSent event")
@@ -321,7 +320,6 @@ func (ob *Observer) observeZetaSent(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Str(logs.FieldMethod, "observeZetaSent").
 				Stringer(logs.FieldTx, event.Raw.TxHash).
 				Msg("multiple remote call events detected in a tx")
 			continue
@@ -373,7 +371,6 @@ func (ob *Observer) observeERC20Deposited(
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
-			Str(logs.FieldMethod, "observeERC20Deposited").
 			Stringer(logs.FieldTx, ethlog.TxHash).
 			Uint64(logs.FieldBlock, ethlog.BlockNumber).
 			Msg("invalid Deposited event")
@@ -409,7 +406,6 @@ func (ob *Observer) observeERC20Deposited(
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().
-				Str(logs.FieldMethod, "observeERC20Deposited").
 				Stringer(logs.FieldTx, event.Raw.TxHash).
 				Msg("multiple remote call events detected in a tx")
 			continue

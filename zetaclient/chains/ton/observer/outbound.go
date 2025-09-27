@@ -145,7 +145,6 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 		return err
 	case auth.Signer != ob.TSS().PubKey().AddressEVM():
 		ob.Logger().Inbound.Warn().
-			Str(logs.FieldMethod, "addOutboundTracker").
 			Fields(txLogFields(tx)).
 			Str("transaction_ton_signer", auth.Signer.String()).
 			Msg("observe gateway: signer is not TSS; skipping")
@@ -238,7 +237,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 	case zetaTxHash != "":
 		log.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
+			Str(logs.FieldBallotIndex, ballot).
 			Msg("posted outbound vote")
 	}
 

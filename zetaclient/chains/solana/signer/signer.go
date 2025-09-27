@@ -133,8 +133,7 @@ func (signer *Signer) TryProcessOutbound(
 		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
 			signer.Logger().Std.Error().
-				Str(logs.FieldMethod, "TryProcessOutbound").
-				Str(logs.FieldCctx, cctx.Index).
+				Str(logs.FieldCctxIndex, cctx.Index).
 				Any("panic", err).
 				Str("stack_trace", string(debug.Stack())).
 				Msg("caught panic error")
@@ -144,7 +143,6 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str(logs.FieldMethod, "TryProcessOutbound").
 		Uint64("nonce", params.TssNonce).
 		Str("cctx", cctx.Index).
 		Logger()
@@ -310,9 +308,8 @@ func (signer *Signer) broadcastOutbound(
 	tx := outbound.Tx
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod: "broadcastOutbound",
-		logs.FieldNonce:  nonce,
-		logs.FieldTx:     tx.Signatures[0].String(),
+		logs.FieldNonce: nonce,
+		logs.FieldTx:    tx.Signatures[0].String(),
 	}
 
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
@@ -490,11 +487,7 @@ func signMsgWithFallback[T SignableMessage[T]](
 //     processing goroutines by nonce and avoid nonce mismatch
 //  3. less nonce mismatch will reduce CCTX retries and TSS keysign requests
 func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) error {
-	logger := signer.Logger().Std.With().
-		Str("method", "waitExactGatewayNonce").
-		Int64("chain", signer.Chain().ChainId).
-		Uint64("nonce", nonce).
-		Logger()
+	logger := signer.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
 
 	for {
 		if ctx.Err() != nil {
