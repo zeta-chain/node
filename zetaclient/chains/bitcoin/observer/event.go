@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -168,8 +169,9 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 		logger.Info().Msg("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
-		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
+		coinType := coin.CoinType_Gas
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance, false,
+			ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, &coinType)
 		return false
 	default:
 		logger.Error().Any("category", category).Msg("unreachable code got InboundCategory")

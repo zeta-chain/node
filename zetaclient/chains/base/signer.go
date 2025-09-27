@@ -171,7 +171,7 @@ func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
 		cctx.Index,
 		cctx.InboundParams.Sender,
 		params.Receiver,
-		params.CoinType.String(),
+		&params.CoinType,
 	)
 
 	return false

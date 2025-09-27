@@ -194,7 +194,7 @@ func (ob *Observer) constructInboundVote(
 			event.TxHash,
 			deposit.Sender,
 			deposit.Receiver.String(),
-			asset,
+			&coinType,
 		)
 		return nil, errCompliance
 	}
