@@ -67,6 +67,7 @@ func (r *E2ERunner) SetupEVM() {
 		initializerData,
 	)
 	require.NoError(r, err)
+	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
 
 	r.GatewayEVMAddr = gatewayProxyAddress
 	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(gatewayProxyAddress, r.EVMClient)
