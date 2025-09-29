@@ -32,7 +32,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// Sui has a nice access-pattern of scrolling through contract events
-	events, _, err := ob.client.QueryModuleEvents(ctx, query)
+	events, _, err := ob.suiClient.QueryModuleEvents(ctx, query)
 	if err != nil {
 		return errors.Wrap(err, "unable to query module events")
 	}
@@ -125,7 +125,7 @@ func (ob *Observer) processInboundEvent(
 
 	if tx == nil {
 		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
-		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
+		txFresh, err := ob.suiClient.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
 		}
@@ -153,7 +153,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
 	}
 
-	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
+	tx, err := ob.suiClient.SuiGetTransactionBlock(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "unable to get transaction block")
 	}

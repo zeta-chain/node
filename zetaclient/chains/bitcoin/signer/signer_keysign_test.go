@@ -132,7 +132,7 @@ func getWalletTX(
 }
 
 func getTSSTX(
-	tss interfaces.TSSSigner,
+	tssSigner interfaces.TSSSigner,
 	tx *wire.MsgTx,
 	sigHashes *txscript.TxSigHashes,
 	idx int,
@@ -147,7 +147,7 @@ func getTSSTX(
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(ctx, witnessHash, 10, 10, 0)
+	sig65B, err := tssSigner.Sign(ctx, witnessHash, 10, 10, 0)
 	R := &btcec.ModNScalar{}
 	R.SetBytes((*[32]byte)(sig65B[:32]))
 	S := &btcec.ModNScalar{}
@@ -158,7 +158,7 @@ func getTSSTX(
 		return "", err
 	}
 
-	pkCompressed := tss.PubKey().Bytes(true)
+	pkCompressed := tssSigner.PubKey().Bytes(true)
 	txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 	tx.TxIn[0].Witness = txWitness
 

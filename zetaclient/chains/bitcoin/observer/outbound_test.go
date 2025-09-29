@@ -18,13 +18,13 @@ import (
 )
 
 // MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
-func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
+func MockBTCObserverMainnet(t *testing.T, tssSigner interfaces.TSSSigner) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
-	if tss == nil {
-		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+	if tssSigner == nil {
+		tssSigner = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 	}
 
 	// create mock rpc client
@@ -37,11 +37,11 @@ func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 	baseLogger := base.Logger{Std: logger, Compliance: logger}
 
-	baseObserver, err := base.NewObserver(chain, params, nil, tss, 100, nil, database, baseLogger)
+	baseObserver, err := base.NewObserver(chain, params, nil, tssSigner, 100, nil, database, baseLogger)
 	require.NoError(t, err)
 
 	// create Bitcoin observer
-	ob, err := New(chain, baseObserver, btcClient)
+	ob, err := New(baseObserver, btcClient, chain)
 	require.NoError(t, err)
 
 	return ob

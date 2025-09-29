@@ -48,7 +48,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.client.Signer)
+		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.client.Signer())
 
 		// check that by default tx type is legacy tx
 		assert.Equal(t, ethtypes.LegacyTxType, int(tx.Type()))

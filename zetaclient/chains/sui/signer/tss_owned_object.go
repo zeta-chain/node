@@ -62,7 +62,7 @@ func (s *Signer) getWithdrawCapID(ctx context.Context) (string, error) {
 	owner := s.TSS().PubKey().AddressSui()
 	structType := s.gateway.WithdrawCapType()
 
-	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
+	objectID, err := s.suiClient.GetOwnedObjectID(ctx, owner, structType)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to get owned object ID")
 	}

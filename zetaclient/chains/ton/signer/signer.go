@@ -16,17 +16,23 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-type RPC interface {
-	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
-	GetAccountState(ctx context.Context, accountID ton.AccountID) (rpc.Account, error)
-	SendMessage(ctx context.Context, payload []byte) (uint32, error)
+type TONClient interface {
+	GetTransactionsSince(_ context.Context,
+		_ ton.AccountID,
+		lt uint64,
+		hash ton.Bits256,
+	) ([]ton.Transaction, error)
+
+	GetAccountState(context.Context, ton.AccountID) (rpc.Account, error)
+
+	SendMessage(context.Context, []byte) (uint32, error)
 }
 
 // Signer represents TON signer.
 type Signer struct {
 	*base.Signer
-	rpc     RPC
-	gateway *toncontracts.Gateway
+	tonClient TONClient
+	gateway   *toncontracts.Gateway
 }
 
 // Outcome possible outbound processing outcomes.
@@ -39,11 +45,11 @@ const (
 )
 
 // New Signer constructor.
-func New(baseSigner *base.Signer, rpc RPC, gateway *toncontracts.Gateway) *Signer {
+func New(baseSigner *base.Signer, tonClient TONClient, gateway *toncontracts.Gateway) *Signer {
 	return &Signer{
-		Signer:  baseSigner,
-		rpc:     rpc,
-		gateway: gateway,
+		Signer:    baseSigner,
+		tonClient: tonClient,
+		gateway:   gateway,
 	}
 }
 
@@ -103,7 +109,7 @@ func (s *Signer) ProcessOutbound(
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
 	}
 
-	gwState, err := s.rpc.GetAccountState(ctx, s.gateway.AccountID())
+	gwState, err := s.tonClient.GetAccountState(ctx, s.gateway.AccountID())
 	if err != nil {
 		return Fail, errors.Wrap(err, "unable to get gateway state")
 	}
@@ -113,7 +119,7 @@ func (s *Signer) ProcessOutbound(
 	//
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
-	exitCode, err := s.gateway.SendExternalMessage(ctx, s.rpc, outbound.message)
+	exitCode, err := s.gateway.SendExternalMessage(ctx, s.tonClient, outbound.message)
 	if err != nil || exitCode != 0 {
 		return s.handleSendError(exitCode, err, outbound.logFields)
 	}

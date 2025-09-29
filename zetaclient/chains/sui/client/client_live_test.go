@@ -306,7 +306,7 @@ type testSuite struct {
 
 func newTestSuite(t *testing.T, endpoint string) *testSuite {
 	ctx := context.Background()
-	client := NewFromEndpoint(endpoint)
+	client := New(endpoint)
 
 	return &testSuite{t: t, ctx: ctx, Client: client}
 }

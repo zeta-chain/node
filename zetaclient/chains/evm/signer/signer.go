@@ -11,7 +11,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -20,7 +20,6 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -39,17 +38,25 @@ const (
 	broadcastTimeout = time.Second * 15
 )
 
-var (
-	// zeroValue is for outbounds that carry no ETH (gas token) value
-	zeroValue = big.NewInt(0)
-)
+// zeroValue is for outbounds that carry no ETH (gas token) value
+var zeroValue = big.NewInt(0)
+
+type EVMClient interface {
+	NonceAt(_ context.Context, account ethcommon.Address, blockNumber *big.Int) (uint64, error)
+
+	IsTxConfirmed(_ context.Context, txHash string, confirmations uint64) (bool, error)
+
+	SendTransaction(context.Context, *eth.Transaction) error
+
+	Signer() eth.Signer
+}
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
 
-	// client is the EVM RPC client to interact with the EVM chain
-	client *client.Client
+	// evmClient is the EVM RPC client used to interact with the EVM chain
+	evmClient EVMClient
 
 	// zetaConnectorAddress is the address of the ZetaConnector contract
 	zetaConnectorAddress ethcommon.Address
@@ -64,14 +71,14 @@ type Signer struct {
 // New Signer constructor
 func New(
 	baseSigner *base.Signer,
-	client *client.Client,
+	evmClient EVMClient,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
 	return &Signer{
 		Signer:               baseSigner,
-		client:               client,
+		evmClient:            evmClient,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
 		gatewayAddress:       gatewayAddress,
@@ -156,14 +163,14 @@ func (signer *Signer) Sign(
 	gas Gas,
 	nonce uint64,
 	height uint64,
-) (*ethtypes.Transaction, []byte, []byte, error) {
+) (*eth.Transaction, []byte, []byte, error) {
 	chainID := big.NewInt(signer.Chain().ChainId)
 	tx, err := newTx(chainID, data, to, amount, gas, nonce)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "unable to create new tx")
 	}
 
-	hashBytes := signer.client.Hash(tx).Bytes()
+	hashBytes := signer.evmClient.Signer().Hash(tx).Bytes()
 
 	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
@@ -175,7 +182,7 @@ func (signer *Signer) Sign(
 		return nil, nil, nil, errors.Wrap(err, "unable to derive pub key from signature")
 	}
 
-	signedTX, err := tx.WithSignature(signer.client.Signer, sig[:])
+	signedTX, err := tx.WithSignature(signer.evmClient.Signer(), sig[:])
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "unable to set tx signature")
 	}
@@ -190,14 +197,14 @@ func newTx(
 	amount *big.Int,
 	gas Gas,
 	nonce uint64,
-) (*ethtypes.Transaction, error) {
+) (*eth.Transaction, error) {
 	if err := gas.validate(); err != nil {
 		return nil, errors.Wrap(err, "invalid gas parameters")
 	}
 
 	// https://github.com/zeta-chain/node/issues/3221
 	//if gas.isLegacy() {
-	return ethtypes.NewTx(&ethtypes.LegacyTx{
+	return eth.NewTx(&eth.LegacyTx{
 		To:       &to,
 		Value:    amount,
 		Data:     data,
@@ -219,11 +226,11 @@ func newTx(
 	//}), nil
 }
 
-func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) error {
+func (signer *Signer) broadcast(ctx context.Context, tx *eth.Transaction) error {
 	ctx, cancel := context.WithTimeout(ctx, broadcastTimeout)
 	defer cancel()
 
-	return signer.client.SendTransaction(ctx, tx)
+	return signer.evmClient.SendTransaction(ctx, tx)
 }
 
 // TryProcessOutbound - signer interface implementation
@@ -334,7 +341,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	outboundData *OutboundData,
 	zetacoreClient interfaces.ZetacoreClient,
 	_ zctx.Chain,
-) (*ethtypes.Transaction, error) {
+) (*eth.Transaction, error) {
 	switch {
 	case !signer.PassesCompliance(cctx):
 		// restricted cctx
@@ -401,7 +408,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 // BroadcastOutbound signed transaction through evm rpc client
 func (signer *Signer) BroadcastOutbound(
 	ctx context.Context,
-	tx *ethtypes.Transaction,
+	tx *eth.Transaction,
 	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
 	zetacoreClient interfaces.ZetacoreClient,
@@ -440,7 +447,7 @@ func (signer *Signer) BroadcastOutbound(
 	// define broadcast function
 	broadcast := func() error {
 		// get latest TSS account nonce
-		latestNonce, err := signer.client.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
+		latestNonce, err := signer.evmClient.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
 		if err != nil {
 			return errors.Wrap(err, "unable to get latest TSS account nonce")
 		}

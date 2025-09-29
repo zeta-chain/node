@@ -447,13 +447,13 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name               string
-		mockEVMClient      func(m *mocks.EVMRPCClient)
+		mockEVMClient      func(m *mocks.EVMClient)
 		mockZetacoreClient func(m *mocks.ZetacoreClient)
 		errMsg             string
 	}{
 		{
 			name: "should observe TSS receive in block",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number and receipt to mock client
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
@@ -466,7 +466,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		},
 		{
 			name: "should not observe on error getting block",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number to allow construction of observer
 				m.On("BlockNumber", mock.Anything).Unset()
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Unset()
@@ -478,7 +478,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		},
 		{
 			name: "should not observe on error getting receipt",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number but RPC error on getting receipt
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
