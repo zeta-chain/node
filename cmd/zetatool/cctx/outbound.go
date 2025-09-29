@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	zetaevmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -96,9 +96,11 @@ func (c *TrackingDetails) checkSolanaOutboundTx(ctx *context.Context) error {
 	if solClient == nil {
 		return fmt.Errorf("error creating rpc client")
 	}
+	solRepo := solrepo.New(solClient)
+
 	for _, hash := range txHashList {
 		signature := solana.MustSignatureFromBase58(hash)
-		_, err := solanarpc.GetTransaction(goCtx, solClient, signature)
+		_, err := solRepo.GetTransaction(goCtx, signature)
 		if err != nil {
 			continue
 		}

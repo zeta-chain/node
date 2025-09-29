@@ -34,7 +34,7 @@ const (
 // Note:  OP_RETURN based memo is prioritized over tapscript memo if both are present.
 func GetBtcEventWithWitness(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -63,7 +63,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// event found, get sender address
-	fromAddress, err := rpc.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
+	fromAddress, err := bitcoinClient.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
@@ -80,7 +80,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, rpc, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
@@ -108,7 +108,7 @@ func GetBtcEventWithWitness(
 		logger.Debug().Fields(lf).Str("memo", hex.EncodeToString(memo)).Msg("found inscription memo")
 
 		// override the sender address with the initiator of the inscription's commit tx
-		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
+		if fromAddress, err = bitcoinClient.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
 			return nil, errors.Wrap(err, "unable to get inscription initiator")
 		}
 	} else {

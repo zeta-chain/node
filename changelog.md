@@ -13,6 +13,7 @@
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 * [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
 * [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
 
 ### Fixes
 

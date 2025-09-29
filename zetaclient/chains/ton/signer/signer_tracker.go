@@ -47,7 +47,7 @@ func (s *Signer) trackOutbound(
 	)
 
 	for time.Since(start) <= timeout {
-		txs, err := s.rpc.GetTransactionsSince(ctx, acc, lt, hash)
+		txs, err := s.tonClient.GetTransactionsSince(ctx, acc, lt, hash)
 		if err != nil {
 			return errors.Wrapf(err, "unable to get transactions (lt %d, hash %s)", lt, hash.Hex())
 		}

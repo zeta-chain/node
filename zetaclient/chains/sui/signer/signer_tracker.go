@@ -59,7 +59,7 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 		}
 		attempts++
 
-		res, err := s.client.SuiGetTransactionBlock(ctx, req)
+		res, err := s.suiClient.SuiGetTransactionBlock(ctx, req)
 		switch {
 		case ctx.Err() != nil:
 			return errors.Wrap(ctx.Err(), "failed to get transaction block")
@@ -83,6 +83,6 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 
 // note that at this point we don't care whether tx was successful or not.
 func (s *Signer) postTrackerVote(ctx context.Context, nonce uint64, digest string) error {
-	_, err := s.zetacore.PostOutboundTracker(ctx, s.Chain().ChainId, nonce, digest)
+	_, err := s.zetacoreClient.PostOutboundTracker(ctx, s.Chain().ChainId, nonce, digest)
 	return err
 }

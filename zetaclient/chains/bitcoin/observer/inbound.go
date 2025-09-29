@@ -92,7 +92,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		// #nosec G115 always positive
 		events, err := FilterAndParseIncomingTx(
 			ctx,
-			ob.rpc,
+			ob.bitcoinClient,
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
@@ -142,7 +142,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
 	tssAddress string,
@@ -159,7 +159,7 @@ func FilterAndParseIncomingTx(
 
 		event, err := GetBtcEventWithWitness(
 			ctx,
-			rpc,
+			bitcoinClient,
 			tx,
 			tssAddress,
 			blockNumber,
