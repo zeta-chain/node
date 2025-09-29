@@ -283,6 +283,7 @@ jobs:
           - make-target: "start-solana-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
+            timeout-minutes: 40
           - make-target: "start-ton-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
