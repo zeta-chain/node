@@ -18,6 +18,7 @@
 ### Fixes
 
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4278](https://github.com/zeta-chain/node/pull/4278) - force rescan if inbound vote monitoring fails
 
 ## v33.0.0
 
