@@ -73,6 +73,10 @@ func (r *E2ERunner) SetupEVM() {
 	require.NoError(r, err)
 	r.Logger.Info("Gateway EVM contract address: %s, tx hash: %s", gatewayEVMAddr.Hex(), txGateway.Hash().Hex())
 
+	updateAdditionalFeeTx, err := r.GatewayEVM.UpdateAdditionalActionFee(r.EVMAuth, big.NewInt(2e5))
+	require.NoError(r, err)
+	ensureTxReceipt(updateAdditionalFeeTx, "Updating additional fee failed")
+
 	// Deploy erc20custody proxy contract
 	r.Logger.Info("Deploying ERC20Custody contract")
 	erc20CustodyAddr, txCustody, _, err := erc20custodyv2.DeployERC20Custody(r.EVMAuth, r.EVMClient)

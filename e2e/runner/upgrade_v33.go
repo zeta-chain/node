@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"math/big"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
@@ -33,6 +35,9 @@ func (r *E2ERunner) RunSetup(testLegacy bool) {
 		)
 	}
 	r.UpgradeGatewayEVM()
+	updateAdditionalFeeTx, err := r.GatewayEVM.UpdateAdditionalActionFee(r.EVMAuth, big.NewInt(2e5))
+	require.NoError(r, err)
+	ensureReceiptEVM(updateAdditionalFeeTx, "Update additional fee failed")
 	r.UpgradeGatewayZEVM()
 	r.DeployZetaConnectorNative(ensureReceiptEVM)
 	r.UpdateProtocolContractsInChainParams(testLegacy)
