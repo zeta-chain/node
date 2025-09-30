@@ -63,7 +63,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🏃test erc20 deposit")
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 	tx = r.ERC20Deposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
-	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 erc20 deposit observed")
 
 	// send erc20 deposit and call
@@ -74,7 +74,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 1)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 1)
 	r.Logger.Print("🍾 erc20 deposit and call observed")
 
 	// send call

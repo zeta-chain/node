@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -22,7 +20,8 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// send erc20 tokens to test dapp to be deposited to gateway
-	tx := r.SendERC20OnEVM(r.TestDAppV2EVMAddr, new(big.Int).Div(amount, big.NewInt(1e18)).Int64())
+	tx, err := r.ERC20.Transfer(r.EVMAuth, r.TestDAppV2EVMAddr, amount)
+	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
 
 	// set value of the payable transactions
