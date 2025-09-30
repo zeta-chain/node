@@ -2,7 +2,6 @@ package parsers
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -55,5 +54,5 @@ func createObserverList(fp string, observerAddress, commonGrantAddress, validato
 	listReader = append(listReader, info)
 
 	file, _ := json.MarshalIndent(listReader, "", " ")
-	_ = ioutil.WriteFile(fp, file, 0600)
+	_ = os.WriteFile(fp, file, 0600)
 }
