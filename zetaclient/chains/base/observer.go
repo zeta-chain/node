@@ -243,7 +243,7 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	defer ob.mu.Unlock()
 
 	if ob.lastTxScanned == "" {
-		ob.logger.Chain.Info().
+		ob.logger.Chain.Debug().
 			Str(logs.FieldTx, txHash).
 			Msg("initializing last scanned transaction")
 	}
@@ -448,22 +448,21 @@ func (ob *Observer) PostVoteInbound(
 
 	// Does not vote in dry mode.
 	if ob.clientMode == mode.DryMode {
-		ob.Logger().Inbound.Info().Msg("dry-mode: skipping inbound vote")
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping inbound vote")
 		return "", nil
 	}
 
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	if err != nil {
+		logger.Error().Err(err).Msg("inbound detected: error posting vote")
+		return "", err
+	}
 
 	logger = logger.With().
 		Str(logs.FieldZetaTx, zetaHash).
 		Str(logs.FieldBallotIndex, ballot).
 		Logger()
-
-	if err != nil {
-		logger.Error().Err(err).Msg("inbound detected: error posting vote")
-		return "", err
-	}
 
 	if zetaHash == "" {
 		logger.Info().Msg("inbound detected: already voted on ballot")

@@ -106,12 +106,16 @@ func (s *Signer) processOutbound(
 		return Invalid, errors.Wrap(err, "unable to compose message")
 	}
 
-	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
+	logger := s.Logger().Std.With().Fields(outbound.logFields).Logger()
 
 	if s.ClientMode == mode.DryMode {
-		s.Logger().Std.Info().Msg("dry-mode: skipping TON signing, sending, and tracking")
+		logger.Info().
+			Stringer(logs.FieldMode, mode.DryMode).
+			Msg("skipping TON signing, sending, and tracking")
 		return Success, nil
 	}
+
+	logger.Info().Msg("signing outbound")
 
 	err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce)
 	if err != nil {
