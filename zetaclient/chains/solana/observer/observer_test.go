@@ -43,13 +43,12 @@ func MockSolanaObserver(
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacoreClient,
+		zrepo.New(zetacoreClient, chain, mode.StandardMode),
 		tssSigner,
 		1000,
 		nil,
 		database,
 		base.DefaultLogger(),
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

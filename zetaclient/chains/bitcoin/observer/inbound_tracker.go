@@ -14,7 +14,7 @@ import (
 
 // ProcessInboundTrackers processes inbound trackers
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,9 +58,9 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
+	tss, err := ob.ZetaRepo().GetBTCTSSAddress(ctx)
 	if err != nil {
-		return "", errors.Wrapf(err, "error getting btc tss address for chain %d", ob.Chain().ChainId)
+		return "", err
 	}
 
 	// check confirmation
@@ -97,5 +97,9 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return msg.Digest(), nil
 	}
 
-	return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	return ob.ZetaRepo().VoteInbound(ctx,
+		ob.logger.Inbound,
+		msg,
+		zetacore.PostVoteInboundExecutionGasLimit,
+	)
 }
