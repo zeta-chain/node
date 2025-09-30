@@ -252,7 +252,9 @@ then
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
-    .consensus.params.block.max_gas = "500000000"
+    .app_state.feemarket.params.base_fee_change_denominator = "300" |
+    .app_state.feemarket.params.elasticity_multiplier = "4" |
+    .consensus.params.block.max_gas = "30000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
