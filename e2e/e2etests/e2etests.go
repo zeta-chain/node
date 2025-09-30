@@ -68,6 +68,7 @@ const (
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallALTName                      = "solana_withdraw_and_call_alt"
 	TestSolanaWithdrawAndCallInvalidTxSizeName            = "solana_withdraw_and_call_invalid_tx_size"
 	TestSolanaWithdrawAndCallInvalidMsgEncodingName       = "solana_withdraw_and_call_invalid_msg_encoding"
 	TestZEVMToSolanaCallName                              = "zevm_to_solana_call"
@@ -710,10 +711,19 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SOL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallALTName,
+		"withdraw SOL from ZEVM and call solana program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
 			{Description: "ALT address", DefaultValue: ""},
 			{Description: "indexes of ALT accounts that are mutable", DefaultValue: ""},
 		},
-		TestSolanaWithdrawAndCall,
+		TestSolanaWithdrawAndCallALT,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
