@@ -278,12 +278,11 @@ func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdk
 			return nil, retry.Retry(err)
 		}
 
-		// increase gas and fees if multiple messages are provided
-		txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
-		txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
+		txBuilder.SetGasLimit(zts.txFactory.Gas())
+		txBuilder.SetFeeAmount(zts.txFactory.Fees())
 
 		// Sign tx
-		err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
+		err = tx.Sign(zts.ctx, zts.txFactory, account, txBuilder, true)
 		if err != nil {
 			return nil, retry.Retry(err)
 		}
