@@ -151,43 +151,12 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// Check if multiple calls are enabled
-	if ob.shouldAllowMultipleCalls(ctx) {
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
 		return validEvents
 	}
-	return ob.filterDepositEventsByTx(validEvents)
-}
 
-// shouldAllowMultipleCalls checks the EnableMultipleCalls feature flag
-func (ob *Observer) shouldAllowMultipleCalls(ctx context.Context) bool {
-	// Get app context to access feature flags
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
-		// Fallback to filtering (return false)
-		return false
-	}
-
-	// Check feature flag to determine whether to allow multiple calls from same tx
-	cfg := app.Config()
-
-	// If EnableMultipleCalls is enabled, return all valid events without filtering
-	if cfg.IsEnableMultipleCallsEnabled() {
-		ob.Logger().Inbound.Debug().
-			Msg("EnableMultipleCalls enabled: returning all valid events without filtering")
-		return true
-	}
-
-	// Default behavior: filter events from same tx (only first event)
-	ob.Logger().Inbound.Debug().
-		Msg("EnableMultipleCalls disabled: filtering multiple events from same tx (only first event)")
-	return false
-}
-
-// filterDepositEventsByTx filters deposit events from same tx (original logic)
-func (ob *Observer) filterDepositEventsByTx(
-	validEvents []*gatewayevm.GatewayEVMDeposited,
-) []*gatewayevm.GatewayEVMDeposited {
+	// if not, default to previous behavior
 	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	guard := make(map[string]bool)
 	for _, event := range validEvents {
@@ -323,15 +292,12 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// Check if multiple calls are enabled
-	if ob.shouldAllowMultipleCalls(ctx) {
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
 		return validEvents
 	}
-	return ob.filterCallEventsByTx(validEvents)
-}
 
-// filterCallEventsByTx filters call events from same tx (original logic)
-func (ob *Observer) filterCallEventsByTx(validEvents []*gatewayevm.GatewayEVMCalled) []*gatewayevm.GatewayEVMCalled {
+	// if not, default to previous behavior
 	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
 	guard := make(map[string]bool)
 	for _, event := range validEvents {
@@ -462,16 +428,11 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	})
 
 	// Check if multiple calls are enabled
-	if ob.shouldAllowMultipleCalls(ctx) {
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
 		return validEvents
 	}
-	return ob.filterDepositAndCallEventsByTx(validEvents)
-}
 
-// filterDepositAndCallEventsByTx filters deposit and call events from same tx (original logic)
-func (ob *Observer) filterDepositAndCallEventsByTx(
-	validEvents []*gatewayevm.GatewayEVMDepositedAndCalled,
-) []*gatewayevm.GatewayEVMDepositedAndCalled {
+	// if not, default to previous behavior
 	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	guard := make(map[string]bool)
 	for _, event := range validEvents {

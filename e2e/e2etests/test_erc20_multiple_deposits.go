@@ -51,7 +51,7 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	// wait for the cctxs to be mined
 	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 4, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctxs[0], "deposit erc20")
-	r.Logger.CCTX(*cctxs[2], "deposit erc20 2")
+	r.Logger.CCTX(*cctxs[1], "deposit erc20 2")
 	r.Logger.CCTX(*cctxs[2], "deposit erc20 and call")
 	r.Logger.CCTX(*cctxs[3], "deposit erc20 and call 2")
 
