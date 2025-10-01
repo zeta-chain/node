@@ -15,8 +15,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/signer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 type EVM struct {
@@ -186,10 +186,12 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		continueKeysign, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx)
 		switch {
 		case err != nil:
-			e.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX: VoteOutboundIfConfirmed failed")
+			e.outboundLogger(outboundID).Error().
+				Err(err).
+				Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
 			continue
 		case !continueKeysign:
-			e.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
+			e.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 			continue
 		case e.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
@@ -263,7 +265,7 @@ func (e *EVM) updateChainParams(ctx context.Context) error {
 func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
 	chainID := e.observer.Chain().ChainId
 
-	trackers, err := e.observer.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := e.observer.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get outbound trackers")
 	}
@@ -278,7 +280,7 @@ func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
 }
 
 func (e *EVM) outboundLogger(id string) *zerolog.Logger {
-	l := e.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := e.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

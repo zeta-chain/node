@@ -144,7 +144,7 @@ func (s *Signer) buildWithdrawTx(
 		GasBudget:       gasBudgetStr,
 	}
 
-	return s.client.MoveCall(ctx, req)
+	return s.suiClient.MoveCall(ctx, req)
 }
 
 // buildWithdrawAndCallTx builds unsigned withdrawAndCall
@@ -191,17 +191,16 @@ func (s *Signer) buildWithdrawAndCallTx(
 
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
-		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
-		Uint64("tx.amount", args.amount).
-		Str("tx.sender", args.sender).
-		Str("tx.target", args.target).
-		Uint64("tx.gas_budget", args.gasBudget).
-		Strs("tx.type_args", args.payload.TypeArgs).
-		Strs("tx.object_ids", args.payload.ObjectIDs).
-		Hex("tx.payload", args.payload.Message).
-		Int("tx.sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
+		Uint64("tx_amount", args.amount).
+		Str("tx_sender", args.sender).
+		Str("tx_target", args.target).
+		Uint64("tx_gas_budget", args.gasBudget).
+		Strs("tx_type_args", args.payload.TypeArgs).
+		Strs("tx_object_ids", args.payload.ObjectIDs).
+		Hex("tx_payload", args.payload.Message).
+		Int("tx_sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
 		Msg("calling withdrawAndCallPTB")
 
 	// build the PTB transaction
@@ -245,7 +244,7 @@ func (s *Signer) createCancelTxBuilder(
 	}
 
 	return func(ctx context.Context) (models.TxnMetaData, string, error) {
-		tx, err := s.client.MoveCall(ctx, req)
+		tx, err := s.suiClient.MoveCall(ctx, req)
 		if err != nil {
 			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build cancel tx")
 		}
@@ -265,7 +264,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	ctx context.Context,
 	withdrawTxBuilder, cancelTxBuilder txBuilder,
 ) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// should not happen
 	if withdrawTxBuilder == nil || cancelTxBuilder == nil {
@@ -296,14 +295,14 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// broadcast tx
 	// Note: this is the place where the gateway object version mismatch error happens
-	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
+	res, err := s.suiClient.SuiExecuteTransactionBlock(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute tx block")
 	}
 
 	// tx succeeded, return the digest
 	if res.Effects.Status.Status == client.TxStatusSuccess {
-		logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui tx block successfully")
+		logger.Info().Str(logs.FieldTx, res.Digest).Msg("executed sui tx block successfully")
 		return res.Digest, nil
 	}
 
@@ -329,7 +328,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 // broadcastCancelTx broadcasts a cancel tx and returns the tx digest
 func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastCancelTx").Logger()
+	logger := zerolog.Ctx(ctx)
 
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder(ctx)
@@ -344,11 +343,11 @@ func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilde
 	}
 
 	// broadcast cancel tx
-	res, err := s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
+	res, err := s.suiClient.SuiExecuteTransactionBlock(ctx, reqCancel)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}
-	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block")
+	logger.Info().Str(logs.FieldTx, res.Digest).Msg("executed sui cancel tx block")
 
 	return res.Digest, nil
 }
@@ -369,7 +368,7 @@ func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
 
 // getGatewayNonce reads the nonce of the gateway object
 func (s *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
-	data, err := s.client.GetObjectParsedData(ctx, s.gateway.ObjectID())
+	data, err := s.suiClient.GetObjectParsedData(ctx, s.gateway.ObjectID())
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get parsed data of gateway object")
 	}

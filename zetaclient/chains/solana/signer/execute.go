@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
@@ -186,7 +186,7 @@ func (signer *Signer) createMsgExecute(
 }
 
 // createExecuteInstruction wraps the execute 'msg' into a Solana instruction.
-func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solana.GenericInstruction, error) {
+func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*sol.GenericInstruction, error) {
 	// create execute instruction with program call data
 	discriminator := contracts.DiscriminatorExecute
 	var dataBytes []byte
@@ -195,7 +195,7 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		serializedInst, err := borsh.Serialize(contracts.ExecuteRevertInstructionParams{
 			Discriminator: discriminator,
 			Amount:        msg.Amount(),
-			Sender:        solana.MustPublicKeyFromBase58(msg.Sender()),
+			Sender:        sol.MustPublicKeyFromBase58(msg.Sender()),
 			Data:          msg.Data(),
 			Signature:     msg.SigRS(),
 			RecoveryID:    msg.SigV(),
@@ -230,15 +230,15 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		return nil, errors.Wrap(err, "cannot decode connected pda address")
 	}
 
-	predefinedAccounts := []*solana.AccountMeta{
-		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-		solana.Meta(signer.pda).WRITE(),
-		solana.Meta(msg.To()).WRITE(),
-		solana.Meta(destinationProgramPda).WRITE(),
+	predefinedAccounts := []*sol.AccountMeta{
+		sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+		sol.Meta(signer.pda).WRITE(),
+		sol.Meta(msg.To()).WRITE(),
+		sol.Meta(destinationProgramPda).WRITE(),
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:        signer.gatewayID,
 		DataBytes:     dataBytes,
 		AccountValues: allAccounts,
@@ -259,7 +259,7 @@ func validateSender(sender string, executeType contracts.ExecuteType) (string, e
 	}
 
 	// for revert execute, sender should be a Solana address
-	senderSol, err := solana.PublicKeyFromBase58(sender)
+	senderSol, err := sol.PublicKeyFromBase58(sender)
 	if err != nil {
 		return "", errors.Wrapf(err, "invalid execute revert sender %s", sender)
 	}

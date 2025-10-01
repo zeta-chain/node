@@ -2,11 +2,31 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
+
+### Features
+
+* [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
+
 ## v36.0.0
 
 ### Features
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+
+### Refactor
+
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
+
+### Fixes
+
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 
 ## v33.0.0
 

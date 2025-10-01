@@ -107,7 +107,7 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 }
 
 func (oc *Orchestrator) Stop() {
-	oc.logger.Info().Msg("Stopping orchestrator")
+	oc.logger.Info().Msg("stopping the orchestrator")
 
 	// stops *all* scheduler tasks
 	oc.scheduler.Stop()
@@ -123,9 +123,8 @@ func (oc *Orchestrator) UpdateContext(ctx context.Context) error {
 
 	switch {
 	case errors.Is(err, ErrUpgradeRequired):
-		const msg = "Upgrade detected. Kill the process, " +
+		const msg = "upgrade detected; kill the process, " +
 			"replace the binary with upgraded version, and restart zetaclientd"
-
 		oc.logger.Warn().Str("upgrade", err.Error()).Msg(msg)
 
 		// stop the orchestrator
@@ -184,19 +183,30 @@ func (oc *Orchestrator) SyncChains(ctx context.Context) error {
 		case errors.Is(err, errSkipChain):
 			// TODO use throttled logger instead of sampled one.
 			// https://github.com/zeta-chain/node/issues/3336
-			oc.logger.sampled.Warn().Err(err).Fields(chain.LogFields()).Msg("Skipping observer-signer")
+			oc.logger.sampled.Warn().
+				Err(err).
+				Fields(chain.LogFields()).
+				Msg("skipping observer-signer")
 			continue
 		case err != nil:
-			oc.logger.Error().Err(err).Fields(chain.LogFields()).Msg("Failed to bootstrap observer-signer")
+			oc.logger.Error().
+				Err(err).
+				Fields(chain.LogFields()).
+				Msg("failed to bootstrap observer-signer")
 			continue
 		case observerSigner == nil:
 			// should not happen
-			oc.logger.Error().Fields(chain.LogFields()).Msg("Nil observer-signer")
+			oc.logger.Error().
+				Fields(chain.LogFields()).
+				Msg("nil observer-signer")
 			continue
 		}
 
 		if err = observerSigner.Start(ctx); err != nil {
-			oc.logger.Error().Err(err).Fields(chain.LogFields()).Msg("Failed to start observer-signer")
+			oc.logger.Error().
+				Err(err).
+				Fields(chain.LogFields()).
+				Msg("failed to start observer-signer")
 			continue
 		}
 
@@ -208,9 +218,9 @@ func (oc *Orchestrator) SyncChains(ctx context.Context) error {
 
 	if (added + removed) > 0 {
 		oc.logger.Info().
-			Int("chains.added", added).
-			Int("chains.removed", removed).
-			Msg("Synced observer-signers")
+			Int("chains_added", added).
+			Int("chains_removed", removed).
+			Msg("synced observer-signers")
 	}
 
 	return nil
@@ -301,7 +311,7 @@ func (oc *Orchestrator) addChain(observerSigner ObserverSigner) {
 	}
 
 	oc.chains[chain.ChainId] = observerSigner
-	oc.logger.Info().Fields(chain.LogFields()).Msg("Added observer-signer")
+	oc.logger.Info().Fields(chain.LogFields()).Msg("added observer-signer")
 }
 
 func (oc *Orchestrator) removeChain(chainID int64) {
@@ -317,7 +327,7 @@ func (oc *Orchestrator) removeChain(chainID int64) {
 	delete(oc.chains, chainID)
 	oc.mu.Unlock()
 
-	oc.logger.Info().Int64(logs.FieldChain, chainID).Msg("Removed observer-signer")
+	oc.logger.Info().Int64(logs.FieldChain, chainID).Msg("removed observer-signer")
 }
 
 // removeMissingChains stops and deletes chains
@@ -364,8 +374,7 @@ func validateConstructor(s *scheduler.Scheduler, dep *Dependencies) error {
 }
 
 func newLoggers(baseLogger base.Logger) loggers {
-	std := baseLogger.Std.With().Str(logs.FieldModule, "orchestrator").Logger()
-
+	std := baseLogger.Std.With().Str(logs.FieldModule, logs.ModNameOrchestrator).Logger()
 	return loggers{
 		Logger:  std,
 		sampled: std.Sample(&zerolog.BasicSampler{N: 10}),

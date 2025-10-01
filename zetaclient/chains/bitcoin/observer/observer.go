@@ -21,50 +21,47 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-type RPC interface {
-	Healthcheck(ctx context.Context) (time.Time, error)
+type BitcoinClient interface {
+	Healthcheck(context.Context) (time.Time, error)
 
-	GetBlockCount(ctx context.Context) (int64, error)
-	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)
-	GetBlockHeader(ctx context.Context, hash *hash.Hash) (*wire.BlockHeader, error)
-	GetBlockVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+	GetBlockCount(context.Context) (int64, error)
+	GetBlockHash(_ context.Context, blockHeight int64) (*hash.Hash, error)
+	GetBlockHeader(context.Context, *hash.Hash) (*wire.BlockHeader, error)
+	GetBlockVerbose(context.Context, *hash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
 
-	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
-	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*btcjson.TxRawResult, error)
-	GetRawTransactionResult(
-		ctx context.Context,
-		hash *hash.Hash,
-		res *btcjson.GetTransactionResult,
+	GetRawTransaction(context.Context, *hash.Hash) (*btcutil.Tx, error)
+	GetRawTransactionVerbose(context.Context, *hash.Hash) (*btcjson.TxRawResult, error)
+	GetRawTransactionResult(context.Context,
+		*hash.Hash,
+		*btcjson.GetTransactionResult,
 	) (btcjson.TxRawResult, error)
-	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
+	GetMempoolEntry(_ context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
-	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
+	GetEstimatedFeeRate(_ context.Context, confTarget int64) (uint64, error)
+	GetTransactionFeeAndRate(_ context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
 
-	IsTxStuckInMempool(
-		ctx context.Context,
+	IsTxStuckInMempool(_ context.Context,
 		txHash string,
 		maxWaitBlocks int64,
 	) (stuck bool, pendingFor time.Duration, err error)
 
-	EstimateSmartFee(
-		ctx context.Context,
+	EstimateSmartFee(_ context.Context,
 		confTarget int64,
-		mode *btcjson.EstimateSmartFeeMode,
+		_ *btcjson.EstimateSmartFeeMode,
 	) (*btcjson.EstimateSmartFeeResult, error)
 
-	ListUnspentMinMaxAddresses(
-		ctx context.Context,
-		minConf, maxConf int,
-		addresses []btcutil.Address,
+	ListUnspentMinMaxAddresses(_ context.Context,
+		minConf int,
+		maxConf int,
+		_ []btcutil.Address,
 	) ([]btcjson.ListUnspentResult, error)
 
-	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
-	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
-	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
+	GetBlockHeightByStr(_ context.Context, blockHash string) (int64, error)
+	GetTransactionByStr(_ context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
+	GetRawTransactionByStr(_ context.Context, hash string) (*btcutil.Tx, error)
 
-	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
-	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
+	GetTransactionInputSpender(_ context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(_ context.Context, txid string) (string, error)
 }
 
 const (
@@ -101,8 +98,8 @@ type Observer struct {
 	// netParams contains the Bitcoin network parameters
 	netParams *chaincfg.Params
 
-	// btcClient is the Bitcoin RPC client that interacts with the Bitcoin node
-	rpc RPC
+	// bitcoinClient is the Bitcoin RPC client that interacts with the Bitcoin node
+	bitcoinClient BitcoinClient
 
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
@@ -135,7 +132,10 @@ type Observer struct {
 }
 
 // New BTC Observer constructor.
-func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, error) {
+func New(baseObserver *base.Observer,
+	bitcoinClient BitcoinClient,
+	chain chains.Chain,
+) (*Observer, error) {
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
@@ -151,9 +151,9 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 
 	// create bitcoin observer
 	ob := &Observer{
-		Observer:  baseObserver,
-		netParams: netParams,
-		rpc:       rpc,
+		Observer:      baseObserver,
+		netParams:     netParams,
+		bitcoinClient: bitcoinClient,
 
 		pendingNonce:      0,
 		feeBumpWaitBlocks: int64(feeBumpWaitBlocks),
@@ -214,17 +214,17 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 	}
 
 	// Get the block hash
-	hash, err := ob.rpc.GetBlockHash(ctx, blockNumber)
+	hash, err := ob.bitcoinClient.GetBlockHash(ctx, blockNumber)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block header
-	header, err := ob.rpc.GetBlockHeader(ctx, hash)
+	header, err := ob.bitcoinClient.GetBlockHeader(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
 	// Get the block with verbose transactions
-	block, err := ob.rpc.GetBlockVerbose(ctx, hash)
+	block, err := ob.bitcoinClient.GetBlockVerbose(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
@@ -250,20 +250,19 @@ func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 
-	lf := map[string]any{
-		logs.FieldMethod: "SetLastStuckOutbound",
-	}
+	logger := ob.logger.Outbound
 
 	if stuckTx != nil {
-		lf[logs.FieldNonce] = stuckTx.Nonce
-		lf[logs.FieldTx] = stuckTx.Tx.MsgTx().TxID()
-		ob.logger.Outbound.Warn().
-			Fields(lf).
-			Msgf("Bitcoin outbound is stuck for %f minutes", stuckTx.StuckFor.Minutes())
+		logger.Warn().
+			Uint64(logs.FieldNonce, stuckTx.Nonce).
+			Str(logs.FieldTx, stuckTx.Tx.MsgTx().TxID()).
+			Float64("duration_in_minutes", stuckTx.StuckFor.Minutes()).
+			Msg("bitcoin outbound is stuck")
 	} else if ob.lastStuckTx != nil {
-		lf[logs.FieldNonce] = ob.lastStuckTx.Nonce
-		lf[logs.FieldTx] = ob.lastStuckTx.Tx.MsgTx().TxID()
-		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
+		logger.Info().
+			Uint64(logs.FieldNonce, ob.lastStuckTx.Nonce).
+			Str(logs.FieldTx, ob.lastStuckTx.Tx.MsgTx().TxID()).
+			Msg("bitcoin outbound is no longer stuck")
 	}
 	ob.lastStuckTx = stuckTx
 }
@@ -294,7 +293,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 		return nil
 	}
 
-	blockTime, err := ob.rpc.Healthcheck(ctx)
+	blockTime, err := ob.bitcoinClient.Healthcheck(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to check rpc health")
 	}
@@ -311,7 +310,7 @@ func (ob *Observer) isNodeEnabled() bool {
 // updateLastBlock is a helper function to update the last block number.
 // Note: keep last block up-to-date helps to avoid inaccurate confirmation.
 func (ob *Observer) updateLastBlock(ctx context.Context) error {
-	blockNumber, err := ob.rpc.GetBlockCount(ctx)
+	blockNumber, err := ob.bitcoinClient.GetBlockCount(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block number")
 	}
@@ -322,7 +321,7 @@ func (ob *Observer) updateLastBlock(ctx context.Context) error {
 	// 0 will be returned if the node is not synced
 	if blockNumber == 0 {
 		ob.nodeEnabled.Store(false)
-		ob.Logger().Chain.Debug().Err(err).Msg("Bitcoin node is not enabled")
+		ob.Logger().Chain.Debug().Err(err).Msg("bitcoin node is not enabled")
 		return nil
 	}
 	ob.nodeEnabled.Store(true)

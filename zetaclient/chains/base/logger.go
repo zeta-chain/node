@@ -39,12 +39,6 @@ type ObserverLogger struct {
 	// the logger for outbound transactions
 	Outbound zerolog.Logger
 
-	// the logger for the chain's gas price
-	GasPrice zerolog.Logger
-
-	// the logger for block headers
-	Headers zerolog.Logger
-
 	// the logger for the compliance check
 	Compliance zerolog.Logger
 }
@@ -60,7 +54,7 @@ func NewLogger(cfg config.Config) (Logger, error) {
 	augmentLogger := func(logger zerolog.Logger) zerolog.Logger {
 		level := zerolog.Level(cfg.LogLevel)
 
-		return logger.Level(level).With().Timestamp().Logger()
+		return logger.Level(level).With().Timestamp().Caller().Logger()
 	}
 
 	// create loggers based on configured level and format

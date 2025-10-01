@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
@@ -80,13 +80,13 @@ func (signer *Signer) createMsgWithdrawSPL(
 	}
 
 	// parse mint account
-	mintAccount, err := solana.PublicKeyFromBase58(cctx.InboundParams.Asset)
+	mintAccount, err := sol.PublicKeyFromBase58(cctx.InboundParams.Asset)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "cannot parse asset public key %s", cctx.InboundParams.Asset)
 	}
 
 	// get recipient ata
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
+	recipientAta, _, err := sol.FindAssociatedTokenAddress(to, mintAccount)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", to, mintAccount)
 	}
@@ -98,7 +98,7 @@ func (signer *Signer) createMsgWithdrawSPL(
 }
 
 // createWithdrawSPLInstruction wraps the withdraw spl 'msg' into a Solana instruction.
-func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL) (*solana.GenericInstruction, error) {
+func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL) (*sol.GenericInstruction, error) {
 	// create withdraw spl instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.WithdrawSPLInstructionParams{
 		Discriminator: contracts.DiscriminatorWithdrawSPL,
@@ -113,29 +113,29 @@ func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL)
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
 	}
 
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
+	pdaAta, _, err := sol.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", signer.pda, msg.MintAccount())
 	}
 
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(msg.To(), msg.MintAccount())
+	recipientAta, _, err := sol.FindAssociatedTokenAddress(msg.To(), msg.MintAccount())
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", msg.To(), msg.MintAccount())
 	}
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:    signer.gatewayID,
 		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(pdaAta).WRITE(),
-			solana.Meta(msg.MintAccount()),
-			solana.Meta(msg.To()),
-			solana.Meta(recipientAta).WRITE(),
-			solana.Meta(solana.TokenProgramID),
-			solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
-			solana.Meta(solana.SystemProgramID),
+		AccountValues: []*sol.AccountMeta{
+			sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			sol.Meta(signer.pda).WRITE(),
+			sol.Meta(pdaAta).WRITE(),
+			sol.Meta(msg.MintAccount()),
+			sol.Meta(msg.To()),
+			sol.Meta(recipientAta).WRITE(),
+			sol.Meta(sol.TokenProgramID),
+			sol.Meta(sol.SPLAssociatedTokenAccountProgramID),
+			sol.Meta(sol.SystemProgramID),
 		},
 	}
 
@@ -143,12 +143,12 @@ func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL)
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
-	mintPk, err := solana.PublicKeyFromBase58(asset)
+	mintPk, err := sol.PublicKeyFromBase58(asset)
 	if err != nil {
 		return token.Mint{}, err
 	}
 
-	info, err := signer.client.GetAccountInfo(ctx, mintPk)
+	info, err := signer.solanaClient.GetAccountInfo(ctx, mintPk)
 	if err != nil {
 		return token.Mint{}, err
 	}

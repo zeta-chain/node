@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -53,7 +52,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		zetacore = ob.ZetacoreClient()
 	)
 
-	trackers, err := zetacore.GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := zetacore.GetOutboundTrackers(ctx, chainID)
 	if err != nil {
 		return errors.Wrap(err, "unable to get outbound trackers")
 	}
@@ -71,9 +70,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		if err != nil {
 			ob.Logger().Outbound.
 				Error().Err(err).
-				Uint64("outbound.nonce", nonce).
-				Msg("Unable to get cctx by nonce")
-
+				Uint64(logs.FieldNonce, nonce).
+				Msg("unable to get CCTX by nonce")
 			continue
 		}
 
@@ -81,9 +79,9 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			if err := ob.processOutboundTracker(ctx, cctx, txHash.TxHash); err != nil {
 				ob.Logger().Outbound.
 					Error().Err(err).
-					Uint64("outbound.nonce", nonce).
-					Str("outbound.hash", txHash.TxHash).
-					Msg("Unable to check transaction by nonce")
+					Str(logs.FieldTx, txHash.TxHash).
+					Uint64(logs.FieldNonce, nonce).
+					Msg("unable to check CCTX by nonce")
 			}
 		}
 	}
@@ -106,7 +104,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
 
-	rawTx, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
+	rawTx, err := ob.tonClient.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
 		return errors.Wrap(err, "unable to get tx")
 	}
@@ -147,8 +145,8 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	case auth.Signer != ob.TSS().PubKey().AddressEVM():
 		ob.Logger().Inbound.Warn().
 			Fields(txLogFields(tx)).
-			Str("transaction.ton.signer", auth.Signer.String()).
-			Msg("observeGateway: addOutboundTracker: signer is not TSS. Skipping")
+			Str("transaction_ton_signer", auth.Signer.String()).
+			Msg("observe gateway: signer is not TSS; skipping")
 
 		return nil
 	}
@@ -233,13 +231,13 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 
 	switch {
 	case err != nil:
-		log.Error().Err(err).Msg("Unable to post outbound vote")
+		log.Error().Err(err).Msg("unable to post outbound vote")
 		return err
 	case zetaTxHash != "":
 		log.Info().
 			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
-			Msg("Outbound vote posted")
+			Str(logs.FieldBallotIndex, ballot).
+			Msg("posted outbound vote")
 	}
 
 	return nil

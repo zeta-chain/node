@@ -5,9 +5,9 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
-	"github.com/gagliardetto/solana-go/rpc"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -42,14 +42,44 @@ const (
 	// reduces the expiration of tx by about 13 seconds. The "confirmed" level has very low risk of
 	// belonging to a dropped fork.
 	// see: https://solana.com/developers/guides/advanced/confirmation#use-an-appropriate-preflight-commitment-level
-	broadcastOutboundCommitment = rpc.CommitmentConfirmed
+	broadcastOutboundCommitment = solrpc.CommitmentConfirmed
 
 	// SolanaMaxComputeBudget is the max compute budget for a transaction.
 	SolanaMaxComputeBudget = 1_400_000
 )
 
+// SolanaClient is the interface for the Solana RPC client.
+type SolanaClient interface {
+	GetAccountInfo(context.Context, sol.PublicKey) (*solrpc.GetAccountInfoResult, error)
+
+	GetAccountInfoWithOpts(
+		context.Context,
+		sol.PublicKey,
+		*solrpc.GetAccountInfoOpts,
+	) (*solrpc.GetAccountInfoResult, error)
+
+	GetBalance(_ context.Context,
+		account sol.PublicKey,
+		_ solrpc.CommitmentType,
+	) (*solrpc.GetBalanceResult, error)
+
+	GetLatestBlockhash(context.Context,
+		solrpc.CommitmentType,
+	) (*solrpc.GetLatestBlockhashResult, error)
+
+	GetTransaction(context.Context,
+		sol.Signature,
+		*solrpc.GetTransactionOpts,
+	) (*solrpc.GetTransactionResult, error)
+
+	SendTransactionWithOpts(context.Context,
+		*sol.Transaction,
+		solrpc.TransactionOpts,
+	) (sol.Signature, error)
+}
+
 type Outbound struct {
-	Tx          *solana.Transaction
+	Tx          *sol.Transaction
 	FallbackMsg *contracts.MsgIncrementNonce
 }
 
@@ -59,24 +89,23 @@ type outboundGetter func() (*Outbound, error)
 type Signer struct {
 	*base.Signer
 
-	// client is the Solana RPC client that interacts with the Solana chain
-	client interfaces.SolanaRPCClient
+	// solanaClient is the Solana RPC client that interacts with the Solana chain
+	solanaClient SolanaClient
 
 	// relayerKey is the private key of the relayer account for Solana chain
 	// relayerKey is optional, the signer will not relay transactions if it is not set
-	relayerKey *solana.PrivateKey
+	relayerKey *sol.PrivateKey
 
 	// gatewayID is the program ID of gateway program on Solana chain
-	gatewayID solana.PublicKey
+	gatewayID sol.PublicKey
 
 	// pda is the program derived address of the gateway program
-	pda solana.PublicKey
+	pda sol.PublicKey
 }
 
 // New Signer constructor.
-func New(
-	baseSigner *base.Signer,
-	solClient interfaces.SolanaRPCClient,
+func New(baseSigner *base.Signer,
+	solanaClient SolanaClient,
 	gatewayAddress string,
 	relayerKey *keys.RelayerKey,
 ) (*Signer, error) {
@@ -86,26 +115,28 @@ func New(
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", gatewayAddress)
 	}
 
-	var rk *solana.PrivateKey
+	var rk *sol.PrivateKey
 
 	if relayerKey != nil {
-		pk, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+		pk, err := sol.PrivateKeyFromBase58(relayerKey.PrivateKey)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to construct solana private key")
+			return nil, errors.Wrap(err, "unable to construct Solana private key")
 		}
 
 		rk = &pk
-		baseSigner.Logger().Std.Info().Stringer("relayer_key", rk.PublicKey()).Msg("Loaded relayer key")
+		baseSigner.Logger().Std.Info().
+			Stringer("relayer_key", rk.PublicKey()).
+			Msg("loaded relayer key")
 	} else {
-		baseSigner.Logger().Std.Info().Msg("Solana relayer key is not provided")
+		baseSigner.Logger().Std.Info().Msg("solana relayer key was not provided")
 	}
 
 	return &Signer{
-		Signer:     baseSigner,
-		client:     solClient,
-		gatewayID:  gatewayID,
-		relayerKey: rk,
-		pda:        pda,
+		Signer:       baseSigner,
+		solanaClient: solanaClient,
+		gatewayID:    gatewayID,
+		relayerKey:   rk,
+		pda:          pda,
 	}, nil
 }
 
@@ -130,11 +161,9 @@ func (signer *Signer) TryProcessOutbound(
 	defer func() {
 		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
-			signer.Logger().
-				Std.Error().
-				Str(logs.FieldMethod, "TryProcessOutbound").
-				Str(logs.FieldCctx, cctx.Index).
-				Interface("panic", err).
+			signer.Logger().Std.Error().
+				Str(logs.FieldCctxIndex, cctx.Index).
+				Any("panic", err).
 				Str("stack_trace", string(debug.Stack())).
 				Msg("caught panic error")
 		}
@@ -143,8 +172,6 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger
 	params := cctx.GetCurrentOutboundParam()
 	logger := signer.Logger().Std.With().
-		Str("method", "TryProcessOutbound").
-		Int64("chain", signer.Chain().ChainId).
 		Uint64("nonce", params.TssNonce).
 		Str("cctx", cctx.Index).
 		Logger()
@@ -162,7 +189,7 @@ func (signer *Signer) TryProcessOutbound(
 	case coin.CoinType_Cmd:
 		whitelistTxGetter, err := signer.prepareWhitelistTx(ctx, cctx, height)
 		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign whitelist outbound")
+			logger.Error().Err(err).Msg("failed to sign whitelist outbound")
 			return
 		}
 
@@ -173,7 +200,7 @@ func (signer *Signer) TryProcessOutbound(
 		if cctx.IsWithdrawAndCall() || isRevert {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
+				logger.Error().Err(err).Msg("failed to sign execute outbound")
 				return
 			}
 
@@ -181,7 +208,7 @@ func (signer *Signer) TryProcessOutbound(
 		} else {
 			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
+				logger.Error().Err(err).Msg("failed to sign withdraw outbound")
 				return
 			}
 
@@ -192,7 +219,7 @@ func (signer *Signer) TryProcessOutbound(
 		if cctx.IsWithdrawAndCall() || isRevert {
 			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
+				logger.Error().Err(err).Msg("failed to sign execute spl outbound")
 				return
 			}
 
@@ -200,7 +227,7 @@ func (signer *Signer) TryProcessOutbound(
 		} else {
 			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+				logger.Error().Err(err).Msg("failed to sign withdraw spl outbound")
 				return
 			}
 
@@ -209,20 +236,19 @@ func (signer *Signer) TryProcessOutbound(
 	case coin.CoinType_NoAssetCall:
 		executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, cancelTx, logger)
 		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
+			logger.Error().Err(err).Msg("failed to sign execute outbound")
 			return
 		}
 
 		outboundGetter = executeTxGetter
 	default:
-		logger.Error().
-			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
+		logger.Error().Msg("can only send SOL to the Solana network")
 		return
 	}
 
 	// skip relaying the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
-		logger.Warn().Msgf("TryProcessOutbound: no relayer key configured")
+		logger.Warn().Msg("no relayer key configured")
 		return
 	}
 
@@ -234,7 +260,7 @@ func (signer *Signer) TryProcessOutbound(
 	defer cancel()
 
 	if err := signer.waitExactGatewayNonce(ctxWait, params.TssNonce); err != nil {
-		logger.Error().Err(err).Msgf("fail to wait for gateway nonce")
+		logger.Error().Err(err).Msg("failed to wait for gateway nonce")
 		return
 	}
 
@@ -242,7 +268,7 @@ func (signer *Signer) TryProcessOutbound(
 	// This is when the recent block hash timer starts
 	outbound, err := outboundGetter()
 	if err != nil {
-		logger.Error().Err(err).Msgf("TryProcessOutbound: Failed to get transaction")
+		logger.Error().Err(err).Msg("failed to get transaction")
 		return
 	}
 
@@ -254,13 +280,13 @@ func (signer *Signer) TryProcessOutbound(
 // If `alt` is non-nil and `addrs` is non-empty, the transaction will include an address lookup table.
 func (signer *Signer) signTx(
 	ctx context.Context,
-	inst *solana.GenericInstruction,
+	inst *sol.GenericInstruction,
 	limit uint64,
 	alt *solana.PublicKey,
 	addrs solana.PublicKeySlice,
 ) (*solana.Transaction, error) {
 	// get a recent blockhash
-	recent, err := signer.client.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
+	recent, err := signer.solanaClient.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
 	if err != nil {
 		return nil, errors.Wrap(err, "getLatestBlockhash error")
 	}
@@ -294,7 +320,7 @@ func (signer *Signer) signTx(
 	}
 
 	// relayer signs the transaction
-	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
+	_, err = tx.Sign(func(key sol.PublicKey) *sol.PrivateKey {
 		if key.Equals(signer.relayerKey.PublicKey()) {
 			return signer.relayerKey
 		}
@@ -319,9 +345,8 @@ func (signer *Signer) broadcastOutbound(
 	tx := outbound.Tx
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod: "broadcastOutbound",
-		logs.FieldNonce:  nonce,
-		logs.FieldTx:     tx.Signatures[0].String(),
+		logs.FieldNonce: nonce,
+		logs.FieldTx:    tx.Signatures[0].String(),
 	}
 
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
@@ -347,10 +372,10 @@ func (signer *Signer) broadcastOutbound(
 
 		// broadcast the signed tx to the Solana network with preflight check
 		// the PDA nonce MUST be equal to 'nonce' if arrived here, guaranteed by upstream code
-		txSig, err := signer.client.SendTransactionWithOpts(
+		txSig, err := signer.solanaClient.SendTransactionWithOpts(
 			ctx,
 			tx,
-			rpc.TransactionOpts{PreflightCommitment: broadcastOutboundCommitment},
+			solrpc.TransactionOpts{PreflightCommitment: broadcastOutboundCommitment},
 		)
 		if err != nil {
 			shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, signer.GetGatewayAddress())
@@ -370,7 +395,7 @@ func (signer *Signer) broadcastOutbound(
 				}
 				tx = fallbackTx
 			}
-			logger.Warn().Err(err).Fields(lf).Msg("SendTransactionWithOpts failed")
+			logger.Warn().Err(err).Fields(lf).Msg("error calling SendTransactionWithOpts")
 			backOff *= 2
 			continue
 		}
@@ -386,7 +411,7 @@ func (signer *Signer) broadcastOutbound(
 // signed with the relayer key. If an ALT is provided, the transaction will include it.
 func (signer *Signer) createOutboundWithFallback(
 	ctx context.Context,
-	mainInst *solana.GenericInstruction,
+	mainInst *sol.GenericInstruction,
 	msgIn *contracts.MsgIncrementNonce,
 	computeLimit uint64,
 	alt *solana.PublicKey,
@@ -414,7 +439,10 @@ func (signer *Signer) SetGatewayAddress(address string) {
 	// parse gateway ID and PDA
 	gatewayID, pda, err := contracts.ParseGatewayWithPDA(address)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msgf("cannot parse gateway address: %s", address)
+		signer.Logger().Std.Error().
+			Err(err).
+			Str("address", address).
+			Msg("error parsing the gateway address")
 		return
 	}
 
@@ -424,9 +452,9 @@ func (signer *Signer) SetGatewayAddress(address string) {
 	}
 
 	signer.Logger().Std.Info().
-		Str("signer.old_gateway_address", signer.gatewayID.String()).
-		Str("signer.new_gateway_address", gatewayID.String()).
-		Msg("Updated gateway address")
+		Stringer("signer_old_gateway_address", signer.gatewayID).
+		Stringer("signer_new_gateway_address", gatewayID).
+		Msg("updated the gateway address")
 
 	signer.Lock()
 	signer.gatewayID = gatewayID
@@ -445,12 +473,12 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 		return
 	}
 
-	result, err := signer.client.GetBalance(ctx, signer.relayerKey.PublicKey(), rpc.CommitmentFinalized)
+	result, err := signer.solanaClient.GetBalance(ctx, signer.relayerKey.PublicKey(), solrpc.CommitmentFinalized)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msg("GetBalance error")
+		signer.Logger().Std.Error().Err(err).Msg("error calling GetBalance")
 		return
 	}
-	solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
+	solBalance := float64(result.Value) / float64(sol.LAMPORTS_PER_SOL)
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
@@ -498,11 +526,7 @@ func signMsgWithFallback[T SignableMessage[T]](
 //     processing goroutines by nonce and avoid nonce mismatch
 //  3. less nonce mismatch will reduce CCTX retries and TSS keysign requests
 func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) error {
-	logger := signer.Logger().Std.With().
-		Str("method", "waitExactGatewayNonce").
-		Int64("chain", signer.Chain().ChainId).
-		Uint64("nonce", nonce).
-		Logger()
+	logger := signer.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
 
 	for {
 		if ctx.Err() != nil {
@@ -519,7 +543,7 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) e
 		// query the gateway PDA nonce
 		pdaNonce, err := signer.getGatewayNonce(ctx)
 		if err != nil {
-			logger.Error().Err(err).Msgf("unable to get gateway nonce")
+			logger.Error().Err(err).Msg("unable to get gateway nonce")
 			time.Sleep(time.Second) // prevent RPC spamming
 			continue
 		}
@@ -530,7 +554,7 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) e
 		case pdaNonce == nonce:
 			return nil
 		default:
-			logger.Info().Uint64("pda.nonce", pdaNonce).Msg("waiting for PDA nonce to arrive")
+			logger.Info().Uint64("pda_nonce", pdaNonce).Msg("waiting for PDA nonce to arrive")
 
 			// calculate how far behind the PDA nonce and sleep accordingly
 			//  - base sleep time of 1 second, multiplied by the nonce difference
@@ -545,10 +569,10 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) e
 // getGatewayNonce queries the gateway nonce from the PDA account information
 func (signer *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
 	// query the gateway PDA account information
-	pdaInfo, err := signer.client.GetAccountInfoWithOpts(
+	pdaInfo, err := signer.solanaClient.GetAccountInfoWithOpts(
 		ctx,
 		signer.pda,
-		&rpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
+		&solrpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
 	)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get gateway PDA account info")

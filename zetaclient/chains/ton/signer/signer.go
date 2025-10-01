@@ -16,17 +16,23 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-type RPC interface {
-	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
-	GetAccountState(ctx context.Context, accountID ton.AccountID) (rpc.Account, error)
-	SendMessage(ctx context.Context, payload []byte) (uint32, error)
+type TONClient interface {
+	GetTransactionsSince(_ context.Context,
+		_ ton.AccountID,
+		lt uint64,
+		hash ton.Bits256,
+	) ([]ton.Transaction, error)
+
+	GetAccountState(context.Context, ton.AccountID) (rpc.Account, error)
+
+	SendMessage(context.Context, []byte) (uint32, error)
 }
 
 // Signer represents TON signer.
 type Signer struct {
 	*base.Signer
-	rpc     RPC
-	gateway *toncontracts.Gateway
+	tonClient TONClient
+	gateway   *toncontracts.Gateway
 }
 
 // Outcome possible outbound processing outcomes.
@@ -39,11 +45,11 @@ const (
 )
 
 // New Signer constructor.
-func New(baseSigner *base.Signer, rpc RPC, gateway *toncontracts.Gateway) *Signer {
+func New(baseSigner *base.Signer, tonClient TONClient, gateway *toncontracts.Gateway) *Signer {
 	return &Signer{
-		Signer:  baseSigner,
-		rpc:     rpc,
-		gateway: gateway,
+		Signer:    baseSigner,
+		tonClient: tonClient,
+		gateway:   gateway,
 	}
 }
 
@@ -61,19 +67,19 @@ func (s *Signer) TryProcessOutbound(
 
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
-	lf := map[string]any{
-		logs.FieldOutboundID: outboundID,
-		logs.FieldNonce:      cctx.GetCurrentOutboundParam().TssNonce,
-		"outcome":            string(outcome),
-	}
+	logger := s.Logger().Std.With().
+		Str(logs.FieldOutboundID, outboundID).
+		Uint64(logs.FieldNonce, cctx.GetCurrentOutboundParam().TssNonce).
+		Str("outcome", string(outcome)).
+		Logger()
 
 	switch {
 	case err != nil:
-		s.Logger().Std.Error().Err(err).Fields(lf).Msg("Unable to ProcessOutbound")
+		logger.Error().Err(err).Msg("error calling ProcessOutbound")
 	case outcome != Success:
-		s.Logger().Std.Warn().Fields(lf).Msg("Unsuccessful outcome for ProcessOutbound")
+		logger.Warn().Msg("unsuccessful outcome for ProcessOutbound")
 	default:
-		s.Logger().Std.Info().Fields(lf).Msg("Processed outbound")
+		logger.Info().Msg("processed outbound")
 	}
 }
 
@@ -97,13 +103,13 @@ func (s *Signer) ProcessOutbound(
 		return Invalid, errors.Wrap(err, "unable to compose message")
 	}
 
-	s.Logger().Std.Info().Fields(outbound.logFields).Msg("Signing outbound")
+	s.Logger().Std.Info().Fields(outbound.logFields).Msg("signing outbound")
 
 	if err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce); err != nil {
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
 	}
 
-	gwState, err := s.rpc.GetAccountState(ctx, s.gateway.AccountID())
+	gwState, err := s.tonClient.GetAccountState(ctx, s.gateway.AccountID())
 	if err != nil {
 		return Fail, errors.Wrap(err, "unable to get gateway state")
 	}
@@ -113,7 +119,7 @@ func (s *Signer) ProcessOutbound(
 	//
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
-	exitCode, err := s.gateway.SendExternalMessage(ctx, s.rpc, outbound.message)
+	exitCode, err := s.gateway.SendExternalMessage(ctx, s.tonClient, outbound.message)
 	if err != nil || exitCode != 0 {
 		return s.handleSendError(exitCode, err, outbound.logFields)
 	}
@@ -154,7 +160,7 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 		// Might be possible if 2 concurrent zeta clients
 		// are trying to broadcast the same message.
 		if strings.Contains(err.Error(), "duplicate") {
-			s.Logger().Std.Warn().Fields(logFields).Msg("Message already sent")
+			s.Logger().Std.Warn().Fields(logFields).Msg("message already sent")
 			return Invalid, nil
 		}
 	}
@@ -163,8 +169,8 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 	case exitCode == uint32(toncontracts.ExitCodeInvalidSeqno):
 		// Might be possible if zeta clients send several seq. numbers concurrently.
 		// In the current implementation, Gateway supports only 1 nonce per block.
-		logFields["outbound.error.exit_code"] = exitCode
-		s.Logger().Std.Warn().Fields(logFields).Msg("Invalid nonce, retry later")
+		logFields["outbound_error_exit_code"] = exitCode
+		s.Logger().Std.Warn().Fields(logFields).Msg("invalid nonce, retry later")
 		return Invalid, nil
 	case err != nil:
 		return Fail, errors.Wrap(err, "unable to send external message")
@@ -192,8 +198,8 @@ func (s *Signer) SetGatewayAddress(addr string) {
 	}
 
 	s.Logger().Std.Info().
-		Str("signer.old_gateway_address", s.gateway.AccountID().ToRaw()).
-		Str("signer.new_gateway_address", acc.ToRaw()).
+		Str("signer_old_gateway_address", s.gateway.AccountID().ToRaw()).
+		Str("signer_new_gateway_address", acc.ToRaw()).
 		Msg("Updated gateway address")
 
 	s.Lock()

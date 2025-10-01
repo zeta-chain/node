@@ -14,7 +14,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
@@ -30,7 +30,7 @@ import (
 	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
-	tonrpc "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	tonclient "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -56,10 +56,11 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 		return nil, errors.Wrap(errSkipChain, "unable to find btc config")
 	}
 
-	rpcClient, err := client.New(cfg, chain.ID(), oc.logger.Logger)
+	standardBitcoinClient, err := btcclient.New(cfg, chain.ID(), oc.logger.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create rpc client")
 	}
+	var bitcoinClient bitcoin.Client = standardBitcoinClient
 
 	var (
 		rawChain = chain.RawChain()
@@ -71,13 +72,13 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := btcobserver.New(*rawChain, baseObserver, rpcClient)
+	observer, err := btcobserver.New(baseObserver, bitcoinClient, *rawChain)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
 	baseSigner := oc.newBaseSigner(chain)
-	signer := btcsigner.New(baseSigner, rpcClient)
+	signer := btcsigner.New(baseSigner, bitcoinClient)
 
 	return bitcoin.New(oc.scheduler, observer, signer), nil
 }
@@ -98,10 +99,11 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 		return nil, errors.Wrap(errSkipChain, "unable to find evm config")
 	}
 
-	evmClient, err := evmclient.NewFromEndpoint(ctx, cfg.Endpoint)
+	standardEvmClient, err := evmclient.NewFromEndpoint(ctx, cfg.Endpoint)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", cfg.Endpoint)
 	}
+	var evmClient evm.Client = standardEvmClient
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
@@ -156,12 +158,13 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 
 	gwAddress := chain.Params().GatewayAddress
 
-	rpcClient := solrpc.New(cfg.Endpoint)
-	if rpcClient == nil {
+	standardSolanaClient := solrpc.New(cfg.Endpoint)
+	if standardSolanaClient == nil {
 		return nil, errors.New("unable to create rpc client")
 	}
+	var solanaClient solana.Client = standardSolanaClient
 
-	observer, err := solbserver.New(baseObserver, rpcClient, gwAddress)
+	observer, err := solbserver.New(baseObserver, solanaClient, gwAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
@@ -177,7 +180,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 	baseSigner := oc.newBaseSigner(chain)
 
 	// create Solana signer
-	signer, err := solanasigner.New(baseSigner, rpcClient, gwAddress, relayerKey)
+	signer, err := solanasigner.New(baseSigner, solanaClient, gwAddress, relayerKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create signer")
 	}
@@ -207,7 +210,8 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 		return nil, errors.Wrap(err, "unable to create gateway")
 	}
 
-	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
+	standardSuiClient := suiclient.New(cfg.Endpoint)
+	var suiClient sui.Client = standardSuiClient
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
@@ -216,7 +220,7 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
-	signer := suisigner.New(oc.newBaseSigner(chain), suiClient, gateway, oc.deps.Zetacore)
+	signer := suisigner.New(oc.newBaseSigner(chain), oc.deps.Zetacore, suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -258,19 +262,20 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 		return nil, errors.Wrap(err, "unable to create instrumented rpc client")
 	}
 
-	rpc := tonrpc.New(cfg.Endpoint, chain.ID(), tonrpc.WithHTTPClient(rpcClient))
+	standardTonClient := tonclient.New(cfg.Endpoint, chain.ID(), tonclient.WithHTTPClient(rpcClient))
+	var tonClient ton.Client = standardTonClient
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := tonobserver.New(baseObserver, rpc, gw)
+	observer, err := tonobserver.New(baseObserver, tonClient, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), rpc, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain), tonClient, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }

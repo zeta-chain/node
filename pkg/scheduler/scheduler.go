@@ -103,7 +103,7 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	task.logger = newTaskLogger(task, config, s.logger)
 	task.ticker = newTickable(task, config)
 
-	task.logger.Info().Msgf("Starting scheduler task %s", task.name)
+	task.logger.Info().Str("started_task", task.name).Msg("starting scheduler task")
 	bg.Work(ctx, task.ticker.Start, bg.WithLogger(task.logger))
 
 	s.mu.Lock()
@@ -153,7 +153,7 @@ func (s *Scheduler) StopGroup(group Group) {
 	s.logger.Info().
 		Int("tasks", len(selectedTasks)).
 		Str("group", string(group)).
-		Msg("Stopping scheduler group")
+		Msg("stopping scheduler group")
 
 	// Stop all selected tasks concurrently
 	var wg sync.WaitGroup
@@ -171,7 +171,7 @@ func (s *Scheduler) StopGroup(group Group) {
 
 // Stop stops the task and offloads it from the scheduler.
 func (t *Task) Stop() {
-	t.logger.Info().Msgf("Stopping scheduler task %s", t.name)
+	t.logger.Info().Str("stopped_task", t.name).Msg("stopping scheduler task")
 	start := time.Now()
 
 	t.ticker.Stop()
@@ -181,7 +181,7 @@ func (t *Task) Stop() {
 	t.scheduler.mu.Unlock()
 
 	timeTakenMS := time.Since(start).Milliseconds()
-	t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("Stopped scheduler task")
+	t.logger.Info().Int64("time_taken_ms", timeTakenMS).Msg("stopped scheduler task")
 }
 
 func (t *Task) Group() Group {
@@ -211,8 +211,8 @@ func (t *Task) execute(ctx context.Context) error {
 
 func newTaskLogger(task *Task, opts *taskOpts, logger zerolog.Logger) zerolog.Logger {
 	logOpts := logger.With().
-		Str("task.name", task.name).
-		Str("task.group", string(task.group))
+		Str("task_name", task.name).
+		Str("task_group", string(task.group))
 
 	if len(opts.logFields) > 0 {
 		logOpts = logOpts.Fields(opts.logFields)
@@ -223,7 +223,7 @@ func newTaskLogger(task *Task, opts *taskOpts, logger zerolog.Logger) zerolog.Lo
 		taskType = "block_ticker"
 	}
 
-	return logOpts.Str("task.type", taskType).Logger()
+	return logOpts.Str("task_type", taskType).Logger()
 }
 
 func newTickable(task *Task, opts *taskOpts) tickable {

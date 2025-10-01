@@ -1,20 +1,20 @@
-package rpc_test
+package repo_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/gagliardetto/solana-go"
-	solanarpc "github.com/gagliardetto/solana-go/rpc"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
-// Test_SolanaRPCLive is a phony test to run all live tests
-func Test_SolanaRPCLive(t *testing.T) {
+// Test_SolanaRepoLive is a phony test to run all live tests
+func Test_SolanaRepoLive(t *testing.T) {
 	if !common.LiveTestEnabled() {
 		return
 	}
@@ -42,7 +42,9 @@ func Test_SolanaRPCLive(t *testing.T) {
 
 func Run_GetTransactionWithVersion(t *testing.T) {
 	// create a Solana devnet RPC client
-	client := solanarpc.New(solanarpc.DevNet_RPC)
+	client := solrpc.New(solrpc.DevNet_RPC)
+
+	repo := repo.New(client)
 
 	// example transaction of version "0"
 	// https://explorer.solana.com/tx/Wqgj7hAaUUSfLzieN912G7GxyGHijzBZgY135NtuFtPRjevK8DnYjWwQZy7LAKFQZu582wsjuab2QP27VMUJzAi?cluster=devnet
@@ -52,7 +54,7 @@ func Run_GetTransactionWithVersion(t *testing.T) {
 
 	t.Run("should get the transaction if the version is supported", func(t *testing.T) {
 		ctx := context.Background()
-		txResult, err := rpc.GetTransaction(ctx, client, txSig)
+		txResult, err := repo.GetTransaction(ctx, txSig)
 		require.NoError(t, err)
 		require.NotNil(t, txResult)
 	})
@@ -60,13 +62,15 @@ func Run_GetTransactionWithVersion(t *testing.T) {
 
 func Run_GetFirstSignatureForAddress(t *testing.T) {
 	// create a Solana devnet RPC client
-	client := solanarpc.New(solanarpc.DevNet_RPC)
+	client := solrpc.New(solrpc.DevNet_RPC)
+
+	repo := repo.New(client)
 
 	// program address
 	address := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
 
 	// get the first signature for the address (one by one)
-	sig, err := rpc.GetFirstSignatureForAddress(context.Background(), client, address, 1)
+	sig, err := repo.GetFirstSignatureForAddress(context.Background(), address, 1)
 	require.NoError(t, err)
 
 	// assert
@@ -76,7 +80,9 @@ func Run_GetFirstSignatureForAddress(t *testing.T) {
 
 func Run_GetSignaturesForAddressUntil(t *testing.T) {
 	// create a Solana devnet RPC client
-	client := solanarpc.New(solanarpc.DevNet_RPC)
+	client := solrpc.New(solrpc.DevNet_RPC)
+
+	repo := repo.New(client)
 
 	// program address
 	address := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
@@ -85,7 +91,7 @@ func Run_GetSignaturesForAddressUntil(t *testing.T) {
 	)
 
 	// get all signatures for the address until the first signature
-	sigs, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 100)
+	sigs, err := repo.GetSignaturesForAddressUntil(context.Background(), address, untilSig, 100)
 	require.NoError(t, err)
 
 	// assert
@@ -99,7 +105,9 @@ func Run_GetSignaturesForAddressUntil(t *testing.T) {
 
 func Run_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	// create a Solana devnet RPC client
-	client := solanarpc.New(solanarpc.DevNet_RPC)
+	client := solrpc.New(solrpc.DevNet_RPC)
+
+	repo := repo.New(client)
 
 	// program address and signature of version "0"
 	chain := chains.SolanaDevnet
@@ -109,16 +117,18 @@ func Run_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	)
 
 	// should get all signatures for the address until a signature of version "0" successfully
-	_, err := rpc.GetSignaturesForAddressUntil(context.Background(), client, address, untilSig, 100)
+	_, err := repo.GetSignaturesForAddressUntil(context.Background(), address, untilSig, 100)
 	require.NoError(t, err)
 }
 
 func Run_HealthCheck(t *testing.T) {
 	// create a Solana devnet RPC client
-	client := solanarpc.New(solanarpc.DevNet_RPC)
+	client := solrpc.New(solrpc.DevNet_RPC)
+
+	repo := repo.New(client)
 
 	// check the RPC status
 	ctx := context.Background()
-	_, err := rpc.HealthCheck(ctx, client)
+	_, err := repo.HealthCheck(ctx)
 	require.NoError(t, err)
 }

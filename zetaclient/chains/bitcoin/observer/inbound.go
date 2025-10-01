@@ -22,7 +22,7 @@ import (
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
+	logger := ob.Logger().Inbound
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
@@ -92,7 +92,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		// #nosec G115 always positive
 		events, err := FilterAndParseIncomingTx(
 			ctx,
-			ob.rpc,
+			ob.bitcoinClient,
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
@@ -142,7 +142,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
 	tssAddress string,
@@ -159,7 +159,7 @@ func FilterAndParseIncomingTx(
 
 		event, err := GetBtcEventWithWitness(
 			ctx,
-			rpc,
+			bitcoinClient,
 			tx,
 			tssAddress,
 			blockNumber,
@@ -187,17 +187,17 @@ func FilterAndParseIncomingTx(
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
-	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
-		logs.FieldTx:     event.TxHash,
-	}
+	// prepare logger
+	logger := ob.logger.Inbound.With().Str(logs.FieldTx, event.TxHash).Logger()
 
 	// decode event memo bytes
 	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
-		ob.Logger().Inbound.Info().Err(err).Fields(lf).Msgf("invalid memo: %s", hex.EncodeToString(event.MemoBytes))
+		logger.Info().
+			Err(err).
+			Str("memo", hex.EncodeToString(event.MemoBytes)).
+			Msg("invalid memo")
 		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
@@ -209,7 +209,10 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	// convert the amount to integer (satoshis)
 	amountSats, err := common.GetSatoshis(event.Value)
 	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Fields(lf).Msgf("can't convert value %f to satoshis", event.Value)
+		logger.Error().
+			Err(err).
+			Float64("value", event.Value).
+			Msg("cannot convert value to satoshis")
 		return nil
 	}
 	amountInt := big.NewInt(amountSats)

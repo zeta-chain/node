@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -159,20 +160,21 @@ func ValidateStandardMemo(memoStd memo.InboundMemo, chainID int64) error {
 
 // IsEventProcessable checks if the inbound event is processable
 func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
-	logFields := map[string]any{logs.FieldTx: event.TxHash}
+	logger := ob.Logger().Inbound.With().Str(logs.FieldTx, event.TxHash).Logger()
 
 	switch category := event.Category(); category {
 	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
-		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
+		logger.Info().Msg("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
-		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, "BTC")
+		coinType := coin.CoinType_Gas
+		compliance.PrintComplianceLog(ob.logger.Inbound, ob.logger.Compliance, false,
+			ob.Chain().ChainId, event.TxHash, event.FromAddress, event.ToAddress, &coinType)
 		return false
 	default:
-		ob.Logger().Inbound.Error().Fields(logFields).Msgf("unreachable code got InboundCategory: %v", category)
+		logger.Error().Any("category", category).Msg("unreachable code got InboundCategory")
 		return false
 	}
 }

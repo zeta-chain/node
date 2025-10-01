@@ -108,7 +108,7 @@ fund_eth() {
     fi
 
     geth --exec \
-        "eth.sendTransaction({from: eth.coinbase, to: '${address}', value: web3.toWei(${ether}, 'ether')})" \
+        "eth.sendTransaction({from: eth.accounts[0], to: '${address}', value: web3.toWei(${ether}, 'ether')})" \
         attach http://eth:8545 > /dev/null;
 }
 

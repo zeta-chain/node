@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 type Zetacore interface {
@@ -71,7 +72,9 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		cp := chainParams[i]
 
 		if !cp.IsSupported {
-			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping unsupported chain")
+			logger.Warn().
+				Int64(logs.FieldChain, cp.ChainId).
+				Msg("skipping unsupported chain")
 			continue
 		}
 
@@ -80,7 +83,10 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		}
 
 		if err := cp.Validate(); err != nil {
-			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
+			logger.Warn().
+				Err(err).
+				Int64(logs.FieldChain, cp.ChainId).
+				Msg("skipping invalid chain parameters")
 			continue
 		}
 

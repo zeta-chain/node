@@ -151,12 +151,12 @@ func TestObserver(t *testing.T) {
 		assert.Contains(
 			t,
 			ts.log.String(),
-			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 		assert.Contains(
 			t,
 			ts.log.String(),
-			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 	})
 
@@ -635,7 +635,7 @@ func (ts *testSuite) MockCCTXByNonce(cctx *cctypes.CrossChainTx) *mock.Call {
 
 func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *mock.Call {
 	return ts.zetaMock.
-		On("GetAllOutboundTrackerByChain", mock.Anything, ts.Chain().ChainId, mock.Anything).
+		On("GetOutboundTrackers", mock.Anything, ts.Chain().ChainId).
 		Return(trackers, nil)
 }
 

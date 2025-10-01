@@ -51,8 +51,8 @@ func TestOrchestratorV2(t *testing.T) {
 
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
-		assert.Contains(t, ts.Log.String(), "Chain list changed at the runtime!")
-		assert.Contains(t, ts.Log.String(), `"chains.new":[1]`)
+		assert.Contains(t, ts.Log.String(), "chain list changed at the runtime")
+		assert.Contains(t, ts.Log.String(), `"chains_new":[1]`)
 
 		// ACT #2
 		// Mimic zetacore update that adds bitcoin chain with chain params
@@ -70,7 +70,7 @@ func TestOrchestratorV2(t *testing.T) {
 
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
-		assert.Contains(t, ts.Log.String(), `"chains.new":[1,8332],"message":"Chain list changed at the runtime!"`)
+		assert.Contains(t, ts.Log.String(), `"chains_new":[1,8332],"message":"chain list changed at the runtime"`)
 	})
 }
 
@@ -173,7 +173,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Mock CCTX-related calls (stubs for now)
 	on(zetacore, "ListPendingCCTX", 2).Return(nil, uint64(0), nil).Maybe()
 	on(zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
-	on(zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(zetacore, "GetOutboundTrackers", 2).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 

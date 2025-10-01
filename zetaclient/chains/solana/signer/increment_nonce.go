@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -24,6 +25,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 	// compliance check
 	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
+		coinType := coin.CoinType_Gas
 		compliance.PrintComplianceLog(
 			logger,
 			signer.Logger().Compliance,
@@ -32,7 +34,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 			cctx.Index,
 			cctx.InboundParams.Sender,
 			params.Receiver,
-			"SOL",
+			&coinType,
 		)
 	}
 
@@ -93,7 +95,7 @@ func (signer *Signer) createAndSignMsgIncrementNonce(
 // createIncrementNonceInstruction wraps the increment_nonce 'msg' into a Solana instruction.
 func (signer *Signer) createIncrementNonceInstruction(
 	msg contracts.MsgIncrementNonce,
-) (*solana.GenericInstruction, error) {
+) (*sol.GenericInstruction, error) {
 	// create increment_nonce instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.IncrementNonceInstructionParams{
 		Discriminator: contracts.DiscriminatorIncrementNonce,
@@ -108,12 +110,12 @@ func (signer *Signer) createIncrementNonceInstruction(
 		return nil, errors.Wrap(err, "cannot serialize increment_nonce instruction")
 	}
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:    signer.gatewayID,
 		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
+		AccountValues: []*sol.AccountMeta{
+			sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			sol.Meta(signer.pda).WRITE(),
 		},
 	}
 

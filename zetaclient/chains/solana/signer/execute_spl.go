@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
@@ -94,7 +94,7 @@ func (signer *Signer) createMsgExecuteSPL(
 	}
 
 	// parse mint account
-	mintAccount, err := solana.PublicKeyFromBase58(cctx.InboundParams.Asset)
+	mintAccount, err := sol.PublicKeyFromBase58(cctx.InboundParams.Asset)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "cannot parse asset public key %s", cctx.InboundParams.Asset)
 	}
@@ -105,7 +105,7 @@ func (signer *Signer) createMsgExecuteSPL(
 		return nil, nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
 
-	destinationProgramPdaAta, _, err := solana.FindAssociatedTokenAddress(destinationProgramPda, mintAccount)
+	destinationProgramPdaAta, _, err := sol.FindAssociatedTokenAddress(destinationProgramPda, mintAccount)
 	if err != nil {
 		return nil, nil, errors.Wrapf(
 			err,
@@ -143,7 +143,7 @@ func (signer *Signer) createMsgExecuteSPL(
 }
 
 // createExecuteSPLInstruction wraps the execute spl 'msg' into a Solana instruction.
-func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (*solana.GenericInstruction, error) {
+func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (*sol.GenericInstruction, error) {
 	// create execute spl instruction with program call data
 	var dataBytes []byte
 	if msg.ExecuteType() == contracts.ExecuteTypeRevert {
@@ -151,7 +151,7 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 			Discriminator: contracts.DiscriminatorExecuteSPLRevert,
 			Decimals:      msg.Decimals(),
 			Amount:        msg.Amount(),
-			Sender:        solana.MustPublicKeyFromBase58(msg.Sender()),
+			Sender:        sol.MustPublicKeyFromBase58(msg.Sender()),
 			Data:          msg.Data(),
 			Signature:     msg.SigRS(),
 			RecoveryID:    msg.SigV(),
@@ -182,7 +182,7 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 		dataBytes = serializedInst
 	}
 
-	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
+	pdaAta, _, err := sol.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", signer.pda, msg.MintAccount())
 	}
@@ -192,21 +192,21 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
 
-	predefinedAccounts := []*solana.AccountMeta{
-		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-		solana.Meta(signer.pda).WRITE(),
-		solana.Meta(pdaAta).WRITE(),
-		solana.Meta(msg.MintAccount()),
-		solana.Meta(msg.To()),
-		solana.Meta(destinationProgramPda).WRITE(),
-		solana.Meta(msg.RecipientAta()).WRITE(),
-		solana.Meta(solana.TokenProgramID),
-		solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
-		solana.Meta(solana.SystemProgramID),
+	predefinedAccounts := []*sol.AccountMeta{
+		sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+		sol.Meta(signer.pda).WRITE(),
+		sol.Meta(pdaAta).WRITE(),
+		sol.Meta(msg.MintAccount()),
+		sol.Meta(msg.To()),
+		sol.Meta(destinationProgramPda).WRITE(),
+		sol.Meta(msg.RecipientAta()).WRITE(),
+		sol.Meta(sol.TokenProgramID),
+		sol.Meta(sol.SPLAssociatedTokenAccountProgramID),
+		sol.Meta(sol.SystemProgramID),
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:        signer.gatewayID,
 		DataBytes:     dataBytes,
 		AccountValues: allAccounts,

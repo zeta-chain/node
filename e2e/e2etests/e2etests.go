@@ -12,6 +12,8 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHMultipleDepositsName             = "eth_multiple_deposits"
+	TestETHMultipleDepositsLegacyName       = "eth_multiple_deposits_legacy"
 	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
@@ -34,6 +36,7 @@ const (
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 
 	TestERC20DepositName                      = "erc20_deposit"
+	TestERC20MultipleDepositsName             = "erc20_multiple_deposits"
 	TestERC20DepositAndCallName               = "erc20_deposit_and_call"
 	TestERC20DepositAndCallNoMessageName      = "erc20_deposit_and_call_no_message"
 	TestERC20DepositAndCallRevertName         = "erc20_deposit_and_call_revert"
@@ -216,7 +219,7 @@ const (
 	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                   = "migrate_tss"
 	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
-	TestUpdateZRC20NameName              = "update_zrc20_name"
+	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
@@ -356,6 +359,22 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
 		},
 		TestETHDeposit,
+	),
+	runner.NewE2ETest(
+		TestETHMultipleDepositsName,
+		"deposit Ether into ZEVM multiple",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestETHMultipleDeposits,
+	),
+	runner.NewE2ETest(
+		TestETHMultipleDepositsLegacyName,
+		"deposit Ether into ZEVM multiple legacy",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestETHMultipleDepositsLegacy,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallName,
@@ -520,6 +539,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestERC20MultipleDepositsName,
+		"deposit ERC20 into ZEVM multiple",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestERC20MultipleDeposits,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallName,

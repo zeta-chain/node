@@ -32,17 +32,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// Sui has a nice access-pattern of scrolling through contract events
-	events, _, err := ob.client.QueryModuleEvents(ctx, query)
+	events, _, err := ob.suiClient.QueryModuleEvents(ctx, query)
 	if err != nil {
 		return errors.Wrap(err, "unable to query module events")
 	}
 
 	if len(events) == 0 {
-		ob.Logger().Inbound.Debug().Msg("No inbound events found")
+		ob.Logger().Inbound.Debug().Msg("found no inbound events")
 		return nil
 	}
 
-	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing inbound events")
+	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
@@ -54,18 +54,18 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("TX not found or not finalized. Pausing")
+				Msg("tx not found or not finalized; pausing")
 			return nil
 		case errors.Is(err, errCompliance):
 			// skip restricted tx and update the cursor
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Tx contains restricted address. Skipping")
+				Msg("tx contains restricted address; skipping")
 		case err != nil:
 			// failed processing also updates the cursor
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Unable to process inbound event")
+				Msg("unable to process inbound event")
 		}
 
 		// update the cursor
@@ -90,7 +90,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
-				Msg("Unable to process inbound tracker")
+				Msg("unable to process inbound tracker")
 		}
 	}
 
@@ -112,7 +112,7 @@ func (ob *Observer) processInboundEvent(
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
 	case errors.Is(err, sui.ErrParseEvent):
-		ob.Logger().Inbound.Err(err).Msg("Unable to parse event. Skipping")
+		ob.Logger().Inbound.Err(err).Msg("unable to parse event; skipping")
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
@@ -125,7 +125,7 @@ func (ob *Observer) processInboundEvent(
 
 	if tx == nil {
 		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
-		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
+		txFresh, err := ob.suiClient.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
 		}
@@ -153,7 +153,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
 	}
 
-	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
+	tx, err := ob.suiClient.SuiGetTransactionBlock(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "unable to get transaction block")
 	}
@@ -194,7 +194,7 @@ func (ob *Observer) constructInboundVote(
 			event.TxHash,
 			deposit.Sender,
 			deposit.Receiver.String(),
-			asset,
+			&coinType,
 		)
 		return nil, errCompliance
 	}
