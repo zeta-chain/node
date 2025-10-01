@@ -33,7 +33,7 @@ func (r *E2ERunner) ETHDeposit(
 	}()
 	r.EVMAuth.Value = amount
 
-	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, revertOptions)
+	tx, err := r.GatewayEVM.Deposit1(r.EVMAuth, receiver, revertOptions)
 	require.NoError(r, err)
 
 	if wait {
@@ -75,7 +75,7 @@ func (r *E2ERunner) ETHDepositAndCall(
 	}()
 	r.EVMAuth.Value = amount
 
-	tx, err := r.GatewayEVM.DepositAndCall(r.EVMAuth, receiver, payload, revertOptions)
+	tx, err := r.GatewayEVM.DepositAndCall0(r.EVMAuth, receiver, payload, revertOptions)
 	require.NoError(r, err)
 
 	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit_and_call")
@@ -122,7 +122,7 @@ func (r *E2ERunner) ERC20DepositAndCall(
 	payload []byte,
 	revertOptions gatewayevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.DepositAndCall0(
+	tx, err := r.GatewayEVM.DepositAndCall1(
 		r.EVMAuth,
 		receiver,
 		amount,
@@ -144,7 +144,7 @@ func (r *E2ERunner) ZetaDepositAndCall(
 	payload []byte,
 	revertOptions gatewayevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayEVM.DepositAndCall0(
+	tx, err := r.GatewayEVM.DepositAndCall1(
 		r.EVMAuth,
 		receiver,
 		amount,
@@ -233,7 +233,7 @@ func (r *E2ERunner) SendZetaOnEVM(address ethcommon.Address, zetaAmount int64) *
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
 func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
-	allowance, err := r.ERC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ERC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
 	// approve 1M*1e18 if allowance is zero
