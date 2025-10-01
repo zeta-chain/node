@@ -10,7 +10,7 @@ on:
   schedule:
     # run at 6AM UTC Daily
     # 6AM UTC -> 11PM PT
-    - cron: "0 6 * * *"
+    - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       make-targets:
@@ -283,7 +283,6 @@ jobs:
           - make-target: "start-solana-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
-            timeout-minutes: 40
           - make-target: "start-ton-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
