@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -15,10 +16,12 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -34,6 +37,9 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
+
+	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
+	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -452,8 +458,14 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
+	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
+	// Note: the canceller is not used because we want to allow the goroutines to run until they time out
+	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), MonitoringErrHandlerRoutineTimeout)
+
 	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
+	zetaHash, ballot, err := ob.ZetacoreClient().
+		PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
 	if err != nil {
 		logger.Error().Err(err).Msg("inbound detected: error posting vote")
 		return "", err
@@ -470,7 +482,40 @@ func (ob *Observer) PostVoteInbound(
 		logger.Info().Msg("inbound detected: vote posted")
 	}
 
+	go func() {
+		ob.handleMonitoringError(ctxWithTimeout, monitorErrCh, zetaHash)
+	}()
+
 	return ballot, nil
+}
+
+func (ob *Observer) handleMonitoringError(
+	ctx context.Context,
+	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
+	zetaHash string,
+) {
+	logger := ob.logger.Inbound
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
+		}
+	}()
+
+	select {
+	case monitorErr := <-monitorErrCh:
+		if monitorErr.Err != nil {
+			logger.Error().
+				Err(monitorErr).
+				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
+				Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
+				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
+				Msg("error monitoring vote transaction")
+		}
+	case <-ctx.Done():
+		logger.Debug().
+			Str(logs.FieldZetaTx, zetaHash).
+			Msg("no error received for the monitoring, the transaction likely succeeded")
+	}
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

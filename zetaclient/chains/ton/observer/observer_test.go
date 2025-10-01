@@ -248,7 +248,7 @@ func setupVotesBag(ts *testSuite) {
 		ts.votesBag = append(ts.votesBag, cctx)
 	}
 	ts.zetacore.
-		On("PostVoteInbound", ts.ctx, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Maybe().
 		Run(catcher).
 		Return("", "", nil) // zeta hash, ballot index, error
