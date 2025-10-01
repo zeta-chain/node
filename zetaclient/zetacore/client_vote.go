@@ -264,8 +264,8 @@ func (c *Client) addFailedInboundBallotOutOfGas(ballotIndex string, gasWanted in
 
 // removeFailedInboundBallotOutOfGas removes the failed inbound ballot from the map
 func (c *Client) removeFailedInboundBallotOutOfGas(ballotIndex string) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]; found {
 		delete(c.inboundBallotsOutOfGas, ballotIndex)
