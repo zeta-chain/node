@@ -28,6 +28,7 @@ by calling `updateAdditionalActionFee` admin function.
 ### Fixes
 
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4291](https://github.com/zeta-chain/node/pull/4291) - adjust inbound retry gas limit and stop tx broadcasting on mempool congestion
 
 ## v33.0.0
 
