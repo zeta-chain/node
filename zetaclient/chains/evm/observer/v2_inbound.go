@@ -149,22 +149,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// filter events from same tx
-	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
-	guard := make(map[string]bool)
-	for _, event := range validEvents {
-		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple Deposited events in same tx")
-			continue
-		}
-		guard[event.Raw.TxHash.Hex()] = true
-		filtered = append(filtered, event)
-	}
-
-	return filtered
+	return validEvents
 }
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
@@ -284,24 +269,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// filter events from same tx
-	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
-	guard := make(map[string]bool)
-	for _, event := range validEvents {
-		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("Multiple Call events in same tx")
-
-			continue
-		}
-
-		guard[event.Raw.TxHash.Hex()] = true
-		filtered = append(filtered, event)
-	}
-
-	return filtered
+	return validEvents
 }
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
@@ -413,22 +381,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// filter events from same tx
-	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
-	guard := make(map[string]bool)
-	for _, event := range validEvents {
-		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple DepositedAndCalled events in same tx")
-			continue
-		}
-		guard[event.Raw.TxHash.Hex()] = true
-		filtered = append(filtered, event)
-	}
-
-	return filtered
+	return validEvents
 }
 
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
