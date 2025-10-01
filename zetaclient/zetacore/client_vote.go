@@ -12,6 +12,7 @@ import (
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -156,9 +157,16 @@ func (c *Client) PostVoteInbound(
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
 ) (string, string, error) {
-	// zetaclient patch
 	// force use SAFE mode for all inbound votes (both fast and slow votes)
 	msg.ConfirmationMode = types.ConfirmationMode_SAFE
+
+	// adjust gas limit according to previous out of gas failures
+	ballotIndex := msg.Digest()
+	gasLimit, retryGasLimit, retryable := c.getAdjustedVoteInboundGasLimit(ballotIndex, gasLimit, retryGasLimit)
+	if !retryable {
+		c.logger.Info().Str(logs.FieldBallotIndex, ballotIndex).Msg("stop voting due to inbound gas limit")
+		return "", ballotIndex, nil
+	}
 
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -166,7 +174,6 @@ func (c *Client) PostVoteInbound(
 	}
 
 	// don't post send if has already voted before
-	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ctx, ballotIndex, msg.Creator)
 	if err != nil {
 		return "", ballotIndex, errors.Wrapf(err,
@@ -197,4 +204,74 @@ func (c *Client) PostVoteInbound(
 	}()
 
 	return zetaTxHash, ballotIndex, nil
+}
+
+// getAdjustedVoteInboundGasLimit gets the adjusted gas limit and retry gas limit by checking previous failed ballots
+func (c *Client) getAdjustedVoteInboundGasLimit(
+	ballotIndex string,
+	gasLimit, retryGasLimit uint64,
+) (newGasLimit, newRetryGasLimit uint64, retryable bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	// no adjustment needed if no previous failed ballots
+	lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]
+	if !found {
+		return gasLimit, retryGasLimit, true
+	}
+
+	// in our case, the 'retryGasLimit' passed (e.g. 7M) is higher than 'gasLimit' (e.g. 5M),
+	// but we do NOT assume too much inside this function to make implementation simpler.
+	maxGasLimit := max(gasLimit, retryGasLimit)
+	if lastGasLimit >= maxGasLimit {
+		return 0, 0, false
+	}
+
+	// use max gas limit paired with 0 (indicates that no further retry is needed).
+	c.logger.Info().
+		Str(logs.FieldBallotIndex, ballotIndex).
+		Uint64("gas_limit", gasLimit).
+		Uint64("new_gas_limit", maxGasLimit).
+		Msg("adjusted gas limit")
+	return maxGasLimit, 0, true
+}
+
+// addFailedInboundBallotOutOfGas saves the failed inbound ballot together with the gas limit used in voting
+func (c *Client) addFailedInboundBallotOutOfGas(ballotIndex string, gasWanted int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// the 'GasWanted' field should never be negative in Cosmos tx response
+	if gasWanted < 0 {
+		c.logger.Error().Int64("gas_wanted", gasWanted).Msg("invalid cosmos gas limit")
+		return
+	}
+	// #nosec G115 checked positive
+	gasLimit := uint64(gasWanted)
+
+	// update only if given gas limit is higher than last failed gasLimit
+	lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]
+	if found && lastGasLimit >= gasLimit {
+		return
+	}
+
+	c.inboundBallotsOutOfGas[ballotIndex] = gasLimit
+	c.logger.Info().
+		Str(logs.FieldBallotIndex, ballotIndex).
+		Uint64("gas_limit", gasLimit).
+		Msg("added failed inbound ballot out of gas")
+}
+
+// removeFailedInboundBallotOutOfGas removes the failed inbound ballot from the map
+func (c *Client) removeFailedInboundBallotOutOfGas(ballotIndex string) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]; found {
+		delete(c.inboundBallotsOutOfGas, ballotIndex)
+		c.logger.Info().
+			Str(logs.FieldBallotIndex, ballotIndex).
+			Uint64("gas_limit", lastGasLimit).
+			Msg("removed failed inbound ballot out of gas")
+	}
 }
