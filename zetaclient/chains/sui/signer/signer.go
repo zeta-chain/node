@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -21,7 +21,7 @@ import (
 type Signer struct {
 	*base.Signer
 
-	zetacoreClient interfaces.ZetacoreClient
+	zetacoreClient zrepo.ZetacoreClient
 	suiClient      SuiClient
 
 	gateway        *sui.Gateway
@@ -69,7 +69,7 @@ type SuiClient interface {
 
 // New Signer constructor.
 func New(baseSigner *base.Signer,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	suiClient SuiClient,
 	gateway *sui.Gateway,
 ) *Signer {

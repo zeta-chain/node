@@ -16,6 +16,7 @@ by calling `updateAdditionalActionFee` admin function.
 ### Features
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4277](https://github.com/zeta-chain/node/pull/4277) - add dry-mode support for TON
 
 ### Refactor
 

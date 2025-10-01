@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"gorm.io/gorm"
 
@@ -23,6 +24,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -81,7 +83,7 @@ func Test_NewObserver(t *testing.T) {
 		chain          chains.Chain
 		btcClient      *mocks.BitcoinClient
 		chainParams    observertypes.ChainParams
-		zetacoreClient interfaces.ZetacoreClient
+		zetacoreClient zrepo.ZetacoreClient
 		tssSigner      interfaces.TSSSigner
 		logger         base.Logger
 		ts             *metrics.TelemetryServer
@@ -149,6 +151,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.ts,
 				database,
 				tt.logger,
+				mode.StandardMode,
 			)
 			require.NoError(t, err)
 
@@ -330,6 +333,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 		&metrics.TelemetryServer{},
 		database,
 		baseLogger,
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
