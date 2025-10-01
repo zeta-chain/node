@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+// TODO: https://github.com/zeta-chain/node/issues/4292
 // EnableMultipleCallsFeatureFlag returns true if EnableMultipleCalls feature flag is enabled
 func EnableMultipleCallsFeatureFlag(ctx context.Context) bool {
 	app, err := FromContext(ctx)
