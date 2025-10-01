@@ -226,8 +226,7 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 func (ob *Observer) LastBlockScanned() uint64 {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
-	height := atomic.LoadUint64(&ob.lastBlockScanned)
-	return height
+	return ob.lastBlockScanned
 }
 
 // WithLastBlockScanned set last block scanned (not necessarily caught up with the chain; could be slow/paused).
@@ -243,11 +242,17 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64, forceResetLastScann
 	// forceResetLastScanned was set to true before; it means the monitoring thread would have updated it
 	// In this case we should not update the last scanned block and just return
 	if wasForceReset && !forceResetLastScanned {
+		ob.logger.Chain.Info().Uint64(logs.FieldBlock, ob.lastBlockScanned).Msg("skipped updating last scanned block")
 		return ob, wasForceReset
 	}
 
-	atomic.StoreUint64(&ob.lastBlockScanned, blockNumber)
+	ob.lastBlockScanned = blockNumber
 	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.Name).Set(float64(blockNumber))
+
+	if forceResetLastScanned {
+		ob.logger.Chain.Info().Uint64(logs.FieldBlock, blockNumber).Msg("force updated last scanned block")
+	}
+
 	return ob, wasForceReset
 }
 
@@ -351,6 +356,7 @@ func (ob *Observer) SaveLastBlockScanned(blockNumber uint64) error {
 // ForceSaveLastBlockScanned saves the last scanned block to memory if the new blocknumber is less than the current last scanned block.
 // It also forces the update of the last scanned block in the database, to makes sure any other the block gets rescanned.
 func (ob *Observer) ForceSaveLastBlockScanned(blockNumber uint64) error {
+	// there can be multiple monitoring goroutines setting the rescan height, so the lowest height should be used
 	currentLastScanned := ob.LastBlockScanned()
 	if blockNumber > currentLastScanned {
 		return nil

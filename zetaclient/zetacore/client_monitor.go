@@ -156,6 +156,9 @@ func (c *Client) monitorVoteInboundResult(
 		logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to execute vote")
 
 	case strings.Contains(txResult.RawLog, "out of gas"):
+		// record this failure for future gas adjustment
+		c.addFailedInboundBallotOutOfGas(msg.Digest(), txResult.GasWanted)
+
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("out of gas")
 		if retryGasLimit > 0 {
@@ -168,6 +171,9 @@ func (c *Client) monitorVoteInboundResult(
 			}
 		}
 	default:
+		// it is just a nice-to-have logic to reduce the memory usage and
+		// we don't expect this cleanup is perfect and cover 100% of the cases
+		c.removeFailedInboundBallotOutOfGas(msg.Digest())
 		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("successful")
 	}
 
