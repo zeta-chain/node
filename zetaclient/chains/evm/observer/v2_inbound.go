@@ -151,12 +151,21 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
+	// Check if multiple calls are enabled
+	if ob.shouldAllowMultipleCalls(ctx) {
+		return validEvents
+	}
+	return ob.filterDepositEventsByTx(validEvents)
+}
+
+// shouldAllowMultipleCalls checks the EnableMultipleCalls feature flag
+func (ob *Observer) shouldAllowMultipleCalls(ctx context.Context) bool {
 	// Get app context to access feature flags
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
-		// Fallback to filtered events if we can't get context
-		return ob.filterDepositEventsByTx(validEvents)
+		// Fallback to filtering (return false)
+		return false
 	}
 
 	// Check feature flag to determine whether to allow multiple calls from same tx
@@ -165,16 +174,14 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	// If EnableMultipleCalls is enabled, return all valid events without filtering
 	if cfg.IsEnableMultipleCallsEnabled() {
 		ob.Logger().Inbound.Debug().
-			Int("total_events", len(validEvents)).
-			Msg("EnableMultipleCalls enabled: returning all valid deposit events without filtering")
-		return validEvents
+			Msg("EnableMultipleCalls enabled: returning all valid events without filtering")
+		return true
 	}
 
 	// Default behavior: filter events from same tx (only first event)
 	ob.Logger().Inbound.Debug().
-		Int("total_events", len(validEvents)).
-		Msg("EnableMultipleCalls disabled: filtering multiple deposit events from same tx (only first event)")
-	return ob.filterDepositEventsByTx(validEvents)
+		Msg("EnableMultipleCalls disabled: filtering multiple events from same tx (only first event)")
+	return false
 }
 
 // filterDepositEventsByTx filters deposit events from same tx (original logic)
@@ -316,29 +323,10 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// Get app context to access feature flags
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
-		// Fallback to filtered events if we can't get context
-		return ob.filterCallEventsByTx(validEvents)
-	}
-
-	// Check feature flag to determine whether to allow multiple calls from same tx
-	cfg := app.Config()
-
-	// If EnableMultipleCalls is enabled, return all valid events without filtering
-	if cfg.IsEnableMultipleCallsEnabled() {
-		ob.Logger().Inbound.Info().
-			Int("total_events", len(validEvents)).
-			Msg("EnableMultipleCalls enabled: returning all valid events without filtering")
+	// Check if multiple calls are enabled
+	if ob.shouldAllowMultipleCalls(ctx) {
 		return validEvents
 	}
-
-	// Default behavior: filter events from same tx (only first event)
-	ob.Logger().Inbound.Debug().
-		Int("total_events", len(validEvents)).
-		Msg("EnableMultipleCalls disabled: filtering multiple calls from same tx (only first event)")
 	return ob.filterCallEventsByTx(validEvents)
 }
 
@@ -473,29 +461,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	// Get app context to access feature flags
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
-		// Fallback to filtered events if we can't get context
-		return ob.filterDepositAndCallEventsByTx(validEvents)
-	}
-
-	// Check feature flag to determine whether to allow multiple calls from same tx
-	cfg := app.Config()
-
-	// If EnableMultipleCalls is enabled, return all valid events without filtering
-	if cfg.IsEnableMultipleCallsEnabled() {
-		ob.Logger().Inbound.Info().
-			Int("total_events", len(validEvents)).
-			Msg("EnableMultipleCalls enabled: returning all valid deposit and call events without filtering")
+	// Check if multiple calls are enabled
+	if ob.shouldAllowMultipleCalls(ctx) {
 		return validEvents
 	}
-
-	// Default behavior: filter events from same tx (only first event)
-	ob.Logger().Inbound.Debug().
-		Int("total_events", len(validEvents)).
-		Msg("EnableMultipleCalls disabled: filtering multiple deposit and call events from same tx (only first event)")
 	return ob.filterDepositAndCallEventsByTx(validEvents)
 }
 
