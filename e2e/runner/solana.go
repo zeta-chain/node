@@ -721,7 +721,7 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	amount *big.Int,
 	approveAmount *big.Int,
-	data []byte,
+	msgEncoded []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiver := r.ConnectedSPLProgram.String()
@@ -735,31 +735,6 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
-
-	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58(receiver)
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
-	require.NoError(r, err)
-
-	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
-	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
-
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
-			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
-	}
-
-	msgEncoded, err := msg.Encode()
-	require.NoError(r, err)
 
 	// withdraw
 	tx, err = r.GatewayZEVM.WithdrawAndCall(
@@ -932,4 +907,72 @@ func (r *E2ERunner) SetupTestALTWithRandomWallets(accounts []solana.PublicKey) (
 	r.BroadcastTxSync(signedTx)
 
 	return altAddress, randomWallets
+}
+
+// SetupTestALTWithRandomWallets sets up ALT with random accounts provided in setup solana script, with accounts provided as argument
+// using only 10 accounts because this is creating ATAs, and point is not to test accounts amount, just execute SPL functionality
+func (r *E2ERunner) SetupTestALTWithRandomWalletsSPL(accounts []solana.PublicKey) (solana.PublicKey, []solana.PublicKey) {
+	privkey := r.GetSolanaPrivKey()
+
+	recentSlot, err := r.SolanaClient.GetSlot(r.Ctx, rpc.CommitmentFinalized)
+	require.NoError(r, err)
+
+	// prefunded random wallets used for testing big number of accounts in payload
+	randomWallets := []solana.PublicKey{
+		solana.MustPublicKeyFromBase58("4C2kkMnqXMfPJ8PPK5v6TCg42k5z16f2kzqVocXoSDcq"),
+		solana.MustPublicKeyFromBase58("3tqcVCVz5Jztwnku1H9zpvjaWshSpHakMuX4xUJQuuuA"),
+		solana.MustPublicKeyFromBase58("7duGsuv6nB3yr15EuWuHEDD7rWovpAnjuveXJ5ySZuFV"),
+		solana.MustPublicKeyFromBase58("8vjuCrCKVfnBGinWjc33zLRnG8iy53wj3YWHhKqvTE7o"),
+		solana.MustPublicKeyFromBase58("bzkoxG5YMeWxKfNcjzbEHb3XaGTY4NLKfejjDmxVhhY"),
+		solana.MustPublicKeyFromBase58("GUjKWPmnXNwPLR6kcrkLSBARmQdYnySPpxVNEUGFLs72"),
+		solana.MustPublicKeyFromBase58("5oqdTyA78hpeP8RTwRBmoxCvp1V7DFicKj7T2DvtDDQM"),
+		solana.MustPublicKeyFromBase58("C481t79gpWbsWwPD9eJZTAo5TSaTBet8icEkiPhwKLDx"),
+		solana.MustPublicKeyFromBase58("EJvNNovWkfQYrmyMncqVvHNde2QJpSA4EJk355vyQWph"),
+		solana.MustPublicKeyFromBase58("EkUpd7HFbSYPJEDbXZeDsCG19Hj5vbKTUt4rzpPYKsTM"),
+	}
+
+	randomWalletsAta := []solana.PublicKey{}
+	for _, acc := range randomWallets {
+		ata := r.ResolveSolanaATA(r.GetSolanaPrivKey(), acc, r.SPLAddr)
+		randomWalletsAta = append(randomWalletsAta, ata)
+	}
+
+	accounts = append(accounts, randomWalletsAta...)
+
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, recentSlot)
+
+	altAddress, bump, err := solana.FindProgramAddress(
+		[][]byte{privkey.PublicKey().Bytes(), buf},
+		solana.AddressLookupTableProgramID,
+	)
+	require.NoError(r, err)
+
+	// create ALT and extend it
+	createALTInstruction := addresslookuptable.NewCreateAddressLookupTableInstruction(recentSlot, bump, altAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createALTInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	// need to wait a bit for ALT to be active
+	time.Sleep(1 * time.Second)
+
+	extendALTInstruction := addresslookuptable.NewExtendAddressLookupTableInstruction(accounts, altAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendALTInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	time.Sleep(1 * time.Second)
+
+	return altAddress, randomWalletsAta
 }

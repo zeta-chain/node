@@ -92,6 +92,7 @@ const (
 	TestSPLDepositAndCallRevertWithCallThatRevertsName    = "spl_deposit_and_call_revert_with_call_that_reverts"
 	TestSPLWithdrawName                                   = "spl_withdraw"
 	TestSPLWithdrawAndCallName                            = "spl_withdraw_and_call"
+	TestSPLWithdrawAndCallALTName                         = "spl_withdraw_and_call_alt"
 	TestSPLWithdrawAndCallRevertName                      = "spl_withdraw_and_call_revert"
 	TestSPLWithdrawAndCreateReceiverAtaName               = "spl_withdraw_and_create_receiver_ata"
 
@@ -744,7 +745,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallALTName,
-		"withdraw SOL from ZEVM and call solana program",
+		"withdraw SOL from ZEVM and call solana program using ALT",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 			{Description: "ALT address", DefaultValue: ""},
@@ -797,16 +798,27 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdrawAndCallName,
 		"withdraw SPL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "amount in spl", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCallALTName,
+		"withdraw SPL from ZEVM and call solana program using ALT",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl", DefaultValue: "1000000"},
+			{Description: "ALT address", DefaultValue: ""},
+			{Description: "indexes of ALT accounts that are mutable", DefaultValue: ""},
+		},
+		TestSPLWithdrawAndCallALT,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallRevertName,
 		"withdraw SPL from ZEVM and call solana program that reverts",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "amount in spl", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCallRevert,
 		runner.WithMinimumVersion("v29.0.0"),

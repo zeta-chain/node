@@ -446,6 +446,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallALTName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
 				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 				// TODO move under admin tests

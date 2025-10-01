@@ -17,14 +17,17 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls connected program on solana
-// message and zevm sender are stored in connected program pda, and withdrawn spl tokens are stored
-// in connected program pda and account provided in remaining accounts to demonstrate that spl tokens
-// can be moved to accounts in connected program as well as gateway program
-func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+// TestSPLWithdrawAndCallALT executes spl withdrawAndCall on zevm and calls connected program on solana
+// similar to TestSPLWithdrawAndCall, but uses ALT to provide accounts for connected program
+func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
+	require.True(r, len(args) == 1 || len(args) == 3)
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
+
+	altAddress, err := solana.PublicKeyFromBase58(args[1])
+	initALT := err != nil
+
+	writableIndexes := utils.ParseUint8Array(r, args[2])
 
 	// get SPL ZRC20 balance before withdraw
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -46,12 +49,6 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// load deployer private key
 	privkey := r.GetSolanaPrivKey()
 
-	// get receiver ata balance before withdraw
-	receiverAta := r.ResolveSolanaATA(privkey, privkey.PublicKey(), r.SPLAddr)
-	receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-	r.Logger.Info("receiver balance of SPL before withdraw: %s", receiverBalanceBefore.Value.Amount)
-
 	connected := solana.MustPublicKeyFromBase58(r.ConnectedSPLProgram.String())
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
@@ -65,24 +62,44 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL before withdraw: %s", connectedPdaBalanceBefore.Value.Amount)
 
-	// create encoded msg
-	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
+	// in case ALT address is not provided (eg. for local testing) use prefunded random accounts to create ALT
+	randomWallets := []solana.PublicKey{}
+	if initALT {
+		accounts := []solana.PublicKey{}
 
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
-		},
-		Data: []byte("hello"),
+		accounts = append(accounts, connectedPda)
+		accounts = append(accounts, connectedPdaAta)
+		accounts = append(accounts, r.SPLAddr)
+		accounts = append(accounts, r.ComputePdaAddress())
+		accounts = append(accounts, solana.TokenProgramID)
+		accounts = append(accounts, solana.SystemProgramID)
+		writableIndexes = []uint8{0, 1} // only first 2 are mutable
+
+		altAddress, randomWallets = r.SetupTestALTWithRandomWalletsSPL(accounts)
+
+		// based on example accounts from above, all random wallets are writable
+		// since they will get some lamports from connected program example
+		for i := range randomWallets {
+			writableIndexes = append(writableIndexes, uint8(i+6))
+		}
+	}
+
+	msg := solanacontract.ExecuteMsgALT{
+		AltAddress:       altAddress,
+		WriteableIndexes: writableIndexes,
+		Data:             []byte("hello"),
 	}
 
 	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
+
+	// get receivers ata balances before withdraw
+	randomWalletsBalanceBefore := []*big.Int{}
+	for _, acc := range randomWallets {
+		receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, acc, rpc.CommitmentConfirmed)
+		require.NoError(r, err)
+		randomWalletsBalanceBefore = append(randomWalletsBalanceBefore, utils.ParseBigInt(r, receiverBalanceBefore.Value.Amount))
+	}
 
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
@@ -122,10 +139,6 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 
 	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
-
 	connectedPdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(
 		r.Ctx,
 		connectedPdaAta,
@@ -134,14 +147,8 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL after withdraw: %s", connectedPdaBalanceAfter.Value.Amount)
 
-	// verify half of amount is added to receiver ata and half to connected pda ata
+	// verify half of amount is added to connected pda ata
 	halfWithdrawAmount := new(big.Int).Div(withdrawAmount, big.NewInt(2))
-	require.EqualValues(
-		r,
-		new(big.Int).Add(halfWithdrawAmount, utils.ParseBigInt(r, receiverBalanceBefore.Value.Amount)).String(),
-		utils.ParseBigInt(r, receiverBalanceAfter.Value.Amount).String(),
-	)
-
 	require.EqualValues(
 		r,
 		new(big.Int).Add(halfWithdrawAmount, utils.ParseBigInt(r, connectedPdaBalanceBefore.Value.Amount)).String(),
@@ -150,4 +157,11 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// verify amount is subtracted on zrc20
 	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())
+
+	// check if balances locally are increased in connected program
+	for i, acc := range randomWallets {
+		receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, acc, rpc.CommitmentConfirmed)
+		require.NoError(r, err)
+		require.True(r, utils.ParseBigInt(r, receiverBalanceAfter.Value.Amount).Cmp(randomWalletsBalanceBefore[i]) > 0)
+	}
 }
