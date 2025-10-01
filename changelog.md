@@ -19,6 +19,7 @@
 
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 * [4278](https://github.com/zeta-chain/node/pull/4278) - force rescan if inbound vote monitoring fails
+* [4286](https://github.com/zeta-chain/node/pull/4286) - adjust gas limit properly when retrying failed inbound votes
 
 ## v33.0.0
 
