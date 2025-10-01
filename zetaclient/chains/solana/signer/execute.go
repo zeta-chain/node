@@ -120,7 +120,7 @@ func (signer *Signer) prepareExecuteMsgParams(
 	for i, a := range alt.Addresses {
 		_, isWritable := writableSet[i]
 		remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
-			PublicKey:  sol.PublicKey(a),
+			PublicKey:  a,
 			IsWritable: isWritable,
 		})
 	}

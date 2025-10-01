@@ -61,6 +61,7 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		accounts = append(accounts, r.ComputePdaAddress())
 		accounts = append(accounts, solana.SystemProgramID)
 		accounts = append(accounts, solana.SysVarInstructionsPubkey)
+		predefinedAccountsLen := len(accounts)
 		writableIndexes = []uint8{0} // only first one is mutable
 
 		altAddress, randomWallets = r.SetupTestALTWithRandomWallets(accounts)
@@ -68,7 +69,11 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		// based on example accounts from above, all random wallets are writable
 		// since they will get some lamports from connected program example
 		for i := range randomWallets {
-			writableIndexes = append(writableIndexes, uint8(i+4))
+			// #nosec G115 e2eTest - always in range
+			writableIndexes = append(
+				writableIndexes,
+				uint8(i+predefinedAccountsLen),
+			)
 		}
 	}
 

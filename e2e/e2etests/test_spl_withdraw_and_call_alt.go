@@ -73,14 +73,19 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		accounts = append(accounts, r.ComputePdaAddress())
 		accounts = append(accounts, solana.TokenProgramID)
 		accounts = append(accounts, solana.SystemProgramID)
+		predefinedAccountsLen := len(accounts)
 		writableIndexes = []uint8{0, 1} // only first 2 are mutable
 
 		altAddress, randomWallets = r.SetupTestALTWithRandomWalletsSPL(accounts)
 
 		// based on example accounts from above, all random wallets are writable
-		// since they will get some lamports from connected program example
+		// since they will get some SPL from connected program example
 		for i := range randomWallets {
-			writableIndexes = append(writableIndexes, uint8(i+6))
+			// #nosec G115 e2eTest - always in range
+			writableIndexes = append(
+				writableIndexes,
+				uint8(i+predefinedAccountsLen),
+			)
 		}
 	}
 
@@ -98,7 +103,10 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	for _, acc := range randomWallets {
 		receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, acc, rpc.CommitmentConfirmed)
 		require.NoError(r, err)
-		randomWalletsBalanceBefore = append(randomWalletsBalanceBefore, utils.ParseBigInt(r, receiverBalanceBefore.Value.Amount))
+		randomWalletsBalanceBefore = append(
+			randomWalletsBalanceBefore,
+			utils.ParseBigInt(r, receiverBalanceBefore.Value.Amount),
+		)
 	}
 
 	// withdraw

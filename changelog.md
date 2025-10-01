@@ -10,6 +10,7 @@ by calling `updateAdditionalActionFee` admin function.
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
+* [4266](https://github.com/zeta-chain/node/pull/4266) - add solana ALT support 
 
 ## v36.0.0
 

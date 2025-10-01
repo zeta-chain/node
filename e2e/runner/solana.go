@@ -911,7 +911,9 @@ func (r *E2ERunner) SetupTestALTWithRandomWallets(accounts []solana.PublicKey) (
 
 // SetupTestALTWithRandomWallets sets up ALT with random accounts provided in setup solana script, with accounts provided as argument
 // using only 10 accounts because this is creating ATAs, and point is not to test accounts amount, just execute SPL functionality
-func (r *E2ERunner) SetupTestALTWithRandomWalletsSPL(accounts []solana.PublicKey) (solana.PublicKey, []solana.PublicKey) {
+func (r *E2ERunner) SetupTestALTWithRandomWalletsSPL(
+	accounts []solana.PublicKey,
+) (solana.PublicKey, []solana.PublicKey) {
 	privkey := r.GetSolanaPrivKey()
 
 	recentSlot, err := r.SolanaClient.GetSlot(r.Ctx, rpc.CommitmentFinalized)
