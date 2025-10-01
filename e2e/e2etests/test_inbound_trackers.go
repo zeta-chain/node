@@ -122,8 +122,9 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	previousValue := r.EVMAuth.Value
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
-	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
-	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+
+	// add 5 fees to provided amount to pay for 6 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(5)))
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple deposits through contract")
@@ -140,9 +141,8 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
 
-	// set value of the payable transactions
-	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
-	r.EVMAuth.Value = fee
+	// use 3 * fee as amount to pay for 4 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Mul(fee, big.NewInt(3))
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple erc20 deposits through contract")
