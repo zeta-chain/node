@@ -282,9 +282,9 @@ func (signer *Signer) signTx(
 	ctx context.Context,
 	inst *sol.GenericInstruction,
 	limit uint64,
-	alt *solana.PublicKey,
-	addrs solana.PublicKeySlice,
-) (*solana.Transaction, error) {
+	alt *sol.PublicKey,
+	addrs sol.PublicKeySlice,
+) (*sol.Transaction, error) {
 	// get a recent blockhash
 	recent, err := signer.solanaClient.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
 	if err != nil {
@@ -292,7 +292,7 @@ func (signer *Signer) signTx(
 	}
 
 	// prepend compute unit limit instruction if needed
-	var instructions []solana.Instruction
+	var instructions []sol.Instruction
 	if limit > 0 {
 		limit = min(limit, SolanaMaxComputeBudget)
 		// #nosec G115 always in range
@@ -302,19 +302,19 @@ func (signer *Signer) signTx(
 	instructions = append(instructions, inst)
 
 	// transaction options
-	opts := []solana.TransactionOption{
-		solana.TransactionPayer(signer.relayerKey.PublicKey()),
+	opts := []sol.TransactionOption{
+		sol.TransactionPayer(signer.relayerKey.PublicKey()),
 	}
 
 	// add ALT if provided
 	if alt != nil && len(addrs) > 0 {
-		opts = append(opts, solana.TransactionAddressTables(map[solana.PublicKey]solana.PublicKeySlice{
+		opts = append(opts, sol.TransactionAddressTables(map[sol.PublicKey]sol.PublicKeySlice{
 			*alt: addrs,
 		}))
 	}
 
 	// create a transaction
-	tx, err := solana.NewTransaction(instructions, recent.Value.Blockhash, opts...)
+	tx, err := sol.NewTransaction(instructions, recent.Value.Blockhash, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create new tx")
 	}
@@ -414,8 +414,8 @@ func (signer *Signer) createOutboundWithFallback(
 	mainInst *sol.GenericInstruction,
 	msgIn *contracts.MsgIncrementNonce,
 	computeLimit uint64,
-	alt *solana.PublicKey,
-	addrs solana.PublicKeySlice,
+	alt *sol.PublicKey,
+	addrs sol.PublicKeySlice,
 ) (*Outbound, error) {
 	// Create and sign main transaction
 	tx, err := signer.signTx(ctx, mainInst, computeLimit, alt, addrs)

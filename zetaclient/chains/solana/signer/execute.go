@@ -89,12 +89,12 @@ func (signer *Signer) prepareExecuteMsg(
 func (signer *Signer) prepareExecuteMsgParams(
 	ctx context.Context,
 	msg *contracts.GenericExecuteMsg,
-) ([]*solana.AccountMeta, solana.PublicKeySlice, error) {
-	remainingAccounts := []*solana.AccountMeta{}
+) ([]*sol.AccountMeta, sol.PublicKeySlice, error) {
+	remainingAccounts := []*sol.AccountMeta{}
 	if msg.ALTAddress() == nil {
 		for _, a := range msg.Legacy.Accounts {
-			remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
-				PublicKey:  solana.PublicKey(a.PublicKey),
+			remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
+				PublicKey:  sol.PublicKey(a.PublicKey),
 				IsWritable: a.IsWritable,
 			})
 		}
@@ -104,7 +104,7 @@ func (signer *Signer) prepareExecuteMsgParams(
 
 	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
 		ctx,
-		signer.client.(*rpc.Client),
+		signer.solanaClient.(*rpc.Client),
 		*msg.ALTAddress(),
 		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
 	)
@@ -119,8 +119,8 @@ func (signer *Signer) prepareExecuteMsgParams(
 
 	for i, a := range alt.Addresses {
 		_, isWritable := writableSet[i]
-		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
-			PublicKey:  solana.PublicKey(a),
+		remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
+			PublicKey:  sol.PublicKey(a),
 			IsWritable: isWritable,
 		})
 	}
