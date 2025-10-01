@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -29,8 +31,8 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
 
-	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
-	r.EVMAuth.Value = fee
+	// use 3 * fee as amount to pay for 4 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Mul(fee, big.NewInt(3))
 	defer func() {
 		r.EVMAuth.Value = previousValue
 	}()
@@ -47,12 +49,16 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	r.WaitForTxReceiptOnEVM(tx)
 
 	// wait for the cctxs to be mined
-	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 2, r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 4, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctxs[0], "deposit erc20")
-	r.Logger.CCTX(*cctxs[1], "deposit erc20 and call")
+	r.Logger.CCTX(*cctxs[2], "deposit erc20 2")
+	r.Logger.CCTX(*cctxs[2], "deposit erc20 and call")
+	r.Logger.CCTX(*cctxs[3], "deposit erc20 and call 2")
 
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[0].CctxStatus.Status)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[1].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[2].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[3].CctxStatus.Status)
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)

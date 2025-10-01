@@ -129,7 +129,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🏃test multiple deposits through contract")
 	tx, err = r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 3)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 6)
 	r.Logger.Print("🍾 multiple deposits through contract observed")
 
 	// reset the value of the payable transactions
@@ -154,6 +154,6 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 	)
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 2)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 4)
 	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")
 }

@@ -73,6 +73,12 @@ type ComplianceConfig struct {
 	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
+// FeatureFlags contains feature flags for controlling new and experimental features
+type FeatureFlags struct {
+	// EnableMultipleCalls enables multiple calls from the same transaction
+	EnableMultipleCalls bool `json:"EnableMultipleCalls"`
+}
+
 // Config is the config for ZetaClient
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
@@ -106,6 +112,9 @@ type Config struct {
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
+
+	// feature flags for controlling new and experimental features
+	FeatureFlags FeatureFlags `json:"FeatureFlags"`
 
 	mu *sync.RWMutex
 }
@@ -224,4 +233,18 @@ func (c EVMConfig) Empty() bool {
 
 func (c BTCConfig) Empty() bool {
 	return c.RPCHost == ""
+}
+
+// GetFeatureFlags returns the feature flags
+func (c Config) GetFeatureFlags() FeatureFlags {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags
+}
+
+// IsEnableMultipleCallsEnabled returns true if multiple calls from same transaction are enabled
+func (c Config) IsEnableMultipleCallsEnabled() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableMultipleCalls
 }

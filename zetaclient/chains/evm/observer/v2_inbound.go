@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -71,7 +72,7 @@ func (ob *Observer) observeGatewayDeposit(
 	}
 
 	// parse and validate events
-	events := ob.parseAndValidateDepositEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	// post to zetacore
 	lastScanned := uint64(0)
@@ -116,6 +117,7 @@ func (ob *Observer) observeGatewayDeposit(
 
 // parseAndValidateDepositEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -149,7 +151,51 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// Get app context to access feature flags
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
+		// Fallback to filtered events if we can't get context
+		return ob.filterDepositEventsByTx(validEvents)
+	}
+
+	// Check feature flag to determine whether to allow multiple calls from same tx
+	cfg := app.Config()
+
+	// If EnableMultipleCalls is enabled, return all valid events without filtering
+	if cfg.IsEnableMultipleCallsEnabled() {
+		ob.Logger().Inbound.Debug().
+			Int("total_events", len(validEvents)).
+			Msg("EnableMultipleCalls enabled: returning all valid deposit events without filtering")
+		return validEvents
+	}
+
+	// Default behavior: filter events from same tx (only first event)
+	ob.Logger().Inbound.Debug().
+		Int("total_events", len(validEvents)).
+		Msg("EnableMultipleCalls disabled: filtering multiple deposit events from same tx (only first event)")
+	return ob.filterDepositEventsByTx(validEvents)
+}
+
+// filterDepositEventsByTx filters deposit events from same tx (original logic)
+func (ob *Observer) filterDepositEventsByTx(
+	validEvents []*gatewayevm.GatewayEVMDeposited,
+) []*gatewayevm.GatewayEVMDeposited {
+	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Info().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple Deposited events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
@@ -205,7 +251,7 @@ func (ob *Observer) observeGatewayCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 	lastScanned := uint64(0)
 	for _, event := range events {
 		if event.Raw.BlockNumber > lastScanned {
@@ -236,6 +282,7 @@ func (ob *Observer) observeGatewayCall(
 
 // parseAndValidateCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -269,7 +316,51 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// Get app context to access feature flags
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
+		// Fallback to filtered events if we can't get context
+		return ob.filterCallEventsByTx(validEvents)
+	}
+
+	// Check feature flag to determine whether to allow multiple calls from same tx
+	cfg := app.Config()
+
+	// If EnableMultipleCalls is enabled, return all valid events without filtering
+	if cfg.IsEnableMultipleCallsEnabled() {
+		ob.Logger().Inbound.Info().
+			Int("total_events", len(validEvents)).
+			Msg("EnableMultipleCalls enabled: returning all valid events without filtering")
+		return validEvents
+	}
+
+	// Default behavior: filter events from same tx (only first event)
+	ob.Logger().Inbound.Debug().
+		Int("total_events", len(validEvents)).
+		Msg("EnableMultipleCalls disabled: filtering multiple calls from same tx (only first event)")
+	return ob.filterCallEventsByTx(validEvents)
+}
+
+// filterCallEventsByTx filters call events from same tx (original logic)
+func (ob *Observer) filterCallEventsByTx(validEvents []*gatewayevm.GatewayEVMCalled) []*gatewayevm.GatewayEVMCalled {
+	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("Multiple Call events in same tx")
+
+			continue
+		}
+
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
@@ -310,7 +401,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateDepositAndCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositAndCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	lastScanned := uint64(0)
 	for _, event := range events {
@@ -347,6 +438,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 
 // parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositAndCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -381,7 +473,51 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// Get app context to access feature flags
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		ob.Logger().Inbound.Warn().Err(err).Msg("unable to get app context, using default behavior")
+		// Fallback to filtered events if we can't get context
+		return ob.filterDepositAndCallEventsByTx(validEvents)
+	}
+
+	// Check feature flag to determine whether to allow multiple calls from same tx
+	cfg := app.Config()
+
+	// If EnableMultipleCalls is enabled, return all valid events without filtering
+	if cfg.IsEnableMultipleCallsEnabled() {
+		ob.Logger().Inbound.Info().
+			Int("total_events", len(validEvents)).
+			Msg("EnableMultipleCalls enabled: returning all valid deposit and call events without filtering")
+		return validEvents
+	}
+
+	// Default behavior: filter events from same tx (only first event)
+	ob.Logger().Inbound.Debug().
+		Int("total_events", len(validEvents)).
+		Msg("EnableMultipleCalls disabled: filtering multiple deposit and call events from same tx (only first event)")
+	return ob.filterDepositAndCallEventsByTx(validEvents)
+}
+
+// filterDepositAndCallEventsByTx filters deposit and call events from same tx (original logic)
+func (ob *Observer) filterDepositAndCallEventsByTx(
+	validEvents []*gatewayevm.GatewayEVMDepositedAndCalled,
+) []*gatewayevm.GatewayEVMDepositedAndCalled {
+	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple DepositedAndCalled events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event

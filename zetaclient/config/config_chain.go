@@ -16,6 +16,7 @@ func New(setDefaults bool) Config {
 	cfg := Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
 		BTCChainConfigs: make(map[int64]BTCConfig),
+		FeatureFlags:    defaultFeatureFlags(),
 
 		mu: &sync.RWMutex{},
 	}
@@ -76,5 +77,12 @@ func evmChainsConfigs() map[int64]EVMConfig {
 func btcChainsConfigs() map[int64]BTCConfig {
 	return map[int64]BTCConfig{
 		chains.BitcoinRegtest.ChainId: bitcoinConfigRegnet(),
+	}
+}
+
+// defaultFeatureFlags returns default feature flags
+func defaultFeatureFlags() FeatureFlags {
+	return FeatureFlags{
+		EnableMultipleCalls: true,
 	}
 }
