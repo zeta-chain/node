@@ -11,19 +11,19 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 const tssListenerTicker = 5 * time.Second
 
 // TSSListener is a struct that listens for TSS updates, new keygen, and new TSS key generation.
 type TSSListener struct {
-	client interfaces.ZetacoreClient
+	client zrepo.ZetacoreClient
 	logger zerolog.Logger
 }
 
 // NewTSSListener creates a new TSSListener.
-func NewTSSListener(client interfaces.ZetacoreClient, logger zerolog.Logger) *TSSListener {
+func NewTSSListener(client zrepo.ZetacoreClient, logger zerolog.Logger) *TSSListener {
 	log := logger.With().Str("module", "tss_listener").Logger()
 
 	return &TSSListener{

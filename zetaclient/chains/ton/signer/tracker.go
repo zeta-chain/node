@@ -8,8 +8,9 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -22,12 +23,14 @@ import (
 // Note that another zetaclient observers that scrolls Gateway's txs can publish this tracker concurrently.
 func (s *Signer) trackOutbound(
 	ctx context.Context,
-	zetacore interfaces.ZetacoreClient,
+	zetacore zrepo.ZetacoreClient,
 	outbound outbound,
 	prevState rpc.Account,
 ) error {
-	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
-	defer metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Dec()
+	chain := s.Chain()
+
+	metrics.NumTrackerReporters.WithLabelValues(chain.Name).Inc()
+	defer metrics.NumTrackerReporters.WithLabelValues(chain.Name).Dec()
 
 	const (
 		timeout = 60 * time.Second
@@ -35,8 +38,7 @@ func (s *Signer) trackOutbound(
 	)
 
 	var (
-		start   = time.Now()
-		chainID = s.Chain().ChainId
+		start = time.Now()
 
 		acc   = s.gateway.AccountID()
 		lt    = prevState.LastTxLT
@@ -59,7 +61,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		tx := results[0].Transaction
-		txHash := rpc.TransactionToHashString(results[0].Transaction)
+		txHash := encoder.EncodeTx(results[0].Transaction)
 
 		if !tx.IsSuccess() {
 			// should not happen
@@ -67,7 +69,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		// Note that this method has a check for noop
-		_, err = zetacore.PostOutboundTracker(ctx, chainID, nonce, txHash)
+		_, err = zetacore.PostOutboundTracker(ctx, chain.ChainId, nonce, txHash)
 		if err != nil {
 			return errors.Wrap(err, "unable to add outbound tracker")
 		}
@@ -82,7 +84,6 @@ func (s *Signer) trackOutbound(
 func outboundFilter(ob outbound) func(tx *toncontracts.Transaction) (found bool) {
 	return func(tx *toncontracts.Transaction) bool {
 		auth, err := tx.OutboundAuth()
-
 		return err == nil && auth.Seqno == ob.seqno && auth.Sig == ob.message.Signature()
 	}
 }
