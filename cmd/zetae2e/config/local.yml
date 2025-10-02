@@ -116,10 +116,10 @@ rpcs:
     params: regnet
   zetacore_grpc: "localhost:9090"
   zetacore_rpc: "http://localhost:26657"
-  solana: "http://localhost:8899"
+#  solana: "http://localhost:8899"
   # ton center v2 rpc
-  ton: "http://ton:8081"
-  ton_faucet: "http://ton:8111/faucet.json"
+#  ton: "http://ton:8081"
+#  ton_faucet: "http://ton:8111/faucet.json"
   zetaclient_metrics: "http://localhost:8886"
 contracts:
   zevm:

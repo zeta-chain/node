@@ -193,6 +193,7 @@ const (
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 	TestStressSuiDepositName     = "stress_sui_deposit"
 	TestStressSuiWithdrawName    = "stress_sui_withdraw"
+	TestStressZEVMName           = "stress_zevm"
 
 	/*
 		Staking tests
@@ -1528,6 +1529,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSuiWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressZEVMName,
+		"stress test ZEVM calls",
+		[]runner.ArgDefinition{
+			{Description: CountArgDescription, DefaultValue: "1000"},
+		},
+		TestStressZEVM,
 	),
 	/*
 	 Admin tests

@@ -45,7 +45,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 		// slow down submitting transactions a bit.
 		// submitting them as fast as possible does actually work.
 		// but we want to ensure the workload is a bit more representative.
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 100)
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
 	}

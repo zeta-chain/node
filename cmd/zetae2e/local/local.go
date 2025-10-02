@@ -42,6 +42,7 @@ const (
 	flagTestEthStress          = "test-stress-eth"
 	flagTestSolanaStress       = "test-stress-solana"
 	flagTestSuiStress          = "test-stress-sui"
+	flagTestZEVMStress         = "test-stress-zevm"
 	flagIterations             = "iterations"
 	flagTestSolana             = "test-solana"
 	flagTestTON                = "test-ton"
@@ -85,6 +86,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestEthStress, false, "set to true to run eth stress tests")
 	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run solana stress tests")
 	cmd.Flags().Bool(flagTestSuiStress, false, "set to true to run sui stress tests")
+	cmd.Flags().Bool(flagTestZEVMStress, false, "set to true to run direct zevm stress tests")
 	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
@@ -125,6 +127,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testEthStress          = must(cmd.Flags().GetBool(flagTestEthStress))
 		testSolanaStress       = must(cmd.Flags().GetBool(flagTestSolanaStress))
 		testSuiStress          = must(cmd.Flags().GetBool(flagTestSuiStress))
+		testZEVMStress         = must(cmd.Flags().GetBool(flagTestZEVMStress))
 		iterations             = must(cmd.Flags().GetInt(flagIterations))
 		testSolana             = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON                = must(cmd.Flags().GetBool(flagTestTON))
@@ -139,7 +142,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		testStress             = testEthStress || testSolanaStress || testSuiStress
+		testStress             = testEthStress || testSolanaStress || testSuiStress || testZEVMStress
 		setupSolana            = testSolana || testStress
 		setupSui               = testSui || testStress
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
@@ -397,6 +400,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			testEthStress,
 			testSolanaStress,
 			testSuiStress,
+			testZEVMStress,
 			&eg,
 		)
 	}
@@ -677,8 +681,22 @@ func runE2EStressTests(
 	testEthStress bool,
 	testSolanaStress bool,
 	testSuiStress bool,
+	testZEVMStress bool,
 	eg *errgroup.Group,
 ) {
+	if testZEVMStress {
+		eg.Go(
+			zevmPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressZEVMName},
+				conf.AdditionalAccounts.UserSui,
+				iterations,
+			),
+		)
+	}
+
 	if testEthStress {
 		eg.Go(
 			ethereumDepositPerformanceRoutine(
