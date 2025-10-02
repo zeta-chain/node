@@ -17,13 +17,6 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-const (
-	// ModeFailFast fails the test on first transaction failure
-	ModeFailFast = false
-	// ModeBestEffort tolerates transaction failures and reports statistics at the end
-	ModeBestEffort = true
-)
-
 type txResult struct {
 	index   uint64
 	hash    common.Hash
@@ -33,14 +26,17 @@ type txResult struct {
 
 // TestStressZEVM tests stressing direct interactions with the zEVM using calls that consume a lot of gas
 func TestStressZEVM(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 3)
 
 	// parse number of transactions
-	txNumbers := utils.ParseBigInt(r, args[0])
-	totalTxs := txNumbers.Uint64()
+	totalTxs := utils.ParseInt(r, args[0])
+	batchSize := utils.ParseInt(r, args[1])
+	batchInterval := utils.ParseInt(r, args[2])
 
 	// configure test mode
-	bestEffortMode := ModeBestEffort
+	// true: tolerates transaction failures and reports statistics at the end
+	// false: fails the test on first transaction failure
+	bestEffortMode := true
 
 	r.Logger.Print("starting stress test of %d calls (mode: best-effort=%v)", totalTxs, bestEffortMode)
 
@@ -83,44 +79,61 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 
 	// Send all transactions with pre-calculated nonces
 	sendStart := time.Now()
-	for i := uint64(0); i < totalTxs; i++ {
-		nonce := initialNonce + i
+	batchCount := (totalTxs + batchSize - 1) / batchSize // ceiling division
+	r.Logger.Print("sending %d transactions in %d batches (batch size: %d, interval: %dms)",
+		totalTxs, batchCount, batchSize, batchInterval)
 
-		// Create a new transactor with specific nonce
-		auth := *r.ZEVMAuth // copy the auth
-		auth.Nonce = big.NewInt(int64(nonce))
+	for batchIdx := 0; batchIdx < batchCount; batchIdx++ {
+		batchStart := batchIdx * batchSize
+		batchEnd := min((batchIdx+1)*batchSize, totalTxs)
+		batchSize := batchEnd - batchStart
 
-		// Send transaction
-		tx, err := gasConsumer.OnCall(
-			&auth,
-			testgasconsumer.TestGasConsumerzContext{
-				Origin:  []byte{},
-				Sender:  gasConsumerAddress,
-				ChainID: big.NewInt(0),
-			},
-			gasConsumerAddress,
-			big.NewInt(0),
-			[]byte{},
-		)
+		r.Logger.Print("sending batch %d/%d (%d txs)", batchIdx+1, batchCount, batchSize)
 
-		if err != nil {
-			r.Logger.Print("index %d (nonce %d): failed to send tx: %v", i, nonce, err)
-			if !bestEffortMode {
-				require.FailNow(r, fmt.Sprintf("failed to send transaction %d: %v", i, err))
+		// Send all transactions in this batch
+		for i := batchStart; i < batchEnd; i++ {
+			nonce := initialNonce + uint64(i)
+
+			// Create a new transactor with specific nonce
+			auth := *r.ZEVMAuth // copy the auth
+			auth.Nonce = big.NewInt(int64(nonce))
+
+			// Send transaction
+			tx, err := gasConsumer.OnCall(
+				&auth,
+				testgasconsumer.TestGasConsumerzContext{
+					Origin:  []byte{},
+					Sender:  gasConsumerAddress,
+					ChainID: big.NewInt(0),
+				},
+				gasConsumerAddress,
+				big.NewInt(0),
+				[]byte{},
+			)
+
+			if err != nil {
+				r.Logger.Print("index %d (nonce %d): failed to send tx: %v", i, nonce, err)
+				if !bestEffortMode {
+					require.FailNow(r, fmt.Sprintf("failed to send transaction %d: %v", i, err))
+				}
+				failedCount.Add(1)
+				continue
 			}
-			failedCount.Add(1)
-			continue
+
+			sentCount.Add(1)
+			txHashes <- txResult{index: uint64(i), hash: tx.Hash()}
+
+			// Small delay within batch to avoid overwhelming the node
+			time.Sleep(time.Millisecond * 10)
 		}
 
-		sentCount.Add(1)
-		txHashes <- txResult{index: i, hash: tx.Hash()}
+		r.Logger.Print("batch %d/%d sent (%d txs)", batchIdx+1, batchCount, batchSize)
 
-		if i%100 == 0 {
-			r.Logger.Print("sent %d/%d transactions", i+1, totalTxs)
+		// Wait before sending next batch (except for the last batch)
+		if batchIdx < batchCount-1 {
+			r.Logger.Print("waiting %dms before next batch...", batchInterval)
+			time.Sleep(time.Duration(batchInterval) * time.Millisecond)
 		}
-
-		// Small delay to avoid overwhelming the node
-		time.Sleep(time.Millisecond * 10)
 	}
 
 	close(txHashes)
@@ -159,14 +172,20 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("═══════════════════════════════════════")
 	r.Logger.Print("Stress Test Results:")
 	r.Logger.Print("═══════════════════════════════════════")
-	r.Logger.Print("Total transactions: %d", totalTxs)
-	r.Logger.Print("Sent successfully:  %d", sentCount.Load())
-	r.Logger.Print("Succeeded:          %d (%.2f%%)", successCount.Load(), float64(successCount.Load())/float64(totalTxs)*100)
-	r.Logger.Print("Failed:             %d (%.2f%%)", failedCount.Load(), float64(failedCount.Load())/float64(totalTxs)*100)
-	r.Logger.Print("Send duration:      %v", sendDuration)
-	r.Logger.Print("Receipt duration:   %v", receiptDuration)
-	r.Logger.Print("Total duration:     %v", sendDuration+receiptDuration)
-	r.Logger.Print("TPS (send):         %.2f", float64(sentCount.Load())/sendDuration.Seconds())
+	r.Logger.Print("Configuration:")
+	r.Logger.Print("  Batch size:         %d txs", batchSize)
+	r.Logger.Print("  Batch interval:     %dms", batchInterval)
+	r.Logger.Print("  Total batches:      %d", batchCount)
+	r.Logger.Print("Results:")
+	r.Logger.Print("  Total transactions: %d", totalTxs)
+	r.Logger.Print("  Sent successfully:  %d", sentCount.Load())
+	r.Logger.Print("  Succeeded:          %d (%.2f%%)", successCount.Load(), float64(successCount.Load())/float64(totalTxs)*100)
+	r.Logger.Print("  Failed:             %d (%.2f%%)", failedCount.Load(), float64(failedCount.Load())/float64(totalTxs)*100)
+	r.Logger.Print("Timing:")
+	r.Logger.Print("  Send duration:      %v", sendDuration)
+	r.Logger.Print("  Receipt duration:   %v", receiptDuration)
+	r.Logger.Print("  Total duration:     %v", sendDuration+receiptDuration)
+	r.Logger.Print("  TPS (send):         %.2f", float64(sentCount.Load())/sendDuration.Seconds())
 	r.Logger.Print("═══════════════════════════════════════")
 
 	if len(failedTxs) > 0 && len(failedTxs) <= 10 {

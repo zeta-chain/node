@@ -1535,6 +1535,8 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test ZEVM calls",
 		[]runner.ArgDefinition{
 			{Description: CountArgDescription, DefaultValue: "1000"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "500"},
 		},
 		TestStressZEVM,
 	),
