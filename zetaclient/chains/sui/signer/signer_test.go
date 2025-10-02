@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
@@ -341,7 +342,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
-	baseSigner := base.NewSigner(chain, tss, logger)
+	baseSigner := base.NewSigner(chain, tss, logger, mode.StandardMode)
 	signer := New(baseSigner, zetacore, suiMock, gw)
 
 	ts := &testSuite{

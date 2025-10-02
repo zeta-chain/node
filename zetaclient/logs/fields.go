@@ -2,6 +2,10 @@ package logs
 
 // A group of predefined field keys and module names for the zetaclient logs.
 const (
+	// The mode associated with the message.
+	// Check mode.Mode for possible values.
+	FieldMode = "mode"
+
 	// The module in the ZetaClient that originated the message.
 	// Check the ModName constants for possible values.
 	FieldModule = "module"

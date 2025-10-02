@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -18,7 +18,7 @@ import (
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
 func (signer *Signer) reportToOutboundTracker(
 	ctx context.Context,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	chainID int64,
 	nonce uint64,
 	outboundHash string,

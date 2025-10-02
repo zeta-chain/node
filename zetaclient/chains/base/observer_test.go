@@ -18,9 +18,11 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -84,6 +86,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 		nil,
 		database,
 		logger,
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
@@ -112,7 +115,7 @@ func TestNewObserver(t *testing.T) {
 		chain          chains.Chain
 		chainParams    observertypes.ChainParams
 		appContext     *zctx.AppContext
-		zetacoreClient interfaces.ZetacoreClient
+		zetacoreClient zrepo.ZetacoreClient
 		tssSigner      interfaces.TSSSigner
 		blockCacheSize int
 		fail           bool
@@ -153,6 +156,7 @@ func TestNewObserver(t *testing.T) {
 				nil,
 				database,
 				base.DefaultLogger(),
+				mode.StandardMode,
 			)
 			if tt.fail {
 				require.ErrorContains(t, err, tt.message)

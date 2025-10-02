@@ -7,12 +7,14 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -22,7 +24,7 @@ func MockSolanaObserver(
 	chain chains.Chain,
 	solanaClient observer.SolanaClient,
 	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	tssSigner interfaces.TSSSigner,
 ) *observer.Observer {
 	// use mock zetacore client if not provided
@@ -47,6 +49,7 @@ func MockSolanaObserver(
 		nil,
 		database,
 		base.DefaultLogger(),
+		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
