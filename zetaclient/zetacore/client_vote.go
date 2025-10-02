@@ -199,10 +199,9 @@ func (c *Client) PostVoteInbound(
 			if monitorErrCh != nil {
 				select {
 				case monitorErrCh <- zetaerrors.ErrTxMonitor{
-					Err:                errMonitor,
-					InboundBlockHeight: msg.InboundBlockHeight,
-					ZetaTxHash:         zetaTxHash,
-					BallotIndex:        ballotIndex,
+					Err:        errMonitor,
+					Msg:        *msg,
+					ZetaTxHash: zetaTxHash,
 				}:
 				case <-ctx.Done():
 					c.logger.Error().Msg("context cancelled: timeout")

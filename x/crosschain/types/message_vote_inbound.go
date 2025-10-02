@@ -187,3 +187,12 @@ func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
 		return false
 	}
 }
+
+// InboundTracker creates an InboundTracker for the inbound vote message
+func (msg *MsgVoteInbound) InboundTracker() InboundTracker {
+	return InboundTracker{
+		ChainId:  msg.SenderChainId,
+		TxHash:   msg.InboundHash,
+		CoinType: msg.CoinType,
+	}
+}

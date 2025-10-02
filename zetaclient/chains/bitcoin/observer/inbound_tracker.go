@@ -14,7 +14,7 @@ import (
 
 // ProcessInboundTrackers processes inbound trackers
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
 	if err != nil {
 		return err
 	}

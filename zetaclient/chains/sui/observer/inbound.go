@@ -79,11 +79,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
 	}
 
 	for _, tracker := range trackers {

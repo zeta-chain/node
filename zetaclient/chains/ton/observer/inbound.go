@@ -168,9 +168,9 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 // It processes each tracker individually (continues executing despite any errors so it does not
 // block other trackers).
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
 	}
 
 	logSkippedTracker := func(hash string, reason string, err error) {

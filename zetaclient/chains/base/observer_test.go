@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"bytes"
@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -34,7 +33,7 @@ const (
 )
 
 type testSuite struct {
-	*base.Observer
+	*Observer
 	db       *db.DB
 	tss      *mocks.TSS
 	zetacore *mocks.ZetacoreClient
@@ -76,13 +75,13 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	database := createDatabase(t)
 
 	// create observer
-	logger := base.DefaultLogger()
-	ob, err := base.NewObserver(
+	logger := DefaultLogger()
+	ob, err := NewObserver(
 		chain,
 		chainParams,
 		zetacoreClient,
 		tss,
-		base.DefaultBlockCacheSize,
+		DefaultBlockCacheSize,
 		nil,
 		database,
 		logger,
@@ -105,7 +104,7 @@ func TestNewObserver(t *testing.T) {
 	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSS(t)
-	blockCacheSize := base.DefaultBlockCacheSize
+	blockCacheSize := DefaultBlockCacheSize
 
 	database := createDatabase(t)
 
@@ -147,7 +146,7 @@ func TestNewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob, err := base.NewObserver(
+			ob, err := NewObserver(
 				tt.chain,
 				tt.chainParams,
 				tt.zetacoreClient,
@@ -155,7 +154,7 @@ func TestNewObserver(t *testing.T) {
 				tt.blockCacheSize,
 				nil,
 				database,
-				base.DefaultLogger(),
+				DefaultLogger(),
 				mode.StandardMode,
 			)
 			if tt.fail {
@@ -311,7 +310,7 @@ func TestOutboundID(t *testing.T) {
 
 func TestLoadLastBlockScanned(t *testing.T) {
 	chain := chains.Ethereum
-	envvar := base.EnvVarLatestBlockByChain(chain)
+	envvar := EnvVarLatestBlockByChain(chain)
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
@@ -361,7 +360,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(100)
 
 		// set env var to 'latest'
-		os.Setenv(envvar, base.EnvVarLatestBlock)
+		os.Setenv(envvar, EnvVarLatestBlock)
 
 		// last block scanned should remain 0
 		err := ob.LoadLastBlockScanned()
@@ -427,7 +426,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 }
 func TestLoadLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
-	envvar := base.EnvVarLatestTxByChain(chain)
+	envvar := EnvVarLatestTxByChain(chain)
 	lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
 
 	t.Run("should be able to load last tx scanned", func(t *testing.T) {

@@ -68,6 +68,10 @@ type Observer struct {
 
 	blockCache *lru.Cache
 
+	// failedInboundBacklog is a backlog of failed inbounds (ballot -> inbound tracker) that needs to be retried
+	// the contents of the map may vary from observer to observer, depending on individual situation
+	failedInboundBacklog map[string]crosschaintypes.InboundTracker
+
 	// db is the database to persist data
 	db *db.DB
 
@@ -106,20 +110,21 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetacoreClient:   zetacoreClient,
-		tssSigner:        tssSigner,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
-		clientMode:       clientMode,
+		chain:                chain,
+		chainParams:          chainParams,
+		zetacoreClient:       zetacoreClient,
+		tssSigner:            tssSigner,
+		lastBlock:            0,
+		lastBlockScanned:     0,
+		lastTxScanned:        "",
+		ts:                   ts,
+		db:                   database,
+		blockCache:           blockCache,
+		failedInboundBacklog: make(map[string]crosschaintypes.InboundTracker),
+		mu:                   &sync.Mutex{},
+		logger:               newObserverLogger(chain, logger),
+		stop:                 make(chan struct{}),
+		clientMode:           clientMode,
 	}, nil
 }
 
@@ -480,42 +485,14 @@ func (ob *Observer) PostVoteInbound(
 		logger.Info().Msg("inbound detected: already voted on ballot")
 	} else {
 		logger.Info().Msg("inbound detected: vote posted")
-	}
 
-	go func() {
-		ob.handleMonitoringError(ctxWithTimeout, monitorErrCh, zetaHash)
-	}()
+		// watch for monitoring error for this vote
+		go func() {
+			ob.handleMonitoringError(ctxWithTimeout, monitorErrCh, zetaHash)
+		}()
+	}
 
 	return ballot, nil
-}
-
-func (ob *Observer) handleMonitoringError(
-	ctx context.Context,
-	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
-	zetaHash string,
-) {
-	logger := ob.logger.Inbound
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error().Any("panic", r).Msg("recovered from panic in monitoring error handler")
-		}
-	}()
-
-	select {
-	case monitorErr := <-monitorErrCh:
-		if monitorErr.Err != nil {
-			logger.Error().
-				Err(monitorErr).
-				Str(logs.FieldZetaTx, monitorErr.ZetaTxHash).
-				Str(logs.FieldBallotIndex, monitorErr.BallotIndex).
-				Uint64(logs.FieldBlock, monitorErr.InboundBlockHeight).
-				Msg("error monitoring vote transaction")
-		}
-	case <-ctx.Done():
-		logger.Debug().
-			Str(logs.FieldZetaTx, zetaHash).
-			Msg("no error received for the monitoring, the transaction likely succeeded")
-	}
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

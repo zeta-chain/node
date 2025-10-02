@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"context"
