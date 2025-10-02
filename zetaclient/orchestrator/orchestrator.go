@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -52,7 +53,7 @@ type ObserverSigner interface {
 }
 
 type Dependencies struct {
-	Zetacore  interfaces.ZetacoreClient
+	Zetacore  zrepo.ZetacoreClient
 	TSS       interfaces.TSSSigner
 	DBPath    string
 	Telemetry *metrics.TelemetryServer

@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -80,7 +81,8 @@ func createTestObserver(
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
 
-	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tssSigner, 1000, nil, database, logger)
+	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tssSigner, 1000, nil, database,
+		logger, mode.StandardMode)
 	require.NoError(t, err)
 
 	ob, err := observer.New(baseObserver, solanaClient, chainParams.GatewayAddress)
