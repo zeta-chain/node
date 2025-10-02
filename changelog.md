@@ -17,7 +17,7 @@ by calling `updateAdditionalActionFee` admin function.
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 * [4277](https://github.com/zeta-chain/node/pull/4277) - add dry-mode support for TON
-* [4295](https://github.com/zeta-chain/node/pull/4295) - monitor failed inbound votes and add them to a inbound tracker backlog
+* [4295](https://github.com/zeta-chain/node/pull/4295) - monitor failed inbound votes and add them to an inbound tracker backlog
 
 ### Refactor
 
