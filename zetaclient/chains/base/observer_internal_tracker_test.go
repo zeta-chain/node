@@ -107,9 +107,8 @@ func Test_handleMonitoringError(t *testing.T) {
 		ob := newTestSuite(t, chain)
 		monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
-		// mock inbound trackers query
+		// mock cctx query
 		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
-		ob.zetacore.On("GetInboundTrackersForChain", ctx, chain.ChainId).Return([]crosschaintypes.InboundTracker{}, nil)
 
 		// ACT
 		// start the monitoring error handler
@@ -125,7 +124,7 @@ func Test_handleMonitoringError(t *testing.T) {
 			ZetaTxHash: vote.InboundHash,
 		}
 
-		// wait for the failed inbound to be added to the backlog
+		// wait for the internal tracker to be added
 		time.Sleep(1 * time.Second)
 
 		// ASSERT
@@ -143,9 +142,6 @@ func Test_handleMonitoringError(t *testing.T) {
 		ctxTimeout, cancel := context.WithTimeout(ctx, 1*time.Second)
 		_ = cancel
 		monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
-
-		// mock inbound trackers query
-		ob.zetacore.On("GetInboundTrackersForChain", ctx, chain.ChainId).Return([]crosschaintypes.InboundTracker{}, nil)
 
 		// ACT
 		ob.handleMonitoringError(ctxTimeout, monitorErrCh, "zetaHash")
