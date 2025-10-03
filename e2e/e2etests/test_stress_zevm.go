@@ -93,6 +93,7 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 
 		// Send all transactions in this batch
 		for i := batchStart; i < batchEnd; i++ {
+			// #nosec G115 e2eTest - always in range
 			nonce := initialNonce + uint64(i)
 			txSent := false
 			retryCount := 0
@@ -101,6 +102,7 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 			for !txSent {
 				// Create a new transactor with specific nonce
 				auth := *r.ZEVMAuth // copy the auth
+				// #nosec G115 e2eTest - always in range
 				auth.Nonce = big.NewInt(int64(nonce))
 
 				// Send transaction
@@ -139,6 +141,7 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 				sentCount.Add(1)
 				txSent = true
 
+				// #nosec G115 e2eTest - always in range
 				txHashes <- txResult{index: uint64(i), hash: tx.Hash()}
 
 				// Small delay within batch to avoid overwhelming the node

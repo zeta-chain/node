@@ -103,6 +103,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 			for !txSent {
 				// Create a new transactor with specific nonce
 				auth := *r.ZEVMAuth
+				// #nosec G115 e2eTest - always in range
 				auth.Nonce = big.NewInt(int64(currentNonce))
 
 				// Send withdrawal transaction

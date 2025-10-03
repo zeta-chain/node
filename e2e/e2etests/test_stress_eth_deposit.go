@@ -88,6 +88,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 		for i := batchStart; i < batchEnd; i++ {
 			// Create a new transactor with specific nonce
 			auth := *r.EVMAuth
+			// #nosec G115 e2eTest - always in range
 			auth.Nonce = big.NewInt(int64(currentNonce))
 			auth.Value = depositAmount
 
