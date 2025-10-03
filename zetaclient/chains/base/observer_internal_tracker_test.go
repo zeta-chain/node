@@ -13,76 +13,88 @@ import (
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-func Test_GetInboundTrackersWithBacklog(t *testing.T) {
+func Test_GetInboundInternalTrackers(t *testing.T) {
 	ctx := context.Background()
 	chain := chains.Ethereum
 
-	t.Run("should return empty trackers if no failed inbounds", func(t *testing.T) {
+	t.Run("should return empty internal tracker list", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
-		// mock inbound trackers
-		ob.zetacore.On("GetInboundTrackersForChain", ctx, chain.ChainId).Return([]crosschaintypes.InboundTracker{}, nil)
+		// ACT
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
 
-		trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
-		require.NoError(t, err)
+		// ASSERT
 		require.Empty(t, trackers)
+		require.Zero(t, totalCount)
 	})
 
-	t.Run("should return inbound trackers from zetacore and backlog", func(t *testing.T) {
+	t.Run("should return non-empty internal tracker list", func(t *testing.T) {
 		// ARRANGE
 		ob := newTestSuite(t, chain)
 
-		// mock inbound tracker and cctx queries
-		tracker1 := sample.InboundTracker(t, "tracker1")
+		// mock cctx query
 		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
-		ob.zetacore.On("GetInboundTrackersForChain", ctx, chain.ChainId).Return([]crosschaintypes.InboundTracker{tracker1}, nil)
 
-		// add an additional failed inbound
+		// add a failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddFailedInbound(&msg)
+		ob.AddInternalInboundTracker(&msg)
 
 		// ACT
-		trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
 
 		// ASSERT
-		require.NoError(t, err)
-		require.Len(t, trackers, 2)
-		require.Equal(t, tracker1, trackers[0])
-		require.Equal(t, msg.InboundTracker(), trackers[1])
+		require.Len(t, trackers, 1)
+		require.Equal(t, msg.InboundTracker(), trackers[0])
+		require.EqualValues(t, 1, totalCount)
 	})
 
-	t.Run("should remove failed inbound from backlog if it is finalized", func(t *testing.T) {
+	t.Run("should remove internal tracker if the ballot is finalized", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
-		// mock inbound trackers and cctx queries
-		tracker := sample.InboundTracker(t, "tracker")
-		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found")).Once()
-		ob.zetacore.On("GetInboundTrackersForChain", ctx, chain.ChainId).Return([]crosschaintypes.InboundTracker{tracker}, nil)
-
-		// add a failed inbound
+		// add a failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddFailedInbound(&msg)
+		ob.AddInternalInboundTracker(&msg)
+
+		// mock cctx query
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found")).Once()
 
 		// ACT 1
-		trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
 
 		// ASSERT 1
-		require.NoError(t, err)
-		require.Len(t, trackers, 2)
+		require.Len(t, trackers, 1)
+		require.EqualValues(t, 1, totalCount)
 
-		// mock finalized cctx query
-		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, nil)
+		// mock ballot as finalized
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, nil).Once()
 
 		// ACT 2
-		trackers, err = ob.GetInboundTrackersWithBacklog(ctx)
+		trackers, totalCount = ob.GetInboundInternalTrackers(ctx)
 
 		// ASSERT 2
-		// should remove failed inbound from backlog
-		require.NoError(t, err)
-		require.Len(t, trackers, 1)
-		require.Equal(t, tracker, trackers[0])
+		// should remove internal tracker
+		require.Len(t, trackers, 0)
+		require.EqualValues(t, 0, totalCount)
+	})
+
+	t.Run("should return at most 'MaxInternalTrackersPerScan' internal trackers", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// add more than 'MaxInternalTrackersPerScan' internal trackers
+		msgs := addNInternalTrackers(ob, config.MaxInternalTrackersPerScan+1)
+
+		// mock cctx queries
+		for _, msg := range msgs {
+			ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Maybe().Return(nil, errors.New("not found"))
+		}
+
+		// ACT
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
+		require.Len(t, trackers, config.MaxInternalTrackersPerScan)
+		require.EqualValues(t, config.MaxInternalTrackersPerScan+1, totalCount)
 	})
 }
 
@@ -117,10 +129,10 @@ func Test_handleMonitoringError(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		// ASSERT
-		trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
-		require.NoError(t, err)
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
 		require.Len(t, trackers, 1)
 		require.Equal(t, vote.InboundTracker(), trackers[0])
+		require.EqualValues(t, 1, totalCount)
 	})
 
 	t.Run("should time out if no error is received", func(t *testing.T) {
@@ -139,8 +151,19 @@ func Test_handleMonitoringError(t *testing.T) {
 		ob.handleMonitoringError(ctxTimeout, monitorErrCh, "zetaHash")
 
 		// ASSERT
-		trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
-		require.NoError(t, err)
+		trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
 		require.Empty(t, trackers)
+		require.EqualValues(t, 0, totalCount)
 	})
+}
+
+// addNInternalTrackers adds n internal trackers to the observer
+func addNInternalTrackers(ob *testSuite, n int) []crosschaintypes.MsgVoteInbound {
+	msgs := make([]crosschaintypes.MsgVoteInbound, 0, n)
+	for range n {
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+		ob.AddInternalInboundTracker(&msg)
+		msgs = append(msgs, msg)
+	}
+	return msgs
 }

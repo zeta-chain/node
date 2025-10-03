@@ -94,6 +94,7 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
 	register(b.observer.ObserveMempool, "observe_mempool", optMempoolInterval, optGenericSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)

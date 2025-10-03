@@ -168,16 +168,36 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 // It processes each tracker individually (continues executing despite any errors so it does not
 // block other trackers).
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get inbound trackers")
 	}
 
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
+	if totalCount > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
 	logSkippedTracker := func(hash string, reason string, err error) {
 		ob.Logger().Inbound.Warn().
 			Err(err).
 			Str(logs.FieldTx, hash).
 			Str("reason", reason).
+			Bool("is_internal", isInternal).
 			Msg("skipping inbound tracker")
 	}
 

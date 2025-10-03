@@ -6,16 +6,40 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // ProcessInboundTrackers processes inbound trackers
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get inbound trackers")
 	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
+	if totalCount > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal inbound trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	chainID := ob.Chain().ChainId
 
 	// process inbound trackers
 	for _, tracker := range trackers {
@@ -24,7 +48,8 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		switch {
 		case errors.Is(err, repo.ErrUnsupportedTxVersion):
 			ob.Logger().Inbound.Warn().
-				Stringer("tx_signature", signature).
+				Stringer(logs.FieldTx, signature).
+				Bool("is_internal", isInternal).
 				Msg("skip inbound tracker hash")
 			continue
 		case err != nil:

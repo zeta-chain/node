@@ -79,15 +79,37 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+	chainID := ob.Chain().ChainId
+
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to get inbound trackers")
 	}
 
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
+	if totalCount > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []cctypes.InboundTracker,
+	isInternal bool,
+) error {
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
+				Bool("is_internal", isInternal).
 				Msg("unable to process inbound tracker")
 		}
 	}

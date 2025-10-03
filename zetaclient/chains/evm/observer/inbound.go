@@ -34,13 +34,32 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ProcessInboundTrackers observes inbound trackers from zetacore
+// ProcessInboundTrackers processes inbound trackers from zetacore
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.GetInboundTrackersWithBacklog(ctx)
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err
 	}
 
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
+	if totalCount > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
 	for _, tracker := range trackers {
 		// query tx and receipt
 		tx, _, err := ob.transactionByHash(ctx, tracker.TxHash)
@@ -64,6 +83,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
+			Bool("is_internal", isInternal).
 			Msg("checking inbound tracker")
 
 		// try processing the tracker for v2 inbound
@@ -96,6 +116,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 		}
 	}
+
 	return nil
 }
 
