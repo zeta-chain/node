@@ -49,12 +49,12 @@ func (t *TON) Start(ctx context.Context) error {
 
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get app from context")
+		return errors.Wrap(err, "failed to get app from context")
 	}
 
 	newBlockChan, err := t.observer.ZetacoreClient().NewBlockSubscriber(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return errors.Wrap(err, "failed to create new block subscriber")
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -90,10 +90,10 @@ func (t *TON) Start(ctx context.Context) error {
 		t.scheduler.Register(ctx, exec, opts...)
 	}
 
-	register(t.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(t.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(t.observer.CheckRPCStatus, "check_rpc_status")
+	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGenericSkipper)
+	register(t.observer.ObserveInbounds, "observe_inbounds", optInboundInterval, optInboundSkipper)
+	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
@@ -118,12 +118,12 @@ func (t *TON) group() scheduler.Group {
 // It loads pending cctx from zetacore, then tries to sign and broadcast them.
 func (t *TON) scheduleCCTX(ctx context.Context) error {
 	if err := t.updateChainParams(ctx); err != nil {
-		return errors.Wrap(err, "unable to update chain params")
+		return errors.Wrap(err, "failed to update chain parameters")
 	}
 
 	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get zeta block from context")
+		return errors.Wrap(err, "failed to get zeta block from context")
 	}
 
 	time.Sleep(delay)
@@ -134,36 +134,40 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return errors.Wrap(err, "failed to list pending CCTXs")
 	}
 
 	for i := range cctxList {
 		cctx := cctxList[i]
 		outboundID := base.OutboundIDFromCCTX(cctx)
 
-		if err := t.processCCTX(ctx, outboundID, cctx, zetaHeight); err != nil {
-			t.outboundLogger(outboundID).Error().Err(err).Msg("schedule CCTX failed")
+		err := t.processCCTX(ctx, outboundID, cctx, zetaHeight)
+		if err != nil {
+			t.outboundLogger(outboundID).Error().Err(err).Msg("failed to schedule CCTX")
 		}
 	}
 
 	return nil
 }
 
-func (t *TON) processCCTX(ctx context.Context, outboundID string, cctx *types.CrossChainTx, zetaHeight uint64) error {
+func (t *TON) processCCTX(ctx context.Context,
+	outboundID string,
+	cctx *types.CrossChainTx,
+	zetaHeight uint64,
+) error {
 	switch {
 	case t.signer.IsOutboundActive(outboundID):
-		//noop
-		return nil
+		return nil //no-op
 	case cctx.GetCurrentOutboundParam().ReceiverChainId != t.observer.Chain().ChainId:
 		return errors.New("chain id mismatch")
 	}
 
 	// vote outbound if it's already confirmed
 	continueKeySign, err := t.observer.VoteOutboundIfConfirmed(ctx, cctx)
-	switch {
-	case err != nil:
+	if err != nil {
 		return errors.Wrap(err, "failed to VoteOutboundIfConfirmed")
-	case !continueKeySign:
+	}
+	if !continueKeySign {
 		t.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 		return nil
 	}

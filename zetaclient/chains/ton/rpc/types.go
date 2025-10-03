@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -194,38 +192,6 @@ type rpcResponse struct {
 	Result  json.RawMessage `json:"result"`
 	Error   string          `json:"error"`
 	Code    int             `json:"code"`
-}
-
-// TransactionToHashString converts transaction's logicalTime and hash to string
-// This string is used to store the last scanned hash (e.g. "123:0x123...")
-func TransactionToHashString(tx ton.Transaction) string {
-	return TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
-}
-
-// TransactionHashToString converts logicalTime and hash to string
-func TransactionHashToString(lt uint64, hash ton.Bits256) string {
-	return fmt.Sprintf("%d:%s", lt, hash.Hex())
-}
-
-// TransactionHashFromString parses encoded string into logicalTime and hash
-func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
-	parts := strings.Split(encoded, ":")
-	if len(parts) != 2 {
-		return 0, ton.Bits256{}, fmt.Errorf("invalid encoded string format %q", encoded)
-	}
-
-	lt, err := strconv.ParseUint(parts[0], 10, 64)
-	if err != nil {
-		return 0, ton.Bits256{}, fmt.Errorf("invalid logical time: %w", err)
-	}
-
-	var hashBits ton.Bits256
-
-	if err = hashBits.FromHex(parts[1]); err != nil {
-		return 0, ton.Bits256{}, fmt.Errorf("invalid hash: %w", err)
-	}
-
-	return lt, hashBits, nil
 }
 
 func tlbAccountState(a *Account) tlb.AccountState {

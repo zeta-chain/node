@@ -30,12 +30,14 @@ import (
 	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonrepo "github.com/zeta-chain/node/zetaclient/chains/ton/repo"
 	tonclient "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 const btcBlocksPerDay = 144
@@ -67,7 +69,7 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 		dbName   = btcDatabaseFileName(*rawChain)
 	)
 
-	baseObserver, err := oc.newBaseObserver(chain, dbName)
+	baseObserver, err := oc.newBaseObserver(chain, dbName, mode.StandardMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
@@ -77,7 +79,7 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner := oc.newBaseSigner(chain, mode.StandardMode)
 	signer := btcsigner.New(baseSigner, bitcoinClient)
 
 	return bitcoin.New(oc.scheduler, observer, signer), nil
@@ -105,7 +107,7 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 	}
 	var evmClient evm.Client = standardEvmClient
 
-	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name(), mode.StandardMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
@@ -122,7 +124,7 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 	)
 
 	signer, err := evmsigner.New(
-		oc.newBaseSigner(chain),
+		oc.newBaseSigner(chain, mode.StandardMode),
 		evmClient,
 		zetaConnectorAddress,
 		erc20CustodyAddress,
@@ -151,7 +153,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 		return nil, errors.Wrap(errSkipChain, "unable to find solana config")
 	}
 
-	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name(), mode.StandardMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
@@ -177,7 +179,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 		return nil, errors.Wrap(err, "unable to load relayer key")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner := oc.newBaseSigner(chain, mode.StandardMode)
 
 	// create Solana signer
 	signer, err := solanasigner.New(baseSigner, solanaClient, gwAddress, relayerKey)
@@ -213,14 +215,14 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 	standardSuiClient := suiclient.New(cfg.Endpoint)
 	var suiClient sui.Client = standardSuiClient
 
-	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name(), mode.StandardMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
-	signer := suisigner.New(oc.newBaseSigner(chain), oc.deps.Zetacore, suiClient, gateway)
+	signer := suisigner.New(oc.newBaseSigner(chain, mode.StandardMode), oc.deps.Zetacore, suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -265,22 +267,27 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 	standardTonClient := tonclient.New(cfg.Endpoint, chain.ID(), tonclient.WithHTTPClient(rpcClient))
 	var tonClient ton.Client = standardTonClient
 
-	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name(), mode.StandardMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := tonobserver.New(baseObserver, tonClient, gw)
+	tonRepo := tonrepo.NewTONRepo(tonClient, gw, baseObserver.Chain())
+	observer, err := tonobserver.New(baseObserver, tonRepo, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), tonClient, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain, mode.StandardMode), tonClient, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *Orchestrator) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {
+func (oc *Orchestrator) newBaseObserver(
+	chain zctx.Chain,
+	dbName string,
+	clientMode mode.ClientMode,
+) (*base.Observer, error) {
 	var (
 		rawChain       = chain.RawChain()
 		rawChainParams = chain.Params()
@@ -305,11 +312,12 @@ func (oc *Orchestrator) newBaseObserver(chain zctx.Chain, dbName string) (*base.
 		oc.deps.Telemetry,
 		database,
 		oc.logger.base,
+		clientMode,
 	)
 }
 
-func (oc *Orchestrator) newBaseSigner(chain zctx.Chain) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base)
+func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
+	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {

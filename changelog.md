@@ -7,16 +7,28 @@
 * EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
 by calling `updateAdditionalActionFee` admin function.
 
+### Zetaclient Config
+
+* Feature flags are introduced, this section should be added to Zetaclient Config after EVM Gateway contracts are upgraded, to enable multiple EVM calls in Zetaclient:
+
+```
+"FeatureFlags": {
+  "EnableMultipleCalls": true
+}
+```
+
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
 * [4266](https://github.com/zeta-chain/node/pull/4266) - add solana ALT support 
+* [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 
 ## v36.0.0
 
 ### Features
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4277](https://github.com/zeta-chain/node/pull/4277) - add dry-mode support for TON
 
 ### Refactor
 

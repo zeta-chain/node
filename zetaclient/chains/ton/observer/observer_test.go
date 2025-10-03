@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -18,9 +19,11 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -86,6 +89,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		nil,
 		database,
 		logger,
+		mode.StandardMode,
 	)
 
 	require.NoError(t, err)
@@ -123,7 +127,7 @@ func (ts *testSuite) SetupLastScannedTX(gw ton.AccountID) ton.Transaction {
 		Amount: tonCoins(ts.t, "1"),
 	})
 
-	txHash := rpc.TransactionHashToString(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
+	txHash := encoder.EncodeHash(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
 
 	ts.baseObserver.WithLastTxScanned(txHash)
 	require.NoError(ts.t, ts.baseObserver.WriteLastTxScannedToDB(txHash))
@@ -195,7 +199,7 @@ func (ts *testSuite) OnGetInboundTrackersForChain(trackers []cc.InboundTracker) 
 func (ts *testSuite) TxToInboundTracker(tx ton.Transaction) cc.InboundTracker {
 	return cc.InboundTracker{
 		ChainId:  ts.chain.ChainId,
-		TxHash:   rpc.TransactionToHashString(tx),
+		TxHash:   encoder.EncodeTx(tx),
 		CoinType: coin.CoinType_Gas,
 	}
 }
@@ -268,4 +272,14 @@ func setupTrackersBag(ts *testSuite) {
 		mock.Anything,
 		mock.Anything,
 	).Maybe().Run(catcher).Return("", nil)
+}
+
+func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
+	return rpc.BlockIDExt{
+		Workchain: int(id.Workchain),
+		Seqno:     id.Seqno,
+		Shard:     fmt.Sprintf("%d", id.Shard),
+		RootHash:  id.RootHash.Base64(),
+		FileHash:  id.FileHash.Base64(),
+	}
 }
