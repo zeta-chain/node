@@ -119,7 +119,7 @@ func (a *AppContext) GetUnconfirmedTxCount() int64 {
 
 // IsMempoolCongested returns true if the mempool is congested
 func (a *AppContext) IsMempoolCongested() bool {
-	return a.GetUnconfirmedTxCount() >= a.config.GetMempoolCongestionTxCount()
+	return a.GetUnconfirmedTxCount() >= a.config.GetMempoolCongestionThreshold()
 }
 
 // Update updates AppContext and params for all chains
@@ -157,7 +157,7 @@ func (a *AppContext) Update(
 	a.operationalFlags = operationalFlags
 	a.unconfirmedTxCount = int64(unconfirmedTxCount)
 
-	if a.unconfirmedTxCount >= a.config.GetMempoolCongestionTxCount() {
+	if a.unconfirmedTxCount >= a.config.GetMempoolCongestionThreshold() {
 		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
 	}
 

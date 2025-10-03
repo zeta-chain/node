@@ -17,6 +17,12 @@ by calling `updateAdditionalActionFee` admin function.
 }
 ```
 
+* ZetaChain mempool congestion threshold is introduced. This field is optional and defaults to 3000. Observation will stop if the number of unconfirmed txs in mempool is greater than or equal to this value.
+```
+"MempoolCongestionThreshold": 3000,
+```
+
+
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx

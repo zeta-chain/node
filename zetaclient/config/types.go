@@ -26,8 +26,8 @@ const (
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 
-	// DefaultMempoolCongestionTxCount is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
-	DefaultMempoolCongestionTxCount = 3000
+	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
+	DefaultMempoolCongestionThreshold = 3000
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -86,26 +86,29 @@ type FeatureFlags struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer                     string         `json:"Peer"`
-	PublicIP                 string         `json:"PublicIP"`
-	LogFormat                string         `json:"LogFormat"`
-	LogLevel                 int8           `json:"LogLevel"`
-	LogSampler               bool           `json:"LogSampler"`
-	PreParamsPath            string         `json:"PreParamsPath"`
-	ZetaCoreHome             string         `json:"ZetaCoreHome"`
-	ChainID                  string         `json:"ChainID"`
-	ZetaCoreURL              string         `json:"ZetaCoreURL"`
-	AuthzGranter             string         `json:"AuthzGranter"`
-	AuthzHotkey              string         `json:"AuthzHotkey"`
-	P2PDiagnostic            bool           `json:"P2PDiagnostic"`
-	ConfigUpdateTicker       uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker      uint64         `json:"P2PDiagnosticTicker"`
-	TssPath                  string         `json:"TssPath"`
-	TSSMaxPendingSignatures  uint64         `json:"TSSMaxPendingSignatures"`
-	TestTssKeysign           bool           `json:"TestTssKeysign"`
-	KeyringBackend           KeyringBackend `json:"KeyringBackend"`
-	RelayerKeyPath           string         `json:"RelayerKeyPath"`
-	MempoolCongestionTxCount int64          `json:"MempoolCongestionTxCount"`
+	Peer                    string         `json:"Peer"`
+	PublicIP                string         `json:"PublicIP"`
+	LogFormat               string         `json:"LogFormat"`
+	LogLevel                int8           `json:"LogLevel"`
+	LogSampler              bool           `json:"LogSampler"`
+	PreParamsPath           string         `json:"PreParamsPath"`
+	ZetaCoreHome            string         `json:"ZetaCoreHome"`
+	ChainID                 string         `json:"ChainID"`
+	ZetaCoreURL             string         `json:"ZetaCoreURL"`
+	AuthzGranter            string         `json:"AuthzGranter"`
+	AuthzHotkey             string         `json:"AuthzHotkey"`
+	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
+	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
+	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
+	TssPath                 string         `json:"TssPath"`
+	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
+	TestTssKeysign          bool           `json:"TestTssKeysign"`
+	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
+	RelayerKeyPath          string         `json:"RelayerKeyPath"`
+
+	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore mempool to consider it congested
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than or equal to congestion threshold.
+	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -231,15 +234,15 @@ func (c Config) GetRelayerKeyPath() string {
 	return c.RelayerKeyPath
 }
 
-// GetMempoolCongestionTxCount returns the threshold of unconfirmed txs in zetacore mempool to consider it congested
-func (c Config) GetMempoolCongestionTxCount() int64 {
+// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to consider it congested
+func (c Config) GetMempoolCongestionThreshold() int64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	if c.MempoolCongestionTxCount <= 0 {
-		return DefaultMempoolCongestionTxCount
+	if c.MempoolCongestionThreshold <= 0 {
+		return DefaultMempoolCongestionThreshold
 	}
-	return c.MempoolCongestionTxCount
+	return c.MempoolCongestionThreshold
 }
 
 func (c EVMConfig) Empty() bool {

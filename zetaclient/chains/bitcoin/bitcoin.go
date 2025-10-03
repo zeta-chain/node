@@ -70,17 +70,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(b.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !b.observer.ChainParams().IsSupported || !app.IsInboundObservationEnabled() || app.IsMempoolCongested()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !b.observer.ChainParams().IsSupported || !app.IsOutboundObservationEnabled() || app.IsMempoolCongested()
-	})
-
-	optGasPriceSkipper := scheduler.Skipper(func() bool {
-		return !b.observer.ChainParams().IsSupported || app.IsMempoolCongested()
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return inboundSkipper(b, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return outboundSkipper(b, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return gasPriceSkipper(b, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -223,4 +215,56 @@ func (b *Bitcoin) outboundLogger(id string) *zerolog.Logger {
 	l := b.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
+}
+
+// inboundSkipper returns a skipper function for inbound observation.
+func inboundSkipper(b *Bitcoin, app *zctx.AppContext) bool {
+	isSupported := b.observer.ChainParams().IsSupported
+	isInboundEnabled := app.IsInboundObservationEnabled()
+	isMempoolCongested := app.IsMempoolCongested()
+
+	if !isSupported || !isInboundEnabled || isMempoolCongested {
+		b.observer.Logger().
+			Chain.Debug().
+			Bool("is_supported", isSupported).
+			Bool("is_enabled", isInboundEnabled).
+			Bool("is_congested", isMempoolCongested).
+			Msg("skip inbound observation")
+		return true
+	}
+	return false
+}
+
+// outboundSkipper returns a skipper function for outbound observation.
+func outboundSkipper(b *Bitcoin, app *zctx.AppContext) bool {
+	isSupported := b.observer.ChainParams().IsSupported
+	isOutboundEnabled := app.IsOutboundObservationEnabled()
+	isMempoolCongested := app.IsMempoolCongested()
+
+	if !isSupported || !isOutboundEnabled || isMempoolCongested {
+		b.observer.Logger().
+			Chain.Debug().
+			Bool("is_supported", isSupported).
+			Bool("is_enabled", isOutboundEnabled).
+			Bool("is_congested", isMempoolCongested).
+			Msg("skip outbound observation")
+		return true
+	}
+	return false
+}
+
+// gasPriceSkipper returns a skipper function for gas price observation.
+func gasPriceSkipper(b *Bitcoin, app *zctx.AppContext) bool {
+	isSupported := b.observer.ChainParams().IsSupported
+	isMempoolCongested := app.IsMempoolCongested()
+
+	if !isSupported || isMempoolCongested {
+		b.observer.Logger().
+			Chain.Debug().
+			Bool("is_supported", isSupported).
+			Bool("is_congested", isMempoolCongested).
+			Msg("skip gas price observation")
+		return true
+	}
+	return false
 }
