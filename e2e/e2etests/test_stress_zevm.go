@@ -166,7 +166,6 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 	close(results)
 
 	// Collect and analyze results
-	receiptStart := time.Now()
 	var failedTxs []txResult
 	for result := range results {
 		if result.err != nil || result.receipt == nil {
@@ -185,7 +184,6 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 			successCount.Add(1)
 		}
 	}
-	receiptDuration := time.Since(receiptStart)
 
 	// Print final statistics
 	r.Logger.Print("═══════════════════════════════════════")
@@ -208,11 +206,6 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 		failedCount.Load(),
 		float64(failedCount.Load())/float64(totalTxs)*100,
 	)
-	r.Logger.Print("Timing:")
-	r.Logger.Print("  Send duration:      %v", sendDuration)
-	r.Logger.Print("  Receipt duration:   %v", receiptDuration)
-	r.Logger.Print("  Total duration:     %v", sendDuration+receiptDuration)
-	r.Logger.Print("  TPS (send):         %.2f", float64(sentCount.Load())/sendDuration.Seconds())
 	r.Logger.Print("═══════════════════════════════════════")
 
 	if len(failedTxs) > 0 && len(failedTxs) <= 10 {

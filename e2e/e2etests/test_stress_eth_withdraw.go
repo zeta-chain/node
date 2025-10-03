@@ -13,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -174,7 +173,6 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	close(results)
 
 	// Collect and analyze results
-	monitorStart := time.Now()
 	var failedWithdraws []withdrawResult
 	var durations []float64
 
@@ -197,17 +195,6 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 			durations = append(durations, result.duration.Seconds())
 		}
 	}
-	monitorDuration := time.Since(monitorStart)
-
-	// Calculate statistics
-	var desc *stats.Description
-	var descErr error
-	if len(durations) > 0 {
-		desc, descErr = stats.Describe(durations, false, &[]float64{50.0, 75.0, 90.0, 95.0, 99.0})
-		if descErr != nil {
-			r.Logger.Print("warning: failed to calculate latency statistics: %v", descErr)
-		}
-	}
 
 	// Print final statistics
 	r.Logger.Print("═══════════════════════════════════════")
@@ -224,22 +211,6 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 		float64(successCount.Load())/float64(numWithdraws)*100)
 	r.Logger.Print("  Failed:              %d (%.2f%%)", failedCount.Load(),
 		float64(failedCount.Load())/float64(numWithdraws)*100)
-	r.Logger.Print("Timing:")
-	r.Logger.Print("  Send duration:       %v", sendDuration)
-	r.Logger.Print("  Monitor duration:    %v", monitorDuration)
-	r.Logger.Print("  Total duration:      %v", sendDuration+monitorDuration)
-	r.Logger.Print("  TPS (send):          %.2f", float64(sentCount.Load())/sendDuration.Seconds())
-
-	if len(durations) > 0 && descErr == nil {
-		r.Logger.Print("Latency Statistics (seconds):")
-		r.Logger.Print("  Min:                 %.2f", desc.Min)
-		r.Logger.Print("  Max:                 %.2f", desc.Max)
-		r.Logger.Print("  Mean:                %.2f", desc.Mean)
-		r.Logger.Print("  Std Dev:             %.2f", desc.Std)
-		for _, p := range desc.DescriptionPercentiles {
-			r.Logger.Print("  P%.0f:                 %.2f", p.Percentile, p.Value)
-		}
-	}
 	r.Logger.Print("═══════════════════════════════════════")
 
 	if len(failedWithdraws) > 0 && len(failedWithdraws) <= 10 {
