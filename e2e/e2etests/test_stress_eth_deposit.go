@@ -145,7 +145,6 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 
 	// Collect and analyze results
 	var failedDeposits []depositResult
-	var durations []float64
 
 	for result := range results {
 		if result.err != nil {
@@ -163,7 +162,6 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 			}
 		} else {
 			successCount.Add(1)
-			durations = append(durations, result.duration.Seconds())
 		}
 	}
 

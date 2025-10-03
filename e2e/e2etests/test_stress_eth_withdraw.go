@@ -174,7 +174,6 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	// Collect and analyze results
 	var failedWithdraws []withdrawResult
-	var durations []float64
 
 	for result := range results {
 		if result.err != nil {
@@ -192,7 +191,6 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 			}
 		} else {
 			successCount.Add(1)
-			durations = append(durations, result.duration.Seconds())
 		}
 	}
 
