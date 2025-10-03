@@ -21,13 +21,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const (
-	// WithdrawBatchSize defines how many withdrawals to send per batch
-	WithdrawBatchSize = 30
-	// WithdrawBatchInterval defines the delay between batches in milliseconds
-	WithdrawBatchInterval = 3000 // 1 second between batches
-)
-
 type withdrawResult struct {
 	index       int
 	txHash      common.Hash
@@ -40,7 +33,7 @@ type withdrawResult struct {
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
 func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 2)
+	require.Len(r, args, 4)
 
 	// parse withdraw amount and number of withdraws
 	withdrawalAmount := utils.ParseBigInt(r, args[0])
@@ -48,6 +41,9 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	numWithdraws, err := strconv.Atoi(args[1])
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, numWithdraws, 1)
+
+	batchSize := utils.ParseInt(r, args[2])
+	batchInterval := utils.ParseInt(r, args[3])
 
 	// configure test mode
 	bestEffortMode := false
@@ -85,15 +81,15 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 	// Send all withdrawals with batching
 	sendStart := time.Now()
-	batchCount := (numWithdraws + WithdrawBatchSize - 1) / WithdrawBatchSize
+	batchCount := (numWithdraws + batchSize - 1) / batchSize
 	r.Logger.Print("sending %d withdrawals in %d batches (batch size: %d, interval: %dms)",
-		numWithdraws, batchCount, WithdrawBatchSize, WithdrawBatchInterval)
+		numWithdraws, batchCount, batchSize, batchInterval)
 
 	currentNonce := initialNonce
 
 	for batchIdx := 0; batchIdx < batchCount; batchIdx++ {
-		batchStart := batchIdx * WithdrawBatchSize
-		batchEnd := minInt((batchIdx+1)*WithdrawBatchSize, numWithdraws)
+		batchStart := batchIdx * batchSize
+		batchEnd := minInt((batchIdx+1)*batchSize, numWithdraws)
 		batchSize := batchEnd - batchStart
 
 		r.Logger.Print("sending batch %d/%d (%d withdrawals)", batchIdx+1, batchCount, batchSize)
@@ -145,8 +141,8 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 		// Wait before sending next batch
 		if batchIdx < batchCount-1 {
-			r.Logger.Print("waiting %dms before next batch...", WithdrawBatchInterval)
-			time.Sleep(time.Duration(WithdrawBatchInterval) * time.Millisecond)
+			r.Logger.Print("waiting %dms before next batch...", batchInterval)
+			time.Sleep(time.Duration(batchInterval) * time.Millisecond)
 		}
 	}
 
@@ -201,8 +197,8 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("Stress Test Results:")
 	r.Logger.Print("═══════════════════════════════════════")
 	r.Logger.Print("Configuration:")
-	r.Logger.Print("  Batch size:          %d withdrawals", WithdrawBatchSize)
-	r.Logger.Print("  Batch interval:      %dms", WithdrawBatchInterval)
+	r.Logger.Print("  Batch size:          %d withdrawals", batchSize)
+	r.Logger.Print("  Batch interval:      %dms", batchInterval)
 	r.Logger.Print("  Total batches:       %d", batchCount)
 	r.Logger.Print("Results:")
 	r.Logger.Print("  Total withdrawals:   %d", numWithdraws)

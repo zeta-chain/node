@@ -1446,6 +1446,8 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 			{Description: CountArgDescription, DefaultValue: "100"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
 		},
 		TestStressEtherWithdraw,
 	),
@@ -1464,6 +1466,8 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 			{Description: CountArgDescription, DefaultValue: "100"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
 		},
 		TestStressEtherDeposit,
 	),
@@ -1536,7 +1540,7 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: CountArgDescription, DefaultValue: "1000"},
 			{Description: "batch of tx size", DefaultValue: "100"},
-			{Description: "interval in ms between batches", DefaultValue: "500"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
 		},
 		TestStressZEVM,
 	),

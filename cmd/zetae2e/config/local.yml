@@ -149,9 +149,6 @@ contracts:
     test_dapp_v2: "0xa825eAa55b497AF892faca73a3797046C10B7c23"
   solana:
     gateway_program_id: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-    spl: "D71ndXdpKE6ZvgoKpEohP1F1AfkiQgBWpmFZ7Mc74h7W"
-    connected_program_id: "4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc"
-    connected_spl_program_id: "8iUjRRhUCn8BjrvsWPfj8mguTe9L81ES4oAUApiF8JFC"
   ton:
     # e.g. "0:31503e3dd1df464216e4c4ca0eee3a40b812822c8539823e009b0720fab527b5"
     # unique on each e2e as it's partially derived from TSS address
