@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -41,7 +42,10 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		)
 	}
 
+	// Check if multiple calls are enabled
+	allowMultipleCalls := zctx.EnableMultipleCallsFeatureFlag(ctx)
 	eventFound := false
+
 	for _, log := range receipt.Logs {
 		if log == nil || log.Address != gatewayAddr {
 			continue
@@ -63,7 +67,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newDepositInboundVote(eventDeposit)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}
@@ -84,7 +88,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}
@@ -105,7 +109,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newCallInboundVote(eventCall)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}

@@ -122,14 +122,15 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	previousValue := r.EVMAuth.Value
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
-	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
-	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+
+	// add 5 fees to provided amount to pay for 6 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(5)))
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple deposits through contract")
 	tx, err = r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 3)
+	addTrackerAndWaitForCCTXs(coin.CoinType_Gas, tx.Hash().Hex(), 6)
 	r.Logger.Print("🍾 multiple deposits through contract observed")
 
 	// reset the value of the payable transactions
@@ -140,9 +141,8 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
 
-	// set value of the payable transactions
-	// use 1 fee as amount to pay for 2 inbounds (1st one is free)
-	r.EVMAuth.Value = fee
+	// use 3 * fee as amount to pay for 4 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Mul(fee, big.NewInt(3))
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple erc20 deposits through contract")
@@ -154,6 +154,6 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 		[]byte(randomPayload(r)),
 	)
 	require.NoError(r, err)
-	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 2)
+	addTrackerAndWaitForCCTXs(coin.CoinType_ERC20, tx.Hash().Hex(), 4)
 	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")
 }

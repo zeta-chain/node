@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
+	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -98,6 +99,9 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 
 	// refresh preflight metrics in a lazy manner
 	preflightTicker := scheduler.Interval(1 * time.Minute)
+
+	// check feature flags and log their status
+	oc.logFeatureFlags(app.Config())
 
 	oc.scheduler.Register(ctx, oc.UpdateContext, opts("update_context", contextInterval)...)
 	oc.scheduler.Register(ctx, oc.SyncChains, opts("sync_chains", syncInterval)...)
@@ -380,5 +384,20 @@ func newLoggers(baseLogger base.Logger) loggers {
 		Logger:  std,
 		sampled: std.Sample(&zerolog.BasicSampler{N: 10}),
 		base:    baseLogger,
+	}
+}
+
+// logFeatureFlags logs the current status of feature flags
+func (oc *Orchestrator) logFeatureFlags(config config.Config) {
+	flags := config.GetFeatureFlags()
+
+	oc.logger.Info().
+		Bool("enable_multiple_calls", flags.EnableMultipleCalls).
+		Msg("feature flags status")
+
+	if config.IsEnableMultipleCallsEnabled() {
+		oc.logger.Info().Msg("EnableMultipleCalls is enabled - multiple calls from same tx will be allowed")
+	} else {
+		oc.logger.Info().Msg("EnableMultipleCalls is disabled - multiple calls from same tx will be filtered (only first event)")
 	}
 }
