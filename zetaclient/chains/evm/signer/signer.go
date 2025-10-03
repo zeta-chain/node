@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -240,7 +240,7 @@ func (signer *Signer) broadcast(ctx context.Context, tx *eth.Transaction) error 
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -339,7 +339,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	logger zerolog.Logger,
 	cctx *crosschaintypes.CrossChainTx,
 	outboundData *OutboundData,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	_ zctx.Chain,
 ) (*eth.Transaction, error) {
 	switch {
@@ -411,7 +411,7 @@ func (signer *Signer) BroadcastOutbound(
 	tx *eth.Transaction,
 	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 	txData *OutboundData,
 ) {
 	app, err := zctx.FromContext(ctx)
@@ -499,7 +499,7 @@ func (signer *Signer) BroadcastOutbound(
 func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
 
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
 		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound

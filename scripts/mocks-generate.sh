@@ -7,7 +7,7 @@ go install github.com/vektra/mockery/v2@v2.53.3
 
 MOCK_DIRS=(
     "./testutil/keeper/mocks"
-    "./zetaclient/chains/interfaces"
+    "./zetaclient/chains/zrepo"
     "./zetaclient/chains/bitcoin/client"
     "./zetaclient/chains/evm/observer"
     "./zetaclient/chains/ton/observer"

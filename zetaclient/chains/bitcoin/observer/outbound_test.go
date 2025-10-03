@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -37,7 +38,8 @@ func MockBTCObserverMainnet(t *testing.T, tssSigner interfaces.TSSSigner) *Obser
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 	baseLogger := base.Logger{Std: logger, Compliance: logger}
 
-	baseObserver, err := base.NewObserver(chain, params, nil, tssSigner, 100, nil, database, baseLogger)
+	baseObserver, err := base.NewObserver(chain, params, nil, tssSigner, 100, nil, database,
+		baseLogger, mode.StandardMode)
 	require.NoError(t, err)
 
 	// create Bitcoin observer

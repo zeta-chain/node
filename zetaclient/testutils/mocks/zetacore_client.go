@@ -16,7 +16,7 @@ import (
 
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
-	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
+	interfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 
 	math "cosmossdk.io/math"
 
@@ -371,19 +371,19 @@ func (_m *ZetacoreClient) GetKeyGen(_a0 context.Context) (types.Keygen, error) {
 }
 
 // GetKeys provides a mock function with no fields
-func (_m *ZetacoreClient) GetKeys() keysinterfaces.ObserverKeys {
+func (_m *ZetacoreClient) GetKeys() interfaces.ObserverKeys {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetKeys")
 	}
 
-	var r0 keysinterfaces.ObserverKeys
-	if rf, ok := ret.Get(0).(func() keysinterfaces.ObserverKeys); ok {
+	var r0 interfaces.ObserverKeys
+	if rf, ok := ret.Get(0).(func() interfaces.ObserverKeys); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(keysinterfaces.ObserverKeys)
+			r0 = ret.Get(0).(interfaces.ObserverKeys)
 		}
 	}
 
