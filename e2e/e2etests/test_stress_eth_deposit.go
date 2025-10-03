@@ -92,7 +92,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 			auth.Value = depositAmount
 
 			// Send deposit transaction
-			tx, err := r.GatewayEVM.Deposit0(
+			tx, err := r.GatewayEVM.Deposit1(
 				&auth,
 				r.EVMAddress(),
 				gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
