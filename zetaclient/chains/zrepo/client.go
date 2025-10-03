@@ -119,4 +119,6 @@ type ZetacoreClient interface {
 	GetUpgradePlan(context.Context) (*upgrade.Plan, error)
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
+
+	GetNumberOfUnconfirmedTxs(context.Context) (int, error)
 }

@@ -352,6 +352,7 @@ func makeCtx(t *testing.T) context.Context {
 		},
 		*sample.CrosschainFlags(),
 		sample.OperationalFlags(),
+		0,
 	)
 	require.NoError(t, err, "unable to update app context")
 

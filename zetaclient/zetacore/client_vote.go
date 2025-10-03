@@ -162,7 +162,7 @@ func (c *Client) PostVoteInbound(
 
 	// adjust gas limit according to previous out of gas failures
 	ballotIndex := msg.Digest()
-	gasLimit, retryGasLimit, retryable := c.getAdjustedVoteInboundGasLimit(ballotIndex, gasLimit, retryGasLimit)
+	gasLimit, retryGasLimit, retryable := c.getAdjustedGasLimitForInboundVote(ballotIndex, gasLimit, retryGasLimit)
 	if !retryable {
 		c.logger.Info().Str(logs.FieldBallotIndex, ballotIndex).Msg("stop voting due to inbound gas limit")
 		return "", ballotIndex, nil
@@ -206,8 +206,8 @@ func (c *Client) PostVoteInbound(
 	return zetaTxHash, ballotIndex, nil
 }
 
-// getAdjustedVoteInboundGasLimit gets the adjusted gas limit and retry gas limit by checking previous failed ballots
-func (c *Client) getAdjustedVoteInboundGasLimit(
+// getAdjustedGasLimitForInboundVote gets the adjusted gas limit and retry gas limit by checking previous failed ballots
+func (c *Client) getAdjustedGasLimitForInboundVote(
 	ballotIndex string,
 	gasLimit, retryGasLimit uint64,
 ) (newGasLimit, newRetryGasLimit uint64, retryable bool) {
@@ -215,7 +215,7 @@ func (c *Client) getAdjustedVoteInboundGasLimit(
 	defer c.mu.RUnlock()
 
 	// no adjustment needed if no previous failed ballots
-	lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]
+	lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]
 	if !found {
 		return gasLimit, retryGasLimit, true
 	}
@@ -250,12 +250,12 @@ func (c *Client) addFailedInboundBallotOutOfGas(ballotIndex string, gasWanted in
 	gasLimit := uint64(gasWanted)
 
 	// update only if given gas limit is higher than last failed gasLimit
-	lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]
+	lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]
 	if found && lastGasLimit >= gasLimit {
 		return
 	}
 
-	c.inboundBallotsOutOfGas[ballotIndex] = gasLimit
+	c.readyToExecuteInboundBallots[ballotIndex] = gasLimit
 	c.logger.Info().
 		Str(logs.FieldBallotIndex, ballotIndex).
 		Uint64("gas_limit", gasLimit).
@@ -267,8 +267,8 @@ func (c *Client) removeFailedInboundBallotOutOfGas(ballotIndex string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if lastGasLimit, found := c.inboundBallotsOutOfGas[ballotIndex]; found {
-		delete(c.inboundBallotsOutOfGas, ballotIndex)
+	if lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]; found {
+		delete(c.readyToExecuteInboundBallots, ballotIndex)
 		c.logger.Info().
 			Str(logs.FieldBallotIndex, ballotIndex).
 			Uint64("gas_limit", lastGasLimit).

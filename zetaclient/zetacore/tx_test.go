@@ -302,45 +302,45 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 		})
 
 		// should not adjust the gas limit, no out-of-gas failure so far
-		gasLimit, retryGasLimit, retryable := client.getAdjustedVoteInboundGasLimit(msg.Digest(), 1000, 2000)
+		gasLimit, retryGasLimit, retryable := client.getAdjustedGasLimitForInboundVote(msg.Digest(), 1000, 2000)
 		require.Equal(t, uint64(1000), gasLimit)
 		require.Equal(t, uint64(2000), retryGasLimit)
 		require.True(t, retryable)
 
 		// ACT 1
-		// monitor out of gas error, record it
-		err := client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
+		// monitor out of gas error, should record it
+		err := client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
+		require.NoError(t, err)
+
+		// it is okay to monitor same tx again, nothing will happen
+		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
 		require.NoError(t, err)
 
 		// ASSERT 1.1
 		// should adjust the gas limit
-		gasLimit, retryGasLimit, retryable = client.getAdjustedVoteInboundGasLimit(msg.Digest(), 1000, 2000)
+		gasLimit, retryGasLimit, retryable = client.getAdjustedGasLimitForInboundVote(msg.Digest(), 1000, 2000)
 		require.Equal(t, uint64(2000), gasLimit)
 		require.Zero(t, retryGasLimit)
 		require.True(t, retryable)
 
 		// ASSERT 1.2
-		// not retryable, given gas limits are too low
-		gasLimit, retryGasLimit, retryable = client.getAdjustedVoteInboundGasLimit(msg.Digest(), 500, 1000)
+		// not retryable, because given gas limits are too low
+		gasLimit, retryGasLimit, retryable = client.getAdjustedGasLimitForInboundVote(msg.Digest(), 500, 1000)
 		require.Zero(t, gasLimit)
 		require.Zero(t, retryGasLimit)
 		require.False(t, retryable)
-
-		// monitor it again with same 'GasWanted', nothing new to record
-		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
-		require.NoError(t, err)
 
 		// set mock tx result to nil, so tx is successful
 		cometbftMock.SetTxResult(nil)
 
 		// ACT 2
-		// monitor success, remove the record
-		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
+		// monitor tx as a successful, should remove the record of out of gas failure
+		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
 		require.NoError(t, err)
 
 		// ASSERT 2.1
 		// should not adjust the gas limit
-		gasLimit, retryGasLimit, retryable = client.getAdjustedVoteInboundGasLimit(msg.Digest(), 1000, 2000)
+		gasLimit, retryGasLimit, retryable = client.getAdjustedGasLimitForInboundVote(msg.Digest(), 1000, 2000)
 		require.Equal(t, uint64(1000), gasLimit)
 		require.Equal(t, uint64(2000), retryGasLimit)
 		require.True(t, retryable)

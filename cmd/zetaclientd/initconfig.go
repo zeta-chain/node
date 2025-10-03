@@ -24,12 +24,13 @@ type initializeConfigOptions struct {
 	level              int8
 	configUpdateTicker uint64
 
-	p2pDiagnostic       bool
-	p2pDiagnosticTicker uint64
-	TSSPath             string
-	TestTSSKeySign      bool
-	KeyringBackend      string
-	RelayerKeyPath      string
+	p2pDiagnostic            bool
+	p2pDiagnosticTicker      uint64
+	TSSPath                  string
+	TestTSSKeySign           bool
+	KeyringBackend           string
+	RelayerKeyPath           string
+	MempoolCongestionTxCount int64
 }
 
 var initializeConfigOpts initializeConfigOptions
@@ -38,12 +39,13 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
-		usagePeer     = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
-		usageHotKey   = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
-		usageLogLevel = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
-		usageP2PDiag  = "p2p diagnostic ticker (default: 0 means no ticker)"
-		usageTicker   = "config update ticker (default: 0 means no ticker)"
-		usageKeyring  = "keyring backend to use (test, file)"
+		usagePeer                     = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
+		usageHotKey                   = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
+		usageLogLevel                 = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
+		usageP2PDiag                  = "p2p diagnostic ticker (default: 0 means no ticker)"
+		usageTicker                   = "config update ticker (default: 0 means no ticker)"
+		usageKeyring                  = "keyring backend to use (test, file)"
+		usageMempoolCongestionTxCount = "the number of unconfirmed txs in the zetacore mempool to consider it congested (e.g. 3000)"
 	)
 
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
@@ -63,6 +65,7 @@ func setupInitializeConfigOptions() {
 	f.BoolVar(&cfg.TestTSSKeySign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), usageKeyring)
 	f.StringVar(&cfg.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")
+	f.Int64Var(&cfg.MempoolCongestionTxCount, "mempool-congestion-tx-count", 3000, usageMempoolCongestionTxCount)
 }
 
 // InitializeConfig creates new config for zetaclientd and saves it to the config file.
@@ -97,6 +100,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)
 	configData.RelayerKeyPath = opts.RelayerKeyPath
+	configData.MempoolCongestionTxCount = opts.MempoolCongestionTxCount
 	configData.ComplianceConfig = sample.ComplianceConfig()
 
 	// Save config file

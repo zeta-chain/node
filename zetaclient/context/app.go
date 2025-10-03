@@ -28,6 +28,9 @@ type AppContext struct {
 	crosschainFlags  observertypes.CrosschainFlags
 	operationalFlags observertypes.OperationalFlags
 
+	// unconfirmedTxCount is the number of unconfirmed txs in the zetacore mempool
+	unconfirmedTxCount int64
+
 	// logger is the logger of the app
 	logger zerolog.Logger
 
@@ -106,6 +109,19 @@ func (a *AppContext) GetOperationalFlags() observertypes.OperationalFlags {
 	return a.operationalFlags
 }
 
+// GetUnconfirmedTxCount returns the number of unconfirmed txs in the zetacore mempool
+func (a *AppContext) GetUnconfirmedTxCount() int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.unconfirmedTxCount
+}
+
+// IsMempoolCongested returns true if the mempool is congested
+func (a *AppContext) IsMempoolCongested() bool {
+	return a.GetUnconfirmedTxCount() >= a.config.GetMempoolCongestionTxCount()
+}
+
 // Update updates AppContext and params for all chains
 // this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
@@ -113,6 +129,7 @@ func (a *AppContext) Update(
 	freshChainParams map[int64]*observertypes.ChainParams,
 	crosschainFlags observertypes.CrosschainFlags,
 	operationalFlags observertypes.OperationalFlags,
+	unconfirmedTxCount int,
 ) error {
 	// some sanity checks
 	switch {
@@ -138,6 +155,11 @@ func (a *AppContext) Update(
 
 	a.crosschainFlags = crosschainFlags
 	a.operationalFlags = operationalFlags
+	a.unconfirmedTxCount = int64(unconfirmedTxCount)
+
+	if a.unconfirmedTxCount >= a.config.GetMempoolCongestionTxCount() {
+		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
+	}
 
 	return nil
 }

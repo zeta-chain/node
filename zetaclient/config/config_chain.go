@@ -21,6 +21,7 @@ func New(setDefaults bool) Config {
 	}
 
 	if setDefaults {
+		cfg.MempoolCongestionTxCount = DefaultMempoolCongestionTxCount
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()

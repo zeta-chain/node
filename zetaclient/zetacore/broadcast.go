@@ -23,10 +23,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-// unconfirmedTxsThreshold is the threshold of unconfirmed txs in the mempool
-// if the number of unconfirmed txs is greater or equal to this value, the tx will not be broadcasted to avoid congestion
-const unconfirmedTxsThreshold = 3000
-
 // paying 50% more than the current base gas price to buffer for potential block-by-block
 // gas price increase due to EIP1559 feemarket on ZetaChain
 var bufferMultiplier = sdkmath.LegacyMustNewDecFromStr("1.5")
@@ -109,16 +105,6 @@ func (c *Client) Broadcast(
 	txBytes, err := c.cosmosClientContext.TxConfig.TxEncoder()(builder.GetTx())
 	if err != nil {
 		return "", errors.Wrap(err, "unable to encode tx")
-	}
-
-	// skip broadcasting if mempool is already congested
-	resp, err := c.cometBFTClient.NumUnconfirmedTxs(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get unconfirmed tx count")
-	}
-
-	if resp.Count >= unconfirmedTxsThreshold {
-		return "", fmt.Errorf("mempool is congested, unconfirmed tx count is %d", resp.Count)
 	}
 
 	// broadcast to a Tendermint node

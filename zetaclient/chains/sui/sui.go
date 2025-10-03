@@ -60,10 +60,6 @@ func (s *Sui) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to create new block subscriber")
 	}
 
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
 			scheduler.GroupName(s.group()),
@@ -86,17 +82,21 @@ func (s *Sui) Start(ctx context.Context) error {
 	})
 
 	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
+		return !s.observer.ChainParams().IsSupported || !app.IsInboundObservationEnabled() || app.IsMempoolCongested()
 	})
 
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !s.observer.ChainParams().IsSupported
+	optOutboundSkipper := scheduler.Skipper(func() bool {
+		return !s.observer.ChainParams().IsSupported || !app.IsOutboundObservationEnabled() || app.IsMempoolCongested()
+	})
+
+	optGasPriceSkipper := scheduler.Skipper(func() bool {
+		return !s.observer.ChainParams().IsSupported || app.IsMempoolCongested()
 	})
 
 	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
-	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)

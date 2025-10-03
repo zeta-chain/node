@@ -73,15 +73,15 @@ func (e *EVM) Start(ctx context.Context) error {
 	})
 
 	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
+		return !e.observer.ChainParams().IsSupported || !app.IsInboundObservationEnabled() || app.IsMempoolCongested()
 	})
 
 	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
+		return !e.observer.ChainParams().IsSupported || !app.IsOutboundObservationEnabled() || app.IsMempoolCongested()
 	})
 
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !e.observer.ChainParams().IsSupported
+	optGasPriceSkipper := scheduler.Skipper(func() bool {
+		return !e.observer.ChainParams().IsSupported || app.IsMempoolCongested()
 	})
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
@@ -96,7 +96,7 @@ func (e *EVM) Start(ctx context.Context) error {
 	// Observers
 	register(e.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(e.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(e.observer.CheckRPCStatus, "check_rpc_status")
 	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 

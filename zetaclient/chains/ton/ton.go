@@ -70,15 +70,15 @@ func (t *TON) Start(ctx context.Context) error {
 	})
 
 	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
+		return !t.observer.ChainParams().IsSupported || !app.IsInboundObservationEnabled() || app.IsMempoolCongested()
 	})
 
 	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
+		return !t.observer.ChainParams().IsSupported || !app.IsOutboundObservationEnabled() || app.IsMempoolCongested()
 	})
 
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !t.observer.ChainParams().IsSupported
+	optGasPriceSkipper := scheduler.Skipper(func() bool {
+		return !t.observer.ChainParams().IsSupported || app.IsMempoolCongested()
 	})
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
@@ -91,7 +91,7 @@ func (t *TON) Start(ctx context.Context) error {
 	}
 
 	register(t.observer.CheckRPCStatus, "check_rpc_status")
-	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGenericSkipper)
+	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
 	register(t.observer.ObserveInbounds, "observe_inbounds", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)

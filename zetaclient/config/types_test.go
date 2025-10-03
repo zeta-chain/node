@@ -16,6 +16,19 @@ func Test_GetRelayerKeyPath(t *testing.T) {
 	require.Equal(t, config.DefaultRelayerKeyPath, cfg.GetRelayerKeyPath())
 }
 
+func Test_GetMempoolCongestionTxCount(t *testing.T) {
+	t.Run("should return default mempool congestion tx count", func(t *testing.T) {
+		cfg := config.New(false)
+		require.EqualValues(t, config.DefaultMempoolCongestionTxCount, cfg.GetMempoolCongestionTxCount())
+	})
+
+	t.Run("should return configured mempool congestion tx count", func(t *testing.T) {
+		cfg := config.New(false)
+		cfg.MempoolCongestionTxCount = 5000
+		require.EqualValues(t, 5000, cfg.GetMempoolCongestionTxCount())
+	})
+}
+
 func Test_GetEVMConfig(t *testing.T) {
 	chainID := chains.Sepolia.ChainId
 

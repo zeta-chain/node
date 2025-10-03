@@ -68,6 +68,7 @@ func TestAppContext(t *testing.T) {
 		require.Empty(t, appContext.GetCrossChainFlags())
 		require.False(t, appContext.IsInboundObservationEnabled())
 		require.False(t, appContext.IsOutboundObservationEnabled())
+		require.False(t, appContext.IsMempoolCongested())
 
 		// Given some data that is supposed to come from ZetaCore RPC
 		newChains := []chains.Chain{
@@ -88,7 +89,7 @@ func TestAppContext(t *testing.T) {
 		}
 
 		// ACT
-		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags)
+		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags, 3000)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -98,6 +99,7 @@ func TestAppContext(t *testing.T) {
 		assert.Equal(t, ccFlags, appContext.GetCrossChainFlags())
 		assert.True(t, appContext.IsInboundObservationEnabled())
 		assert.True(t, appContext.IsOutboundObservationEnabled())
+		assert.True(t, appContext.IsMempoolCongested())
 
 		// Check ETH Chain
 		ethChain, err := appContext.GetChain(1)
@@ -126,6 +128,9 @@ func TestAppContext(t *testing.T) {
 		// Check operational flags
 		assert.Equal(t, time.Second, *appContext.GetOperationalFlags().SignerBlockTimeOffset)
 
+		// Check unconfirmed tx count
+		assert.EqualValues(t, 3000, appContext.GetUnconfirmedTxCount())
+
 		t.Run("edge-cases", func(t *testing.T) {
 			for _, tt := range []struct {
 				name   string
@@ -135,7 +140,7 @@ func TestAppContext(t *testing.T) {
 				{
 					name: "update with empty chains results in an error",
 					act: func(a *AppContext) error {
-						return appContext.Update(newChains, nil, nil, ccFlags, opFlags)
+						return appContext.Update(newChains, nil, nil, ccFlags, opFlags, 1)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "no chain params present")
@@ -156,7 +161,7 @@ func TestAppContext(t *testing.T) {
 						chainParamsWithOpt := maps.Clone(chainParams)
 						chainParamsWithOpt[opParams.ChainId] = opParams
 
-						return a.Update(chainsWithOpt, additionalChains, chainParamsWithOpt, ccFlags, opFlags)
+						return a.Update(chainsWithOpt, additionalChains, chainParamsWithOpt, ccFlags, opFlags, 1)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorIs(t, err, ErrChainNotSupported)
@@ -167,7 +172,7 @@ func TestAppContext(t *testing.T) {
 					name: "trying to add zeta chain without chain params is allowed",
 					act: func(a *AppContext) error {
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
-						return a.Update(chainsWithZeta, additionalChains, chainParams, ccFlags, opFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParams, ccFlags, opFlags, 1)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -189,7 +194,7 @@ func TestAppContext(t *testing.T) {
 
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
 
-						return a.Update(chainsWithZeta, additionalChains, chainParamsWithZeta, ccFlags, opFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParamsWithZeta, ccFlags, opFlags, 1)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -212,7 +217,7 @@ func TestAppContext(t *testing.T) {
 						updatedChainParams[maticParams.ChainId] = maticParams
 						delete(updatedChainParams, chains.ZetaChainMainnet.ChainId)
 
-						return a.Update(newChains, additionalChains, updatedChainParams, ccFlags, opFlags)
+						return a.Update(newChains, additionalChains, updatedChainParams, ccFlags, opFlags, 1)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "unable to locate fresh chain 137 based on chain params")
