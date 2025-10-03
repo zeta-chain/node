@@ -207,6 +207,21 @@ func (c *Client) PostVoteInbound(
 }
 
 // getAdjustedGasLimitForInboundVote gets the adjusted gas limit and retry gas limit by checking previous failed ballots
+// In happy path, if 500K gas limit failed with out of gas, we retry with 7M gas limit for execution.
+// In edge case like mempool congestion, retrying a inbound causes more mempool traffic and make the situation worse. We
+// have to be more careful and avoid meaningless retries.
+//
+// For example, if a 500K vote already failed with out of gas, and the subsequent 7M vote didn't go through due to mempool
+// congestion, we should directly use 7M for future retries instead of following the 500K -> 7M path again.
+//
+// Example:
+// Case 1. vote already failed with 500K gas limit
+//   - input: gasLimit = 500K, retryGasLimit = 7M
+//   - output: gasLimit = 7M, retryGasLimit = 0 (retry with 7M only)
+//
+// Case 2. vote already failed with 7M gas limit
+//   - input: gasLimit = 500K, retryGasLimit = 7M
+//   - output: gasLimit = 0, retryGasLimit = 0 (not retryable, 7M is already the gas limit cap. Inbound is skipped.)
 func (c *Client) getAdjustedGasLimitForInboundVote(
 	ballotIndex string,
 	gasLimit, retryGasLimit uint64,
