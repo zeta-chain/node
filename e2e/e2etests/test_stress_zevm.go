@@ -94,38 +94,56 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 		// Send all transactions in this batch
 		for i := batchStart; i < batchEnd; i++ {
 			nonce := initialNonce + uint64(i)
+			txSent := false
+			retryCount := 0
 
-			// Create a new transactor with specific nonce
-			auth := *r.ZEVMAuth // copy the auth
-			auth.Nonce = big.NewInt(int64(nonce))
+			// Retry loop - infinite retries for mempool full
+			for !txSent {
+				// Create a new transactor with specific nonce
+				auth := *r.ZEVMAuth // copy the auth
+				auth.Nonce = big.NewInt(int64(nonce))
 
-			// Send transaction
-			tx, err := gasConsumer.OnCall(
-				&auth,
-				testgasconsumer.TestGasConsumerzContext{
-					Origin:  []byte{},
-					Sender:  gasConsumerAddress,
-					ChainID: big.NewInt(0),
-				},
-				gasConsumerAddress,
-				big.NewInt(0),
-				[]byte{},
-			)
+				// Send transaction
+				tx, err := gasConsumer.OnCall(
+					&auth,
+					testgasconsumer.TestGasConsumerzContext{
+						Origin:  []byte{},
+						Sender:  gasConsumerAddress,
+						ChainID: big.NewInt(0),
+					},
+					gasConsumerAddress,
+					big.NewInt(0),
+					[]byte{},
+				)
 
-			if err != nil {
-				r.Logger.Print("index %d (nonce %d): failed to send tx: %v", i, nonce, err)
-				if !bestEffortMode {
-					require.FailNow(r, fmt.Sprintf("failed to send transaction %d: %v", i, err))
+				if err != nil {
+					// Check if mempool is full
+					if isErrMempoolFull(err) {
+						retryCount++
+						r.Logger.Print("index %d (nonce %d): mempool is full (retry %d), waiting 5 seconds...",
+							i, nonce, retryCount)
+						time.Sleep(5 * time.Second)
+						continue // retry with same nonce
+					}
+
+					// Other errors - fail or skip
+					r.Logger.Print("index %d (nonce %d): failed to send tx: %v", i, nonce, err)
+					if !bestEffortMode {
+						require.FailNow(r, fmt.Sprintf("failed to send transaction %d: %v", i, err))
+					}
+					failedCount.Add(1)
+					break // exit retry loop and move to next transaction
 				}
-				failedCount.Add(1)
-				continue
+
+				// Success!
+				sentCount.Add(1)
+				txSent = true
+
+				txHashes <- txResult{index: uint64(i), hash: tx.Hash()}
+
+				// Small delay within batch to avoid overwhelming the node
+				time.Sleep(time.Millisecond * 10)
 			}
-
-			sentCount.Add(1)
-			txHashes <- txResult{index: uint64(i), hash: tx.Hash()}
-
-			// Small delay within batch to avoid overwhelming the node
-			time.Sleep(time.Millisecond * 10)
 		}
 
 		r.Logger.Print("batch %d/%d sent (%d txs)", batchIdx+1, batchCount, batchSize)

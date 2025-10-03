@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -46,7 +47,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	batchInterval := utils.ParseInt(r, args[3])
 
 	// configure test mode
-	bestEffortMode := false
+	bestEffortMode := true
 
 	r.Logger.Print("starting stress test of %d withdrawals (mode: best-effort=%v)", numWithdraws, bestEffortMode)
 
@@ -96,45 +97,61 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 
 		// Send all withdrawals in this batch
 		for i := batchStart; i < batchEnd; i++ {
-			// Create a new transactor with specific nonce
-			auth := *r.ZEVMAuth
-			auth.Nonce = big.NewInt(int64(currentNonce))
+			txSent := false
+			retryCount := 0
 
-			// Send withdrawal transaction
-			r.Logger.Print("gatewayzevm %s", r.GatewayZEVMAddr.Hex())
-			tx, err := r.GatewayZEVM.Withdraw0(
-				&auth,
-				r.EVMAddress().Bytes(),
-				withdrawalAmount,
-				r.ETHZRC20Addr,
-				gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
-			)
+			// Retry loop - infinite retries for mempool full, otherwise fail
+			for !txSent {
+				// Create a new transactor with specific nonce
+				auth := *r.ZEVMAuth
+				auth.Nonce = big.NewInt(int64(currentNonce))
 
-			if err != nil {
-				r.Logger.Print("index %d (nonce %d): failed to send withdrawal: %v", i, currentNonce, err)
-				if !bestEffortMode {
-					require.FailNow(r, fmt.Sprintf("failed to send withdrawal %d: %v", i, err))
+				// Send withdrawal transaction
+				r.Logger.Print("gatewayzevm %s", r.GatewayZEVMAddr.Hex())
+				tx, err := r.GatewayZEVM.Withdraw0(
+					&auth,
+					r.EVMAddress().Bytes(),
+					withdrawalAmount,
+					r.ETHZRC20Addr,
+					gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+				)
+
+				if err != nil {
+					// Check if mempool is full
+					if isErrMempoolFull(err) {
+						retryCount++
+						r.Logger.Print("index %d (nonce %d): mempool is full (retry %d), waiting 5 seconds...",
+							i, currentNonce, retryCount)
+						time.Sleep(5 * time.Second)
+						continue // retry with same nonce
+					}
+
+					// Other errors - fail or skip
+					r.Logger.Print("index %d (nonce %d): failed to send withdrawal: %v", i, currentNonce, err)
+					if !bestEffortMode {
+						require.FailNow(r, fmt.Sprintf("failed to send withdrawal %d: %v", i, err))
+					}
+					failedCount.Add(1)
+					currentNonce++ // increment to move past this failed tx
+					break          // exit retry loop and move to next withdrawal
 				}
-				failedCount.Add(1)
-				currentNonce++ // increment anyway to avoid nonce reuse
-				continue
+
+				sentCount.Add(1)
+				currentNonce++
+				txSent = true
+
+				r.Logger.Print("index %d: withdrawal broadcast, tx hash: %s", i, tx.Hash().Hex())
+
+				withdrawTxs <- withdrawResult{
+					index:       i,
+					txHash:      tx.Hash(),
+					startTime:   time.Now(),
+					submittedAt: time.Now(),
+				}
+
+				// Small delay within batch
+				time.Sleep(time.Millisecond * 20)
 			}
-
-			// Success - don't wait for receipt, just send to monitor
-			sentCount.Add(1)
-			currentNonce++
-
-			r.Logger.Print("index %d: withdrawal broadcast, tx hash: %s", i, tx.Hash().Hex())
-
-			withdrawTxs <- withdrawResult{
-				index:       i,
-				txHash:      tx.Hash(),
-				startTime:   time.Now(),
-				submittedAt: time.Now(),
-			}
-
-			// Small delay within batch
-			time.Sleep(time.Millisecond * 20)
 		}
 
 		r.Logger.Print("batch %d/%d sent (%d withdrawals)", batchIdx+1, batchCount, batchSize)
@@ -317,14 +334,6 @@ func monitorWithdrawals(
 	}
 }
 
-// minInt returns the minimum of two integers
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // waitForZEVMReceipt polls for a transaction receipt on zEVM until it's available or timeout
 func waitForZEVMReceipt(ctx context.Context, client bind.DeployBackend, hash common.Hash) (*types.Receipt, error) {
 	ticker := time.NewTicker(500 * time.Millisecond)
@@ -346,4 +355,23 @@ func waitForZEVMReceipt(ctx context.Context, client bind.DeployBackend, hash com
 			// Otherwise continue polling
 		}
 	}
+}
+
+// minInt returns the minimum of two integers
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// isErrMempoolFull checks if the error indicates mempool is full
+// there are two types of error messages reported when it happens
+func isErrMempoolFull(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "mempool is full") ||
+		strings.Contains(errMsg, "pool reached max tx capacity")
 }
