@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -71,7 +72,7 @@ func (ob *Observer) observeGatewayDeposit(
 	}
 
 	// parse and validate events
-	events := ob.parseAndValidateDepositEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	// post to zetacore
 	lastScanned := uint64(0)
@@ -116,6 +117,7 @@ func (ob *Observer) observeGatewayDeposit(
 
 // parseAndValidateDepositEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -149,7 +151,27 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Info().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple Deposited events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
@@ -205,7 +227,7 @@ func (ob *Observer) observeGatewayCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 	lastScanned := uint64(0)
 	for _, event := range events {
 		if event.Raw.BlockNumber > lastScanned {
@@ -236,6 +258,7 @@ func (ob *Observer) observeGatewayCall(
 
 // parseAndValidateCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -269,7 +292,29 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("Multiple Call events in same tx")
+
+			continue
+		}
+
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
@@ -310,7 +355,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateDepositAndCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositAndCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	lastScanned := uint64(0)
 	for _, event := range events {
@@ -347,6 +392,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 
 // parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositAndCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -381,7 +427,27 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// Check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple DepositedAndCalled events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
