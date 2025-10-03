@@ -236,8 +236,8 @@ func (c *Client) getAdjustedGasLimitForInboundVote(
 	return maxGasLimit, 0, true
 }
 
-// addFailedInboundBallotOutOfGas saves the failed inbound ballot together with the gas limit used in voting
-func (c *Client) addFailedInboundBallotOutOfGas(ballotIndex string, gasWanted int64) {
+// addReadyToExecuteInboundBallot saves the ready-to-execute inbound ballot and the gas limit used in last vote
+func (c *Client) addReadyToExecuteInboundBallot(ballotIndex string, gasWanted int64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -259,11 +259,11 @@ func (c *Client) addFailedInboundBallotOutOfGas(ballotIndex string, gasWanted in
 	c.logger.Info().
 		Str(logs.FieldBallotIndex, ballotIndex).
 		Uint64("gas_limit", gasLimit).
-		Msg("added failed inbound ballot out of gas")
+		Msg("added ready-to-execute inbound ballot")
 }
 
-// removeFailedInboundBallotOutOfGas removes the failed inbound ballot from the map
-func (c *Client) removeFailedInboundBallotOutOfGas(ballotIndex string) {
+// removeReadyToExecuteInboundBallot removes the ready-to-execute inbound ballot from the map
+func (c *Client) removeReadyToExecuteInboundBallot(ballotIndex string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -272,6 +272,6 @@ func (c *Client) removeFailedInboundBallotOutOfGas(ballotIndex string) {
 		c.logger.Info().
 			Str(logs.FieldBallotIndex, ballotIndex).
 			Uint64("gas_limit", lastGasLimit).
-			Msg("removed failed inbound ballot out of gas")
+			Msg("removed ready-to-execute inbound ballot")
 	}
 }
