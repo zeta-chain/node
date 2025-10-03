@@ -307,18 +307,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.AddPostUpgradeHandler(previousVersion, func() {
-		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
+	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
+		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
-		if !testSui || deployerRunner.IsRunningTssMigration() {
-			return
-		}
-
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
 	})
 
 	// if a config output is specified, write the config

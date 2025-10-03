@@ -25,8 +25,8 @@ func TestETHMultipleDeposits(r *runner.E2ERunner, args []string) {
 	previousValue := r.EVMAuth.Value
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
-	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
-	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+	// add 5 fees to provided amount to pay for 6 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(5)))
 	defer func() {
 		r.EVMAuth.Value = previousValue
 	}()
@@ -37,14 +37,20 @@ func TestETHMultipleDeposits(r *runner.E2ERunner, args []string) {
 	r.WaitForTxReceiptOnEVM(tx)
 
 	// wait for the cctxs to be mined
-	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 6, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctxs[0], "deposit eth")
-	r.Logger.CCTX(*cctxs[1], "deposit and call eth")
-	r.Logger.CCTX(*cctxs[2], "call")
+	r.Logger.CCTX(*cctxs[1], "deposit eth 2")
+	r.Logger.CCTX(*cctxs[2], "deposit and call eth")
+	r.Logger.CCTX(*cctxs[3], "deposit and call eth 2")
+	r.Logger.CCTX(*cctxs[4], "call")
+	r.Logger.CCTX(*cctxs[5], "call 2")
 
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[0].CctxStatus.Status)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[1].CctxStatus.Status)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[2].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[3].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[4].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[5].CctxStatus.Status)
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)

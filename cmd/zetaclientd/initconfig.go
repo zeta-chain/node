@@ -102,6 +102,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.RelayerKeyPath = opts.RelayerKeyPath
 	configData.MempoolCongestionTxCount = opts.MempoolCongestionTxCount
 	configData.ComplianceConfig = sample.ComplianceConfig()
+	configData.FeatureFlags = sample.FeatureFlags()
 
 	// Save config file
 	return config.Save(&configData, globalOpts.ZetacoreHome)

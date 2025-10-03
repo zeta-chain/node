@@ -356,3 +356,28 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 }
+
+// DeployTestDAppV2ZEVM deploys the test DApp V2 contract
+func (r *E2ERunner) DeployTestDAppV2ZEVM() {
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := e2eutils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage+" tx hash: "+tx.Hash().Hex())
+	}
+
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		true,
+		r.GatewayEVMAddr,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	r.TestDAppV2ZEVMAddr = testDAppV2Addr
+	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, isZetaChain)
+}
