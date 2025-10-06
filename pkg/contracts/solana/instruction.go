@@ -722,49 +722,49 @@ type ExecuteMsg struct {
 	Data     []byte
 }
 
-type ExecuteMsgALT struct {
-	AltAddress      [32]byte
-	WritableIndexes []uint8
-	Data            []byte
+type ExecuteMsgAddressLookupTable struct {
+	AddressLookupTableAddress [32]byte
+	WritableIndexes           []uint8
+	Data                      []byte
 }
 
-func (m *ExecuteMsgALT) Encode() ([]byte, error) {
-	return executeMsgALTAbi.Pack(m)
+func (m *ExecuteMsgAddressLookupTable) Encode() ([]byte, error) {
+	return executeMsgAddressLookupTableAbi.Pack(m)
 }
 
-func (m *ExecuteMsgALT) Decode(msgbz []byte) error {
-	unpacked, err := executeMsgALTAbi.Unpack(msgbz)
+func (m *ExecuteMsgAddressLookupTable) Decode(msgbz []byte) error {
+	unpacked, err := executeMsgAddressLookupTableAbi.Unpack(msgbz)
 	if err != nil {
-		return errors.Wrap(err, "error unpacking execute msg ALT")
+		return errors.Wrap(err, "error unpacking execute msg AddressLookupTable")
 	}
 
 	jsonMsg, err := json.Marshal(unpacked[0])
 	if err != nil {
-		return errors.Wrap(err, "error marshalling execute msg ALT [0]")
+		return errors.Wrap(err, "error marshalling execute msg AddressLookupTable [0]")
 	}
 
 	err = json.Unmarshal(jsonMsg, m)
 	if err != nil {
-		return errors.Wrap(err, "error unmarshalling execute msg ALT")
+		return errors.Wrap(err, "error unmarshalling execute msg AddressLookupTable")
 	}
 
 	return nil
 }
 
-var executeMsgALTAbi = mustGetExecuteMsgALTAbi()
+var executeMsgAddressLookupTableAbi = mustGetExecuteMsgAddressLookupTableAbi()
 
-func mustGetExecuteMsgALTAbi() abi.Arguments {
-	abiType, err := abi.NewType("tuple", "struct MsgALT", []abi.ArgumentMarshaling{
-		{Name: "altAddress", Type: "bytes32"},
+func mustGetExecuteMsgAddressLookupTableAbi() abi.Arguments {
+	abiType, err := abi.NewType("tuple", "struct MsgAddressLookupTable", []abi.ArgumentMarshaling{
+		{Name: "addressLookupTableAddress", Type: "bytes32"},
 		{Name: "writeableIndexes", Type: "uint8[]"},
 		{Name: "data", Type: "bytes"},
 	})
 	if err != nil {
-		panic(errors.Wrap(err, "error creating abi type for ExecuteMsgALT"))
+		panic(errors.Wrap(err, "error creating abi type for ExecuteMsgAddressLookupTable"))
 	}
 
 	return abi.Arguments{
-		{Type: abiType, Name: "msgALT"},
+		{Type: abiType, Name: "msgAddressLookupTable"},
 	}
 }
 
@@ -815,13 +815,13 @@ func mustGetExecuteMsgAbi() abi.Arguments {
 	}
 }
 
-// GenericExecuteMsg is a wrapper type that can hold either ExecuteMsg or ExecuteMsgALT.
+// GenericExecuteMsg is a wrapper type that can hold either ExecuteMsg or ExecuteMsgAddressLookupTable.
 type GenericExecuteMsg struct {
 	Legacy *ExecuteMsg
-	Alt    *ExecuteMsgALT
+	Alt    *ExecuteMsgAddressLookupTable
 }
 
-// DecodeExecuteMsg tries to decode into ExecuteMsg first, then ExecuteMsgALT.
+// DecodeExecuteMsg tries to decode into ExecuteMsg first, then ExecuteMsgAddressLookupTable.
 func DecodeExecuteMsg(msgbz []byte) (*GenericExecuteMsg, error) {
 	// Try legacy ExecuteMsg
 	{
@@ -837,19 +837,19 @@ func DecodeExecuteMsg(msgbz []byte) (*GenericExecuteMsg, error) {
 		}
 	}
 
-	// Fallback: try ExecuteMsgALT
+	// Fallback: try ExecuteMsgAddressLookupTable
 	{
-		unpacked, err := executeMsgALTAbi.Unpack(msgbz)
+		unpacked, err := executeMsgAddressLookupTableAbi.Unpack(msgbz)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to decode as either ExecuteMsg or ExecuteMsgALT")
+			return nil, errors.Wrap(err, "unable to decode as either ExecuteMsg or ExecuteMsgAddressLookupTable")
 		}
 		jsonMsg, err := json.Marshal(unpacked[0])
 		if err != nil {
-			return nil, errors.Wrap(err, "error marshalling execute msg ALT [0]")
+			return nil, errors.Wrap(err, "error marshalling execute msg AddressLookupTable [0]")
 		}
-		var alt ExecuteMsgALT
+		var alt ExecuteMsgAddressLookupTable
 		if err := json.Unmarshal(jsonMsg, &alt); err != nil {
-			return nil, errors.Wrap(err, "error unmarshalling execute msg ALT")
+			return nil, errors.Wrap(err, "error unmarshalling execute msg AddressLookupTable")
 		}
 		return &GenericExecuteMsg{Alt: &alt}, nil
 	}
@@ -866,10 +866,10 @@ func (g *GenericExecuteMsg) Data() []byte {
 	return nil
 }
 
-// AltAddress returns the ALT address if variant is ExecuteMsgALT, else zero address.
-func (g *GenericExecuteMsg) ALTAddress() *solana.PublicKey {
+// AddressLookupTableAddress returns the AddressLookupTable address if variant is ExecuteMsgAddressLookupTable, else zero address.
+func (g *GenericExecuteMsg) AddressLookupTableAddress() *solana.PublicKey {
 	if g.Alt != nil {
-		pk := solana.PublicKey(g.Alt.AltAddress)
+		pk := solana.PublicKey(g.Alt.AddressLookupTableAddress)
 		return &pk
 	}
 	return nil
@@ -883,7 +883,7 @@ func (g *GenericExecuteMsg) Accounts() []AccountMeta {
 	return nil
 }
 
-// WritableIndexes returns writable indexes if variant is ExecuteMsgALT, else nil.
+// WritableIndexes returns writable indexes if variant is ExecuteMsgAddressLookupTable, else nil.
 func (g *GenericExecuteMsg) WritableIndexes() []uint8 {
 	if g.Alt != nil {
 		return g.Alt.WritableIndexes

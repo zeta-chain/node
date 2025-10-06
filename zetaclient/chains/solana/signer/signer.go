@@ -277,12 +277,12 @@ func (signer *Signer) TryProcessOutbound(
 }
 
 // signTx creates and signs a Solana tx containing the provided instruction with the relayer key.
-// If `alt` is non-nil and `addrs` is non-empty, the transaction will include an address lookup table.
+// If `addressLookupTable` is non-nil and `addrs` is non-empty, the transaction will include an address lookup table.
 func (signer *Signer) signTx(
 	ctx context.Context,
 	inst *sol.GenericInstruction,
 	limit uint64,
-	alt *sol.PublicKey,
+	addressLookupTable *sol.PublicKey,
 	addrs sol.PublicKeySlice,
 ) (*sol.Transaction, error) {
 	// get a recent blockhash
@@ -306,10 +306,10 @@ func (signer *Signer) signTx(
 		sol.TransactionPayer(signer.relayerKey.PublicKey()),
 	}
 
-	// add ALT if provided
-	if alt != nil && len(addrs) > 0 {
+	// add AddressLookupTable if provided
+	if addressLookupTable != nil && len(addrs) > 0 {
 		opts = append(opts, sol.TransactionAddressTables(map[sol.PublicKey]sol.PublicKeySlice{
-			*alt: addrs,
+			*addressLookupTable: addrs,
 		}))
 	}
 
@@ -408,17 +408,17 @@ func (signer *Signer) broadcastOutbound(
 }
 
 // createOutboundWithFallback creates an outbound with a main transaction and fallback message,
-// signed with the relayer key. If an ALT is provided, the transaction will include it.
+// signed with the relayer key. If an addressLookupTable is provided, the transaction will include it.
 func (signer *Signer) createOutboundWithFallback(
 	ctx context.Context,
 	mainInst *sol.GenericInstruction,
 	msgIn *contracts.MsgIncrementNonce,
 	computeLimit uint64,
-	alt *sol.PublicKey,
+	addressLookupTable *sol.PublicKey,
 	addrs sol.PublicKeySlice,
 ) (*Outbound, error) {
 	// Create and sign main transaction
-	tx, err := signer.signTx(ctx, mainInst, computeLimit, alt, addrs)
+	tx, err := signer.signTx(ctx, mainInst, computeLimit, addressLookupTable, addrs)
 	if err != nil {
 		return nil, errors.Wrap(err, "error signing main instruction")
 	}

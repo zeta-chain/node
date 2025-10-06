@@ -52,8 +52,8 @@ func (signer *Signer) prepareExecuteTx(
 			inst,
 			msgIn,
 			params.CallOptions.GasLimit,
-			msg.ALT(),
-			msg.ALTStateAddresses(),
+			msg.AddressLookupTable(),
+			msg.AddressLookupTableStateAddresses(),
 		)
 	}, nil
 }
@@ -92,7 +92,7 @@ func (signer *Signer) prepareExecuteMsgParams(
 	msg *contracts.GenericExecuteMsg,
 ) ([]*sol.AccountMeta, sol.PublicKeySlice, error) {
 	remainingAccounts := []*sol.AccountMeta{}
-	if msg.ALTAddress() == nil {
+	if msg.AddressLookupTableAddress() == nil {
 		for _, a := range msg.Legacy.Accounts {
 			remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
 				PublicKey:  sol.PublicKey(a.PublicKey),
@@ -105,12 +105,14 @@ func (signer *Signer) prepareExecuteMsgParams(
 
 	client, ok := signer.solanaClient.(*rpc.Client)
 	if !ok {
-		return nil, nil, stderrors.New("ALT lookup requires *rpc.Client; got different SolanaClient implementation")
+		return nil, nil, stderrors.New(
+			"AddressLookupTable lookup requires *rpc.Client; got different SolanaClient implementation",
+		)
 	}
 	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
 		ctx,
 		client,
-		*msg.ALTAddress(),
+		*msg.AddressLookupTableAddress(),
 		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
 	)
 
@@ -169,7 +171,7 @@ func (signer *Signer) createMsgExecute(
 		return nil, nil, errors.Wrap(err, "cannot validate sender")
 	}
 
-	remainingAccounts, altAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
+	remainingAccounts, addressLookupTableStateAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot prepare execute msg params")
 	}
@@ -183,8 +185,8 @@ func (signer *Signer) createMsgExecute(
 		msg.Data(),
 		executeType,
 		remainingAccounts,
-		msg.ALTAddress(),
-		altAddresses,
+		msg.AddressLookupTableAddress(),
+		addressLookupTableStateAddresses,
 	)
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
 

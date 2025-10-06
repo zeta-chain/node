@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -104,20 +103,7 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
 	// check pda account info of connected program
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
-
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        common.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 

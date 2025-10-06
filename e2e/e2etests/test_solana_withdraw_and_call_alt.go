@@ -6,7 +6,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -16,23 +15,23 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSolanaWithdrawAndCallALT executes withdrawAndCall on zevm and calls connected program on solana
-// similar to TestSolanaWithdrawAndCall, but uses ALT to provide accounts for connected program
-func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
+// TestSolanaWithdrawAndCallAddressLookupTable executes withdrawAndCall on zevm and calls connected program on solana
+// similar to TestSolanaWithdrawAndCall, but uses AddressLookupTable to provide accounts for connected program
+func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string) {
 	require.True(r, len(args) == 1 || len(args) == 3)
 
 	var (
-		altAddress      solana.PublicKey
-		writableIndexes []uint8
-		initALT         bool
+		addressLookupTableAddress solana.PublicKey
+		writableIndexes           []uint8
+		initAddressLookupTable    bool
 	)
 	if len(args) == 3 {
 		var err error
-		altAddress, err = solana.PublicKeyFromBase58(args[1])
-		require.NoError(r, err, "invalid ALT address")
+		addressLookupTableAddress, err = solana.PublicKeyFromBase58(args[1])
+		require.NoError(r, err, "invalid AddressLookupTable address")
 		writableIndexes = utils.ParseUint8Array(r, args[2])
 	} else {
-		initALT = true
+		initAddressLookupTable = true
 	}
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
@@ -61,9 +60,9 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
 
-	// in case ALT address is not provided (eg. for local testing) use prefunded random accounts to create ALT
+	// in case AddressLookupTable address is not provided (eg. for local testing) use prefunded random accounts to create AddressLookupTable
 	randomWallets := []solana.PublicKey{}
-	if initALT {
+	if initAddressLookupTable {
 		accounts := []solana.PublicKey{}
 
 		accounts = append(accounts, connectedPda)
@@ -73,7 +72,7 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		predefinedAccountsLen := len(accounts)
 		writableIndexes = []uint8{0} // only first one is mutable
 
-		altAddress, randomWallets = r.SetupTestALTWithRandomWallets(accounts)
+		addressLookupTableAddress, randomWallets = r.SetupTestAddressLookupTableWithRandomWallets(accounts)
 
 		// based on example accounts from above, all random wallets are writable
 		// since they will get some lamports from connected program example
@@ -86,10 +85,10 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		}
 	}
 
-	msg := solanacontract.ExecuteMsgALT{
-		AltAddress:      [32]byte(altAddress),
-		WritableIndexes: writableIndexes,
-		Data:            []byte("hello"),
+	msg := solanacontract.ExecuteMsgAddressLookupTable{
+		AddressLookupTableAddress: [32]byte(addressLookupTableAddress),
+		WritableIndexes:           writableIndexes,
+		Data:                      []byte("hello"),
 	}
 
 	encoded, err := msg.Encode()
@@ -129,17 +128,7 @@ func TestSolanaWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
 
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        common.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 

@@ -47,8 +47,8 @@ func (signer *Signer) prepareExecuteSPLTx(
 			inst,
 			msgIn,
 			params.CallOptions.GasLimit,
-			msg.ALT(),
-			msg.ALTStateAddresses(),
+			msg.AddressLookupTable(),
+			msg.AddressLookupTableStateAddresses(),
 		)
 	}, nil
 }
@@ -115,7 +115,7 @@ func (signer *Signer) createMsgExecuteSPL(
 		)
 	}
 
-	remainingAccounts, altAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
+	remainingAccounts, addressLookupTableStateAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot prepare execute msg params")
 	}
@@ -133,8 +133,8 @@ func (signer *Signer) createMsgExecuteSPL(
 		msg.Data(),
 		executeType,
 		remainingAccounts,
-		msg.ALTAddress(),
-		altAddresses,
+		msg.AddressLookupTableAddress(),
+		addressLookupTableStateAddresses,
 	)
 
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)

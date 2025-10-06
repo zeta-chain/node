@@ -417,7 +417,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSolanaDepositThroughProgramName,
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
-				e2etests.TestSolanaWithdrawAndCallALTName,
+				e2etests.TestSolanaWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
 				e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
 				e2etests.TestZEVMToSolanaCallName,
@@ -439,7 +439,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
-				e2etests.TestSPLWithdrawAndCallALTName,
+				e2etests.TestSPLWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
 				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 				// TODO move under admin tests

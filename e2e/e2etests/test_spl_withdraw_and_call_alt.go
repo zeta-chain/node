@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -17,23 +16,23 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCallALT executes spl withdrawAndCall on zevm and calls connected program on solana
-// similar to TestSPLWithdrawAndCall, but uses ALT to provide accounts for connected program
-func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
+// TestSPLWithdrawAndCallAddressLookupTable executes spl withdrawAndCall on zevm and calls connected program on solana
+// similar to TestSPLWithdrawAndCall, but uses AddressLookupTable to provide accounts for connected program
+func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string) {
 	require.True(r, len(args) == 1 || len(args) == 3)
 
 	var (
-		altAddress      solana.PublicKey
-		writableIndexes []uint8
-		initALT         bool
+		addressLookupTableAddress solana.PublicKey
+		writableIndexes           []uint8
+		initAddressLookupTable    bool
 	)
 	if len(args) == 3 {
 		var err error
-		altAddress, err = solana.PublicKeyFromBase58(args[1])
-		require.NoError(r, err, "invalid ALT address")
+		addressLookupTableAddress, err = solana.PublicKeyFromBase58(args[1])
+		require.NoError(r, err, "invalid AddressLookupTable address")
 		writableIndexes = utils.ParseUint8Array(r, args[2])
 	} else {
-		initALT = true
+		initAddressLookupTable = true
 	}
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
@@ -71,9 +70,9 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL before withdraw: %s", connectedPdaBalanceBefore.Value.Amount)
 
-	// in case ALT address is not provided (eg. for local testing) use prefunded random accounts to create ALT
+	// in case AddressLookupTable address is not provided (eg. for local testing) use prefunded random accounts to create AddressLookupTable
 	randomWallets := []solana.PublicKey{}
-	if initALT {
+	if initAddressLookupTable {
 		accounts := []solana.PublicKey{}
 
 		accounts = append(accounts, connectedPda)
@@ -85,7 +84,7 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		predefinedAccountsLen := len(accounts)
 		writableIndexes = []uint8{0, 1} // only first 2 are mutable
 
-		altAddress, randomWallets = r.SetupTestALTWithRandomWalletsSPL(accounts)
+		addressLookupTableAddress, randomWallets = r.SetupTestAddressLookupTableWithRandomWalletsSPL(accounts)
 
 		// based on example accounts from above, all random wallets are writable
 		// since they will get some SPL from connected program example
@@ -98,10 +97,10 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 		}
 	}
 
-	msg := solanacontract.ExecuteMsgALT{
-		AltAddress:      [32]byte(altAddress),
-		WritableIndexes: writableIndexes,
-		Data:            []byte("hello"),
+	msg := solanacontract.ExecuteMsgAddressLookupTable{
+		AddressLookupTableAddress: [32]byte(addressLookupTableAddress),
+		WritableIndexes:           writableIndexes,
+		Data:                      []byte("hello"),
 	}
 
 	msgEncoded, err := msg.Encode()
@@ -138,20 +137,7 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
 	// check pda account info of connected program
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
-
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        common.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 

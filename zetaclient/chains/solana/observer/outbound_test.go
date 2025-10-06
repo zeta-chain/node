@@ -48,14 +48,14 @@ const (
 	// executeTxTest is local devnet tx result for testing
 	executeTxTest = "4ZuPTkYtBGDyDZNHKyHxEKL98VeaefAMUzmZVL2BrgwCvog7CqpjrRoegXDt6bD7w8dffGKGcDZqFYFi5vkAK8eo"
 
-	// executeTxALTTest is local devnet tx result for testing
-	executeTxALTTest = "58azV5L9kTLV7p3XRQRioorv6PvYzz1M6bNLfLjfwYoDuRcVv3A52QdCrr81yEYbc3vvVKxRCZdj4DcfTtDQdCPr"
+	// executeTxAddressLookupTableTest is local devnet tx result for testing
+	executeTxAddressLookupTableTest = "58azV5L9kTLV7p3XRQRioorv6PvYzz1M6bNLfLjfwYoDuRcVv3A52QdCrr81yEYbc3vvVKxRCZdj4DcfTtDQdCPr"
 
 	// executeSPLTxTest is local devnet tx result for testing
 	executeSPLTxTest = "d3WvqtwFws9yftpxSrmwXqb48ZbBVjvxz34zY5Mo9TxaAPxsudPa68nDXZeShvK8UqtM84TgGfpdrgeX65q5WCW"
 
-	// executeSPLTxALTTest is local devnet tx result for testing
-	executeSPLTxALTTest = "ayu91XsBcdpqTPmkxB5vfVRpJUsjxyXZhGg4RTAStU7zufqRQsAjEq3CtWhcAWgjayNZiJ3f5gX8oNfz87sbrHE"
+	// executeSPLTxAddressLookupTableTest is local devnet tx result for testing
+	executeSPLTxAddressLookupTableTest = "ayu91XsBcdpqTPmkxB5vfVRpJUsjxyXZhGg4RTAStU7zufqRQsAjEq3CtWhcAWgjayNZiJ3f5gX8oNfz87sbrHE"
 
 	// incrementNonceTxTest is local devnet tx result for testing
 	incrementNonceTxTest = "5dpFTsscUKCGVQzL9bAUSuEE6yLXaf7d1wMjZa7RLqvtSUtAdfcdxQHNsbfcS2Sfzu4zBVxMJC2KWzuaUUbg1ZGk"
@@ -632,14 +632,14 @@ func Test_ParseInstructionExecute(t *testing.T) {
 	})
 }
 
-func Test_ParseInstructionExecuteALT(t *testing.T) {
+func Test_ParseInstructionExecuteAddressLookupTable(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
-	txHash := executeTxALTTest
+	txHash := executeTxAddressLookupTableTest
 	txAmount := uint64(1000000)
 	instructionIndex := 1
 
-	t.Run("should parse instruction execute with ALT", func(t *testing.T) {
+	t.Run("should parse instruction execute with AddressLookupTable", func(t *testing.T) {
 		// ARRANGE
 		// load and unmarshal archived transaction
 		// tss address used in local devnet
@@ -705,14 +705,14 @@ func Test_ParseInstructionExecuteALT(t *testing.T) {
 	})
 }
 
-func Test_ParseInstructionExecuteSPLALT(t *testing.T) {
+func Test_ParseInstructionExecuteSPLAddressLookupTable(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
-	txHash := executeSPLTxALTTest
+	txHash := executeSPLTxAddressLookupTableTest
 	txAmount := uint64(1000000)
 	instructionIndex := 1
 
-	t.Run("should parse instruction execute SPL with ALT", func(t *testing.T) {
+	t.Run("should parse instruction execute SPL with AddressLookupTable", func(t *testing.T) {
 		// ARRANGE
 		// load and unmarshal archived transaction
 		// tss address used in local devnet
