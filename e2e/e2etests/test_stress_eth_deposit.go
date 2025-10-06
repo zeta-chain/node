@@ -105,7 +105,6 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 					require.FailNow(r, fmt.Sprintf("failed to send deposit %d: %v", i, err))
 				}
 				failedCount.Add(1)
-				currentNonce++
 				continue
 			}
 

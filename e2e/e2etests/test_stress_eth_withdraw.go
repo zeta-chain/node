@@ -132,8 +132,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 						require.FailNow(r, fmt.Sprintf("failed to send withdrawal %d: %v", i, err))
 					}
 					failedCount.Add(1)
-					currentNonce++ // increment to move past this failed tx
-					break          // exit retry loop and move to next withdrawal
+					break // exit retry loop and move to next withdrawal
 				}
 
 				sentCount.Add(1)
