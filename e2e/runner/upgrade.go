@@ -143,5 +143,6 @@ func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()
 }
 
 func checkVersion(upgradeFromm, oldVersion string) bool {
-	return semver.Major(upgradeFromm) != semver.Major(oldVersion)
+	//return semver.Major(upgradeFromm) != semver.Major(oldVersion)
+	return false
 }

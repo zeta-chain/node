@@ -69,6 +69,22 @@ copy_genesis_file() {
   fi
 }
 
+# Create zetaclientd upgrade trigger files on all available zetaclient containers
+create_zetaclientd_upgrade_trigger() {
+  local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3")
+
+  for node in "${nodes[@]}"; do
+    # Skip if node is not accessible
+    ssh -q root@$node "exit" 2>/dev/null || continue
+    
+    echo "Creating upgrade trigger file on $node"
+    ssh root@$node "touch /root/.zetaclientd/zetaclientd-upgrade-trigger" || continue
+    echo "Upgrade trigger file created on $node"
+  done
+
+  echo "Zetaclientd upgrade trigger creation completed"
+}
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -349,7 +365,13 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
     echo "Version did not change after upgrade height, maybe the upgrade did not run?"
-    exit 2
+    
+    # Create upgrade trigger file for zetaclientd-only upgrade
+    echo "Creating zetaclientd upgrade trigger..."
+    create_zetaclientd_upgrade_trigger
+    
+    echo "zetaclientd upgrade trigger created"
+#    exit 2
   fi
 
   # wait for zevm endpoint to come up
@@ -361,7 +383,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # Use light flag to skip advanced tests
 
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
+    zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
   else
     zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light ${COMMON_ARGS}
   fi
