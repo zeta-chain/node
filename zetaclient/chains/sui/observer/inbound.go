@@ -86,7 +86,8 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
 				Msg("unable to process inbound tracker")
 		}
