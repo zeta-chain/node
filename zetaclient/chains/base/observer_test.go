@@ -219,6 +219,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Inbound.Info().Msg("print inbound log")
 		logger.Outbound.Info().Msg("print outbound log")
 		logger.Compliance.Info().Msg("print compliance log")
+		logger.Sampled.Info().Msg("print sampled log")
 	})
 }
 

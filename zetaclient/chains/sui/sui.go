@@ -81,9 +81,9 @@ func (s *Sui) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().GasPriceTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool { return inboundSkipper(s, app) })
-	optOutboundSkipper := scheduler.Skipper(func() bool { return outboundSkipper(s, app) })
-	optGasPriceSkipper := scheduler.Skipper(func() bool { return gasPriceSkipper(s, app) })
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(s.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
 	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
@@ -217,56 +217,4 @@ func (s *Sui) outboundLogger(id string) *zerolog.Logger {
 	l := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
-}
-
-// inboundSkipper returns a skipper function for inbound observation.
-func inboundSkipper(s *Sui, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isInboundEnabled := app.IsInboundObservationEnabled()
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || !isInboundEnabled || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_enabled", isInboundEnabled).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip inbound observation")
-		return true
-	}
-	return false
-}
-
-// outboundSkipper returns a skipper function for outbound observation.
-func outboundSkipper(s *Sui, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isOutboundEnabled := app.IsOutboundObservationEnabled()
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || !isOutboundEnabled || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_enabled", isOutboundEnabled).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip outbound observation")
-		return true
-	}
-	return false
-}
-
-// gasPriceSkipper returns a skipper function for gas price observation.
-func gasPriceSkipper(s *Sui, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip gas price observation")
-		return true
-	}
-	return false
 }

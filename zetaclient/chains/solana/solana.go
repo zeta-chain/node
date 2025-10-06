@@ -75,9 +75,9 @@ func (s *Solana) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool { return inboundSkipper(s, app) })
-	optOutboundSkipper := scheduler.Skipper(func() bool { return outboundSkipper(s, app) })
-	optGasPriceSkipper := scheduler.Skipper(func() bool { return gasPriceSkipper(s, app) })
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(s.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -226,56 +226,4 @@ func (s *Solana) updateChainParams(ctx context.Context) error {
 	s.signer.SetGatewayAddress(params.GatewayAddress)
 
 	return nil
-}
-
-// inboundSkipper returns a skipper function for inbound observation.
-func inboundSkipper(s *Solana, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isInboundEnabled := app.IsInboundObservationEnabled()
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || !isInboundEnabled || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_enabled", isInboundEnabled).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip inbound observation")
-		return true
-	}
-	return false
-}
-
-// outboundSkipper returns a skipper function for outbound observation.
-func outboundSkipper(s *Solana, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isOutboundEnabled := app.IsOutboundObservationEnabled()
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || !isOutboundEnabled || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_enabled", isOutboundEnabled).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip outbound observation")
-		return true
-	}
-	return false
-}
-
-// gasPriceSkipper returns a skipper function for gas price observation.
-func gasPriceSkipper(s *Solana, app *zctx.AppContext) bool {
-	isSupported := s.observer.ChainParams().IsSupported
-	isMempoolCongested := app.IsMempoolCongested()
-
-	if !isSupported || isMempoolCongested {
-		s.observer.Logger().
-			Chain.Debug().
-			Bool("is_supported", isSupported).
-			Bool("is_congested", isMempoolCongested).
-			Msg("skip gas price observation")
-		return true
-	}
-	return false
 }
