@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"encoding/hex"
+	stderrors "errors"
 	"fmt"
 
 	"cosmossdk.io/errors"
@@ -102,18 +103,23 @@ func (signer *Signer) prepareExecuteMsgParams(
 		return remainingAccounts, nil, nil
 	}
 
+	client, ok := signer.solanaClient.(*rpc.Client)
+	if !ok {
+		return nil, nil, stderrors.New("ALT lookup requires *rpc.Client; got different SolanaClient implementation")
+	}
 	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
 		ctx,
-		signer.solanaClient.(*rpc.Client),
+		client,
 		*msg.ALTAddress(),
 		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
 	)
+
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot get alt")
 	}
 
-	writableSet := make(map[int]struct{}, len(msg.Alt.WriteableIndexes))
-	for _, j := range msg.Alt.WriteableIndexes {
+	writableSet := make(map[int]struct{}, len(msg.Alt.WritableIndexes))
+	for _, j := range msg.Alt.WritableIndexes {
 		writableSet[int(j)] = struct{}{}
 	}
 

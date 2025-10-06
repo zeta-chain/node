@@ -723,9 +723,9 @@ type ExecuteMsg struct {
 }
 
 type ExecuteMsgALT struct {
-	AltAddress       [32]byte
-	WriteableIndexes []uint8
-	Data             []byte
+	AltAddress      [32]byte
+	WritableIndexes []uint8
+	Data            []byte
 }
 
 func (m *ExecuteMsgALT) Encode() ([]byte, error) {
@@ -870,7 +870,7 @@ func (g *GenericExecuteMsg) Data() []byte {
 func (g *GenericExecuteMsg) ALTAddress() *solana.PublicKey {
 	if g.Alt != nil {
 		pk := solana.PublicKey(g.Alt.AltAddress)
-		return pk.ToPointer()
+		return &pk
 	}
 	return nil
 }
@@ -883,10 +883,10 @@ func (g *GenericExecuteMsg) Accounts() []AccountMeta {
 	return nil
 }
 
-// WriteableIndexes returns writable indexes if variant is ExecuteMsgALT, else nil.
-func (g *GenericExecuteMsg) WriteableIndexes() []uint8 {
+// WritableIndexes returns writable indexes if variant is ExecuteMsgALT, else nil.
+func (g *GenericExecuteMsg) WritableIndexes() []uint8 {
 	if g.Alt != nil {
-		return g.Alt.WriteableIndexes
+		return g.Alt.WritableIndexes
 	}
 	return nil
 }

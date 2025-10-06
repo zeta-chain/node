@@ -22,12 +22,21 @@ import (
 func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	require.True(r, len(args) == 1 || len(args) == 3)
 
+	var (
+		altAddress      solana.PublicKey
+		writableIndexes []uint8
+		initALT         bool
+	)
+	if len(args) == 3 {
+		var err error
+		altAddress, err = solana.PublicKeyFromBase58(args[1])
+		require.NoError(r, err, "invalid ALT address")
+		writableIndexes = utils.ParseUint8Array(r, args[2])
+	} else {
+		initALT = true
+	}
+
 	withdrawAmount := utils.ParseBigInt(r, args[0])
-
-	altAddress, err := solana.PublicKeyFromBase58(args[1])
-	initALT := err != nil
-
-	writableIndexes := utils.ParseUint8Array(r, args[2])
 
 	// get SPL ZRC20 balance before withdraw
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -90,9 +99,9 @@ func TestSPLWithdrawAndCallALT(r *runner.E2ERunner, args []string) {
 	}
 
 	msg := solanacontract.ExecuteMsgALT{
-		AltAddress:       altAddress,
-		WriteableIndexes: writableIndexes,
-		Data:             []byte("hello"),
+		AltAddress:      [32]byte(altAddress),
+		WritableIndexes: writableIndexes,
+		Data:            []byte("hello"),
 	}
 
 	msgEncoded, err := msg.Encode()
