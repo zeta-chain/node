@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PureUint64ArgFromStr converts a string to a uint64 and creates a PTB pure argument
+// PureUint64FromString converts a string to a uint64 and creates a PTB pure argument
 func PureUint64FromString(
 	ptb *suiptb.ProgrammableTransactionBuilder,
 	integerStr string,
