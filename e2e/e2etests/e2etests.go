@@ -1364,6 +1364,7 @@ var AllE2ETests = []runner.E2ETest{
 		"bitcoin -> zevm call revert with excessive funds",
 		[]runner.ArgDefinition{},
 		TestBitcoinToZEVMCallExcessiveFundsRevert,
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,

@@ -161,6 +161,10 @@ func (c *Client) PostVoteInbound(
 		return "", "", err
 	}
 
+	// zetaclient patch
+	// force use SAFE mode for all inbound votes (both fast and slow votes)
+	msg.ConfirmationMode = types.ConfirmationMode_SAFE
+
 	// don't post send if has already voted before
 	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ctx, ballotIndex, msg.Creator)
