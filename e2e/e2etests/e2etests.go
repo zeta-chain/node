@@ -748,8 +748,6 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SOL from ZEVM and call solana program using Address Lookup Table",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
-			{Description: "Address Lookup Table address", DefaultValue: ""},
-			{Description: "indexes of Address Lookup Table accounts that are mutable", DefaultValue: ""},
 		},
 		TestSolanaWithdrawAndCallAddressLookupTable,
 		runner.WithMinimumVersion("v29.0.0"),
@@ -808,8 +806,6 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SPL from ZEVM and call solana program using Address Lookup Table",
 		[]runner.ArgDefinition{
 			{Description: "amount in spl", DefaultValue: "1000000"},
-			{Description: "Address Lookup Table address", DefaultValue: ""},
-			{Description: "indexes of Address Lookup Table accounts that are mutable", DefaultValue: ""},
 		},
 		TestSPLWithdrawAndCallAddressLookupTable,
 		runner.WithMinimumVersion("v29.0.0"),
