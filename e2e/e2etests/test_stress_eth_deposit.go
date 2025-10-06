@@ -38,7 +38,7 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 
 	// configure test mode
 	// true: tolerates transaction failures and reports statistics at the end
-	bestEffortMode := true
+	bestEffortMode := false
 
 	r.Logger.Print("starting stress test of %d deposits (mode: best-effort=%v)", numDeposits, bestEffortMode)
 
@@ -93,9 +93,10 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 			auth.Value = depositAmount
 
 			// Send deposit transaction
-			tx, err := r.GatewayEVM.Deposit1(
+			tx, err := r.GatewayEVM.DepositAndCall0(
 				&auth,
-				r.EVMAddress(),
+				r.TestDAppV2ZEVMAddr,
+				[]byte(randomPayload(r)),
 				gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 			)
 
