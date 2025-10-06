@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
 
 // prepareExecuteTx prepares execute outbound
@@ -103,10 +104,14 @@ func (signer *Signer) prepareExecuteMsgParams(
 		return remainingAccounts, nil, nil
 	}
 
+	if !zctx.EnableSolanaAddressLookupTableFeatureFlag(ctx) {
+		return nil, nil, stderrors.New("solana AddressLookupTable feature is disabled")
+	}
+
 	client, ok := signer.solanaClient.(*rpc.Client)
 	if !ok {
 		return nil, nil, stderrors.New(
-			"AddressLookupTable lookup requires *rpc.Client; got different SolanaClient implementation",
+			"solana AddressLookupTable requires *rpc.Client; got different SolanaClient implementation",
 		)
 	}
 	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(

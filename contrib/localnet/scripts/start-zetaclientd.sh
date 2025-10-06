@@ -15,7 +15,7 @@ set_sepolia_endpoint() {
 }
 
 enable_multiple_calls() {
-  jq '.FeatureFlags = {"EnableMultipleCalls": true}' \
+  jq '.FeatureFlags = {"EnableMultipleCalls": true, "EnableSolanaAddressLookupTable": true}' \
     /root/.zetacored/config/zetaclient_config.json > tmp.json && \
   mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }

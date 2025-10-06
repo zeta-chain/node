@@ -77,6 +77,9 @@ type ComplianceConfig struct {
 type FeatureFlags struct {
 	// EnableMultipleCalls enables multiple calls from the same transaction
 	EnableMultipleCalls bool `json:"EnableMultipleCalls"`
+
+	// EnableSolanaAddressLookupTable enables using Solana Address Lookup Table for withdraw and call
+	EnableSolanaAddressLookupTable bool `json:"EnableSolanaAddressLookupTable"`
 }
 
 // Config is the config for ZetaClient
@@ -247,4 +250,11 @@ func (c Config) IsEnableMultipleCallsEnabled() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.FeatureFlags.EnableMultipleCalls
+}
+
+// IsEnableSolanaAddressLookupTable returns true if Solana Address Lookup Table is enabled for withdraw and call
+func (c Config) IsEnableSolanaAddressLookupTable() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableSolanaAddressLookupTable
 }
