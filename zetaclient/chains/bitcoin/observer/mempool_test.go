@@ -17,7 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
-func TestObserveMempool(t *testing.T) {
+func TestObserveBTCMempool(t *testing.T) {
 	var (
 		sampleTx1 = btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 		sampleTx2 = btcutil.NewTx(wire.NewMsgTx(2))
@@ -107,7 +107,7 @@ func TestObserveMempool(t *testing.T) {
 			}
 
 			// ACT
-			err := ts.ObserveMempool(ctx)
+			err := ts.ObserveBTCMempool(ctx)
 
 			// ASSERT
 			if tt.errContains != "" {

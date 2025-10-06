@@ -4,7 +4,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/context"
 )
 
-// CheckSkipInbound returns true if inbound observation should be skipped.
+// CheckSkipInbound returns true if inbound related observations should be skipped.
 func CheckSkipInbound(ob *Observer, app *context.AppContext) bool {
 	isSupported := ob.ChainParams().IsSupported
 	isInboundEnabled := app.IsInboundObservationEnabled()
@@ -22,7 +22,7 @@ func CheckSkipInbound(ob *Observer, app *context.AppContext) bool {
 	return false
 }
 
-// CheckSkipOutbound returns true if outbound observation should be skipped.
+// CheckSkipOutbound returns true if outbound related observations should be skipped.
 func CheckSkipOutbound(ob *Observer, app *context.AppContext) bool {
 	isSupported := ob.ChainParams().IsSupported
 	isOutboundEnabled := app.IsOutboundObservationEnabled()
