@@ -17,9 +17,9 @@ func Test_GetRelayerKeyPath(t *testing.T) {
 }
 
 func Test_GetMempoolCongestionThreshold(t *testing.T) {
-	t.Run("should return default mempool congestion threshold", func(t *testing.T) {
+	t.Run("should return zero mempool congestion threshold", func(t *testing.T) {
 		cfg := config.New(false)
-		require.EqualValues(t, config.DefaultMempoolCongestionThreshold, cfg.GetMempoolCongestionThreshold())
+		require.Zero(t, cfg.GetMempoolCongestionThreshold())
 	})
 
 	t.Run("should return configured mempool congestion threshold", func(t *testing.T) {

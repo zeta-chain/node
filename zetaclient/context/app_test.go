@@ -32,6 +32,7 @@ func TestAppContext(t *testing.T) {
 		}
 	)
 
+	testCfg.MempoolCongestionThreshold = 1
 	testCfg.BTCChainConfigs[111] = config.BTCConfig{RPCUsername: "satoshi"}
 
 	ethParams := types.GetDefaultEthMainnetChainParams()
@@ -89,7 +90,7 @@ func TestAppContext(t *testing.T) {
 		}
 
 		// ACT
-		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags, 3000)
+		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags, 2)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -129,7 +130,7 @@ func TestAppContext(t *testing.T) {
 		assert.Equal(t, time.Second, *appContext.GetOperationalFlags().SignerBlockTimeOffset)
 
 		// Check unconfirmed tx count
-		assert.EqualValues(t, 3000, appContext.GetUnconfirmedTxCount())
+		assert.EqualValues(t, 2, appContext.GetUnconfirmedTxCount())
 
 		t.Run("edge-cases", func(t *testing.T) {
 			for _, tt := range []struct {

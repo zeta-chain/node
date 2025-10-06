@@ -238,10 +238,6 @@ func (c Config) GetRelayerKeyPath() string {
 func (c Config) GetMempoolCongestionThreshold() int64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-
-	if c.MempoolCongestionThreshold <= 0 {
-		return DefaultMempoolCongestionThreshold
-	}
 	return c.MempoolCongestionThreshold
 }
 

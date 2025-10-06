@@ -118,8 +118,13 @@ func (a *AppContext) GetUnconfirmedTxCount() int64 {
 }
 
 // IsMempoolCongested returns true if the mempool is congested
+// 0 mempool congestion threshold means the feature is disabled and congestion is ignored
 func (a *AppContext) IsMempoolCongested() bool {
-	return a.GetUnconfirmedTxCount() >= a.config.GetMempoolCongestionThreshold()
+	mempoolThreshold := a.config.GetMempoolCongestionThreshold()
+	if mempoolThreshold <= 0 {
+		return false
+	}
+	return a.GetUnconfirmedTxCount() > mempoolThreshold
 }
 
 // Update updates AppContext and params for all chains
@@ -150,16 +155,17 @@ func (a *AppContext) Update(
 		return errors.Wrap(err, "unable to update chain registry")
 	}
 
+	// print warning if mempool is congested
+	if int64(unconfirmedTxCount) > a.config.GetMempoolCongestionThreshold() {
+		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	a.crosschainFlags = crosschainFlags
 	a.operationalFlags = operationalFlags
 	a.unconfirmedTxCount = int64(unconfirmedTxCount)
-
-	if a.unconfirmedTxCount >= a.config.GetMempoolCongestionThreshold() {
-		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
-	}
 
 	return nil
 }
