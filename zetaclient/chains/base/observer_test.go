@@ -63,6 +63,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.IsSupported = true
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
 		SafeInboundCount:  defaultConfirmationCount,
 		SafeOutboundCount: defaultConfirmationCount,
