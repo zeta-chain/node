@@ -63,5 +63,6 @@ func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args
 
 	// verify that pda of solana connected program balance is not changed
 	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
+	require.NoError(r, err)
 	require.Equal(r, connectedPdaInfoBefore.Value.Lamports, connectedPdaInfo.Value.Lamports)
 }
