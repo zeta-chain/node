@@ -46,9 +46,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
-	if totalCount > 0 {
-		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal trackers")
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
 	}
 
 	return ob.observeInboundTrackers(ctx, trackers, true)
@@ -60,6 +60,11 @@ func (ob *Observer) observeInboundTrackers(
 	trackers []types.InboundTracker,
 	isInternal bool,
 ) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
+
 	for _, tracker := range trackers {
 		// query tx and receipt
 		tx, _, err := ob.transactionByHash(ctx, tracker.TxHash)

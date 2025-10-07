@@ -8,6 +8,7 @@ import (
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -25,9 +26,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
-	if totalCount > 0 {
-		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal inbound trackers")
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal inbound trackers")
 	}
 
 	return ob.observeInboundTrackers(ctx, trackers, true)
@@ -40,6 +41,11 @@ func (ob *Observer) observeInboundTrackers(
 	isInternal bool,
 ) error {
 	chainID := ob.Chain().ChainId
+
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
 
 	// process inbound trackers
 	for _, tracker := range trackers {

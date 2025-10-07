@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -178,9 +178,9 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers, totalCount := ob.GetInboundInternalTrackers(ctx)
-	if totalCount > 0 {
-		ob.Logger().Inbound.Info().Int("total_count", totalCount).Msg("processing internal trackers")
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
 	}
 
 	return ob.observeInboundTrackers(ctx, trackers, true)
@@ -192,6 +192,11 @@ func (ob *Observer) observeInboundTrackers(
 	trackers []types.InboundTracker,
 	isInternal bool,
 ) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
+
 	logSkippedTracker := func(hash string, reason string, err error) {
 		ob.Logger().Inbound.Warn().
 			Err(err).
@@ -384,7 +389,7 @@ func newInbound(tx *toncontracts.Transaction) (*Inbound, error) {
 }
 
 func (inbound *Inbound) isCompliant() bool {
-	return !zetaclientconfig.ContainRestrictedAddress(
+	return !config.ContainRestrictedAddress(
 		inbound.receiver.Hex(),
 		inbound.sender.ToRaw(),
 		inbound.sender.ToHuman(false, false),

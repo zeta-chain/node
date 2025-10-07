@@ -5,19 +5,17 @@ import (
 
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-// GetInboundInternalTrackers returns (trackersToScan, totalCount, error)
-func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) ([]crosschaintypes.InboundTracker, int) {
+// GetInboundInternalTrackers returns internal inbound trackers
+func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschaintypes.InboundTracker {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
 	var (
-		trackerCount     = 0
 		finalizedBallots = make([]string, 0)
-		trackersToScan   = make([]crosschaintypes.InboundTracker, 0)
+		internalTrackers = make([]crosschaintypes.InboundTracker, 0, len(ob.internalInboundTrackers))
 	)
 
 	// collect up to MaxInternalTrackersPerScan trackers
@@ -27,12 +25,7 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) ([]crosschai
 			finalizedBallots = append(finalizedBallots, ballot)
 			continue
 		}
-
-		trackerCount++
-		trackersToScan = append(trackersToScan, tracker)
-		if trackerCount >= config.MaxInternalTrackersPerScan {
-			break
-		}
+		internalTrackers = append(internalTrackers, tracker)
 	}
 
 	// remove trackers for finalized ballots
@@ -40,7 +33,7 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) ([]crosschai
 		ob.removeInternalInboundTracker(ballot)
 	}
 
-	return trackersToScan, len(ob.internalInboundTrackers)
+	return internalTrackers
 }
 
 // AddInternalInboundTracker adds an internal inbound tracker for given inbound vote.
