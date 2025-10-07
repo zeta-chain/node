@@ -756,7 +756,7 @@ var executeMsgAddressLookupTableAbi = mustGetExecuteMsgAddressLookupTableAbi()
 func mustGetExecuteMsgAddressLookupTableAbi() abi.Arguments {
 	abiType, err := abi.NewType("tuple", "struct MsgAddressLookupTable", []abi.ArgumentMarshaling{
 		{Name: "addressLookupTableAddress", Type: "bytes32"},
-		{Name: "writeableIndexes", Type: "uint8[]"},
+		{Name: "writableIndexes", Type: "uint8[]"},
 		{Name: "data", Type: "bytes"},
 	})
 	if err != nil {
