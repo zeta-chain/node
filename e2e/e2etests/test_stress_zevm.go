@@ -87,9 +87,9 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 	for batchIdx := 0; batchIdx < batchCount; batchIdx++ {
 		batchStart := batchIdx * batchSize
 		batchEnd := min((batchIdx+1)*batchSize, totalTxs)
-		batchSize := batchEnd - batchStart
+		actualBatchSize := batchEnd - batchStart
 
-		r.Logger.Print("sending batch %d/%d (%d txs)", batchIdx+1, batchCount, batchSize)
+		r.Logger.Print("sending batch %d/%d (%d txs)", batchIdx+1, batchCount, actualBatchSize)
 
 		// Send all transactions in this batch
 		for i := batchStart; i < batchEnd; i++ {
@@ -149,7 +149,7 @@ func TestStressZEVM(r *runner.E2ERunner, args []string) {
 			}
 		}
 
-		r.Logger.Print("batch %d/%d sent (%d txs)", batchIdx+1, batchCount, batchSize)
+		r.Logger.Print("batch %d/%d sent (%d txs)", batchIdx+1, batchCount, actualBatchSize)
 
 		// Wait before sending next batch (except for the last batch)
 		if batchIdx < batchCount-1 {

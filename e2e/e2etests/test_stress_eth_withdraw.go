@@ -90,9 +90,9 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	for batchIdx := 0; batchIdx < batchCount; batchIdx++ {
 		batchStart := batchIdx * batchSize
 		batchEnd := minInt((batchIdx+1)*batchSize, numWithdraws)
-		batchSize := batchEnd - batchStart
+		actualBatchSize := batchEnd - batchStart
 
-		r.Logger.Print("sending batch %d/%d (%d withdrawals)", batchIdx+1, batchCount, batchSize)
+		r.Logger.Print("sending batch %d/%d (%d withdrawals)", batchIdx+1, batchCount, actualBatchSize)
 
 		// Send all withdrawals in this batch
 		for i := batchStart; i < batchEnd; i++ {
@@ -153,7 +153,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 			}
 		}
 
-		r.Logger.Print("batch %d/%d sent (%d withdrawals)", batchIdx+1, batchCount, batchSize)
+		r.Logger.Print("batch %d/%d sent (%d withdrawals)", batchIdx+1, batchCount, actualBatchSize)
 
 		// Wait before sending next batch
 		if batchIdx < batchCount-1 {
