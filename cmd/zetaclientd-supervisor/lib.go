@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"runtime"
 	"time"
@@ -246,7 +245,6 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 	triggerFile := "/root/.zetaclientd/zetaclientd-upgrade-trigger"
 
 	for {
-		// wait for either a second or context cancel
 		select {
 		case <-time.After(time.Second):
 		case <-ctx.Done():
@@ -255,12 +253,12 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 
 		// Check if trigger file exists
 		if _, err := os.Stat(triggerFile); err != nil {
-			continue // File doesn't exist, keep waiting
+			continue
 		}
 
 		s.logger.Info().Msg("detected file-based upgrade trigger")
 
-		// Download new binary to temporary location first
+		// Download new binary and replace existing one
 		tempPath := "/tmp/zetaclientd.new"
 		err := s.downloadZetaclientdToPath(ctx, tempPath)
 		if err != nil {
@@ -268,15 +266,7 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 			continue
 		}
 
-		// Kill existing zetaclientd process
 		s.logger.Info().Msg("killing existing zetaclientd process")
-		//err = s.killZetaclientdProcess()
-		//if err != nil {
-		//	s.logger.Error().Err(err).Msg("failed to kill zetaclientd process")
-		//	continue
-		//}
-
-		// Replace the binary
 		err = os.Rename(tempPath, "/usr/local/bin/zetaclientd")
 		if err != nil {
 			s.logger.Error().Err(err).Msg("failed to replace zetaclientd binary")
@@ -289,15 +279,12 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 			panic(fmt.Sprintf("remove trigger file: %v", err))
 		}
 
-		// Send reload signal to restart with new binary
 		s.reloadSignals <- true
-
 		s.logger.Info().Msg("zetaclientd binary updated and restart triggered")
 	}
 }
 
 func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, targetPath string) error {
-	// Direct URL to the latest zetaclientd binary
 	binURL := "http://upgrade-host:8000/zetaclientd"
 
 	s.logger.Info().Msgf("downloading zetaclientd to %s", targetPath)
@@ -319,23 +306,5 @@ func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, t
 		return fmt.Errorf("chmod %s: %w", targetPath, err)
 	}
 
-	return nil
-}
-
-func (s *zetaclientdSupervisor) killZetaclientdProcess() error {
-	// Use killall to kill all zetaclientd processes
-	cmd := exec.Command("killall", "zetaclientd")
-	err := cmd.Run()
-	if err != nil {
-		// If killall fails, try to find and kill the process by PID
-		cmd = exec.Command("pkill", "-f", "zetaclientd")
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("failed to kill zetaclientd process: %w", err)
-		}
-	}
-
-	// Wait a moment for the process to terminate
-	time.Sleep(time.Second)
 	return nil
 }

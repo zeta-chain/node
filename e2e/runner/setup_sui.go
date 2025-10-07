@@ -520,7 +520,7 @@ func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 		},
 	}
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
-		return errors.Wrap(err, "unable to broadcast solana chain params tx")
+		return errors.Wrap(err, "unable to broadcast sui chain params tx")
 	}
 
 	if resetNonces {

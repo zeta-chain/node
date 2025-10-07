@@ -307,6 +307,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # shellcheck disable=SC2155
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
   USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE:=false}
+  UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY:=false}
 
   # if enabled, fetches zetae2e binary from the previous version
   # ante means "before" in Latin (used in Cosmos terminology)
@@ -335,14 +336,13 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # Run zetae2e, if the upgrade height is greater than 100 to populate the state
   if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
     echo "Running E2E command to setup the networks and populate the state..."
-
-    # Use light flag to ensure tests can complete before the upgrade height
-    # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
-    if [ $? -ne 0 ]; then
-      echo "First E2E failed"
-      exit 1
-    fi
+      # Use light flag to ensure tests can complete before the upgrade height
+      # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
+      zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
+      if [ $? -ne 0 ]; then
+        echo "First E2E failed"
+        exit 1
+      fi
   fi
 
   echo "Waiting for upgrade height..."
@@ -363,15 +363,14 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
 
-  if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
-    echo "Version did not change after upgrade height, maybe the upgrade did not run?"
-    
-    # Create upgrade trigger file for zetaclientd-only upgrade
-    echo "Creating zetaclientd upgrade trigger..."
+  if [ "$UPGRADE_ZETACLIENT_ONLY" = true ]; then
+    echo "Zetaclientd-only upgrade mode: updating zetaclientd to $NEW_VERSION"
     create_zetaclientd_upgrade_trigger
-    
-    echo "zetaclientd upgrade trigger created"
-#    exit 2
+  else
+    if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
+      echo "Version did not change after upgrade height, maybe the upgrade did not run?"
+      exit 2
+    fi
   fi
 
   # wait for zevm endpoint to come up
