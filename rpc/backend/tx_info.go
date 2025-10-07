@@ -198,12 +198,13 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, fmt.Errorf("failed to decode tx: %w", err)
 		}
 
-		ethMsg, ok := b.DecodeMsgEthereumTxFromCosmosMsg(tx.GetMsgs()[res.MsgIndex])
+		ethMsgDecoded, ok := b.DecodeMsgEthereumTxFromCosmosMsg(tx.GetMsgs()[res.MsgIndex])
 		if !ok {
 			b.Logger.Error("failed to get eth msg")
 			return nil, fmt.Errorf("failed to get eth msg")
 		}
 
+		ethMsg = ethMsgDecoded
 		txData, err = evmtypes.UnpackTxData(ethMsg.Data)
 		if err != nil {
 			b.Logger.Error("failed to unpack tx data", "error", err.Error())
@@ -238,10 +239,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		status = hexutil.Uint(ethtypes.ReceiptStatusSuccessful)
 	}
 
-	from := common.BytesToAddress(ethMsg.From)
-	if additional != nil {
+	var from common.Address
+	if additional != nil || (ethMsg != nil && len(ethMsg.From) != 0) {
 		from = common.BytesToAddress(ethMsg.From)
-	} else if ethMsg.Data != nil && len(ethMsg.From) == 0 {
+	} else if ethMsg.Data != nil {
 		from, err = ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(b.EvmChainID))
 		if err != nil {
 			b.Logger.Debug("failed to parse from field", "hash", hexTx, "error", err.Error())
