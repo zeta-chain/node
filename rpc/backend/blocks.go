@@ -287,12 +287,12 @@ func (b *Backend) DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg) (*evmtypes.MsgEt
 		Accesses:  &accessList,
 	})
 
-	chainId, err := b.ChainID()
+	chainID, err := b.ChainID()
 	if err != nil {
 		b.Logger.Error("can't get backend chain id", err.Error())
 		return nil, false
 	}
-	from, err := ethMsg2.GetSender(chainId.ToInt())
+	from, err := ethMsg2.GetSender(chainID.ToInt())
 	if err != nil {
 		b.Logger.Error("can't get tx From field", err.Error())
 		return nil, false
