@@ -29,6 +29,10 @@ by calling `updateAdditionalActionFee` admin function.
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
 
+### Fixes
+
+* [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+
 ## v36.0.0
 
 ### Features
