@@ -1674,7 +1674,6 @@
         },
         "datasource": {
           "type": "prometheus",
-        "uid": "prometheus",
           "uid": "prometheus"
         },
         "definition": "localnet",
