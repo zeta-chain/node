@@ -10,6 +10,7 @@ import (
 	cmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	etherminttypes "github.com/cosmos/evm/legacy/evm"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -247,6 +248,73 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 	return big.NewInt(resBlock.Header.Height), nil
 }
 
+// DecodeMsgEthereumTxFromCosmosMsg tries to get MsgEthereumTx from cosmos msg
+// fallback to legacy ethermint MsgEthereumTx if evm cant be parsed
+func (b *Backend) DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg) (*evmtypes.MsgEthereumTx, bool) {
+	ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+	if ok {
+		ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
+		return ethMsg, ok
+	}
+
+	// if above fails, try to cast to legacy ethermint type
+	ethMsg2, ok := msg.(*etherminttypes.MsgEthereumTx)
+	if !ok {
+		return nil, false
+	}
+
+	// convert to new evm tx type
+	tx2 := ethMsg2.AsTransaction()
+	acessListTuple := []ethtypes.AccessTuple{}
+	for _, al := range tx2.AccessList() {
+		acessListTuple = append(acessListTuple, ethtypes.AccessTuple{
+			Address:     al.Address,
+			StorageKeys: al.StorageKeys,
+		})
+	}
+
+	accessList := ethtypes.AccessList(acessListTuple)
+	ethMsg = evmtypes.NewTx(&evmtypes.EvmTxArgs{
+		Nonce:     tx2.Nonce(),
+		GasLimit:  tx2.Gas(),
+		Input:     tx2.Data(),
+		GasFeeCap: tx2.GasFeeCap(),
+		GasPrice:  tx2.GasPrice(),
+		ChainID:   tx2.ChainId(),
+		Amount:    tx2.Value(),
+		GasTipCap: tx2.GasFeeCap(),
+		To:        tx2.To(),
+		Accesses:  &accessList,
+	})
+
+	chainId, err := b.ChainID()
+	if err != nil {
+		b.Logger.Error("can't get backend chain id", err.Error())
+		return nil, false
+	}
+	from, err := ethMsg2.GetSender(chainId.ToInt())
+	if err != nil {
+		b.Logger.Error("can't get tx From field", err.Error())
+		return nil, false
+	}
+	ethMsg.From = from.Bytes()
+	ethMsg.Hash = ethMsg2.AsTransaction().Hash().Hex()
+
+	return ethMsg, true
+}
+
+// DecodeMsgEthereumTxFromCosmosTx tries to get MsgEthereumTx from cosmos tx msgs
+func (b *Backend) DecodeMsgEthereumTxFromCosmosTx(tx sdk.Tx) (*evmtypes.MsgEthereumTx, bool) {
+	for _, msg := range tx.GetMsgs() {
+		ethMsg, ok := b.DecodeMsgEthereumTxFromCosmosMsg(msg)
+		if ok {
+			return ethMsg, ok
+		}
+	}
+
+	return nil, false
+}
+
 // EthMsgsFromTendermintBlock returns all real and synthetic MsgEthereumTxs from a
 // Tendermint block. It also ensures consistency over the correct txs indexes
 // across RPC endpoints
@@ -275,14 +343,11 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 		shouldCheckForSyntheticTx := true
 		// if tx can be decoded, try to find MsgEthereumTx inside
 		if err == nil {
-			for _, msg := range tx.GetMsgs() {
-				ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-				if ok {
-					shouldCheckForSyntheticTx = false
-					ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
-					ethMsgs = append(ethMsgs, ethMsg)
-					txsAdditional = append(txsAdditional, nil)
-				}
+			ethMsg, ok := b.DecodeMsgEthereumTxFromCosmosTx(tx)
+			if ok {
+				shouldCheckForSyntheticTx = false
+				ethMsgs = append(ethMsgs, ethMsg)
+				txsAdditional = append(txsAdditional, nil)
 			}
 		} else {
 			b.Logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
@@ -435,6 +500,11 @@ func (b *Backend) BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.
 
 		for _, attr := range event.Attributes {
 			if attr.Key == evmtypes.AttributeKeyEthereumBloom {
+				// this is panicing in go-ethereum in case bloom length is greater than max
+				bloomSize := len([]byte(attr.Value))
+				if bloomSize > ethtypes.BloomByteLength {
+					return ethtypes.Bloom{}, errors.New("block bloom greater than max allowed size")
+				}
 				return ethtypes.BytesToBloom([]byte(attr.Value)), nil
 			}
 		}

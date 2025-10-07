@@ -173,27 +173,39 @@ func NewRPCTransaction(
 	chainID *big.Int,
 ) (*RPCTransaction, error) {
 	tx := msg.AsTransaction()
-	// Determine the signer. For replay-protected transactions, use the most permissive
-	// signer, because we assume that signers are backwards-compatible with old
-	// transactions. For non-protected transactions, the frontier signer is used
-	// because the latest signer will reject the unprotected transactions.
-	var signer ethtypes.Signer
-	if tx.Protected() {
-		signer = ethtypes.LatestSignerForChainID(tx.ChainId())
-	} else {
-		signer = ethtypes.FrontierSigner{}
+
+	from := msg.From
+	if len(from) == 0 {
+		// Determine the signer. For replay-protected transactions, use the most permissive
+		// signer, because we assume that signers are backwards-compatible with old
+		// transactions. For non-protected transactions, the frontier signer is used
+		// because the latest signer will reject the unprotected transactions.
+		var signer ethtypes.Signer
+		if tx.Protected() {
+			signer = ethtypes.LatestSignerForChainID(tx.ChainId())
+		} else {
+			signer = ethtypes.FrontierSigner{}
+		}
+		senderLegacyFrom, err := msg.GetSenderLegacy(signer)
+		if err != nil {
+			return nil, err
+		}
+
+		from = senderLegacyFrom.Bytes()
 	}
-	from, err := msg.GetSenderLegacy(signer)
-	if err != nil {
-		return nil, err
+
+	hash := msg.Hash
+	if hash == "" {
+		hash = tx.Hash().Hex()
 	}
+
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(tx.Type()),
-		From:     from,
+		From:     common.BytesToAddress(from),
 		Gas:      hexutil.Uint64(tx.Gas()),
 		GasPrice: (*hexutil.Big)(tx.GasPrice()),
-		Hash:     tx.Hash(),
+		Hash:     common.HexToHash(hash),
 		Input:    hexutil.Bytes(tx.Data()),
 		Nonce:    hexutil.Uint64(tx.Nonce()),
 		To:       tx.To(),
