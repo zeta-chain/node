@@ -3,6 +3,7 @@ package context
 
 import (
 	"fmt"
+	"math/big"
 	"slices"
 	"sync"
 
@@ -127,7 +128,13 @@ func (a *AppContext) IsMaxFeeExceeded() bool {
 	if maxBaseFee <= 0 {
 		return false
 	}
-	return a.GetCurrentBaseFee() > maxBaseFee
+
+	// convert maxBaseFee to Wei for comparison
+	const gweiToWei = 1_000_000_000
+	currentBaseFee := big.NewInt(a.GetCurrentBaseFee())
+	maxBaseFeeInWei := new(big.Int).Mul(big.NewInt(maxBaseFee), big.NewInt(gweiToWei))
+
+	return currentBaseFee.Cmp(maxBaseFeeInWei) > 0
 }
 
 // GetUnconfirmedTxCount returns the number of unconfirmed txs in the zetacore mempool

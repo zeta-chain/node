@@ -46,7 +46,7 @@ func setupInitializeConfigOptions() {
 		usageP2PDiag          = "p2p diagnostic ticker (default: 0 means no ticker)"
 		usageTicker           = "config update ticker (default: 0 means no ticker)"
 		usageKeyring          = "keyring backend to use (test, file)"
-		usageMaxBaseFee       = "the maximum base fee allowed to send ZetaChain transactions (0 means no limit)"
+		usageMaxBaseFee       = "the maximum base fee in Gwei allowed to send ZetaChain transactions (0 means no limit)"
 		usageMempoolThreshold = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 

@@ -32,7 +32,7 @@ func TestAppContext(t *testing.T) {
 		}
 	)
 
-	testCfg.MaxBaseFee = 1000
+	testCfg.MaxBaseFee = 1
 	testCfg.MempoolCongestionThreshold = 1
 	testCfg.BTCChainConfigs[111] = config.BTCConfig{RPCUsername: "satoshi"}
 
@@ -92,7 +92,7 @@ func TestAppContext(t *testing.T) {
 		}
 
 		// ACT
-		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags, 1001, 2)
+		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags, 1_000_000_001, 2)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -133,7 +133,7 @@ func TestAppContext(t *testing.T) {
 		assert.Equal(t, time.Second, *appContext.GetOperationalFlags().SignerBlockTimeOffset)
 
 		// Check max base fee
-		assert.EqualValues(t, 1001, appContext.GetCurrentBaseFee())
+		assert.EqualValues(t, 1_000_000_001, appContext.GetCurrentBaseFee())
 
 		// Check unconfirmed tx count
 		assert.EqualValues(t, 2, appContext.GetUnconfirmedTxCount())
