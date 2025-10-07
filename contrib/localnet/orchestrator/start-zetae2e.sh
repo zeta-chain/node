@@ -76,7 +76,7 @@ create_zetaclientd_upgrade_trigger() {
   for node in "${nodes[@]}"; do
     # Skip if node is not accessible
     ssh -q root@$node "exit" 2>/dev/null || continue
-    
+
     echo "Creating upgrade trigger file on $node"
     ssh root@$node "touch /root/.zetaclientd/zetaclientd-upgrade-trigger" || continue
     echo "Upgrade trigger file created on $node"
