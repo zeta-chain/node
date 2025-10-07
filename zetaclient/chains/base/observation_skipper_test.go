@@ -18,6 +18,7 @@ func Test_CheckSkipInbound(t *testing.T) {
 		name                string
 		isInboundEnabled    bool
 		isMempoolCongested  bool
+		isMaxFeeExceeded    bool
 		expectedSkip        bool
 		expectedLogContains string
 	}{
@@ -25,18 +26,28 @@ func Test_CheckSkipInbound(t *testing.T) {
 			name:               "should not skip when all conditions are met",
 			isInboundEnabled:   true,
 			isMempoolCongested: false,
+			isMaxFeeExceeded:   false,
 			expectedSkip:       false,
 		},
 		{
 			name:               "should skip when inbound is disabled",
 			isInboundEnabled:   false,
 			isMempoolCongested: false,
+			isMaxFeeExceeded:   false,
 			expectedSkip:       true,
 		},
 		{
 			name:               "should skip when mempool is congested",
 			isInboundEnabled:   true,
 			isMempoolCongested: true,
+			isMaxFeeExceeded:   false,
+			expectedSkip:       true,
+		},
+		{
+			name:               "should skip when max base fee is exceeded",
+			isInboundEnabled:   true,
+			isMempoolCongested: false,
+			isMaxFeeExceeded:   true,
 			expectedSkip:       true,
 		},
 	}
@@ -51,7 +62,7 @@ func Test_CheckSkipInbound(t *testing.T) {
 			ob := newTestSuite(t, chains.Ethereum)
 
 			// mock app context
-			appCtx := mockAppContext(t, chain, *ethParams, tt.isInboundEnabled, true, tt.isMempoolCongested)
+			appCtx := mockAppContext(t, chain, *ethParams, tt.isInboundEnabled, true, tt.isMempoolCongested, tt.isMaxFeeExceeded)
 
 			// ACT
 			result := base.CheckSkipInbound(ob.Observer, appCtx)
@@ -99,7 +110,7 @@ func Test_CheckSkipOutbound(t *testing.T) {
 			ob := newTestSuite(t, chains.Ethereum)
 
 			// mock app context
-			appCtx := mockAppContext(t, chain, *ethParams, true, tt.isOutboundEnabled, tt.isMempoolCongested)
+			appCtx := mockAppContext(t, chain, *ethParams, true, tt.isOutboundEnabled, tt.isMempoolCongested, false)
 
 			// ACT
 			result := base.CheckSkipOutbound(ob.Observer, appCtx)
@@ -143,7 +154,7 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 			ob := newTestSuite(t, chains.Ethereum)
 
 			// mock app context
-			appCtx := mockAppContext(t, chain, *ethParams, true, true, tt.isMempoolCongested)
+			appCtx := mockAppContext(t, chain, *ethParams, true, true, tt.isMempoolCongested, false)
 
 			// ACT
 			result := base.CheckSkipInbound(ob.Observer, appCtx)
@@ -155,9 +166,10 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 }
 
 // mockAppContext creates a mock AppContext for testing
-func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.ChainParams, isInboundEnabled, isOutboundEnabled, isMempoolCongested bool) *context.AppContext {
+func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.ChainParams, isInboundEnabled, isOutboundEnabled, isMempoolCongested bool, isBaseFeeExceeded bool) *context.AppContext {
 	// Create a mock config
 	cfg := config.New(false)
+	cfg.MaxBaseFee = 1000
 	cfg.MempoolCongestionThreshold = 1
 
 	// Create logger
@@ -175,6 +187,12 @@ func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.
 	// Create operational flags
 	operationalFlags := observertypes.OperationalFlags{}
 
+	// Set base fee based on max base fee
+	currentBaseFee := int64(1000)
+	if isBaseFeeExceeded {
+		currentBaseFee = currentBaseFee + 1
+	}
+
 	// Set unconfirmed tx count based on mempool congestion
 	unconfirmedTxCount := 0
 	if isMempoolCongested {
@@ -188,6 +206,7 @@ func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.
 		map[int64]*observertypes.ChainParams{chain.ChainId: &chainParams},
 		crosschainFlags,
 		operationalFlags,
+		currentBaseFee,
 		unconfirmedTxCount,
 	)
 	require.NoError(t, err)

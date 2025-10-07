@@ -138,6 +138,34 @@ func (_m *ZetacoreClient) GetBallotByID(_a0 context.Context, _a1 string) (*types
 	return r0, r1
 }
 
+// GetBaseGasPrice provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetBaseGasPrice(_a0 context.Context) (int64, error) {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBaseGasPrice")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBlockHeight provides a mock function with given fields: _a0
 func (_m *ZetacoreClient) GetBlockHeight(_a0 context.Context) (int64, error) {
 	ret := _m.Called(_a0)

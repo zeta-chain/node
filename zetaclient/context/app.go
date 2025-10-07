@@ -28,6 +28,9 @@ type AppContext struct {
 	crosschainFlags  observertypes.CrosschainFlags
 	operationalFlags observertypes.OperationalFlags
 
+	// currentBaseFee is the current ZetaChain base fee
+	currentBaseFee int64
+
 	// unconfirmedTxCount is the number of unconfirmed txs in the zetacore mempool
 	unconfirmedTxCount int64
 
@@ -109,6 +112,24 @@ func (a *AppContext) GetOperationalFlags() observertypes.OperationalFlags {
 	return a.operationalFlags
 }
 
+// GetCurrentBaseFee returns the current ZetaChain base fee
+func (a *AppContext) GetCurrentBaseFee() int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.currentBaseFee
+}
+
+// IsMaxFeeExceeded returns true if the current base fee is greater than the configured max base fee
+// 0 max base fee means the feature is disabled and max base fee is ignored
+func (a *AppContext) IsMaxFeeExceeded() bool {
+	maxBaseFee := a.config.GetMaxBaseFee()
+	if maxBaseFee <= 0 {
+		return false
+	}
+	return a.GetCurrentBaseFee() > maxBaseFee
+}
+
 // GetUnconfirmedTxCount returns the number of unconfirmed txs in the zetacore mempool
 func (a *AppContext) GetUnconfirmedTxCount() int64 {
 	a.mu.RLock()
@@ -134,6 +155,7 @@ func (a *AppContext) Update(
 	freshChainParams map[int64]*observertypes.ChainParams,
 	crosschainFlags observertypes.CrosschainFlags,
 	operationalFlags observertypes.OperationalFlags,
+	currentBaseFee int64,
 	unconfirmedTxCount int,
 ) error {
 	// some sanity checks
@@ -165,6 +187,7 @@ func (a *AppContext) Update(
 
 	a.crosschainFlags = crosschainFlags
 	a.operationalFlags = operationalFlags
+	a.currentBaseFee = currentBaseFee
 	a.unconfirmedTxCount = int64(unconfirmedTxCount)
 
 	return nil

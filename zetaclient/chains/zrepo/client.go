@@ -120,5 +120,7 @@ type ZetacoreClient interface {
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 
+	GetBaseGasPrice(context.Context) (int64, error)
+
 	GetNumberOfUnconfirmedTxs(context.Context) (int, error)
 }

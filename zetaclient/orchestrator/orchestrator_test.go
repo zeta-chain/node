@@ -162,7 +162,8 @@ func newTestSuite(t *testing.T) *testSuite {
 	on(zetacore, "GetCrosschainFlags", 1).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
 	on(zetacore, "GetOperationalFlags", 1).Return(appCtx.GetOperationalFlags(), nil).Maybe()
 	on(zetacore, "GetZetaHotKeyBalance", 1).Return(math.NewInt(123), nil).Maybe()
-	on(zetacore, "GetNumberOfUnconfirmedTxs", 1).Return(1, nil).Maybe()
+	on(zetacore, "GetBaseGasPrice", 1).Return(int64(1000), nil).Maybe()
+	on(zetacore, "GetNumberOfUnconfirmedTxs", 1).Return(int(1), nil).Maybe()
 
 	// Mock chain-related methods as dynamic getters
 	on(zetacore, "GetSupportedChains", 1).Return(ts.getSupportedChains).Maybe()
@@ -301,7 +302,7 @@ func newAppContext(
 	ccFlags := sample.CrosschainFlags()
 	opFlags := sample.OperationalFlags()
 
-	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags, 0)
+	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags, 0, 0)
 	require.NoError(t, err, "failed to update app context")
 
 	ctx := zctx.WithAppContext(context.Background(), appContext)

@@ -16,6 +16,19 @@ func Test_GetRelayerKeyPath(t *testing.T) {
 	require.Equal(t, config.DefaultRelayerKeyPath, cfg.GetRelayerKeyPath())
 }
 
+func Test_GetMaxBaseFee(t *testing.T) {
+	t.Run("should return zero max base fee", func(t *testing.T) {
+		cfg := config.New(false)
+		require.Zero(t, cfg.GetMaxBaseFee())
+	})
+
+	t.Run("should return configured max base fee", func(t *testing.T) {
+		cfg := config.New(false)
+		cfg.MaxBaseFee = 1000
+		require.EqualValues(t, 1000, cfg.GetMaxBaseFee())
+	})
+}
+
 func Test_GetMempoolCongestionThreshold(t *testing.T) {
 	t.Run("should return zero mempool congestion threshold", func(t *testing.T) {
 		cfg := config.New(false)

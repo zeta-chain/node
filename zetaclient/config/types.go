@@ -106,8 +106,11 @@ type Config struct {
 	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath          string         `json:"RelayerKeyPath"`
 
+	// MaxBaseFee is the maximum base fee allowed for zetaclient to send ZetaChain transactions
+	MaxBaseFee int64 `json:"MaxBaseFee"`
+
 	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore mempool to consider it congested
-	// Observation will stop if the number of unconfirmed txs in mempool is greater than or equal to congestion threshold.
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this threshold.
 	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
 
 	// chain configs
@@ -232,6 +235,13 @@ func (c Config) GetRelayerKeyPath() string {
 		return DefaultRelayerKeyPath
 	}
 	return c.RelayerKeyPath
+}
+
+// GetMaxBaseFee returns the max base fee
+func (c Config) GetMaxBaseFee() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MaxBaseFee
 }
 
 // GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to consider it congested

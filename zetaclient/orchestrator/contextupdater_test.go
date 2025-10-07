@@ -50,7 +50,8 @@ func Test_UpdateAppContext(t *testing.T) {
 		on(zetacore, "GetChainParams", 1).Return(newParams, nil)
 		on(zetacore, "GetCrosschainFlags", 1).Return(ccFlags, nil)
 		on(zetacore, "GetOperationalFlags", 1).Return(opFlags, nil)
-		on(zetacore, "GetNumberOfUnconfirmedTxs", 1).Return(1, nil)
+		on(zetacore, "GetBaseGasPrice", 1).Return(int64(1000), nil)
+		on(zetacore, "GetNumberOfUnconfirmedTxs", 1).Return(int(1), nil)
 
 		// ACT
 		err := UpdateAppContext(ctx, app, zetacore, logger)
@@ -64,6 +65,9 @@ func Test_UpdateAppContext(t *testing.T) {
 
 		// Check OP flags
 		require.Equal(t, opFlags.RestartHeight, app.GetOperationalFlags().RestartHeight)
+
+		// Check base gas price
+		require.EqualValues(t, 1000, app.GetCurrentBaseFee())
 
 		// Check unconfirmed tx count
 		require.EqualValues(t, 1, app.GetUnconfirmedTxCount())

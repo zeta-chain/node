@@ -9,13 +9,15 @@ func CheckSkipInbound(ob *Observer, app *context.AppContext) bool {
 	isSupported := ob.ChainParams().IsSupported
 	isInboundEnabled := app.IsInboundObservationEnabled()
 	isMempoolCongested := app.IsMempoolCongested()
+	isMaxFeeExceeded := app.IsMaxFeeExceeded()
 
-	if !isSupported || !isInboundEnabled || isMempoolCongested {
+	if !isSupported || !isInboundEnabled || isMempoolCongested || isMaxFeeExceeded {
 		ob.Logger().
 			Sampled.Info().
 			Bool("is_supported", isSupported).
 			Bool("is_enabled", isInboundEnabled).
 			Bool("is_congested", isMempoolCongested).
+			Bool("is_max_fee_exceeded", isMaxFeeExceeded).
 			Msg("skip inbound observation")
 		return true
 	}
