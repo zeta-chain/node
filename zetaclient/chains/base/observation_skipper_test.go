@@ -125,21 +125,25 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 	tests := []struct {
 		name               string
 		isMempoolCongested bool
+		isMaxFeeExceeded   bool
 		expectedSkip       bool
 	}{
 		{
 			name:               "should not skip when chain is supported and mempool is not congested",
 			isMempoolCongested: false,
+			isMaxFeeExceeded:   false,
 			expectedSkip:       false,
 		},
 		{
 			name:               "should skip when mempool is congested",
 			isMempoolCongested: true,
+			isMaxFeeExceeded:   false,
 			expectedSkip:       true,
 		},
 		{
-			name:               "should skip when chain is not supported and mempool is congested",
-			isMempoolCongested: true,
+			name:               "should skip when max base fee is exceeded",
+			isMempoolCongested: false,
+			isMaxFeeExceeded:   true,
 			expectedSkip:       true,
 		},
 	}
@@ -154,10 +158,10 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 			ob := newTestSuite(t, chains.Ethereum)
 
 			// mock app context
-			appCtx := mockAppContext(t, chain, *ethParams, true, true, tt.isMempoolCongested, false)
+			appCtx := mockAppContext(t, chain, *ethParams, true, true, tt.isMempoolCongested, tt.isMaxFeeExceeded)
 
 			// ACT
-			result := base.CheckSkipInbound(ob.Observer, appCtx)
+			result := base.CheckSkipGasPrice(ob.Observer, appCtx)
 
 			// ASSERT
 			assert.Equal(t, tt.expectedSkip, result)

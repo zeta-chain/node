@@ -46,12 +46,14 @@ func CheckSkipOutbound(ob *Observer, app *context.AppContext) bool {
 func CheckSkipGasPrice(ob *Observer, app *context.AppContext) bool {
 	isSupported := ob.ChainParams().IsSupported
 	isMempoolCongested := app.IsMempoolCongested()
+	isMaxFeeExceeded := app.IsMaxFeeExceeded()
 
-	if !isSupported || isMempoolCongested {
+	if !isSupported || isMempoolCongested || isMaxFeeExceeded {
 		ob.Logger().
 			Sampled.Info().
 			Bool("is_supported", isSupported).
 			Bool("is_congested", isMempoolCongested).
+			Bool("is_max_fee_exceeded", isMaxFeeExceeded).
 			Msg("skip gas price observation")
 		return true
 	}
