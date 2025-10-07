@@ -129,20 +129,21 @@ func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) 
 // AddPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
 // Note This is handler is not related to the cosmos-sdk upgrade handler in any way
 func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()) {
-	//version := r.GetZetacoredVersion()
-	//versionMajorIsZero := semver.Major(version) == "v0"
-	//oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
-	//
-	//// Run the handler only if this is the second run of the upgrade tests
-	//if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
-	//	checkVersion(upgradeFrom, oldVersion) {
-	//	return
-	//}
+	if !r.IsRunningZetaclientOnlyUpgrade() {
+		version := r.GetZetacoredVersion()
+		versionMajorIsZero := semver.Major(version) == "v0"
+		oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+
+		// Run the handler only if this is the second run of the upgrade tests
+		if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
+			checkVersion(upgradeFrom, oldVersion) {
+			return
+		}
+	}
 
 	postHandler()
 }
 
 func checkVersion(upgradeFromm, oldVersion string) bool {
-	//return semver.Major(upgradeFromm) != semver.Major(oldVersion)
-	return false
+	return semver.Major(upgradeFromm) != semver.Major(oldVersion)
 }

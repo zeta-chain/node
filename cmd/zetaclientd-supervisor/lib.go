@@ -241,6 +241,7 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 	return nil
 }
 
+// handleFileBasedUpgrade watches for a specific file to appear to trigger an upgrade
 func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 	triggerFile := "/root/.zetaclientd/zetaclientd-upgrade-trigger"
 
@@ -251,14 +252,12 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 			return
 		}
 
-		// Check if trigger file exists
 		if _, err := os.Stat(triggerFile); err != nil {
 			continue
 		}
 
 		s.logger.Info().Msg("detected file-based upgrade trigger")
 
-		// Download new binary and replace existing one
 		tempPath := "/tmp/zetaclientd.new"
 		err := s.downloadZetaclientdToPath(ctx, tempPath)
 		if err != nil {
@@ -284,18 +283,17 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 	}
 }
 
+// downloadZetaclientdToPath downloads the zetaclientd binary to the specified path
 func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, targetPath string) error {
 	binURL := "http://upgrade-host:8000/zetaclientd"
 
 	s.logger.Info().Msgf("downloading zetaclientd to %s", targetPath)
 
-	// Download directly to target path
 	err := getter.GetFile(targetPath, binURL, getter.WithContext(ctx), getter.WithUmask(0o750))
 	if err != nil {
 		return fmt.Errorf("get file %s: %w", binURL, err)
 	}
 
-	// Ensure binary is executable
 	info, err := os.Stat(targetPath)
 	if err != nil {
 		return fmt.Errorf("stat binary: %w", err)

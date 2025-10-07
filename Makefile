@@ -394,7 +394,7 @@ start-upgrade-test-light: zetanode-upgrade
 start-upgrade-test-zetaclient-light: zetanode-upgrade
 	@echo "--> Starting zetaclientd-only light upgrade test"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=53 && \
+	export UPGRADE_HEIGHT=60 && \
 	export USE_ZETAE2E_ANTE=true && \
 	export UPGRADE_ZETACLIENT_ONLY=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient -f docker-compose-upgrade.yml up -d
