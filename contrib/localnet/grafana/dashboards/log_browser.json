@@ -5,7 +5,8 @@
           "builtIn": 1,
           "datasource": {
             "type": "grafana",
-            "uid": "-- Grafana --"
+            
+  "uid": "prometheus"
           },
           "enable": true,
           "hide": true,
@@ -32,7 +33,11 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-log-browser",
+          
+  "uid": "prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -109,7 +114,11 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-log-browser",
+              
+  "uid": "prometheus"
             },
             "editorMode": "builder",
             "expr": "zetaclient_pending_txs_total",
@@ -118,13 +127,14 @@
             "refId": "A"
           }
         ],
-        "title": "Pending TXs total",
+        "title": "Localnet - Pending TXs total",
         "type": "timeseries"
       },
       {
         "datasource": {
           "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
+          
+  "uid": "prometheus"
         },
         "gridPos": {
           "h": 10,
@@ -150,7 +160,8 @@
           {
             "datasource": {
               "type": "loki",
-              "uid": "P8E80F9AEF21F6940"
+              
+  "uid": "prometheus"
             },
             "editorMode": "builder",
             "expr": "{container=\"$log_containers\"}",
@@ -158,7 +169,7 @@
             "refId": "A"
           }
         ],
-        "title": "${log_containers}",
+        "title": "Localnet - ${log_containers}",
         "type": "logs"
       }
     ],
@@ -182,7 +193,8 @@
           },
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            
+  "uid": "prometheus"
           },
           "definition": "label_values(container)",
           "hide": 0,
@@ -205,8 +217,10 @@
     },
     "timepicker": {},
     "timezone": "",
-    "title": "Log Browser",
-    "uid": "QD_fGXuSk",
+    "title": "Localnet - Log Browser",
+    
+  
+  "uid": "localnet-log-browser",
     "version": 6,
     "weekStart": ""
   }

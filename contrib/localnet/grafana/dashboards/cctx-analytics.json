@@ -1,0 +1,1102 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          
+  "uid": "prometheus"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 9,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^success$/",
+          "values": true
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+        
+  
+  "uid": "localnet-cctx-analytics",
+            
+  "uid": "prometheus"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "zetachain_exporter_chain_nonces{network=\"$network\"}",
+          "format": "table",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{chain}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "hide": false,
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "",
+              "limit": 1000,
+              "mode": "list",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "table",
+          "rawSql": "SELECT \n    chain_id AS chain,\n    count(*) AS problematic_count\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\nGROUP BY chain_id\nORDER BY chain_id",
+          "refId": "B"
+        }
+      ],
+      "title": "CCTX success rate per chain (excludes 100% chains)",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "chain",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "finalized_height": true,
+              "instance": true,
+              "job": true,
+              "name": true,
+              "network": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Value": "total_transactions"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "succesful_txs",
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "total_transactions"
+                }
+              },
+              "operator": "-",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "problematic_count B"
+                }
+              }
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "sucess_ratio",
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "succesful_txs"
+                }
+              },
+              "operator": "/",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "total_transactions"
+                }
+              }
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "success",
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "sucess_ratio"
+                }
+              },
+              "operator": "*",
+              "right": {
+                "fixed": "100"
+              }
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "isNull",
+                  "options": {}
+                },
+                "fieldName": "problematic_count B"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "success"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        
+  
+  "uid": "localnet-cctx-analytics",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 15,
+        "x": 9,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": true,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "zetachain_exporter_chain_nonces{network=\"$network\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{chain}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Total CCTXs per chain",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        
+  
+  "uid": "localnet-cctx-analytics",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 15,
+        "x": 9,
+        "y": 4
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": true,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "zetachain_exporter_chain_nonces{network=\"$network\"} - zetachain_exporter_chain_nonces{network=\"$network\"} offset $__range",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "{{chain}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Total CCTXs per chain in period of time (max 30d)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 9,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 20,
+          "valueSize": 50
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "",
+              "limit": 1000,
+              "mode": "list",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "table",
+          "rawSql": "SELECT\n    sum(tx_type = 'inbound' ? 1 : 0) AS inbound,\n    sum(tx_type = 'outbound' ? 1 : 0) AS outbound,\n    count(*) AS total_trackers\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\n",
+          "refId": "A"
+        }
+      ],
+      "title": "All chains missed trackers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        
+  
+  "uid": "localnet-cctx-analytics",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 14,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "zetachain_exporter_outbound_cctx_tracker_duration{network=\"$network\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "{{chain}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Avg Outbound CCTX tracker duration",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.84,
+        "fullHighlight": false,
+        "groupWidth": 0.8,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "day",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "builderOptions": {
+            "aggregates": [
+              {
+                "aggregateType": "count",
+                "alias": "date",
+                "column": "datetime"
+              }
+            ],
+            "columns": [
+              {
+                "alias": "*",
+                "custom": false,
+                "name": "*",
+                "type": "String"
+              }
+            ],
+            "database": "problematic_cctxs",
+            "filters": [],
+            "groupBy": [
+              "chain_id"
+            ],
+            "limit": 1000,
+            "meta": {},
+            "mode": "aggregate",
+            "orderBy": [
+              {
+                "dir": "ASC",
+                "name": "*"
+              }
+            ],
+            "queryType": "table",
+            "table": "mainnet_cctxs"
+          },
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "meta": {
+            "builderOptions": {
+              "aggregates": [
+                {
+                  "aggregateType": "count",
+                  "alias": "date",
+                  "column": "datetime"
+                }
+              ],
+              "columns": [
+                {
+                  "alias": "*",
+                  "custom": false,
+                  "name": "*",
+                  "type": "String"
+                }
+              ],
+              "database": "problematic_cctxs",
+              "filters": [],
+              "groupBy": [
+                "chain_id"
+              ],
+              "limit": 1000,
+              "meta": {},
+              "mode": "aggregate",
+              "orderBy": [
+                {
+                  "dir": "ASC",
+                  "name": "*"
+                }
+              ],
+              "queryType": "table",
+              "table": "mainnet_cctxs"
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "timeseries",
+          "rawSql": "SELECT\n    toDate(datetime) AS day,\n    chain_id,\n    sum(tx_type = 'inbound' ? 1 : 0) AS inbound,\n    sum(tx_type = 'outbound' ? 1 : 0) AS outbound\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\nGROUP BY\n    day,\n    chain_id\nORDER BY\n    day ASC,\n    chain_id ASC\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Trackers by chain",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 0,
+        "y": 22
+      },
+      "id": 4,
+      "maxPerRow": 6,
+      "options": {
+        "displayMode": "lcd",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "",
+              "limit": 1000,
+              "mode": "list",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "table",
+          "rawSql": "SELECT\n    chain_id,\n    count(*) AS total_trackers\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\nGROUP BY\n    chain_id\nORDER BY\n    total_trackers DESC\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Missed Trackers (Inbound + Outbound)",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "0"
+                  }
+                },
+                "fieldName": "total_trackers"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 9,
+        "y": 22
+      },
+      "id": 2,
+      "maxPerRow": 6,
+      "options": {
+        "displayMode": "lcd",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "",
+              "limit": 1000,
+              "mode": "list",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "table",
+          "rawSql": "SELECT\n    chain_id,\n    sum(tx_type = 'inbound' ? 1 : 0) AS inbound\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\nGROUP BY\n    chain_id\nORDER BY\n    inbound DESC\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Missed Inbound Trackers (excludes zeroes)",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "0"
+                  }
+                },
+                "fieldName": "inbound"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        
+  "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 17,
+        "y": 22
+      },
+      "id": 3,
+      "maxPerRow": 6,
+      "options": {
+        "displayMode": "lcd",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            
+  "uid": "prometheus"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "",
+              "limit": 1000,
+              "mode": "list",
+              "queryType": "table",
+              "table": ""
+            }
+          },
+          "pluginVersion": "4.9.0",
+          "queryType": "table",
+          "rawSql": "SELECT\n    chain_id,\n    sum(tx_type = 'outbound' ? 1 : 0) AS outbound\nFROM problematic_cctxs.${network}_cctxs\nWHERE $__timeFilter(datetime)\nGROUP BY\n    chain_id\nORDER BY\n    outbound DESC\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Missed Outbound Trackers (excludes zeroes)",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "0"
+                  }
+                },
+                "fieldName": "outbound"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        }
+      ],
+      "type": "bargauge"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "localnet",
+          "value": "localnet"
+        },
+        "hide": 0,
+        "label": "Network",
+        "name": "network",
+        "options": [
+          {
+            "selected": true,
+            "text": "localnet",
+            "value": "localnet"
+          }
+        ],
+        "query": "localnet",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "localnet",
+          "value": "localnet"
+        },
+        "description": "network",
+        "hide": 1,
+        "label": "network",
+        "name": "network",
+        "options": [
+          {
+            "selected": true,
+            "text": "localnet",
+            "value": "localnet"
+          },
+          {
+            "selected": false,
+            "text": "testnet",
+            "value": "testnet"
+          }
+        ],
+        "query": "mainnet,testnet",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Localnet - CCTXs analytics",
+  
+  
+  "uid": "localnet-cctx-analytics",
+  "version": 1,
+  "weekStart": ""
+}
