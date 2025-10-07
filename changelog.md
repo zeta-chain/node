@@ -17,7 +17,12 @@ by calling `updateAdditionalActionFee` admin function.
 }
 ```
 
-* ZetaChain mempool congestion threshold is introduced. This field is optional and defaults to 3000. Observation will stop if the number of unconfirmed txs in mempool is greater than or equal to this value.
+* ZetaChain maximum base fee is introduced as an optional field. It is the maximum base fee, in Gwei, allowed for zetaclient to send out ZetaChain transactions.
+```
+"MaxBaseFee": 100,
+```
+
+* ZetaChain mempool congestion threshold is introduced as an optional field. Observation will stop if the number of unconfirmed transactions in the mempool is greater than this value.
 ```
 "MempoolCongestionThreshold": 3000,
 ```
