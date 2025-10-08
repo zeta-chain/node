@@ -25,6 +25,9 @@ by calling `updateAdditionalActionFee` admin function.
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+### Refactor
+
+* [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
 
 ## v36.0.0
 

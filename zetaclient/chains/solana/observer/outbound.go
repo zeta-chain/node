@@ -48,10 +48,9 @@ var (
 
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "GetOutboundTrackers error")
+		return err
 	}
 
 	logger := ob.Logger().Outbound
@@ -65,10 +64,9 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		}
 
 		// get original cctx parameters
-		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			// take a rest if zetacore RPC breaks
-			return errors.Wrapf(err, "GetCctxByNonce error for chain %d nonce %d", chainID, tracker.Nonce)
+			return err // take a rest if zetacore RPC breaks
 		}
 		coinType := cctx.InboundParams.CoinType
 
@@ -181,20 +179,8 @@ func (ob *Observer) PostVoteOutbound(
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	// post vote to zetacore
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		logger.Error().Err(err).Msg("error posting outbound vote")
-		return
-	}
-
-	// print vote tx hash and ballot
-	if zetaTxHash != "" {
-		logger.Info().
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallotIndex, ballot).
-			Msg("posted outbound vote")
-	}
+	// NOTE: ignoring VoteOutbound's errors
+	_, _, _ = ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg) //nolint:dogsled
 }
 
 // CreateMsgVoteOutbound creates a vote outbound message for Solana chain
@@ -216,10 +202,10 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		outboundGasLimit = 0
 	)
 
-	creator := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+	creator := ob.ZetaRepo().GetOperatorAddress()
 
 	return crosschaintypes.NewMsgVoteOutbound(
-		creator.String(),
+		creator,
 		cctxIndex,
 		outboundHash,
 		txResult.Slot, // instead of using block, Solana explorer uses slot for indexing

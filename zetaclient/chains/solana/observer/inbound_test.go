@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -43,23 +44,24 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+	zetacoreClient.
+		WithKeys(&keys.Keys{OperatorAddress: []byte("something")}).
+		WithZetaChain().
+		WithPostVoteInbound("", "")
 
-	zetacoreClient.MockGetCctxByHash(nil)
-	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
-	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.MockGetCctxByHash("anything", nil)
 	zetacoreClient.MockGetBallotByID(mock.Anything, nil)
+	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
 
 	baseObserver, err := base.NewObserver(
 		chain,
 		*chainParams,
-		zetacoreClient,
+		zrepo.New(zetacoreClient, chain, mode.StandardMode),
 		nil,
 		1000,
 		nil,
 		database,
 		base.DefaultLogger(),
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
@@ -192,13 +194,12 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	baseObserver, err := base.NewObserver(
 		chain,
 		*params,
-		zetacoreClient,
+		zrepo.New(zetacoreClient, chain, mode.StandardMode),
 		nil,
 		1000,
 		nil,
 		database,
 		base.DefaultLogger(),
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

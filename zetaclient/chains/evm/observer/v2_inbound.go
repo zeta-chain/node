@@ -104,10 +104,14 @@ func (ob *Observer) observeGatewayDeposit(
 			}
 		}
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -188,12 +192,12 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	}
 
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),
@@ -247,9 +251,13 @@ func (ob *Observer) observeGatewayCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (Call)")
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+		)
 		if err != nil {
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -320,12 +328,12 @@ func (ob *Observer) parseAndValidateCallEvents(
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
 func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types.MsgVoteInbound {
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.ZeroUint(),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),
@@ -379,10 +387,14 @@ func (ob *Observer) observeGatewayDepositAndCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (DepositAndCall)")
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -456,12 +468,12 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
 
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),

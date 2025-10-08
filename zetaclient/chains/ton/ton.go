@@ -52,9 +52,9 @@ func (t *TON) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get app from context")
 	}
 
-	newBlockChan, err := t.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := t.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -130,17 +130,14 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
-	chain := t.observer.Chain()
 
-	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxs, err := t.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to list pending CCTXs")
+		return err
 	}
 
-	for i := range cctxList {
-		cctx := cctxList[i]
+	for _, cctx := range cctxs {
 		outboundID := base.OutboundIDFromCCTX(cctx)
-
 		err := t.processCCTX(ctx, outboundID, cctx, zetaHeight)
 		if err != nil {
 			t.outboundLogger(outboundID).Error().Err(err).Msg("failed to schedule CCTX")
@@ -172,12 +169,7 @@ func (t *TON) processCCTX(ctx context.Context,
 		return nil
 	}
 
-	go t.signer.TryProcessOutbound(
-		ctx,
-		cctx,
-		t.observer.ZetacoreClient(),
-		zetaHeight,
-	)
+	go t.signer.TryProcessOutbound(ctx, cctx, t.observer.ZetaRepo(), zetaHeight)
 
 	return nil
 }

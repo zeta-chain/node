@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -199,7 +200,7 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			includeTx:     false,
 			expectedTx:    nil,
 			expectedNonce: 0,
-			errMsg:        "GetPendingNoncesByChain failed",
+			errMsg:        zrepo.ErrClientGetPendingNonces.Error(),
 		},
 		{
 			name:         "return error if no last tx found",

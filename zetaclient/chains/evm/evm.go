@@ -55,9 +55,9 @@ func (e *EVM) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := e.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := e.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -152,9 +152,9 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
 	)
 
-	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := e.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	trackerSet, err := e.getTrackerSet(ctx)
@@ -223,7 +223,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			go e.signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				e.observer.ZetacoreClient(),
+				e.observer.ZetaRepo(),
 				zetaHeight,
 			)
 		}
@@ -263,11 +263,9 @@ func (e *EVM) updateChainParams(ctx context.Context) error {
 }
 
 func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
-	chainID := e.observer.Chain().ChainId
-
-	trackers, err := e.observer.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
+	trackers, err := e.observer.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get outbound trackers")
+		return nil, err
 	}
 
 	set := make(map[uint64]struct{})

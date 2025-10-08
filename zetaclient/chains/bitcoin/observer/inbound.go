@@ -123,10 +123,14 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 					}
 				}
 
-				_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+				_, err = ob.ZetaRepo().VoteInbound(ctx,
+					ob.logger.Inbound,
+					msg,
+					zetacore.PostVoteInboundExecutionGasLimit,
+				)
 				if err != nil {
 					// we have to re-scan this block next time
-					return blockNumber - 1, errors.Wrapf(err, "error posting inbound vote for tx %s", event.TxHash)
+					return blockNumber - 1, errors.Wrapf(err, " (tx %s)", event.TxHash)
 				}
 			}
 		}
@@ -238,12 +242,12 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 	}
 
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.FromAddress,
 		ob.Chain().ChainId,
 		event.FromAddress,
 		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountSats),
 		hex.EncodeToString(event.MemoBytes),
 		event.TxHash,
@@ -283,12 +287,12 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	}
 
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.FromAddress,
 		ob.Chain().ChainId,
 		event.FromAddress,
 		event.MemoStd.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountSats),
 		hex.EncodeToString(event.MemoStd.Payload),
 		event.TxHash,

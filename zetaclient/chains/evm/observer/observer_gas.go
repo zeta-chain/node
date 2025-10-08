@@ -34,15 +34,9 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get block number")
 	}
 
-	_, err = ob.
-		ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee, blockNum)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to post vote for gas price")
-	}
-
-	return nil
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice.Uint64(), priorityFee, blockNum)
+	return err
 }
 
 // DeterminePriorityFee determines the chain priority fee.

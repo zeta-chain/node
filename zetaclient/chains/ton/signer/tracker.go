@@ -23,7 +23,7 @@ import (
 // Note that another zetaclient observers that scrolls Gateway's txs can publish this tracker concurrently.
 func (s *Signer) trackOutbound(
 	ctx context.Context,
-	zetacore zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	outbound outbound,
 	prevState rpc.Account,
 ) error {
@@ -69,12 +69,8 @@ func (s *Signer) trackOutbound(
 		}
 
 		// Note that this method has a check for noop
-		_, err = zetacore.PostOutboundTracker(ctx, chain.ChainId, nonce, txHash)
-		if err != nil {
-			return errors.Wrap(err, "unable to add outbound tracker")
-		}
-
-		return nil
+		_, err = zetaRepo.PostOutboundTracker(ctx, s.Logger().Std, nonce, txHash)
+		return err
 	}
 
 	return errors.Errorf("timeout exceeded (%s)", time.Since(start).String())
