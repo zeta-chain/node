@@ -964,7 +964,7 @@
               "options": {
                 "mode": "exclude",
                 "names": [
-                  "tendermint_consensus_block_size_bytes{chain_id=\"zetachain_101-1\", instance=\"172.20.0.11:26657\", job=\"zetacore\", network=\"localnet\"}"
+                  "cometbft_consensus_block_size_bytes{chain_id=\"zetachain_101-1\", instance=\"172.20.0.11:26657\", job=\"zetacore\", network=\"localnet\"}"
                 ],
                 "prefix": "All except:",
                 "readOnly": true
@@ -1011,7 +1011,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "tendermint_consensus_block_size_bytes",
+          "expr": "cometbft_consensus_block_size_bytes",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1134,7 +1134,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "tendermint_mempool_failed_txs",
+          "expr": "cometbft_mempool_failed_txs",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,

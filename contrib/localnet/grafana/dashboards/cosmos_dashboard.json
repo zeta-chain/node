@@ -145,7 +145,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_height{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_height{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -217,7 +217,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_total_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_total_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "interval": "30s",
           "intervalFactor": 1,
@@ -297,7 +297,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_block_interval_seconds{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_block_interval_seconds{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "interval": "30s",
           "intervalFactor": 1,
@@ -368,7 +368,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "instant": false,
           "interval": "30s",
@@ -441,7 +441,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -453,7 +453,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_missing_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_missing_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -464,7 +464,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_byzantine_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_byzantine_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Byzantine",
@@ -565,7 +565,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -577,7 +577,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_missing_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_missing_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -588,7 +588,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_byzantine_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_byzantine_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "Byzantine",
@@ -688,7 +688,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_block_size_bytes{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_consensus_block_size_bytes{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -791,7 +791,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_consensus_num_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
+            "expr": "cometbft_consensus_num_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -924,7 +924,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_p2p_peers{chain_id=\"$chain_id\", instance=~\"$instance\"}",
+          "expr": "cometbft_p2p_peers{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -998,7 +998,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_mempool_size{chain_id=\"$chain_id\", instance=~\"$instance\"}",
+          "expr": "cometbft_mempool_size{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -1069,7 +1069,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_mempool_failed_txs{chain_id=\"$chain_id\", instance=~\"$instance\"}",
+          "expr": "cometbft_mempool_failed_txs{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -1140,7 +1140,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_mempool_recheck_times{chain_id=\"$chain_id\", instance=~\"$instance\"}",
+          "expr": "cometbft_mempool_recheck_times{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
           "instant": true,
           "interval": "30s",
@@ -1206,7 +1206,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_p2p_peer_receive_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_p2p_peer_receive_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{peer_id}}",
@@ -1300,7 +1300,7 @@
           "datasource": {
             "uid": "prometheus"
           },
-          "expr": "tendermint_p2p_peer_send_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
+          "expr": "cometbft_p2p_peer_send_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{peer_id}}",
@@ -1375,14 +1375,14 @@
         "datasource": {
           "uid": "prometheus"
         },
-        "definition": "label_values(tendermint_consensus_height, chain_id)",
+        "definition": "label_values(cometbft_consensus_height, chain_id)",
         "hide": 0,
         "includeAll": false,
         "label": "Chain ID",
         "multi": false,
         "name": "chain_id",
         "options": [],
-        "query": "label_values(tendermint_consensus_height, chain_id)",
+        "query": "label_values(tende    rmint_consensus_height, chain_id)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1402,14 +1402,14 @@
         "datasource": {
           "uid": "prometheus"
         },
-        "definition": "label_values(tendermint_consensus_height{chain_id=\"$chain_id\"}, instance)",
+        "definition": "label_values(cometbft_consensus_height{chain_id=\"$chain_id\"}, instance)",
         "hide": 0,
         "includeAll": false,
         "label": "Instance",
         "multi": false,
         "name": "instance",
         "options": [],
-        "query": "label_values(tendermint_consensus_height{chain_id=\"$chain_id\"}, instance)",
+        "query": "label_values(cometbft_consensus_height{chain_id=\"$chain_id\"}, instance)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
