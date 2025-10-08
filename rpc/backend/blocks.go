@@ -303,9 +303,9 @@ func (b *Backend) DecodeMsgEthereumTxFromCosmosTx(tx sdk.Tx) (*evmtypes.MsgEther
 		ethMsg, err := DecodeMsgEthereumTxFromCosmosMsg(msg, b.ChainConfig().ChainID)
 		if err == nil {
 			return ethMsg, true
-		} else {
-			b.Logger.Warn("can't decode MsgEthereumTx", "err", err.Error())
 		}
+
+		b.Logger.Warn("can't decode MsgEthereumTx", "err", err.Error())
 	}
 
 	return nil, false
