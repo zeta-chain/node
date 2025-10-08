@@ -337,7 +337,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
     echo "Running E2E command to setup the networks and populate the state..."
       # Use light flag to ensure tests can complete before the upgrade height
-      # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
       zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
       if [ $? -ne 0 ]; then
         echo "First E2E failed"

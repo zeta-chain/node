@@ -265,7 +265,6 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 			continue
 		}
 
-		s.logger.Info().Msg("killing existing zetaclientd process")
 		err = os.Rename(tempPath, "/usr/local/bin/zetaclientd")
 		if err != nil {
 			s.logger.Error().Err(err).Msg("failed to replace zetaclientd binary")
