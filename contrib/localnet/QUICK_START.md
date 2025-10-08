@@ -8,7 +8,7 @@
 
 ### **Step 1: Start Services**
 ```bash
-cd /Users/peterlee/go/src/github.com/zeta-chain/node/contrib/localnet
+cd contrib/localnet
 docker compose --profile monitoring up -d
 ```
 
