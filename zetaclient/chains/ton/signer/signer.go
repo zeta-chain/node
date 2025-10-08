@@ -108,7 +108,7 @@ func (s *Signer) processOutbound(
 
 	logger := s.Logger().Std.With().Fields(outbound.logFields).Logger()
 
-	if s.ClientMode == mode.DryMode {
+	if s.ClientMode.IsDryMode() {
 		logger.Info().
 			Stringer(logs.FieldMode, mode.DryMode).
 			Msg("skipping TON signing, sending, and tracking")
