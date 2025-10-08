@@ -1,20 +1,15 @@
 package base_test
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
@@ -24,8 +19,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -76,17 +69,17 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	database := createDatabase(t)
 
 	// create observer
+	zetaRepo := zrepo.New(zetacoreClient, chain, mode.StandardMode)
 	logger := base.DefaultLogger()
 	ob, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacoreClient,
+		zetaRepo,
 		tss,
 		base.DefaultBlockCacheSize,
 		nil,
 		database,
 		logger,
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 
@@ -150,13 +143,12 @@ func TestNewObserver(t *testing.T) {
 			ob, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.zetacoreClient,
+				zrepo.New(tt.zetacoreClient, tt.chain, mode.StandardMode),
 				tt.tssSigner,
 				tt.blockCacheSize,
 				nil,
 				database,
 				base.DefaultLogger(),
-				mode.StandardMode,
 			)
 			if tt.fail {
 				require.ErrorContains(t, err, tt.message)
@@ -514,88 +506,6 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 		lastTxScanned, err := ob.ReadLastTxScannedFromDB()
 		require.Error(t, err)
 		require.Empty(t, lastTxScanned)
-	})
-}
-
-func TestPostVoteInbound(t *testing.T) {
-	t.Run("should be able to post vote inbound", func(t *testing.T) {
-		// create observer
-		ob := newTestSuite(t, chains.Ethereum)
-
-		ob.zetacore.WithPostVoteInbound("", "sampleBallotIndex")
-
-		// post vote inbound
-		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
-		ob.zetacore.MockGetCctxByHash(errors.New("not found"))
-		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
-		require.NoError(t, err)
-		require.Equal(t, "sampleBallotIndex", ballot)
-	})
-
-	t.Run("should not post vote if message basic validation fails", func(t *testing.T) {
-		// create observer
-		ob := newTestSuite(t, chains.Ethereum)
-
-		// create sample message with long Message
-		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
-		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
-		ob.zetacore.MockGetCctxByHash(errors.New("not found"))
-
-		// post vote inbound
-		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
-		require.NoError(t, err)
-		require.Empty(t, ballot)
-	})
-
-	t.Run("should not post vote cctx already exists and ballot is not found", func(t *testing.T) {
-		//Arrange
-		// create observer
-		ob := newTestSuite(t, chains.Ethereum)
-
-		ob.zetacore.WithPostVoteInbound("", "sampleBallotIndex")
-		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
-
-		ob.zetacore.MockGetCctxByHash(nil)
-		ob.zetacore.MockGetBallotByID(msg.Digest(), status.Error(codes.NotFound, "not found ballot"))
-
-		var logBuffer bytes.Buffer
-		consoleWriter := zerolog.ConsoleWriter{Out: &logBuffer}
-		logger := zerolog.New(consoleWriter)
-		ob.Observer.Logger().Inbound = logger
-
-		// Act
-		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
-		// Assert
-		require.NoError(t, err)
-		require.Equal(t, ballot, msg.Digest())
-
-		logOutput := logBuffer.String()
-		require.Contains(t, logOutput, "inbound detected: CCTX exists but the ballot does not")
-	})
-
-	t.Run("should post vote cctx already exists but ballot is found", func(t *testing.T) {
-		//Arrange
-		// create observer
-		ob := newTestSuite(t, chains.Ethereum)
-
-		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
-		ob.zetacore.WithPostVoteInbound(sample.ZetaIndex(t), msg.Digest())
-		ob.zetacore.MockGetCctxByHash(nil)
-		ob.zetacore.MockGetBallotByID(msg.Digest(), nil)
-
-		var logBuffer bytes.Buffer
-		consoleWriter := zerolog.ConsoleWriter{Out: &logBuffer}
-		logger := zerolog.New(consoleWriter)
-		ob.Observer.Logger().Inbound = logger
-
-		// Act
-		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
-		// Assert
-		require.NoError(t, err)
-		require.Equal(t, ballot, msg.Digest())
-
-		logOutput := logBuffer.String()
-		require.Contains(t, logOutput, "inbound detected: vote posted")
 	})
 }
 

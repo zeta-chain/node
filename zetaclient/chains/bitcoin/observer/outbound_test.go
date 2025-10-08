@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/mode"
 
@@ -38,26 +38,13 @@ func MockBTCObserverMainnet(t *testing.T, tssSigner interfaces.TSSSigner) *Obser
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 	baseLogger := base.Logger{Std: logger, Compliance: logger}
 
-	baseObserver, err := base.NewObserver(chain, params, nil, tssSigner, 100, nil, database,
-		baseLogger, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, params, zrepo.New(nil, chain, mode.StandardMode),
+		tssSigner, 100, nil, database, baseLogger)
 	require.NoError(t, err)
 
 	// create Bitcoin observer
 	ob, err := New(baseObserver, btcClient, chain)
 	require.NoError(t, err)
-
-	return ob
-}
-
-// helper function to create a test Bitcoin observer
-func createObserverWithPrivateKey(t *testing.T) *Observer {
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	require.NoError(t, err)
-	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-
-	// create Bitcoin observer with mock tss
-	ob := MockBTCObserverMainnet(t, tss)
 
 	return ob
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -105,8 +106,8 @@ func TestSigner(t *testing.T) {
 	)
 
 	// ACT
-	signer.TryProcessOutbound(ts.ctx, cctx1, ts.zetacore, zetaHeight)
-	signer.TryProcessOutbound(ts.ctx, cctx2, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx1, ts.zetaRepo, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx2, ts.zetaRepo, zetaHeight)
 
 	// ASSERT
 	// Make sure signer send the tx the chain AND published the outbound tracker
@@ -132,6 +133,7 @@ type testSuite struct {
 	rpc *mocks.TONRPC
 
 	zetacore *mocks.ZetacoreClient
+	zetaRepo *zrepo.ZetaRepo
 	tss      *mocks.TSS
 
 	gw         *toncontracts.Gateway
@@ -173,6 +175,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		rpc: rpc,
 
 		zetacore: zetacore,
+		zetaRepo: zrepo.New(zetacore, chain, mode.StandardMode),
 		tss:      tss,
 
 		gw:         toncontracts.NewGateway(gwAccountID),

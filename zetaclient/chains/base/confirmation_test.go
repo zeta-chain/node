@@ -14,6 +14,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 func Test_GetScanRangeInboundSafe(t *testing.T) {
@@ -367,7 +368,7 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			},
 			failForeignCoinsRPC: true,
 			eligible:            false,
-			errMsg:              "unable to get foreign coins",
+			errMsg:              zrepo.ErrClientGetForeignCoinsForAsset.Error(),
 		},
 		{
 			name:       "not eligible if amount exceeds fast amount cap",
@@ -391,11 +392,15 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			// mock up the foreign coins RPC
 			assetAddress := ethcommon.HexToAddress(tt.msg.Asset)
 			if tt.failForeignCoinsRPC {
-				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).
+				ob.zetacore.
+					On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).
 					Maybe().
 					Return(fungibletypes.ForeignCoins{}, errors.New("rpc failed"))
 			} else {
-				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).Maybe().Return(fungibletypes.ForeignCoins{LiquidityCap: liquidityCap}, nil)
+				ob.zetacore.
+					On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).
+					Maybe().
+					Return(fungibletypes.ForeignCoins{LiquidityCap: liquidityCap}, nil)
 			}
 
 			// ACT

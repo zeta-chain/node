@@ -22,6 +22,10 @@ by calling `updateAdditionalActionFee` admin function.
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 
+### Refactor
+
+* [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+
 ## v36.0.0
 
 ### Features

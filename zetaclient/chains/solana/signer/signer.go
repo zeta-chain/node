@@ -151,7 +151,7 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -273,7 +273,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// broadcast the signed tx to the Solana network
-	signer.broadcastOutbound(ctx, outbound, chainID, nonce, logger, zetacoreClient)
+	signer.broadcastOutbound(ctx, outbound, chainID, nonce, logger, zetaRepo)
 }
 
 // signTx creates and signs solana tx containing provided instruction with relayer key.
@@ -332,7 +332,7 @@ func (signer *Signer) broadcastOutbound(
 	chainID int64,
 	nonce uint64,
 	logger zerolog.Logger,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 ) {
 	tx := outbound.Tx
 	// prepare logger fields
@@ -394,7 +394,7 @@ func (signer *Signer) broadcastOutbound(
 		logger.Info().Fields(lf).Msg("broadcasted Solana outbound successfully")
 
 		// successful broadcast; report to the outbound tracker
-		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+		signer.reportToOutboundTracker(ctx, zetaRepo, chainID, nonce, txSig, logger)
 		break
 	}
 }
