@@ -106,11 +106,11 @@ func (signer *Signer) TryProcessOutbound(
 		logs.FieldCctxIndex: cctx.Index,
 		logs.FieldNonce:     params.TssNonce,
 	}
-	signerAddress, err := observer.ZetacoreClient().GetKeys().GetAddress()
+	signerAddress, err := observer.ZetaRepo().GetKeysAddress()
 	if err != nil {
 		return
 	}
-	lf["signer"] = signerAddress.String()
+	lf["signer"] = signerAddress
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// query network info to get minRelayFee (typically 1000 satoshis)
@@ -211,14 +211,7 @@ func (signer *Signer) BroadcastOutbound(
 	}
 
 	// add tx to outbound tracker so that all observers know about it
-	zetaHash, err := ob.ZetacoreClient().PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
-	if err != nil {
-		logger.Err(err).Msg("unable to add Bitcoin outbound tracker")
-	} else {
-		logger.Info().
-			Str(logs.FieldZetaTx, zetaHash).
-			Msg("add Bitcoin outbound tracker successfully")
-	}
+	_, _ = ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, txHash)
 
 	// try including this outbound as early as possible, no need to wait for outbound tracker
 	_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)

@@ -31,7 +31,7 @@ func MustWaitForTxReceipt(
 
 	start := time.Now()
 	for i := 0; ; i++ {
-		require.False(t, time.Since(start) > timeout, "waiting tx receipt timeout")
+		require.False(t, time.Since(start) > timeout, "waiting tx receipt timeout with timeout %s", timeout.String())
 
 		receipt, err := client.TransactionReceipt(ctx, tx.Hash())
 		if err != nil {

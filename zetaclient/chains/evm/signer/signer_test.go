@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -150,13 +151,14 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithKeys(&keys.Keys{}).
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
+	zetaRepo := zrepo.New(client, chains.Ethereum, mode.StandardMode)
 
 	// mock evm client "NonceAt"
 	nonce := uint64(123)
 	evmSigner.evmServer.MockNonceAt(nonce)
 
 	// ACT
-	evmSigner.TryProcessOutbound(ctx, cctx, client, nonce)
+	evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
 
 	// ASSERT
 	// Check if cctx was signed and broadcasted
@@ -190,7 +192,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 			tx,
 			cctx,
 			zerolog.Logger{},
-			mocks.NewZetacoreClient(t),
+			zrepo.New(mocks.NewZetacoreClient(t), chains.Ethereum, mode.StandardMode),
 			txData,
 		)
 

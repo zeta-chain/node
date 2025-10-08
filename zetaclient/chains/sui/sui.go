@@ -44,7 +44,7 @@ func (s *Sui) Chain() chains.Chain {
 	return s.observer.Chain()
 }
 
-// Start starts observer-signer for processing inbound & outbound cross-chain transactions.
+// Start starts the observer-signer for processing inbound and outbound cross-chain transactions.
 func (s *Sui) Start(ctx context.Context) error {
 	if ok := s.observer.Observer.Start(); !ok {
 		return errors.New("observer is already started")
@@ -55,9 +55,9 @@ func (s *Sui) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := s.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := s.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
@@ -85,10 +85,10 @@ func (s *Sui) Start(ctx context.Context) error {
 	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
 	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
-	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
-	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
+	register(s.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
+	register(s.observer.ObserveInbound, "observe_inbounds", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)
@@ -120,12 +120,12 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 
 	time.Sleep(delay)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, s.observer.Chain())
+	cctxList, err := s.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
-	// noop
+	// no-op
 	if len(cctxList) == 0 {
 		return nil
 	}

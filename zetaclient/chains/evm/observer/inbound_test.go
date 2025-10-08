@@ -18,6 +18,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
@@ -460,7 +462,8 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			mockZetacoreClient: func(m *mocks.ZetacoreClient) {
-				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, errors.New("not found"))
+				err := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
 			},
 			errMsg: "",
 		},
@@ -497,7 +500,6 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			if tt.mockEVMClient != nil {
 				tt.mockEVMClient(ob.evmMock)
 			}
-
 			if tt.mockZetacoreClient != nil {
 				tt.mockZetacoreClient(ob.zetacore)
 			}

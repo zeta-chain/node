@@ -22,13 +22,10 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/fanout"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
-
-var _ zrepo.ZetacoreClient = &Client{}
 
 // Client is the client to send tx to zetacore
 type Client struct {

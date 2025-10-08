@@ -22,6 +22,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -375,8 +376,10 @@ func (s *testSuite) createObserver(t *testing.T) {
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create observer
-	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts,
-		database, baseLogger, mode.StandardMode)
+	chain := s.Chain()
+	zetaRepo := zrepo.New(s.zetacoreClient, chain, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, params, zetaRepo, s.tss, 100, ts, database,
+		baseLogger)
 	require.NoError(t, err)
 
 	s.observer, err = observer.New(baseObserver, s.client, s.Chain())

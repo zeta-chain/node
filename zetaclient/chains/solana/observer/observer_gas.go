@@ -54,10 +54,8 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	medianFee := zetamath.SliceMedianValue(priorityFees, true)
 
 	// there is no Ethereum-like gas price in Solana, we only post priority fee for now
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), 1, medianFee, slot)
-	if err != nil {
-		return errors.Wrapf(err, "PostVoteGasPrice error for chain %d", ob.Chain().ChainId)
-	}
 
-	return nil
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, 1, medianFee, slot)
+	return err
 }

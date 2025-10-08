@@ -34,6 +34,7 @@ const (
 	TestETHWithdrawRevertAndAbortName            = "eth_withdraw_revert_and_abort"
 	TestETHWithdrawAndCallRevertWithWithdrawName = "eth_withdraw_and_call_revert_with_withdraw"
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
+	TestDepositAndCallHighGasUsageName           = "deposit_and_call_high_gas_usage"
 
 	TestERC20DepositName                      = "erc20_deposit"
 	TestERC20MultipleDepositsName             = "erc20_multiple_deposits"
@@ -195,6 +196,7 @@ const (
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 	TestStressSuiDepositName     = "stress_sui_deposit"
 	TestStressSuiWithdrawName    = "stress_sui_withdraw"
+	TestStressZEVMName           = "stress_zevm"
 
 	/*
 		Staking tests
@@ -522,6 +524,14 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestETHWithdrawAndCallRevertWithWithdraw,
 		runner.WithMinimumVersion("v26.0.0"),
+	),
+	runner.NewE2ETest(
+		TestDepositAndCallHighGasUsageName,
+		"deposit Ether into ZEVM and call a contract that consumes high gas",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestDepositAndCallHighGasUsage,
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
@@ -1463,6 +1473,8 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 			{Description: CountArgDescription, DefaultValue: "100"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
 		},
 		TestStressEtherWithdraw,
 	),
@@ -1481,6 +1493,8 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 			{Description: CountArgDescription, DefaultValue: "100"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
 		},
 		TestStressEtherDeposit,
 	),
@@ -1546,6 +1560,16 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSuiWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressZEVMName,
+		"stress test ZEVM calls",
+		[]runner.ArgDefinition{
+			{Description: CountArgDescription, DefaultValue: "1000"},
+			{Description: "batch of tx size", DefaultValue: "100"},
+			{Description: "interval in ms between batches", DefaultValue: "2000"},
+		},
+		TestStressZEVM,
 	),
 	/*
 	 Admin tests

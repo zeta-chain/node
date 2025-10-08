@@ -227,7 +227,8 @@ start-localnet: e2e-images start-localnet-skip-build
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	export E2E_ARGS="${E2E_ARGS} --setup-solana --setup-sui --setup-ton" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
@@ -298,7 +299,7 @@ start-e2e-performance-test-1k: e2e-images solana
 
 start-stress-test-eth: e2e-images
 	@echo "--> Starting stress test for eth"
-	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=50" && \
+	export E2E_ARGS="${E2E_ARGS} --test-stress-zevm --test-stress-eth --iterations=1000" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-stress-test-solana: e2e-images solana
@@ -378,7 +379,7 @@ endif
 start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=240 && \
+	export UPGRADE_HEIGHT=300 && \
  	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="--test-solana --test-sui" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana --profile sui -f docker-compose-upgrade.yml up -d
