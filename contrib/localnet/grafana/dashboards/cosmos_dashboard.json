@@ -5,7 +5,8 @@
         "builtIn": 1,
         "datasource": {
           "type": "datasource",
-          "uid": "grafana"
+          
+  "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -28,7 +29,11 @@
       "collapsed": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+        
+  "uid": "prometheus"
       },
       "gridPos": {
         "h": 1,
@@ -42,18 +47,26 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+            
+  "uid": "prometheus"
           },
           "refId": "A"
         }
       ],
-      "title": "$chain_id overview",
+      "title": "Localnet - $chain_id overview",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+        
+  "uid": "prometheus"
       },
       "gridPos": {
         "h": 2,
@@ -77,7 +90,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+            
+  "uid": "prometheus"
           },
           "refId": "A"
         }
@@ -87,7 +104,8 @@
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -143,7 +161,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_height{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -154,12 +173,13 @@
           "refId": "A"
         }
       ],
-      "title": "Block Height",
+      "title": "Localnet - Block Height",
       "type": "stat"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -215,7 +235,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_total_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -224,12 +245,13 @@
           "refId": "A"
         }
       ],
-      "title": "Total Transactions",
+      "title": "Localnet - Total Transactions",
       "type": "stat"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -295,7 +317,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_block_interval_seconds{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -305,12 +328,13 @@
         }
       ],
       "timeFrom": "1h",
-      "title": "Avg Block Time",
+      "title": "Localnet - Avg Block Time",
       "type": "stat"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -366,7 +390,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -376,7 +401,7 @@
           "refId": "A"
         }
       ],
-      "title": "Bonded Tokens",
+      "title": "Localnet - Bonded Tokens",
       "type": "stat"
     },
     {
@@ -388,7 +413,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "decimals": 0,
       "fieldConfig": {
@@ -439,7 +465,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -451,7 +478,8 @@
         },
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_missing_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -462,7 +490,8 @@
         },
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_byzantine_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -473,7 +502,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Validators",
+      "title": "Localnet - Validators",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -513,7 +542,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -563,7 +593,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -575,7 +606,8 @@
         },
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_missing_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -586,7 +618,8 @@
         },
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_byzantine_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -597,7 +630,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Voting Power",
+      "title": "Localnet - Voting Power",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -637,7 +670,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -686,7 +720,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_block_size_bytes{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -699,7 +734,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Block Size",
+      "title": "Localnet - Block Size",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -739,7 +774,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "decimals": 0,
       "fieldConfig": {
@@ -789,7 +825,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_consensus_num_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -802,7 +839,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Transactions",
+      "title": "Localnet - Transactions",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -837,7 +874,11 @@
       "collapsed": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+        
+  "uid": "prometheus"
       },
       "gridPos": {
         "h": 1,
@@ -852,17 +893,22 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+        
+  
+  "uid": "localnet-cosmos-dashboard",
+            
+  "uid": "prometheus"
           },
           "refId": "A"
         }
       ],
-      "title": "instance overview: $instance",
+      "title": "Localnet - instance overview: $instance",
       "type": "row"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -922,7 +968,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peers{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -932,12 +979,13 @@
           "refId": "A"
         }
       ],
-      "title": "Connected Peers",
+      "title": "Localnet - Connected Peers",
       "type": "gauge"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -996,7 +1044,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_mempool_size{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1006,12 +1055,13 @@
           "refId": "A"
         }
       ],
-      "title": "Unconfirmed Transactions",
+      "title": "Localnet - Unconfirmed Transactions",
       "type": "gauge"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -1067,7 +1117,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_mempool_failed_txs{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1077,12 +1128,13 @@
           "refId": "A"
         }
       ],
-      "title": "Failed Transactions",
+      "title": "Localnet - Failed Transactions",
       "type": "stat"
     },
     {
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -1138,7 +1190,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_mempool_recheck_times{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1148,7 +1201,7 @@
           "refId": "A"
         }
       ],
-      "title": "Recheck Times",
+      "title": "Localnet - Recheck Times",
       "type": "stat"
     },
     {
@@ -1157,7 +1210,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1204,7 +1258,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peer_receive_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -1215,7 +1270,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Total Network Input",
+      "title": "Localnet - Total Network Input",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -1251,7 +1306,8 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        "uid": "$DS"
+        
+  "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1298,7 +1354,8 @@
       "targets": [
         {
           "datasource": {
-            "uid": "$DS"
+            
+  "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peer_send_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -1309,7 +1366,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Total Network Output",
+      "title": "Localnet - Total Network Output",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -1373,7 +1430,8 @@
           "value": "athens_101-1"
         },
         "datasource": {
-          "uid": "$DS"
+          
+  "uid": "prometheus"
         },
         "definition": "label_values(tendermint_consensus_height, chain_id)",
         "hide": 0,
@@ -1400,7 +1458,8 @@
           "value": "172.20.0.11:26660"
         },
         "datasource": {
-          "uid": "$DS"
+          
+  "uid": "prometheus"
         },
         "definition": "label_values(tendermint_consensus_height{chain_id=\"$chain_id\"}, instance)",
         "hide": 0,
@@ -1451,8 +1510,10 @@
     ]
   },
   "timezone": "",
-  "title": "Cosmos Dashboard",
-  "uid": "UJyurCTWz",
+  "title": "Localnet - Cosmos Dashboard",
+  
+  
+  "uid": "localnet-cosmos-dashboard",
   "version": 1,
   "weekStart": ""
 }
