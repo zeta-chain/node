@@ -133,9 +133,9 @@ func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx,
 
 	// source 2:
 	// pick highest nonce tx from broadcasted txs
-	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
+	p, err := ob.ZetaRepo().GetPendingNonces(ctx)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "GetPendingNoncesByChain failed")
+		return nil, 0, err
 	}
 
 	// #nosec G115 always in range

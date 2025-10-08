@@ -167,8 +167,6 @@ jobs:
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
               core.setOutput('DEFAULT_TESTS', true);
-              core.setOutput('UPGRADE_TESTS', true);
-              core.setOutput('ADMIN_UPGRADE_TESTS', true);
 
               // conditional tests based on PR labels
               const commit_message = context.payload.merge_group.head_commit.message;

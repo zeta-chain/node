@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func Test_GetInboundInternalTrackers(t *testing.T) {
@@ -66,7 +65,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		require.EqualValues(t, 1, len(trackers))
 
 		// mock ballot as finalized
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, nil).Once()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(sample.CrossChainTx(t, msg.Digest()), nil).Once()
 
 		// ACT 2
 		trackers = ob.GetInboundInternalTrackers(ctx)
@@ -77,7 +76,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 	})
 }
 
-func Test_handleMonitoringError(t *testing.T) {
+func Test_WatchMonitoringError(t *testing.T) {
 	ctx := context.Background()
 	chain := chains.Ethereum
 
@@ -92,7 +91,7 @@ func Test_handleMonitoringError(t *testing.T) {
 		// ACT
 		// start the monitoring error handler
 		go func() {
-			ob.handleMonitoringError(ctx, monitorErrCh, "zetaHash")
+			ob.WatchMonitoringError(ctx, monitorErrCh, "zetaHash")
 		}()
 
 		// feed an error to the channel
@@ -122,21 +121,10 @@ func Test_handleMonitoringError(t *testing.T) {
 		monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
 		// ACT
-		ob.handleMonitoringError(ctxTimeout, monitorErrCh, "zetaHash")
+		ob.WatchMonitoringError(ctxTimeout, monitorErrCh, "zetaHash")
 
 		// ASSERT
 		trackers := ob.GetInboundInternalTrackers(ctx)
 		require.Empty(t, trackers)
 	})
-}
-
-// addNInternalTrackers adds n internal trackers to the observer
-func addNInternalTrackers(ob *testSuite, n int) []crosschaintypes.MsgVoteInbound {
-	msgs := make([]crosschaintypes.MsgVoteInbound, 0, n)
-	for range n {
-		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddInternalInboundTracker(&msg)
-		msgs = append(msgs, msg)
-	}
-	return msgs
 }

@@ -126,9 +126,14 @@ func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
-			_, err := ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err := ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
 			if err != nil {
-				return errors.Wrapf(err, "error PostVoteInbound")
+				return err
 			}
 		}
 	}
@@ -178,12 +183,12 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 
 	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
 		event.Receiver,
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		cosmosmath.NewUint(event.Amount),
 		hex.EncodeToString(event.Memo),
 		event.TxHash,

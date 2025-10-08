@@ -21,7 +21,7 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschain
 	// collect up to MaxInternalTrackersPerScan trackers
 	for ballot, tracker := range ob.internalInboundTrackers {
 		// skip those that are already finalized
-		if _, err := ob.ZetacoreClient().GetCctxByHash(ctx, ballot); err == nil {
+		if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
 			finalizedBallots = append(finalizedBallots, ballot)
 			continue
 		}
@@ -68,7 +68,7 @@ func (ob *Observer) removeInternalInboundTracker(ballot string) {
 	}
 }
 
-func (ob *Observer) handleMonitoringError(
+func (ob *Observer) WatchMonitoringError(
 	ctx context.Context,
 	monitorErrCh <-chan zetaerrors.ErrTxMonitor,
 	zetaHash string,

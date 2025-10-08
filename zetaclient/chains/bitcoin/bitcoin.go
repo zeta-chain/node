@@ -47,9 +47,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := b.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := b.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -142,9 +142,9 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 	// #nosec G115 positive
 	scheduleInterval := uint64(b.observer.ChainParams().OutboundScheduleInterval)
 
-	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := b.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	// schedule at most one keysign per ticker

@@ -65,8 +65,12 @@ func (_m *ZetacoreClient) WithRateLimiterFlags(flags *crosschaintypes.RateLimite
 	return _m
 }
 
-func (_m *ZetacoreClient) MockGetCctxByHash(err error) *ZetacoreClient {
-	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
+func (_m *ZetacoreClient) MockGetCctxByHash(cctxIndex string, err error) *ZetacoreClient {
+	var cctx *crosschaintypes.CrossChainTx
+	if cctxIndex != "" {
+		cctx = &crosschaintypes.CrossChainTx{Index: cctxIndex}
+	}
+	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(cctx, err)
 	return _m
 }
 

@@ -36,7 +36,7 @@ import (
 
 // ProcessInboundTrackers processes inbound trackers from zetacore
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
 		return err
 	}
@@ -358,9 +358,9 @@ func (ob *Observer) observeZetaSent(
 		}
 
 		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
-		if _, err = ob.PostVoteInbound(ctx, msg, gasLimit); err != nil {
-			// we have to re-scan from this block next time
-			return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
+		_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound, msg, gasLimit, ob.WatchMonitoringError)
+		if err != nil {
+			return beingScanned - 1, err // we have to re-scan from this block next time
 		}
 	}
 
@@ -440,10 +440,11 @@ func (ob *Observer) observeERC20Deposited(
 
 		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound,
+				msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 			if err != nil {
 				// we have to re-scan from this block next time
-				return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
+				return beingScanned - 1, err
 			}
 		}
 	}
@@ -522,7 +523,12 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundMessagePassingExecutionGasLimit)
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
@@ -578,7 +584,12 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
@@ -619,7 +630,12 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
@@ -672,7 +688,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		ob.Chain().ChainId,
 		"",
 		clienttypes.BytesToEthHex(event.Recipient),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.Hex(),
@@ -680,7 +696,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		1_500_000,
 		coin.CoinType_ERC20,
 		event.Asset.String(),
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
@@ -744,7 +760,7 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 		event.DestinationGasLimit.Uint64(),
 		coin.CoinType_Zeta,
 		"",
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
@@ -793,7 +809,7 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		ob.Chain().ChainId,
 		sender.Hex(),
 		sender.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(tx.Value),
 		message,
 		tx.Hash,
@@ -801,7 +817,7 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		90_000,
 		coin.CoinType_Gas,
 		"",
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		0, // not a smart contract call
 		types.InboundStatus_SUCCESS,
 	)

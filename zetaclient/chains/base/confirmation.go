@@ -3,9 +3,6 @@ package base
 import (
 	"context"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -77,9 +74,9 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 
 	// query liquidity cap for asset
 	chainID := msg.SenderChainId
-	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, ethcommon.HexToAddress(msg.Asset))
+	fCoins, err := ob.ZetaRepo().GetForeignCoinsFromAsset(ctx, msg.Asset)
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to get foreign coins for asset %s on chain %d", msg.Asset, chainID)
+		return false, err
 	}
 
 	// ensure the deposit amount does not exceed amount cap

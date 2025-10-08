@@ -14,7 +14,6 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
-	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -149,12 +148,10 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 		return nil
 	}
 
-	chainID := ob.Chain().ChainId
 	nonce := uint64(auth.Seqno)
 	hash := encoder.EncodeTx(tx.Transaction)
 
-	// TODO
-	_, err = ob.ZetacoreClient().PostOutboundTracker(ctx, chainID, nonce, hash)
+	_, err = ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, hash)
 
 	return err
 }
@@ -168,9 +165,9 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 // It processes each tracker individually (continues executing despite any errors so it does not
 // block other trackers).
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
 	}
 
 	return ob.observeInboundTrackers(ctx, trackers, false)
@@ -304,12 +301,16 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	msg := inbound.intoVoteMessage(ob.ZetacoreClient(), ob.Chain().ChainId)
-	const retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
+	operatorAddress := ob.ZetaRepo().GetOperatorAddress()
+	senderChain := ob.Chain().ChainId
+	zetaChain := ob.ZetaRepo().ZetaChain().ChainId
 
-	_, err = ob.PostVoteInbound(ctx, msg, retryGasLimit)
+	logger = ob.Logger().Inbound
+	msg := inbound.intoVoteMessage(operatorAddress, senderChain, zetaChain)
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(err, "unable to vote for inbound transaction")
+		return err
 	}
 
 	return nil
@@ -398,30 +399,30 @@ func (inbound *Inbound) isCompliant() bool {
 }
 
 func (inbound *Inbound) intoVoteMessage(
-	zetacoreClient zrepo.ZetacoreClient, // TODO
+	operatorAddress string,
 	senderChain int64,
+	zetaChain int64,
 ) *types.MsgVoteInbound {
 	const (
-		seqno      = 0  // ton doesn't use sequential block numbers
+		seqno      = 0  // TON does not use sequential block numbers
 		eventIndex = 0  // not applicable for TON
 		asset      = "" // empty for gas coin
 		gasLimit   = zetacore.PostVoteInboundCallOptionsGasLimit
 	)
 
 	var (
-		operatorAddress = zetacoreClient.GetKeys().GetOperatorAddress()
-		inboundHash     = encoder.EncodeTx(inbound.tx.Transaction)
-		sender          = inbound.sender.ToRaw()
-		receiver        = inbound.receiver.Hex()
+		inboundHash = encoder.EncodeTx(inbound.tx.Transaction)
+		sender      = inbound.sender.ToRaw()
+		receiver    = inbound.receiver.Hex()
 	)
 
 	return types.NewMsgVoteInbound(
-		operatorAddress.String(),
+		operatorAddress,
 		sender,
 		senderChain,
 		sender,
 		receiver,
-		zetacoreClient.Chain().ChainId,
+		zetaChain,
 		inbound.amount,
 		hex.EncodeToString(inbound.message),
 		inboundHash,

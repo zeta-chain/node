@@ -44,7 +44,7 @@ func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransaction
 	require.NoError(t, err)
 
 	//Create some Transaction entries in the DB
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		txResult := btcjson.GetTransactionResult{
 			Amount:          float64(i),
 			Fee:             0,
@@ -145,13 +145,12 @@ func Test_NewObserver(t *testing.T) {
 			baseObserver, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.zetacoreClient,
+				zrepo.New(tt.zetacoreClient, tt.chain, mode.StandardMode),
 				tt.tssSigner,
 				100,
 				tt.ts,
 				database,
 				tt.logger,
-				mode.StandardMode,
 			)
 			require.NoError(t, err)
 
@@ -327,13 +326,12 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacore,
+		zrepo.New(zetacore, chain, mode.StandardMode),
 		tssSigner,
 		100,
 		&metrics.TelemetryServer{},
 		database,
 		baseLogger,
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

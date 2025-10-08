@@ -79,11 +79,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
 	}
 
 	return ob.observeInboundTrackers(ctx, trackers, false)
@@ -163,9 +161,11 @@ func (ob *Observer) processInboundEvent(
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
 
-	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	logger := ob.Logger().Inbound
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote inbound")
+		return err
 	}
 
 	return nil
@@ -231,12 +231,12 @@ func (ob *Observer) constructInboundVote(
 	}
 
 	return cctypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		deposit.Sender,
 		ob.Chain().ChainId,
 		deposit.Sender,
 		deposit.Receiver.String(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		deposit.Amount,
 		hex.EncodeToString(deposit.Payload),
 		event.TxHash,

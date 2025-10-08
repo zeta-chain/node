@@ -58,9 +58,9 @@ func (s *Solana) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := s.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := s.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -148,9 +148,9 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		needsProcessingCtr = 0
 	)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := s.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	// schedule keysign for each pending cctx
@@ -209,7 +209,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 			go s.signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				s.observer.ZetacoreClient(),
+				s.observer.ZetaRepo(),
 				zetaHeight,
 			)
 		}

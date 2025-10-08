@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -20,6 +19,7 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -27,6 +27,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var someArgStub = map[string]any{}
@@ -55,7 +57,7 @@ func TestObserver(t *testing.T) {
 			Return("", nil)
 
 		// ACT
-		err := ts.PostGasPrice(ts.ctx)
+		err := ts.ObserveGasPrice(ts.ctx)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -116,7 +118,9 @@ func TestObserver(t *testing.T) {
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// ACT
 		err := ts.ObserveInbound(ts.ctx)
@@ -242,7 +246,8 @@ func TestObserver(t *testing.T) {
 			}),
 		})
 
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// Given votes catcher
 		ts.CatchInboundVotes()
@@ -546,8 +551,9 @@ func newTestSuite(t *testing.T) *testSuite {
 		Compliance: log.Logger,
 	}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database,
-		logger, mode.StandardMode)
+	zetaRepo := zrepo.New(zetacore, chain, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetaRepo, tss, 1000, nil,
+		database, logger)
 	require.NoError(t, err)
 
 	suiMock := mocks.NewSuiClient(t)

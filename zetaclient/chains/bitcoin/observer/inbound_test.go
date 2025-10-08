@@ -247,7 +247,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			SenderChainId:      chain.ChainId,
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.ToAddress,
-			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
+			ReceiverChain:      ob.ZetaRepo().ZetaChain().ChainId,
 			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
 			Message:            hex.EncodeToString(event.MemoBytes),
 			InboundHash:        event.TxHash,
@@ -308,7 +308,7 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			SenderChainId:      chain.ChainId,
 			TxOrigin:           event.FromAddress,
 			Receiver:           event.MemoStd.Receiver.Hex(),
-			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
+			ReceiverChain:      ob.ZetaRepo().ZetaChain().ChainId,
 			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
 			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
 			InboundHash:        event.TxHash,

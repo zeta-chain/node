@@ -264,3 +264,12 @@ certificate-path = ""
 
 # Key path defines the key.pem file path for the TLS configuration.
 key-path = ""
+
+#######################################################
+###          Mempool Configuration Option          ###
+#######################################################
+[mempool]
+
+# Max number of transactions in the mempool.
+# Reference: https://docs.cosmos.network/main/user/run-node/run-node#configuring-the-node-using-apptoml-and-configtoml
+max-txs = "3000"
