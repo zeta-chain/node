@@ -250,17 +250,17 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 
 // DecodeMsgEthereumTxFromCosmosMsg tries to get MsgEthereumTx from cosmos msg
 // fallback to legacy ethermint MsgEthereumTx if evm cant be parsed
-func (b *Backend) DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg) (*evmtypes.MsgEthereumTx, bool) {
+func DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg, chainID *big.Int) (*evmtypes.MsgEthereumTx, error) {
 	ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 	if ok {
 		ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
-		return ethMsg, ok
+		return ethMsg, nil
 	}
 
 	// if above fails, try to cast to legacy ethermint type
 	ethMsg2, ok := msg.(*etherminttypes.MsgEthereumTx)
 	if !ok {
-		return nil, false
+		return nil, fmt.Errorf("can't cast to MsgEthereumTx")
 	}
 
 	// convert to new evm tx type
@@ -287,28 +287,23 @@ func (b *Backend) DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg) (*evmtypes.MsgEt
 		Accesses:  &accessList,
 	})
 
-	chainID, err := b.ChainID()
+	from, err := ethMsg2.GetSender(chainID)
 	if err != nil {
-		b.Logger.Error("can't get backend chain id", err.Error())
-		return nil, false
-	}
-	from, err := ethMsg2.GetSender(chainID.ToInt())
-	if err != nil {
-		b.Logger.Error("can't get tx From field", err.Error())
-		return nil, false
+		return nil, errors.Wrap(err, "can't get tx From field")
 	}
 	ethMsg.From = from.Bytes()
 	ethMsg.Hash = ethMsg2.AsTransaction().Hash().Hex()
 
-	return ethMsg, true
+	return ethMsg, nil
 }
 
 // DecodeMsgEthereumTxFromCosmosTx tries to get MsgEthereumTx from cosmos tx msgs
 func (b *Backend) DecodeMsgEthereumTxFromCosmosTx(tx sdk.Tx) (*evmtypes.MsgEthereumTx, bool) {
 	for _, msg := range tx.GetMsgs() {
-		ethMsg, ok := b.DecodeMsgEthereumTxFromCosmosMsg(msg)
-		if ok {
-			return ethMsg, ok
+		ethMsg, err := DecodeMsgEthereumTxFromCosmosMsg(msg, b.ChainConfig().ChainID)
+		if err != nil {
+			b.Logger.Warn("can't decode MsgEthereumTx", "err", err.Error())
+			return ethMsg, false
 		}
 	}
 

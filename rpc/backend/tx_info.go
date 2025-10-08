@@ -198,10 +198,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, fmt.Errorf("failed to decode tx: %w", err)
 		}
 
-		ethMsgDecoded, ok := b.DecodeMsgEthereumTxFromCosmosMsg(tx.GetMsgs()[res.MsgIndex])
-		if !ok {
-			b.Logger.Error("failed to get eth msg")
-			return nil, fmt.Errorf("failed to get eth msg")
+		ethMsgDecoded, err := DecodeMsgEthereumTxFromCosmosMsg(tx.GetMsgs()[res.MsgIndex], b.ChainConfig().ChainID)
+		if err != nil {
+			b.Logger.Error("failed to get eth msg", "error", err.Error())
+			return nil, err
 		}
 
 		ethMsg = ethMsgDecoded
