@@ -345,33 +345,31 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
       fi
   fi
 
-  echo "Waiting for upgrade height..."
-  CURRENT_HEIGHT=0
-  WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
-  # wait for upgrade height
-  while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
-  do
-    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
-    echo Current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
-    sleep 2
-  done
-
-  echo "Waiting 10 seconds for node to restart..."
-  sleep 10
-
-  NEW_VERSION=$(get_zetacored_version)
-
-  echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
-
+  # If this is a zetaclient only upgrade , update the binary and proceed , if not wait for the upgrade height
   if [ "$UPGRADE_ZETACLIENT_ONLY" = true ]; then
     echo "Zetaclientd-only upgrade mode: updating zetaclientd to $NEW_VERSION"
     create_zetaclientd_upgrade_trigger
   else
+    echo "Waiting for upgrade height..."
+      CURRENT_HEIGHT=0
+      WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
+      while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
+      do
+        CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
+        echo Current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
+        sleep 2
+      done
+
+      echo "Waiting 10 seconds for node to restart..."
+      sleep 10
     if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
       echo "Version did not change after upgrade height, maybe the upgrade did not run?"
       exit 2
     fi
   fi
+
+  NEW_VERSION=$(get_zetacored_version)
+  echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
 
   # wait for zevm endpoint to come up
   sleep 10
