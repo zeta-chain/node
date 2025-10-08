@@ -407,7 +407,7 @@ start-upgrade-test-zetaclient: zetanode-upgrade solana
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=260 && \
 	export USE_ZETAE2E_ANTE=true && \
-	export E2E_ARGS="--test-solana --test-sui" && \
+	export E2E_ARGS="--test-solana --test-sui --upgrade-contracts" && \
 	export UPGRADE_ZETACLIENT_ONLY=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient --profile solana --profile sui -f docker-compose-upgrade.yml up -d
 
@@ -416,7 +416,7 @@ start-upgrade-test-admin: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=60 && \
 	export USE_ZETAE2E_ANTE=true && \
-	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin --upgrade-contracts" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
