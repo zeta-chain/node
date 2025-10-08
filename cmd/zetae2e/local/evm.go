@@ -34,6 +34,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHDepositAndCallNoMessageName,
 		e2etests.TestETHWithdrawAndCallNoMessageName,
 		e2etests.TestEtherWithdrawRestrictedName,
+		e2etests.TestDepositAndCallHighGasUsageName,
 	))
 
 	// Test happy paths for erc20 token workflow
