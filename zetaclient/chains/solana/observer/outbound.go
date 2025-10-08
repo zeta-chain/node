@@ -53,8 +53,6 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return err
 	}
 
-	logger := ob.Logger().Outbound
-
 	// process outbound trackers
 	for _, tracker := range trackers {
 		// go to next tracker if this one already has a finalized tx
@@ -63,10 +61,13 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, tracker.Nonce).Logger()
+
 		// get original cctx parameters
 		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			return err // take a rest if zetacore RPC breaks
+			logger.Error().Err(err).Send()
+			continue // does not block other CCTXs from being processed
 		}
 		coinType := cctx.InboundParams.CoinType
 
@@ -77,11 +78,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
 				txCount++
 				txResult = result
-
-				logger.Info().
-					Str(logs.FieldTx, txHash.TxHash).
-					Uint64(logs.FieldNonce, nonce).
-					Msg("confirmed outbound")
+				logger.Info().Str(logs.FieldTx, txHash.TxHash).Msg("confirmed outbound")
 			}
 		}
 
@@ -91,10 +88,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		} else if txCount > 1 {
 			// Should not happen. We can't tell which txHash is true.
 			// It might happen (e.g. bug, glitchy/hacked endpoint)
-			logger.Error().
-				Uint64(logs.FieldNonce, nonce).
-				Int("count", txCount).
-				Msg("finalized multiple outbounds")
+			logger.Error().Int("count", txCount).Msg("finalized multiple outbounds")
 		}
 	}
 

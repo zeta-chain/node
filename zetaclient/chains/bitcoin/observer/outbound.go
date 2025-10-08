@@ -31,29 +31,32 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return err
 	}
 
-	logger := ob.logger.Outbound
-
 	for _, tracker := range trackers {
+		logger := ob.logger.Outbound.With().Uint64(logs.FieldNonce, tracker.Nonce).Logger()
+
 		// get the CCTX
 		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			logger.Err(err).Uint64(logs.FieldNonce, tracker.Nonce).Send()
-			break
+			logger.Error().Err(err).Send()
+			continue // does not block other CCTXs from being processed
 		}
 		if len(tracker.HashList) > 1 {
 			logger.Warn().
-				Uint64(logs.FieldNonce, tracker.Nonce).
 				Int("count", len(tracker.HashList)).
 				Msg("oops, got multiple outbound hashes")
 		}
 
 		// Iterate over all txHashes to find the truly included outbound.
-		// At any time, there is guarantee that only one single txHash will be considered valid and included for each nonce.
+		// At any time, there is guarantee that only one single txHash will be considered valid and
+		// included for each nonce.
+		//
 		// The reasons are:
 		//   1. CCTX with nonce 'N = 0' is the past and well-controlled.
-		//   2. Given any CCTX with nonce 'N > 0', its outbound MUST spend the previous nonce-mark UTXO (nonce N-1) to be considered valid.
+		//   2. Given any CCTX with nonce 'N > 0', its outbound MUST spend the previous nonce-mark
+		//      UTXO (nonce N-1) to be considered valid.
 		//   3. Bitcoin prevents double spending of the same UTXO except for RBF.
-		//   4. When RBF happens, the original tx will be removed from Bitcoin core, and only the new tx will be valid.
+		//   4. When RBF happens, the original tx will be removed from Bitcoin core, and only the
+		//      new tx will be valid.
 		for _, txHash := range tracker.HashList {
 			_, included := ob.TryIncludeOutbound(ctx, cctx, txHash.TxHash)
 			if included {
