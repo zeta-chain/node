@@ -891,7 +891,7 @@
     }
   ],
   "preload": false,
-  "refresh": "",
+  "refresh": "30s",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
@@ -921,14 +921,14 @@
         "auto_count": 30,
         "auto_min": "10s",
         "current": {
-          "text": "5m",
-          "value": "5m"
+          "text": "30s",
+          "value": "30s"
         },
         "label": "interval",
         "name": "interval",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "30s",
             "value": "30s"
           },
@@ -938,7 +938,7 @@
             "value": "1m"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "5m",
             "value": "5m"
           },
@@ -969,7 +969,7 @@
           }
         ],
         "query": "30s,1m,5m,10m,30m,1h,6h,12h",
-        "refresh": false,
+        "refresh": "30s",
         "type": "interval"
       },
       {
@@ -991,7 +991,7 @@
           "query": "localnet",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "refresh": 1,
+        "refresh": "30s",
         "regex": "",
         "type": "query"
       }

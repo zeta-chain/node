@@ -1653,7 +1653,7 @@
           }
         ],
         "query": "30s,1m,5m,10m,30m,1h,6h,12h",
-        "refresh": false,
+        "refresh": "30s",
         "type": "interval"
       },
       {
@@ -1675,7 +1675,7 @@
           "query": "localnet",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "refresh": 1,
+        "refresh": "30s",
         "regex": "",
         "type": "query"
       }

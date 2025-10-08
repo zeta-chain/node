@@ -4842,7 +4842,7 @@
     }
   ],
   "preload": false,
-  "refresh": "60s",
+  "refresh": "30s",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
@@ -4873,20 +4873,20 @@
         "auto_min": "10s",
         "current": {
           "text": [
-            "1m"
+            "30s"
           ],
-          "value": "1m"
+          "value": "30s"
         },
         "label": "interval",
         "name": "interval",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "30s",
             "value": "30s"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "1m",
             "value": "1m"
           },
@@ -4922,7 +4922,7 @@
           }
         ],
         "query": "30s,1m,5m,10m,30m,1h,6h,12h",
-        "refresh": false,
+        "refresh": "30s",
         "type": "interval"
       },
       {
@@ -4945,7 +4945,7 @@
           "query": "label_values(zetachain_exporter_bonded_tokens,network)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "refresh": 1,
+        "refresh": "30s",
         "regex": "",
         "type": "query"
       }

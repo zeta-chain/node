@@ -162,7 +162,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "5s",
+  "refresh": "30s",
   "schemaVersion": 37,
   "style": "dark",
   "tags": [],
@@ -191,7 +191,7 @@
         "name": "log_containers",
         "options": [],
         "query": "label_values(container)",
-        "refresh": 1,
+        "refresh": "30s",
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,

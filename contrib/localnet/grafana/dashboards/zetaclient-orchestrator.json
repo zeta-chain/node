@@ -843,7 +843,7 @@
           "query": "localnet",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "refresh": 1,
+        "refresh": "30s",
         "regex": "",
         "type": "query"
       }
