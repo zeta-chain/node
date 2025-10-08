@@ -28,6 +28,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// simpleMsg is a test message that doesn't implement MsgEthereumTx
+type simpleMsg struct{}
+
+func (m simpleMsg) Route() string                               { return "test" }
+func (m simpleMsg) Type() string                                { return "test" }
+func (m simpleMsg) ValidateBasic() error                        { return nil }
+func (m simpleMsg) GetSigners() []sdk.AccAddress                { return nil }
+func (m simpleMsg) ProtoMessage()                               { panic("not implemented") }
+func (m simpleMsg) Reset()                                      { panic("not implemented") }
+func (m simpleMsg) String() string                              { panic("not implemented") }
+func (m simpleMsg) Bytes() []byte                               { panic("not implemented") }
+func (m simpleMsg) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+
 func (s *TestSuite) TestBlockNumber() {
 	testCases := []struct {
 		name           string
@@ -1741,4 +1754,69 @@ func (suite *TestSuite) TestEthAndSyntheticGetBlockByNumber() {
 	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.V)
 	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.R)
 	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.S)
+}
+
+func (s *TestSuite) TestDecodeMsgEthereumTxFromCosmosMsg() {
+	// Create an evm transaction
+	msgEthereumTx, _ := s.buildEthereumTx()
+	expectedTx := msgEthereumTx
+	expectedTx.Hash = expectedTx.AsTransaction().Hash().Hex()
+
+	// Create a legacy ethermint transaction for testing conversion
+	legacyTx := s.buildLegacyEthereumTx()
+
+	testCases := []struct {
+		name     string
+		msg      sdk.Msg
+		chainID  *big.Int
+		expTx    *evmtypes.MsgEthereumTx
+		expError bool
+		errorMsg string
+	}{
+		{
+			"pass - evmtypes.MsgEthereumTx",
+			msgEthereumTx,
+			big.NewInt(1),
+			expectedTx,
+			false,
+			"",
+		},
+		{
+			"pass - etherminttypes.MsgEthereumTx (legacy conversion)",
+			legacyTx,
+			big.NewInt(1),
+			nil,
+			false,
+			"",
+		},
+		{
+			"fail - unsupported message type",
+			func() sdk.Msg {
+				// Create a simple message that doesn't implement MsgEthereumTx
+				return simpleMsg{}
+			}(),
+			big.NewInt(1),
+			nil,
+			true,
+			"can't cast to MsgEthereumTx",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			result, err := DecodeMsgEthereumTxFromCosmosMsg(tc.msg, tc.chainID)
+
+			if tc.expError {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errorMsg)
+				s.Require().Nil(result)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(result)
+
+				s.Require().NotEmpty(result.Hash)
+				s.Require().NotNil(result.From)
+			}
+		})
+	}
 }

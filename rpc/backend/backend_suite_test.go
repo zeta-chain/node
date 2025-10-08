@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/evm/crypto/hd"
 	"github.com/cosmos/evm/encoding"
 	"github.com/cosmos/evm/indexer"
+	etherminttypes "github.com/cosmos/evm/legacy/evm"
 	"github.com/cosmos/evm/testutil/constants"
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
@@ -160,6 +161,27 @@ func (s *TestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
 	bz, err := s.backend.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 	return msgEthereumTx, bz
+}
+
+// buildEthereumTx returns an example legacy Ethereum transaction
+func (s *TestSuite) buildLegacyEthereumTx() *etherminttypes.MsgEthereumTx {
+	msgEthereumTx := etherminttypes.NewTx(
+		s.backend.EvmChainID,
+		uint64(0),
+		&common.Address{},
+		big.NewInt(0),
+		100000,
+		big.NewInt(1),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	from, _ := utiltx.NewAddrKey()
+	msgEthereumTx.From = from.Hex()
+
+	return msgEthereumTx
 }
 
 func (suite *TestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ExecTxResult) {
