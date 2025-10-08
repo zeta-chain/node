@@ -72,14 +72,15 @@ copy_genesis_file() {
 # Create zetaclientd upgrade trigger files on all available zetaclient containers
 create_zetaclientd_upgrade_trigger() {
   local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3")
+  local download_url="http://upgrade-host:8000/zetaclientd"
 
   for node in "${nodes[@]}"; do
     # Skip if node is not accessible
     ssh -q root@$node "exit" 2>/dev/null || continue
 
     echo "Creating upgrade trigger file on $node"
-    ssh root@$node "touch /root/.zetaclientd/zetaclientd-upgrade-trigger" || continue
-    echo "Upgrade trigger file created on $node"
+    ssh root@$node "echo '$download_url' > /root/.zetaclientd/zetaclientd-upgrade-trigger" || continue
+    echo "Upgrade trigger file created on $node with URL: $download_url"
   done
 
   echo "Zetaclientd upgrade trigger creation completed"

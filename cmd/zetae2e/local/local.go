@@ -606,8 +606,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	// https://github.com/zeta-chain/node/issues/4038
+
 	// TODO : enable sui gateway upgrade tests to be run multiple times
+	// https://github.com/zeta-chain/node/issues/4038
+	// https://github.com/zeta-chain/node/issues/4315
 	runSuiGatewayUpgradeTests := func() bool {
 		if deployerRunner.IsRunningZetaclientOnlyUpgrade() {
 			return false
