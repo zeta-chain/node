@@ -1382,7 +1382,7 @@
         "multi": false,
         "name": "chain_id",
         "options": [],
-        "query": "label_values(tende    rmint_consensus_height, chain_id)",
+        "query": "label_values(cometbft_consensus_height, chain_id)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
