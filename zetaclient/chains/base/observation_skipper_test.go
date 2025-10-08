@@ -194,7 +194,8 @@ func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.
 	// Set base fee based on max base fee
 	currentBaseFee := int64(1000)
 	if isBaseFeeExceeded {
-		currentBaseFee = currentBaseFee + 1
+		const gweiToWei = 1_000_000_000
+		currentBaseFee = currentBaseFee*gweiToWei + 1
 	}
 
 	// Set unconfirmed tx count based on mempool congestion
