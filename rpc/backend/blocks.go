@@ -265,15 +265,15 @@ func DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg, chainID *big.Int) (*evmtypes.
 
 	// convert to new evm tx type
 	tx2 := ethMsg2.AsTransaction()
-	acessListTuple := []ethtypes.AccessTuple{}
+	accessListTuple := make([]ethtypes.AccessTuple, 0, len(tx2.AccessList()))
 	for _, al := range tx2.AccessList() {
-		acessListTuple = append(acessListTuple, ethtypes.AccessTuple{
+		accessListTuple = append(accessListTuple, ethtypes.AccessTuple{
 			Address:     al.Address,
 			StorageKeys: al.StorageKeys,
 		})
 	}
 
-	accessList := ethtypes.AccessList(acessListTuple)
+	accessList := ethtypes.AccessList(accessListTuple)
 	ethMsg = evmtypes.NewTx(&evmtypes.EvmTxArgs{
 		Nonce:     tx2.Nonce(),
 		GasLimit:  tx2.Gas(),
@@ -282,17 +282,17 @@ func DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg, chainID *big.Int) (*evmtypes.
 		GasPrice:  tx2.GasPrice(),
 		ChainID:   tx2.ChainId(),
 		Amount:    tx2.Value(),
-		GasTipCap: tx2.GasFeeCap(),
+		GasTipCap: tx2.GasTipCap(),
 		To:        tx2.To(),
 		Accesses:  &accessList,
 	})
 
 	from, err := ethMsg2.GetSender(chainID)
 	if err != nil {
-		return nil, errors.Wrap(err, "can't get tx From field")
+		return nil, errors.Errorf("can't get tx From field %s", err.Error())
 	}
 	ethMsg.From = from.Bytes()
-	ethMsg.Hash = ethMsg2.AsTransaction().Hash().Hex()
+	ethMsg.Hash = tx2.Hash().Hex()
 
 	return ethMsg, nil
 }
@@ -301,9 +301,10 @@ func DecodeMsgEthereumTxFromCosmosMsg(msg sdk.Msg, chainID *big.Int) (*evmtypes.
 func (b *Backend) DecodeMsgEthereumTxFromCosmosTx(tx sdk.Tx) (*evmtypes.MsgEthereumTx, bool) {
 	for _, msg := range tx.GetMsgs() {
 		ethMsg, err := DecodeMsgEthereumTxFromCosmosMsg(msg, b.ChainConfig().ChainID)
-		if err != nil {
+		if err == nil {
+			return ethMsg, true
+		} else {
 			b.Logger.Warn("can't decode MsgEthereumTx", "err", err.Error())
-			return ethMsg, false
 		}
 	}
 

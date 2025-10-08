@@ -240,7 +240,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	}
 
 	var from common.Address
-	if additional != nil || (ethMsg != nil && len(ethMsg.From) != 0) {
+	if additional != nil || len(ethMsg.From) != 0 {
 		from = common.BytesToAddress(ethMsg.From)
 	} else if ethMsg.Data != nil {
 		from, err = ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(b.EvmChainID))
