@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "grafana",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -38,10 +37,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -139,10 +135,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -243,10 +236,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -347,10 +337,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -451,10 +438,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -555,10 +539,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -633,10 +614,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -718,7 +696,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "cometbft_consensus_block_size_bytes",
+          "expr": "tendermint_consensus_block_size_bytes",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -734,10 +712,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -835,10 +810,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "editable": false,
       "error": false,
@@ -920,7 +892,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "cometbft_mempool_failed_txs",
+          "expr": "tendermint_mempool_failed_txs",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1033,10 +1005,7 @@
         },
         "datasource": {
           "type": "prometheus",
-        
-  "uid": "prometheus",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "localnet",
         "description": "Network that is being monitored",
@@ -1090,7 +1059,6 @@
   },
   "timezone": "",
   "title": "Localnet - Gas Stats & Metrics",
-  
   "uid": "localnet-gas-metrics",
   "version": 1,
   "weekStart": ""

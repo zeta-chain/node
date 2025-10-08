@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "datasource",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -29,11 +28,7 @@
       "collapsed": false,
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 1,
@@ -47,11 +42,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "refId": "A"
         }
@@ -62,11 +53,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 2,
@@ -90,11 +77,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "refId": "A"
         }
@@ -104,8 +87,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -161,8 +143,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_height{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -178,8 +159,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -235,8 +215,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_total_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -250,8 +229,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -317,8 +295,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_block_interval_seconds{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -333,8 +310,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -390,8 +366,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -413,8 +388,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "decimals": 0,
       "fieldConfig": {
@@ -465,8 +439,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -478,8 +451,7 @@
         },
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_missing_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -490,8 +462,7 @@
         },
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_byzantine_validators{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -542,8 +513,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -593,8 +563,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -606,8 +575,7 @@
         },
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_missing_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -618,8 +586,7 @@
         },
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_byzantine_validators_power{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -670,8 +637,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -720,8 +686,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_block_size_bytes{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -774,8 +739,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "decimals": 0,
       "fieldConfig": {
@@ -825,8 +789,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_consensus_num_txs{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -874,11 +837,7 @@
       "collapsed": false,
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 1,
@@ -893,11 +852,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-cosmos-dashboard",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "refId": "A"
         }
@@ -907,8 +862,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -968,8 +922,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peers{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -984,8 +937,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -1044,8 +996,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_mempool_size{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1060,8 +1011,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -1117,8 +1067,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_mempool_failed_txs{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1133,8 +1082,7 @@
     },
     {
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -1190,8 +1138,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_mempool_recheck_times{chain_id=\"$chain_id\", instance=~\"$instance\"}",
           "format": "time_series",
@@ -1210,8 +1157,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1258,8 +1204,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peer_receive_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -1306,8 +1251,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": {
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1354,8 +1298,7 @@
       "targets": [
         {
           "datasource": {
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expr": "tendermint_p2p_peer_send_bytes_total{chain_id=\"$chain_id\", instance=\"$instance\"}",
           "format": "time_series",
@@ -1430,8 +1373,7 @@
           "value": "athens_101-1"
         },
         "datasource": {
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "label_values(tendermint_consensus_height, chain_id)",
         "hide": 0,
@@ -1458,8 +1400,7 @@
           "value": "172.20.0.11:26660"
         },
         "datasource": {
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "label_values(tendermint_consensus_height{chain_id=\"$chain_id\"}, instance)",
         "hide": 0,
@@ -1511,8 +1452,6 @@
   },
   "timezone": "",
   "title": "Localnet - Cosmos Dashboard",
-  
-  
   "uid": "localnet-cosmos-dashboard",
   "version": 1,
   "weekStart": ""

@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "grafana",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -38,11 +37,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -122,15 +117,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg by(job) (Tss_Tss_joinparty_time{network=\"$network\"})",
+          "expr": "avg by(job) (Tss_Tss_joinparty_time)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -156,11 +147,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -249,14 +236,10 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(Tss_Tss_join_party{network=\"$network\", result=\"success\"}[$__rate_interval])) by (job) / sum(rate(Tss_Tss_join_party{network=\"$network\"}[$__rate_interval])) by (job)",
+          "expr": "sum(rate(Tss_Tss_join_party{result=\"success\"}[$__rate_interval])) by (job) / sum(rate(Tss_Tss_join_party[$__rate_interval])) by (job)",
           "format": "time_series",
           "interval": "$interval",
           "legendFormat": "{{job}}",
@@ -279,11 +262,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -363,15 +342,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg by(job) (Tss_Tss_keysign_time{network=\"$network\"})",
+          "expr": "avg by(job) (Tss_Tss_keysign_time)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -388,11 +363,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -481,14 +452,10 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(Tss_Tss_keysign{network=\"$network\", status=\"success\"}[$__rate_interval])) by (job) / sum(rate(Tss_Tss_keysign{network=\"$network\"}[$__rate_interval])) by (job)",
+          "expr": "sum(rate(Tss_Tss_keysign{status=\"success\"}[$__rate_interval])) by (job) / sum(rate(Tss_Tss_keysign[$__rate_interval])) by (job)",
           "format": "time_series",
           "interval": "$interval",
           "legendFormat": "{{job}} ",
@@ -502,11 +469,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -584,15 +547,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg by(pubkey) (zetaclient_tss_node_blame_count{network=\"$network\"})",
+          "expr": "avg by(pubkey) (zetaclient_tss_node_blame_count)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -617,11 +576,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -701,15 +656,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg by(job) (Tss_Tss_keygen_time{network=\"$network\"})",
+          "expr": "avg by(job) (Tss_Tss_keygen_time)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -736,11 +687,7 @@
       "datasource": {
         "default": true,
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -821,15 +768,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "max by(job) (zetaclient_num_active_message_signs{network=\"$network\"})",
+          "expr": "max by(job) (zetaclient_num_active_message_signs)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -847,11 +790,7 @@
       "datasource": {
         "default": true,
         "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -932,15 +871,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg by(job) (zetaclient_num_active_message_signs{network=\"$network\"})",
+          "expr": "avg by(job) (zetaclient_num_active_message_signs)",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1044,11 +979,7 @@
         },
         "datasource": {
           "type": "prometheus",
-        
-  
-  "uid": "localnet-tss-metrics",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "localnet",
         "description": "Network that is being monitored",
@@ -1084,8 +1015,6 @@
   },
   "timezone": "",
   "title": "Localnet - TSS Metrics",
-  
-  
   "uid": "localnet-tss-metrics",
   "version": 1,
   "weekStart": ""

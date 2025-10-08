@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "grafana",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -88,11 +87,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -172,7 +167,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum by (job) (\n  increase(zetaclient_scheduler_task_invocations_total{network=\"$network\",status=\"ok\"}[5m])\n)",
+          "expr": "sum by (job) (\n  increase(zetaclient_scheduler_task_invocations_total{status=\"ok\"}[5m])\n)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -184,11 +179,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "Provides last(p90) of successfull task invocations per validator+chain+task",
       "fieldConfig": {
@@ -299,7 +290,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "label_join (\nhistogram_quantile(0.9,\n    sum by (job, task_group, task_name, le) (\n        increase(zetaclient_scheduler_task_duration_seconds_bucket{status=\"ok\", network=\"$network\"}[$__range])\n    )\n),\n  \"task_id\", \":\", \"task_group\", \"task_name\"\n)",
+          "expr": "label_join (\nhistogram_quantile(0.9,\n    sum by (job, task_group, task_name, le) (\n        increase(zetaclient_scheduler_task_duration_seconds_bucket{status=\"ok\"}[$__range])\n    )\n),\n  \"task_id\", \":\", \"task_group\", \"task_name\"\n)",
           "format": "table",
           "legendFormat": "__auto",
           "range": true,
@@ -379,11 +370,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -465,7 +452,7 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(task_group, task_name) (increase(zetaclient_scheduler_task_invocations_total{network=\"$network\",status=\"failed\"}[5m]))",
+          "expr": "sum by(task_group, task_name) (increase(zetaclient_scheduler_task_invocations_total{status=\"failed\"}[5m]))",
           "format": "table",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -518,11 +505,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -603,15 +586,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum by(job) (increase(zetaclient_scheduler_task_invocations_total{network=\"$network\", status=\"failed\"}[5m]))",
+          "expr": "sum by(job) (increase(zetaclient_scheduler_task_invocations_total{status=\"failed\"}[5m]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "{{job}} - {{status}}",
@@ -626,11 +605,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -711,15 +686,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(task_group) (increase(zetaclient_scheduler_task_invocations_total{network=\"$network\", status=\"failed\"}[5m]))",
+          "expr": "sum by(task_group) (increase(zetaclient_scheduler_task_invocations_total{status=\"failed\"}[5m]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "{{task_group}}",
@@ -734,11 +705,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -819,15 +786,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zetaclient-orchestrator",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(task_name) (increase(zetaclient_scheduler_task_invocations_total{network=\"$network\", status=\"failed\"}[5m]))",
+          "expr": "sum by(task_name) (increase(zetaclient_scheduler_task_invocations_total{status=\"failed\"}[5m]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "{{task_group}}",
@@ -904,8 +867,6 @@
   },
   "timezone": "browser",
   "title": "Localnet - Zetaclient Orchestrator",
-  
-  
   "uid": "localnet-zetaclient-orchestrator",
   "version": 1
 }

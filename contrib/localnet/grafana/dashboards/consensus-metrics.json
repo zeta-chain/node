@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "grafana",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -38,10 +37,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  "uid": "prometheus",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "The number of CometBFT Voting Rounds happening on the network.",
       "fieldConfig": {
@@ -125,7 +121,7 @@
         {
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_validator_prevote_rounds{network=\"$network\"}",
+          "expr": "zetachain_exporter_validator_prevote_rounds",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "Voting Rounds",
@@ -227,10 +223,7 @@
         },
         "datasource": {
           "type": "prometheus",
-        
-  "uid": "prometheus",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "localnet",
         "description": "Network that is being monitored",
@@ -266,7 +259,6 @@
   },
   "timezone": "",
   "title": "Localnet - Consensus Metrics",
-  
   "uid": "localnet-consensus-metrics",
   "version": 1,
   "weekStart": ""

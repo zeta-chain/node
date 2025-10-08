@@ -5,8 +5,7 @@
         "builtIn": 1,
         "datasource": {
           "type": "grafana",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "enable": true,
         "hide": true,
@@ -38,11 +37,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -96,15 +91,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_locked_amount{network=\"$network\", name=\"ZetaConnectorContractETH\"})",
+          "expr": "avg(zetachain_exporter_locked_amount{name=\"ZetaConnectorContractETH\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -120,11 +111,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -178,15 +165,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "avg(2100000000-zetachain_exporter_locked_amount{network=\"$network\", name=\"ZetaConnectorContractETH\"})",
+          "expr": "avg(2100000000-zetachain_exporter_locked_amount{name=\"ZetaConnectorContractETH\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -202,11 +185,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -260,15 +239,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "avg(zetachain_exporter_cosmos_supply{network=\"$network\"} / 1e+18)",
+          "expr": "avg(zetachain_exporter_cosmos_supply / 1e+18)",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -284,11 +259,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -342,15 +313,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_token_supply{network=\"$network\", name=\"ZetaTokenContractBSC\"})",
+          "expr": "avg(zetachain_exporter_token_supply{name=\"ZetaTokenContractBSC\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -366,11 +333,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -424,15 +387,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_token_supply{network=\"$network\", name=\"ZetaTokenContract\"})",
+          "expr": "avg(zetachain_exporter_token_supply{name=\"ZetaTokenContract\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -448,11 +407,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -536,15 +491,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_locked_amount{network=\"$network\", name=\"ZetaConnectorContractETH\"})",
+          "expr": "avg(zetachain_exporter_locked_amount{name=\"ZetaConnectorContractETH\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -560,11 +511,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -648,15 +595,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "avg(2100000000-zetachain_exporter_locked_amount{network=\"$network\", name=\"ZetaConnectorContractETH\"})",
+          "expr": "avg(2100000000-zetachain_exporter_locked_amount{name=\"ZetaConnectorContractETH\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -672,11 +615,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "Wrapped Zeta Token Supply on ZetaChain",
       "fieldConfig": {
@@ -761,15 +700,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_token_supply{network=\"$network\", name=\"ZetaTokenContract\"})",
+          "expr": "avg(zetachain_exporter_token_supply{name=\"ZetaTokenContract\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -785,11 +720,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -873,15 +804,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "avg(zetachain_exporter_cosmos_supply{network=\"$network\"} / 1e+18)",
+          "expr": "avg(zetachain_exporter_cosmos_supply / 1e+18)",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -897,11 +824,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -985,15 +908,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "avg(zetachain_exporter_token_supply{network=\"$network\", name=\"ZetaTokenContractBSC\"})",
+          "expr": "avg(zetachain_exporter_token_supply{name=\"ZetaTokenContractBSC\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -1009,11 +928,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "description": "bonded tokens / total supply of Zeta tokens on ZetaChain Network",
       "fieldConfig": {
@@ -1097,15 +1012,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_bonded_tokens{network=\"$network\", job=\"zetachain-exporter-mainnet\"} / zetachain_exporter_cosmos_supply{network=\"$network\", job=\"zetachain-exporter-mainnet\"}",
+          "expr": "zetachain_exporter_bonded_tokens{job=\"zetachain-exporter-mainnet\"} / zetachain_exporter_cosmos_supply{job=\"zetachain-exporter-mainnet\"}",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -1135,11 +1046,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1202,11 +1109,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -1226,11 +1129,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1310,15 +1209,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_crosschain_balance{network=\"$network\", denom=\"BTC.BTC\"}",
+          "expr": "zetachain_exporter_crosschain_balance{denom=\"BTC.BTC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": false,
@@ -1335,11 +1230,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1419,15 +1310,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_crosschain_balance{network=\"$network\", denom=\"ETH.ETH\"}",
+          "expr": "zetachain_exporter_crosschain_balance{denom=\"ETH.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": false,
@@ -1444,11 +1331,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1528,15 +1411,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_crosschain_balance{network=\"$network\", denom=\"BNB.BSC\"}",
+          "expr": "zetachain_exporter_crosschain_balance{denom=\"BNB.BSC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": false,
@@ -1553,11 +1432,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1637,15 +1512,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_crosschain_balance{network=\"$network\", denom=\"POL.POLYGON\"}",
+          "expr": "zetachain_exporter_crosschain_balance{denom=\"POL.POLYGON\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": false,
@@ -1662,11 +1533,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1746,15 +1613,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -1766,15 +1629,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -1787,8 +1646,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -1802,11 +1660,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1886,15 +1740,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -1906,15 +1756,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -1927,8 +1773,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -1942,11 +1787,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2026,15 +1867,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.BSC\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.BSC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2046,15 +1883,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.BSC\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.BSC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2067,8 +1900,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2082,11 +1914,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2166,15 +1994,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BSC\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BSC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2186,15 +2010,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.BSC\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.BSC\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2207,8 +2027,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2222,11 +2041,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2331,15 +2146,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2351,15 +2162,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDT.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2372,8 +2179,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2387,11 +2193,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2471,15 +2273,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2491,15 +2289,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2512,8 +2306,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2527,11 +2320,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2611,15 +2400,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"SHIB.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"SHIB.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2631,15 +2416,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"SHIB.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"SHIB.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2652,8 +2433,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2667,11 +2447,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2751,15 +2527,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"PEPE.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"PEPE.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2771,15 +2543,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"PEPE.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"PEPE.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2792,8 +2560,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2807,11 +2574,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -2891,15 +2654,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"ULTI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"ULTI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2911,15 +2670,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"ULTI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"ULTI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -2932,8 +2687,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -2947,11 +2701,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3031,15 +2781,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"DAI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"DAI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -3051,15 +2797,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"DAI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"DAI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -3072,8 +2814,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -3088,11 +2829,7 @@
       "datasource": {
         "default": true,
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3172,15 +2909,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -3192,15 +2925,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_custody_balance{denom=\"USDC.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "hide": true,
@@ -3213,8 +2942,7 @@
           "datasource": {
             "name": "Expression",
             "type": "__expr__",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "expression": "$B-$A",
           "hide": false,
@@ -3241,11 +2969,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3325,11 +3049,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"BTC.BTC\"}",
@@ -3341,11 +3061,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"BTC.BTC\"}",
@@ -3361,11 +3077,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3445,11 +3157,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"ETH.ETH\"}",
@@ -3461,11 +3169,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"ETH.ETH\"}",
@@ -3481,11 +3185,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3565,11 +3265,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"BNB.BSC\"}",
@@ -3581,11 +3277,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"BNB.BSC\"}",
@@ -3601,11 +3293,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3685,15 +3373,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"POL.POLYGON\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"POL.POLYGON\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -3705,15 +3389,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"POL.POLYGON\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"POL.POLYGON\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -3730,11 +3410,7 @@
       "datasource": {
         "default": true,
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3814,15 +3490,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"ETH.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"ETH.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -3834,15 +3506,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"ETH.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"ETH.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -3858,11 +3526,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -3942,11 +3606,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.ETH\"}",
@@ -3958,11 +3618,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"USDC.ETH\"}",
@@ -3978,11 +3634,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4062,11 +3714,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDT.ETH\"}",
@@ -4078,11 +3726,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"USDT.ETH\"}",
@@ -4098,11 +3742,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4182,11 +3822,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.BSC\"}",
@@ -4198,11 +3834,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BSC\"}",
@@ -4218,11 +3850,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4311,11 +3939,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDT.BSC\"}",
@@ -4327,11 +3951,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "zetachain_exporter_token_supply{symbol=\"USDT.BSC\"}",
@@ -4347,11 +3967,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4440,15 +4056,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4460,15 +4072,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4484,11 +4092,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4577,15 +4181,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDT.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDT.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4597,15 +4197,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.POL\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDT.POL\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4622,11 +4218,7 @@
       "datasource": {
         "default": true,
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4715,15 +4307,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"USDC.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4735,15 +4323,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BASE\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"USDC.BASE\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4759,11 +4343,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4852,15 +4432,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"SHIB.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"SHIB.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4872,15 +4448,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"SHIB.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"SHIB.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -4896,11 +4468,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -4989,15 +4557,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"PEPE.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"PEPE.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5009,15 +4573,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"PEPE.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"PEPE.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5033,11 +4593,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -5126,15 +4682,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"DAI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"DAI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5146,15 +4698,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"DAI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"DAI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5170,11 +4718,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-        
-  "uid": "prometheus"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -5263,15 +4807,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_liquidity_cap{symbol=\"ULTI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_liquidity_cap{symbol=\"ULTI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5283,15 +4823,11 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "zetachain_exporter_token_supply{symbol=\"ULTI.ETH\", network=\"$network\"}",
+          "expr": "zetachain_exporter_token_supply{symbol=\"ULTI.ETH\"}",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -5396,11 +4932,7 @@
         },
         "datasource": {
           "type": "prometheus",
-        
-  
-  "uid": "localnet-zrc20-data",
-          
-  "uid": "prometheus"
+          "uid": "prometheus"
         },
         "definition": "label_values(zetachain_exporter_bonded_tokens,network)",
         "description": "",
@@ -5437,8 +4969,6 @@
   },
   "timezone": "",
   "title": "Localnet - ZRC20 Data",
-  
-  
   "uid": "localnet-zrc20-data",
   "version": 1,
   "weekStart": ""
