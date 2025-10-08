@@ -401,7 +401,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -505,7 +504,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -687,7 +685,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -791,7 +788,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -866,7 +862,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1012,7 +1007,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1136,7 +1130,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1237,7 +1230,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1356,7 +1348,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1462,7 +1453,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
@@ -1566,7 +1556,6 @@
         {
           "datasource": {
             "type": "prometheus",
-        "uid": "prometheus",
             "uid": "prometheus"
           },
           "disableTextWrap": false,
