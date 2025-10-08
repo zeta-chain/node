@@ -119,10 +119,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -225,10 +222,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -332,10 +326,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -439,10 +430,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -546,10 +534,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -627,10 +612,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -732,10 +714,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -836,10 +815,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -940,10 +916,7 @@
         {
           "datasource": {
             "type": "prometheus",
-        
-  "uid": "prometheus",
-            
-  "uid": "prometheus"
+            "uid": "prometheus"
           },
           "disableTextWrap": false,
           "editorMode": "builder",

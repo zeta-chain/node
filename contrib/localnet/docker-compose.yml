@@ -364,7 +364,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
+    image: grafana/grafana:main
     container_name: grafana
     hostname: grafana
     profiles:
