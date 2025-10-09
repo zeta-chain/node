@@ -2,7 +2,6 @@ package config
 
 import (
 	"sync"
-	"time"
 
 	"github.com/zeta-chain/node/pkg/chains"
 )
@@ -14,9 +13,6 @@ const (
 	// MaxInboundTrackersPerScan is the maximum number of inbound trackers to scan in one ticker
 	// This is to not add too much pressure to the zetacore when missed inbounds happen frequently.
 	MaxInboundTrackersPerScan = 10
-
-	// InternalTrackerScanInterval is the interval to scan internal inbound trackers
-	InternalTrackerScanInterval = 15 * time.Second
 )
 
 // New constructs Config optionally with default values.
