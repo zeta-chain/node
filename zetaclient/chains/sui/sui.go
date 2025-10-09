@@ -144,9 +144,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		maxNonce   = firstNonce + lookback
 	)
 
-	for i := range cctxList {
+	for i, cctx := range cctxList {
 		var (
-			cctx           = cctxList[i]
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
 			nonce          = outboundParams.TssNonce
@@ -183,7 +182,6 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
 				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
 			}
-
 			return nil
 		})
 	}
