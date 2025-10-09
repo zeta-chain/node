@@ -228,7 +228,7 @@ start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
 	export E2E_ARGS="${E2E_ARGS} --setup-solana --setup-sui --setup-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton --profile monitoring up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
