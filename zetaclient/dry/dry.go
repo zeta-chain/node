@@ -12,7 +12,10 @@ import (
 	"context"
 
 	suimodel "github.com/block-vision/sui-go-sdk/models"
+	sol "github.com/gagliardetto/solana-go"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 
+	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 )
@@ -38,8 +41,20 @@ const MsgUnreachable = "unreachable"
 // Solana
 // ------------------------------------------------------------------------------------------------
 
-// TODO
-// See: https://github.com/zeta-chain/node/issues/4230
+type SolanaClient struct {
+	solana.Client
+}
+
+func WrapSolanaClient(client solana.Client) *SolanaClient {
+	return &SolanaClient{Client: client}
+}
+
+func (*SolanaClient) SendTransactionWithOpts(context.Context,
+	*sol.Transaction,
+	solrpc.TransactionOpts,
+) (sol.Signature, error) {
+	panic(MsgUnreachable)
+}
 
 // ------------------------------------------------------------------------------------------------
 // Sui
