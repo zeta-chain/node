@@ -224,6 +224,60 @@ var (
 		},
 		[]string{"client"},
 	)
+
+	InboundObservationsBlockScanTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_observations_block_scan_total",
+		Help:      "Total number of inbound observations from block scan",
+	}, []string{"chain"})
+
+	InboundObservationsZetacoreTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_observations_zetacore_tracker_total",
+		Help:      "Total number of inbound observations added through zetacore tracker",
+	}, []string{"chain"})
+
+	InboundObservationsInternalTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_observations_internal_tracker_total",
+		Help:      "Total number of inbound observations added through internal tracker",
+	}, []string{"chain"})
+
+	VotesPostedWith500kGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_votes_posted_500k_gas_limit_total",
+		Help:      "Total number of inbound votes posted with 500k gas limit",
+	}, []string{"chain"})
+
+	TransactionsWithOutOfGasErrorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_votes_out_of_gas_errors_total",
+		Help:      "Total number of inbound votes with out-of-gas errors",
+	}, []string{"chain"})
+
+	VotesPostedWith7MGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_votes_posted_7m_gas_limit_total",
+		Help:      "Total number of inbound votes posted with 7M gas limit",
+	}, []string{"chain"})
+
+	TransactionsAddedToInternalTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "transactions_added_to_internal_tracker_total",
+		Help:      "Total number of transactions added to internal tracker",
+	}, []string{"chain"})
+
+	SuccessfulInboundVotesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_votes_successful_total",
+		Help:      "Total number of successful inbound votes included in a block",
+	}, []string{"chain"})
+
+	ActiveInternalTrackers = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "internal_trackers_active",
+		Help:      "Current number of active internal trackers",
+	}, []string{"chain"})
 )
 
 // NewMetrics creates a new Metrics instance

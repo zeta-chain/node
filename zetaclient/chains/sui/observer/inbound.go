@@ -110,7 +110,8 @@ func (ob *Observer) observeInboundTrackers(
 
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
 				Bool("is_internal", isInternal).
 				Msg("unable to process inbound tracker")
