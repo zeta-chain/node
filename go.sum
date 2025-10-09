@@ -1043,8 +1043,6 @@ github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/gofuzz v1.2.2 h1:XL/8qDMzcgvR4+CyRQW9UGdwPRPMHVJfqQ/uMvSUuQw=
 github.com/gagliardetto/gofuzz v1.2.2/go.mod h1:bkH/3hYLZrMLbfYWA0pWzXmi5TTRZnu4pMGZBkqMKvY=
-github.com/gagliardetto/solana-go v1.12.0 h1:rzsbilDPj6p+/DOPXBMLhwMZeBgeRuXjm5zQFCoXgsg=
-github.com/gagliardetto/solana-go v1.12.0/go.mod h1:l/qqqIN6qJJPtxW/G1PF4JtcE3Zg2vD2EliZrr9Gn5k=
 github.com/gagliardetto/treeout v0.1.4 h1:ozeYerrLCmCubo1TcIjFiOWTTGteOOHND1twdFpgwaw=
 github.com/gagliardetto/treeout v0.1.4/go.mod h1:loUefvXTrlRG5rYmJmExNryyBRh8f89VZhmMOyCyqok=
 github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff h1:tY80oXqGNY4FhTFhk+o9oFHGINQ/+vhlm8HFzi6znCI=
@@ -1969,6 +1967,8 @@ github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870 h1:G
 github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46 h1:xbgrVDXWkZaWhMAuD3Q5A13jmRKYQbjZMPBaCkv3cns=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
+github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762 h1:KaubBEpJe4qE51FlacXuC0GMuEjopTnW3ttzUikvw54=
+github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762/go.mod h1:l/qqqIN6qJJPtxW/G1PF4JtcE3Zg2vD2EliZrr9Gn5k=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901 h1:9whtN5fjYHfk4yXIuAsYP2EHxImwDWDVUOnZJ2pfL3w=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901/go.mod h1:d2iTC62s9JwKiCMPhcDDXbIZmuzAyJ4lwso0H5QyRbk=
 github.com/zondax/hid v0.9.2 h1:WCJFnEDMiqGF64nlZz28E9qLVZ0KSJ7xpc5DLEyma2U=

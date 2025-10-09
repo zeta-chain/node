@@ -265,6 +265,12 @@ type MsgExecute struct {
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
+
+	// Address of AddressLookupTable
+	addressLookupTableAddress *solana.PublicKey
+
+	// Addresses in AddressLookupTable state
+	addressLookupTableStateAddresses solana.PublicKeySlice
 }
 
 // NewMsgExecute returns a new execute message
@@ -275,16 +281,20 @@ func NewMsgExecute(
 	data []byte,
 	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
+	addressLookupTableAddress *solana.PublicKey,
+	addressLookupTableStateAddresses solana.PublicKeySlice,
 ) *MsgExecute {
 	return &MsgExecute{
-		chainID:           chainID,
-		nonce:             nonce,
-		amount:            amount,
-		to:                to,
-		sender:            sender,
-		data:              data,
-		executeType:       executeType,
-		remainingAccounts: remainingAccounts,
+		chainID:                          chainID,
+		nonce:                            nonce,
+		amount:                           amount,
+		to:                               to,
+		sender:                           sender,
+		data:                             data,
+		executeType:                      executeType,
+		remainingAccounts:                remainingAccounts,
+		addressLookupTableAddress:        addressLookupTableAddress,
+		addressLookupTableStateAddresses: addressLookupTableStateAddresses,
 	}
 }
 
@@ -326,6 +336,16 @@ func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
 // ExecuteType returns the type of execute operation
 func (msg *MsgExecute) ExecuteType() ExecuteType {
 	return msg.executeType
+}
+
+// AddressLookupTable return address of AddressLookupTable
+func (msg *MsgExecute) AddressLookupTable() *solana.PublicKey {
+	return msg.addressLookupTableAddress
+}
+
+// AddressLookupTableStateAddresses returns addresses from AddressLookupTable state
+func (msg *MsgExecute) AddressLookupTableStateAddresses() solana.PublicKeySlice {
+	return msg.addressLookupTableStateAddresses
 }
 
 // Hash packs the execute message and computes the hash
@@ -562,6 +582,12 @@ type MsgExecuteSPL struct {
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
+
+	// Address of AddressLookupTable
+	addressLookupTableAddress *solana.PublicKey
+
+	// Addresses in AddressLookupTable state
+	addressLookupTableStateAddresses solana.PublicKeySlice
 }
 
 // NewMsgExecuteSPL returns a new execute spl message
@@ -573,19 +599,23 @@ func NewMsgExecuteSPL(
 	data []byte,
 	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
+	addressLookupTableAddress *solana.PublicKey,
+	addressLookupTableStateAddresses solana.PublicKeySlice,
 ) *MsgExecuteSPL {
 	return &MsgExecuteSPL{
-		chainID:           chainID,
-		nonce:             nonce,
-		amount:            amount,
-		to:                to,
-		recipientAta:      toAta,
-		mintAccount:       mintAccount,
-		decimals:          decimals,
-		sender:            sender,
-		data:              data,
-		executeType:       executeType,
-		remainingAccounts: remainingAccounts,
+		chainID:                          chainID,
+		nonce:                            nonce,
+		amount:                           amount,
+		to:                               to,
+		recipientAta:                     toAta,
+		mintAccount:                      mintAccount,
+		decimals:                         decimals,
+		sender:                           sender,
+		data:                             data,
+		executeType:                      executeType,
+		remainingAccounts:                remainingAccounts,
+		addressLookupTableAddress:        addressLookupTableAddress,
+		addressLookupTableStateAddresses: addressLookupTableStateAddresses,
 	}
 }
 
@@ -634,6 +664,16 @@ func (msg *MsgExecuteSPL) Data() []byte {
 // RemainingAccounts returns the remaining accounts of the message
 func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
+}
+
+// AddressLookupTable return address of AddressLookupTable
+func (msg *MsgExecuteSPL) AddressLookupTable() *solana.PublicKey {
+	return msg.addressLookupTableAddress
+}
+
+// AddressLookupTableStateAddresses returns addresses from AddressLookupTable state
+func (msg *MsgExecuteSPL) AddressLookupTableStateAddresses() solana.PublicKeySlice {
+	return msg.addressLookupTableStateAddresses
 }
 
 // ExecuteType returns the type of execute operation

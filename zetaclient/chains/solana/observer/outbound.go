@@ -239,7 +239,8 @@ func (ob *Observer) CheckFinalizedTx(
 
 	// query transaction using "finalized" commitment to avoid re-org
 	txResult, err := ob.solanaClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
-		Commitment: rpc.CommitmentFinalized,
+		Commitment:                     rpc.CommitmentFinalized,
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 	})
 	if err != nil {
 		logger.Error().Err(err).Msg("error calling GetTransaction")

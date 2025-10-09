@@ -72,6 +72,7 @@ const (
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallAddressLookupTableName       = "solana_withdraw_and_call_alt"
 	TestSolanaWithdrawAndCallInvalidTxSizeName            = "solana_withdraw_and_call_invalid_tx_size"
 	TestSolanaWithdrawAndCallInvalidMsgEncodingName       = "solana_withdraw_and_call_invalid_msg_encoding"
 	TestZEVMToSolanaCallName                              = "zevm_to_solana_call"
@@ -92,6 +93,7 @@ const (
 	TestSPLDepositAndCallRevertWithCallThatRevertsName    = "spl_deposit_and_call_revert_with_call_that_reverts"
 	TestSPLWithdrawName                                   = "spl_withdraw"
 	TestSPLWithdrawAndCallName                            = "spl_withdraw_and_call"
+	TestSPLWithdrawAndCallAddressLookupTableName          = "spl_withdraw_and_call_alt"
 	TestSPLWithdrawAndCallRevertName                      = "spl_withdraw_and_call_revert"
 	TestSPLWithdrawAndCreateReceiverAtaName               = "spl_withdraw_and_create_receiver_ata"
 
@@ -752,6 +754,15 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallAddressLookupTableName,
+		"withdraw SOL from ZEVM and call solana program using Address Lookup Table",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCallAddressLookupTable,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
 		TestSolanaWithdrawRevertExecutableReceiverName,
 		"withdraw SOL from ZEVM reverts if executable receiver",
 		[]runner.ArgDefinition{
@@ -795,16 +806,25 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLWithdrawAndCallName,
 		"withdraw SPL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "amount in spl", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCallAddressLookupTableName,
+		"withdraw SPL from ZEVM and call solana program using Address Lookup Table",
+		[]runner.ArgDefinition{
+			{Description: "amount in spl", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCallAddressLookupTable,
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallRevertName,
 		"withdraw SPL from ZEVM and call solana program that reverts",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "amount in spl", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCallRevert,
 		runner.WithMinimumVersion("v29.0.0"),
