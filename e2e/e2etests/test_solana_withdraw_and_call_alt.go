@@ -85,10 +85,11 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 		}
 	}
 
+	msgDataStr := "hello"
 	msg := solanacontract.ExecuteMsgAddressLookupTable{
 		AddressLookupTableAddress: [32]byte(addressLookupTableAddress),
 		WritableIndexes:           writableIndexes,
-		Data:                      []byte("hello"),
+		Data:                      []byte(msgDataStr),
 	}
 
 	encoded, err := msg.Encode()
@@ -129,7 +130,7 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 	require.NoError(r, err)
 
 	pda := r.ParseConnectedPda(connectedPda)
-	require.Equal(r, "hello", pda.LastMessage)
+	require.Equal(r, msgDataStr, pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 
 	// check if balances locally are increased in connected program

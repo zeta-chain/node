@@ -97,10 +97,11 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 		}
 	}
 
+	msgDataStr := "hello"
 	msg := solanacontract.ExecuteMsgAddressLookupTable{
 		AddressLookupTableAddress: [32]byte(addressLookupTableAddress),
 		WritableIndexes:           writableIndexes,
-		Data:                      []byte("hello"),
+		Data:                      []byte(msgDataStr),
 	}
 
 	msgEncoded, err := msg.Encode()
@@ -138,7 +139,7 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 
 	// check pda account info of connected program
 	pda := r.ParseConnectedPda(connectedPda)
-	require.Equal(r, "hello", pda.LastMessage)
+	require.Equal(r, msgDataStr, pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 
 	// verify balances are updated

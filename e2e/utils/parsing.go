@@ -12,12 +12,14 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 )
 
+// ParseFloat parses float64 from provided string, used in e2e tests
 func ParseFloat(t require.TestingT, s string) float64 {
 	f, err := strconv.ParseFloat(s, 64)
 	require.NoError(t, err, "unable to parse float %q", s)
 	return f
 }
 
+// ParseInt parses int from provided string, used in e2e tests
 func ParseInt(t require.TestingT, s string) int {
 	v, err := strconv.Atoi(s)
 	require.NoError(t, err, "unable to parse int from %q", s)
@@ -25,6 +27,7 @@ func ParseInt(t require.TestingT, s string) int {
 	return v
 }
 
+// ParseBigInt parses *big.Int from provided string, used in e2e tests
 func ParseBigInt(t require.TestingT, s string) *big.Int {
 	v, ok := big.NewInt(0).SetString(s, 10)
 	require.True(t, ok, "unable to parse big.Int from %q", s)
@@ -32,6 +35,7 @@ func ParseBigInt(t require.TestingT, s string) *big.Int {
 	return v
 }
 
+// ParseUint8Array parses []uint8 from provided string, used in e2e tests
 func ParseUint8Array(t require.TestingT, s string) []uint8 {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -56,6 +60,7 @@ func ParseUint8Array(t require.TestingT, s string) []uint8 {
 	return indexes
 }
 
+// ParseUint parses math.Uint from provided string, used in e2e tests
 func ParseUint(t require.TestingT, s string) math.Uint {
 	return math.NewUintFromBigInt(ParseBigInt(t, s))
 }
@@ -69,6 +74,7 @@ func BTCAmountFromFloat64(t require.TestingT, amount float64) *big.Int {
 	return big.NewInt(int64(satoshi))
 }
 
+// ParseBitcoinWithdrawArgs parses receiver and withdrawal amount, used in e2e tests
 func ParseBitcoinWithdrawArgs(
 	t require.TestingT,
 	args []string,
