@@ -72,17 +72,9 @@ func (e *EVM) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(e.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !e.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(e.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(e.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(e.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -97,7 +89,7 @@ func (e *EVM) Start(ctx context.Context) error {
 	register(e.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(e.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(e.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
-	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(e.observer.CheckRPCStatus, "check_rpc_status")
 	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 

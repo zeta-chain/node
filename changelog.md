@@ -17,6 +17,17 @@ by calling `updateAdditionalActionFee` admin function.
 }
 ```
 
+* ZetaChain maximum base fee is introduced as an optional field. It is the maximum base fee, in Gwei, allowed for zetaclient to send out ZetaChain transactions.
+```
+"MaxBaseFee": 100,
+```
+
+* ZetaChain mempool congestion threshold is introduced as an optional field. Observation will stop if the number of unconfirmed transactions in the mempool is greater than this value.
+```
+"MempoolCongestionThreshold": 3000,
+```
+
+
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
@@ -51,6 +62,7 @@ by calling `updateAdditionalActionFee` admin function.
 ### Fixes
 
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4291](https://github.com/zeta-chain/node/pull/4291) - adjust inbound retry gas limit and stop tx broadcasting on mempool congestion
 
 ## v33.0.0
 

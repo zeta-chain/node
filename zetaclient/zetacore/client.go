@@ -49,6 +49,10 @@ type Client struct {
 	// blocksFanout that receives new block events from Zetacore via websockets
 	blocksFanout *fanout.FanOut[ctypes.EventDataNewBlock]
 
+	// readyToExecuteInboundBallots tracks the failed ballots (ballot -> gas limit) due to out of gas
+	// these ballots are pending and waiting for the finalizing vote to come in and trigger the execution
+	readyToExecuteInboundBallots map[string]uint64
+
 	mu sync.RWMutex
 }
 
@@ -174,6 +178,8 @@ func NewClient(
 		keys:        keys,
 		chainID:     chainID,
 		chain:       zetaChain,
+
+		readyToExecuteInboundBallots: make(map[string]uint64),
 	}, nil
 }
 
