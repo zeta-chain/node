@@ -51,6 +51,7 @@ func ComplianceConfig() config.ComplianceConfig {
 // FeatureFlags returns a sample feature flags
 func FeatureFlags() config.FeatureFlags {
 	return config.FeatureFlags{
-		EnableMultipleCalls: true,
+		EnableMultipleCalls:            true,
+		EnableSolanaAddressLookupTable: true,
 	}
 }

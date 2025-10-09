@@ -1,10 +1,8 @@
 package e2etests
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
@@ -74,20 +72,8 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 
-	// verify state and balances are updated
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        ethcommon.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	// verify state and balances are updated and state is set
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello spl deposit and call", pda.LastRevertMessage)
 	privkey := r.GetSolanaPrivKey()
 	require.Equal(r, privkey.PublicKey().String(), pda.LastRevertSender.String())

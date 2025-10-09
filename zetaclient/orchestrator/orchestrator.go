@@ -393,11 +393,6 @@ func (oc *Orchestrator) logFeatureFlags(config config.Config) {
 
 	oc.logger.Info().
 		Bool("enable_multiple_calls", flags.EnableMultipleCalls).
+		Bool("enable_solana_address_lookup_table", flags.EnableSolanaAddressLookupTable).
 		Msg("feature flags status")
-
-	if config.IsEnableMultipleCallsEnabled() {
-		oc.logger.Info().Msg("EnableMultipleCalls is enabled - multiple calls from same tx will be allowed")
-	} else {
-		oc.logger.Info().Msg("EnableMultipleCalls is disabled - multiple calls from same tx will be filtered (only first event)")
-	}
 }

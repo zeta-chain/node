@@ -113,7 +113,7 @@ func Test_MsgExecuteHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -139,7 +139,7 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -162,7 +162,7 @@ func Test_MsgExecuteRevertHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -187,7 +187,7 @@ func Test_MsgExecuteSPLRevertHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}, nil, nil).
 			Hash()
 
 		// ASSERT

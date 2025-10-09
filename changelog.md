@@ -9,11 +9,13 @@ by calling `updateAdditionalActionFee` admin function.
 
 ### Zetaclient Config
 
-* Feature flags are introduced, this section should be added to Zetaclient Config after EVM Gateway contracts are upgraded, to enable multiple EVM calls in Zetaclient:
+* Feature flags are introduced, this section should be added to Zetaclient Config after EVM Gateway contracts are upgraded, to enable multiple EVM calls in Zetaclient.
+Also EnableSolanaAddressLookupTable feature flag should be set.
 
 ```
 "FeatureFlags": {
-  "EnableMultipleCalls": true
+  "EnableMultipleCalls": true,
+  "EnableSolanaAddressLookupTable": true
 }
 ```
 
@@ -31,6 +33,7 @@ by calling `updateAdditionalActionFee` admin function.
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
+* [4266](https://github.com/zeta-chain/node/pull/4266) - add support for Solana Address Lookup Table in withdraw and call
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 
 ### Tests

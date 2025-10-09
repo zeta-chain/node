@@ -42,7 +42,14 @@ func (signer *Signer) prepareExecuteSPLTx(
 			return nil, errors.Wrap(err, "error creating execute SPL instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, params.CallOptions.GasLimit)
+		return signer.createOutboundWithFallback(
+			ctx,
+			inst,
+			msgIn,
+			params.CallOptions.GasLimit,
+			msg.AddressLookupTable(),
+			msg.AddressLookupTableStateAddresses(),
+		)
 	}, nil
 }
 
@@ -108,12 +115,9 @@ func (signer *Signer) createMsgExecuteSPL(
 		)
 	}
 
-	remainingAccounts := []*sol.AccountMeta{}
-	for _, a := range msg.Accounts {
-		remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
-			PublicKey:  sol.PublicKey(a.PublicKey),
-			IsWritable: a.IsWritable,
-		})
+	remainingAccounts, addressLookupTableStateAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot prepare execute msg params")
 	}
 
 	// prepare execute spl and increment nonce messages
@@ -126,9 +130,11 @@ func (signer *Signer) createMsgExecuteSPL(
 		to,
 		destinationProgramPdaAta,
 		sender,
-		msg.Data,
+		msg.Data(),
 		executeType,
 		remainingAccounts,
+		msg.AddressLookupTableAddress(),
+		addressLookupTableStateAddresses,
 	)
 
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
