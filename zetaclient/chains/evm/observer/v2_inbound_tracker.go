@@ -70,6 +70,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				ob.Logger().Inbound,
 				&msg,
 				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
 			)
 			if err != nil || !allowMultipleCalls {
 				return err
@@ -95,6 +96,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				ob.Logger().Inbound,
 				&msg,
 				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
 			)
 			if err != nil || !allowMultipleCalls {
 				return err
@@ -120,6 +122,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				ob.Logger().Inbound,
 				&msg,
 				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
 			)
 			if err != nil || !allowMultipleCalls {
 				return err

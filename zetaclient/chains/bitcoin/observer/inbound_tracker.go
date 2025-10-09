@@ -7,7 +7,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -19,10 +21,35 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		return err
 	}
 
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
+
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
 			Stringer(logs.FieldCoinType, tracker.CoinType).
+			Bool("is_internal", isInternal).
 			Msg("processing inbound tracker")
 		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err
@@ -101,5 +128,6 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		ob.logger.Inbound,
 		msg,
 		zetacore.PostVoteInboundExecutionGasLimit,
+		ob.WatchMonitoringError,
 	)
 }

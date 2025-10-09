@@ -86,6 +86,7 @@ func (t *TON) Start(ctx context.Context) error {
 	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
 	register(t.observer.ObserveInbounds, "observe_inbounds", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(t.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler

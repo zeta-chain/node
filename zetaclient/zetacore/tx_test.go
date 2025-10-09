@@ -241,7 +241,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		hash, _, err := client.PostVoteInbound(ctx, 100, 200, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
-		})
+		}, nil)
 		require.NoError(t, err)
 		require.Equal(t, sampleHash, hash)
 	})
@@ -284,7 +284,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		err := client.MonitorVoteInboundResult(ctx, sampleHash, 1000, &crosschaintypes.MsgVoteInbound{
 			Creator: address.String(),
-		})
+		}, nil)
 
 		require.NoError(t, err)
 	})
@@ -309,11 +309,11 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 
 		// ACT 1
 		// monitor out of gas error, should record it
-		err := client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
+		err := client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
 		require.NoError(t, err)
 
 		// it is okay to monitor same tx again, nothing will happen
-		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
+		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
 		require.NoError(t, err)
 
 		// ASSERT 1.1
@@ -335,7 +335,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 
 		// ACT 2
 		// monitor tx as a successful, should remove the record of out of gas failure
-		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg)
+		err = client.MonitorVoteInboundResult(ctx, sampleHash, 0, msg, nil)
 		require.NoError(t, err)
 
 		// ASSERT 2.1

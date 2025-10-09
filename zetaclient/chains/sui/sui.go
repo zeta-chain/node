@@ -89,6 +89,7 @@ func (s *Sui) Start(ctx context.Context) error {
 	register(s.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
 	register(s.observer.ObserveInbound, "observe_inbounds", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)

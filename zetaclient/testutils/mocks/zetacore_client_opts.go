@@ -47,7 +47,7 @@ func (_m *ZetacoreClient) WithPostOutboundTracker(zetaTxHash string) *ZetacoreCl
 }
 
 func (_m *ZetacoreClient) WithPostVoteInbound(zetaTxHash string, ballotIndex string) *ZetacoreClient {
-	_m.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	_m.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Maybe().
 		Return(zetaTxHash, ballotIndex, nil)
 
