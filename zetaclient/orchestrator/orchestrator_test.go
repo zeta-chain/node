@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -124,7 +125,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Services
 	var (
 		schedulerService = scheduler.New(logger.Logger, time.Second)
-		zetacore         = mocks.NewZetacoreClient(t)
+		zetacore         = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 		tss              = mocks.NewTSS(t)
 	)
 
