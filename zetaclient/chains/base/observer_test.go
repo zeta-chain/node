@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -63,7 +64,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	if testOpts.ConfirmationParams != nil {
 		chainParams.ConfirmationParams = testOpts.ConfirmationParams
 	}
-	zetacoreClient := mocks.NewZetacoreClient(t)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
 	tss := mocks.NewTSS(t)
 
 	database := createDatabase(t)

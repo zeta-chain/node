@@ -14,7 +14,8 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschain
 	defer ob.mu.Unlock()
 
 	var (
-		finalizedBallots = make([]string, 0)
+		voterAddress     = ob.ZetaRepo().GetOperatorAddress()
+		trackersToRemove = make([]string, 0)
 		internalTrackers = make([]crosschaintypes.InboundTracker, 0, len(ob.internalInboundTrackers))
 	)
 
@@ -22,14 +23,21 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschain
 	for ballot, tracker := range ob.internalInboundTrackers {
 		// skip those that are already finalized
 		if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
-			finalizedBallots = append(finalizedBallots, ballot)
+			trackersToRemove = append(trackersToRemove, ballot)
 			continue
 		}
+
+		// skip those that have already voted
+		if hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress); err == nil && hasVoted {
+			trackersToRemove = append(trackersToRemove, ballot)
+			continue
+		}
+
 		internalTrackers = append(internalTrackers, tracker)
 	}
 
 	// remove trackers for finalized ballots
-	for _, ballot := range finalizedBallots {
+	for _, ballot := range trackersToRemove {
 		ob.removeInternalInboundTracker(ballot)
 	}
 

@@ -108,6 +108,10 @@ func (repo *ZetaRepo) GetBTCTSSAddress(ctx context.Context) (string, error) {
 	return address, nil
 }
 
+func (repo *ZetaRepo) HasVoted(ctx context.Context, ballotIndex string, voterAddress string) (bool, error) {
+	return repo.client.HasVoted(ctx, ballotIndex, voterAddress)
+}
+
 // ------------------------------------------------------------------------------------------------
 // Voting & Posting Trackers
 // ------------------------------------------------------------------------------------------------

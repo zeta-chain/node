@@ -798,6 +798,34 @@ func (_m *ZetacoreClient) GetZetaHotKeyBalance(_a0 context.Context) (math.Int, e
 	return r0, r1
 }
 
+// HasVoted provides a mock function with given fields: _a0, _a1, _a2
+func (_m *ZetacoreClient) HasVoted(_a0 context.Context, _a1 string, _a2 string) (bool, error) {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HasVoted")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
+		return rf(_a0, _a1, _a2)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListPendingCCTX provides a mock function with given fields: _a0, _a1
 func (_m *ZetacoreClient) ListPendingCCTX(_a0 context.Context, _a1 chains.Chain) ([]*crosschaintypes.CrossChainTx, uint64, error) {
 	ret := _m.Called(_a0, _a1)

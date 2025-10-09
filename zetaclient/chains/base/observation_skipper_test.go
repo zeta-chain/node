@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"testing"
@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/context"
 )
@@ -65,7 +64,7 @@ func Test_CheckSkipInbound(t *testing.T) {
 			appCtx := mockAppContext(t, chain, *ethParams, tt.isInboundEnabled, true, tt.isMempoolCongested, tt.isMaxFeeExceeded)
 
 			// ACT
-			result := base.CheckSkipInbound(ob.Observer, appCtx)
+			result := CheckSkipInbound(ob.Observer, appCtx)
 
 			// ASSERT
 			assert.Equal(t, tt.expectedSkip, result)
@@ -113,7 +112,7 @@ func Test_CheckSkipOutbound(t *testing.T) {
 			appCtx := mockAppContext(t, chain, *ethParams, true, tt.isOutboundEnabled, tt.isMempoolCongested, false)
 
 			// ACT
-			result := base.CheckSkipOutbound(ob.Observer, appCtx)
+			result := CheckSkipOutbound(ob.Observer, appCtx)
 
 			// ASSERT
 			assert.Equal(t, tt.expectedSkip, result)
@@ -161,7 +160,7 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 			appCtx := mockAppContext(t, chain, *ethParams, true, true, tt.isMempoolCongested, tt.isMaxFeeExceeded)
 
 			// ACT
-			result := base.CheckSkipGasPrice(ob.Observer, appCtx)
+			result := CheckSkipGasPrice(ob.Observer, appCtx)
 
 			// ASSERT
 			assert.Equal(t, tt.expectedSkip, result)

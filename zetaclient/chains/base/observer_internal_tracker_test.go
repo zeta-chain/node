@@ -32,8 +32,9 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		// ARRANGE
 		ob := newTestSuite(t, chain)
 
-		// mock cctx query
+		// mock cctx and ballot vote queries
 		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
+		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil).Once()
 
 		// add a failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
@@ -54,8 +55,10 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
 		ob.AddInternalInboundTracker(&msg)
 
-		// mock cctx query
+		// mock cctx and ballot vote queries
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
 		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found")).Once()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
 
 		// ACT 1
 		trackers := ob.GetInboundInternalTrackers(ctx)
@@ -71,7 +74,37 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		trackers = ob.GetInboundInternalTrackers(ctx)
 
 		// ASSERT 2
-		// should remove internal tracker
+		// should have removed internal tracker
+		require.Empty(t, trackers)
+	})
+
+	t.Run("should remove internal tracker if the voter has already voted", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// add a failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_ERC20, 1, 7000)
+		ob.AddInternalInboundTracker(&msg)
+
+		// mock cctx and ballot vote queries
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Once()
+
+		// ACT 1
+		trackers := ob.GetInboundInternalTrackers(ctx)
+
+		// ASSERT 1
+		require.Len(t, trackers, 1)
+		require.EqualValues(t, 1, len(trackers))
+
+		// mock ballot as voted
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(true, nil).Once()
+
+		// ACT 2
+		trackers = ob.GetInboundInternalTrackers(ctx)
+
+		// ASSERT 2
+		// should have removed internal tracker
 		require.Empty(t, trackers)
 	})
 }
@@ -85,8 +118,9 @@ func Test_WatchMonitoringError(t *testing.T) {
 		ob := newTestSuite(t, chain)
 		monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
-		// mock cctx query
+		// mock cctx and ballot vote queries
 		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
+		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil)
 
 		// ACT
 		// start the monitoring error handler

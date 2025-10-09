@@ -93,6 +93,8 @@ type ZetacoreClientRepo interface {
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 
 	GetBTCTSSAddress(context.Context, ChainID) (string, error)
+
+	HasVoted(context.Context, string, string) (bool, error)
 }
 
 // ZetacoreClient is the client interface that interacts with zetacore.
