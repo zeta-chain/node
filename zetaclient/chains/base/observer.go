@@ -33,7 +33,7 @@ const (
 
 	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
 	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
-  
+
 	// defaultSampledLogInterval is the default interval for sampled logs
 	defaultSampledLogInterval = 10
 )
