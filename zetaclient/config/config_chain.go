@@ -22,6 +22,7 @@ func New(setDefaults bool) Config {
 	}
 
 	if setDefaults {
+		cfg.MempoolCongestionThreshold = DefaultMempoolCongestionThreshold
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()

@@ -131,4 +131,8 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(context.Context) (cosmosmath.Int, error)
 
 	GetUpgradePlan(context.Context) (*upgrade.Plan, error)
+
+	GetBaseGasPrice(context.Context) (int64, error)
+
+	GetNumberOfUnconfirmedTxs(context.Context) (int, error)
 }

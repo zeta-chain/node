@@ -25,6 +25,9 @@ const (
 
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
+
+	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
+	DefaultMempoolCongestionThreshold = 3000
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -102,6 +105,13 @@ type Config struct {
 	TestTssKeysign          bool           `json:"TestTssKeysign"`
 	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath          string         `json:"RelayerKeyPath"`
+
+	// MaxBaseFee is the maximum base fee allowed for zetaclient to send ZetaChain transactions
+	MaxBaseFee int64 `json:"MaxBaseFee"`
+
+	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore mempool to consider it congested
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this threshold.
+	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -225,6 +235,20 @@ func (c Config) GetRelayerKeyPath() string {
 		return DefaultRelayerKeyPath
 	}
 	return c.RelayerKeyPath
+}
+
+// GetMaxBaseFee returns the max base fee
+func (c Config) GetMaxBaseFee() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MaxBaseFee
+}
+
+// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to consider it congested
+func (c Config) GetMempoolCongestionThreshold() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MempoolCongestionThreshold
 }
 
 func (c EVMConfig) Empty() bool {

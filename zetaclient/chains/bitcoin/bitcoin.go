@@ -70,17 +70,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(b.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !b.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(b.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(b.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(b.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -94,9 +86,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
-	register(b.observer.ObserveMempool, "observe_mempool", optMempoolInterval, optGenericSkipper)
-	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optOutboundSkipper)
+	register(b.observer.ObserveBTCMempool, "observe_btc_mempool", optMempoolInterval, optOutboundSkipper)
+	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
 	register(b.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 

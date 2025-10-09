@@ -28,6 +28,9 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
+
+	// defaultSampledLogInterval is the default interval for sampled logs
+	defaultSampledLogInterval = 10
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -418,5 +421,6 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 		Inbound:    log.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
 		Outbound:   log.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
 		Compliance: complianceLog,
+		Sampled:    log.Sample(&zerolog.BasicSampler{N: defaultSampledLogInterval}),
 	}
 }

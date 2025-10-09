@@ -56,6 +56,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.IsSupported = true
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
 		SafeInboundCount:  defaultConfirmationCount,
 		SafeOutboundCount: defaultConfirmationCount,
@@ -211,6 +212,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Inbound.Info().Msg("print inbound log")
 		logger.Outbound.Info().Msg("print outbound log")
 		logger.Compliance.Info().Msg("print compliance log")
+		logger.Sampled.Info().Msg("print sampled log")
 	})
 }
 
