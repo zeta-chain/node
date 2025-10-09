@@ -25,6 +25,17 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4266](https://github.com/zeta-chain/node/pull/4266) - add support for Solana Address Lookup Table in withdraw and call
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 
+### Tests
+
+* [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+### Refactor
+
+* [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+
+### Fixes
+
+* [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+
 ## v36.0.0
 
 ### Features

@@ -144,7 +144,7 @@ func (c *Client) monitorVoteInboundResult(
 	switch {
 	case strings.Contains(txResult.RawLog, "failed to execute message"):
 		// the inbound vote tx shouldn't fail to execute. this shouldn't happen
-		logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to execute vote")
+		logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to execute inbound vote")
 
 	case strings.Contains(txResult.RawLog, "out of gas"):
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0

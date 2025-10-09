@@ -72,7 +72,7 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	msg := cctypes.NewMsgVoteOutbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(), // TODO
+		ob.ZetaRepo().GetOperatorAddress(),
 		cctx.Index,
 		txHash,
 		tonBlockHeight,
@@ -99,20 +99,8 @@ func (ob *Observer) voteOutbound(ctx context.Context,
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	zetaTxHash, ballot, err := ob.zetaRepo.VoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		logger.Error().Err(err).Msg("unable to post outbound vote")
-		return err
-	}
-
-	if zetaTxHash != "" {
-		logger.Info().
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallotIndex, ballot).
-			Msg("posted outbound vote")
-	}
-
-	return nil
+	_, _, err = ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg)
+	return err
 }
 
 func receiveStatusWithAmount(
@@ -144,9 +132,9 @@ func receiveStatusWithAmount(
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	logger := ob.Logger().Outbound
 
-	trackers, err := ob.zetaRepo.GetOutboundTrackers(ctx)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get outbound trackers")
+		return err
 	}
 
 	for _, tracker := range trackers {
@@ -157,12 +145,9 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		cctx, err := ob.zetaRepo.GetCCTX(ctx, nonce)
+		cctx, err := ob.ZetaRepo().GetCCTX(ctx, nonce)
 		if err != nil {
-			logger.Error().
-				Err(err).
-				Uint64(logs.FieldNonce, nonce).
-				Msg("unable to get CCTX by nonce")
+			logger.Error().Err(err).Uint64(logs.FieldNonce, nonce).Send()
 			continue // does not block other CCTXs from being processed
 		}
 

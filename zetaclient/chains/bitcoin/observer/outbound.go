@@ -26,35 +26,37 @@ const (
 )
 
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get all outbound trackers")
+		return err
 	}
 
-	logger := ob.logger.Outbound
-
 	for _, tracker := range trackers {
+		logger := ob.logger.Outbound.With().Uint64(logs.FieldNonce, tracker.Nonce).Logger()
+
 		// get the CCTX
-		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			logger.Err(err).Uint64(logs.FieldNonce, tracker.Nonce).Msg("cannot find CCTX")
-			break
+			logger.Error().Err(err).Send()
+			continue // does not block other CCTXs from being processed
 		}
 		if len(tracker.HashList) > 1 {
 			logger.Warn().
-				Uint64(logs.FieldNonce, tracker.Nonce).
 				Int("count", len(tracker.HashList)).
 				Msg("oops, got multiple outbound hashes")
 		}
 
 		// Iterate over all txHashes to find the truly included outbound.
-		// At any time, there is guarantee that only one single txHash will be considered valid and included for each nonce.
+		// At any time, there is guarantee that only one single txHash will be considered valid and
+		// included for each nonce.
+		//
 		// The reasons are:
 		//   1. CCTX with nonce 'N = 0' is the past and well-controlled.
-		//   2. Given any CCTX with nonce 'N > 0', its outbound MUST spend the previous nonce-mark UTXO (nonce N-1) to be considered valid.
+		//   2. Given any CCTX with nonce 'N > 0', its outbound MUST spend the previous nonce-mark
+		//      UTXO (nonce N-1) to be considered valid.
 		//   3. Bitcoin prevents double spending of the same UTXO except for RBF.
-		//   4. When RBF happens, the original tx will be removed from Bitcoin core, and only the new tx will be valid.
+		//   4. When RBF happens, the original tx will be removed from Bitcoin core, and only the
+		//      new tx will be valid.
 		for _, txHash := range tracker.HashList {
 			_, included := ob.TryIncludeOutbound(ctx, cctx, txHash.TxHash)
 			if included {
@@ -175,10 +177,8 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		receiveStatus = chains.ReceiveStatus_failed
 	}
 
-	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-
 	msg := crosschaintypes.NewMsgVoteOutbound(
-		signer.String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		cctx.Index,
 		res.TxID,
 		// #nosec G115 always positive
@@ -195,22 +195,10 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
+	logger = logger.With().Str(logs.FieldTx, res.TxID).Logger()
 
-	logFields := map[string]any{
-		logs.FieldTx:          res.TxID,
-		logs.FieldZetaTx:      zetaHash,
-		logs.FieldBallotIndex: ballot,
-	}
-
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Fields(logFields).
-			Msg("error confirming outbound")
-	} else if zetaHash != "" {
-		logger.Info().Fields(logFields).Msg("outbound confirmed")
-	}
+	// NOTE: ignoring VoteOutbound's errors
+	_, _, _ = ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, gasRetryLimit, msg) //nolint:dogsled
 
 	return false, nil
 }
@@ -223,9 +211,9 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	logger := ob.logger.Outbound
 
 	// get pending nonces from zetacore
-	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
+	p, err := ob.ZetaRepo().GetPendingNonces(ctx)
 	if err != nil {
-		logger.Error().Err(err).Msg("error getting pending nonces")
+		logger.Error().Err(err).Send()
 	}
 
 	// increase pending nonce if lagged behind
@@ -247,9 +235,9 @@ func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64) (s
 		return res.TxID, nil
 	}
 
-	send, err := ob.ZetacoreClient().GetCctxByNonce(ctx, ob.Chain().ChainId, nonce)
+	send, err := ob.ZetaRepo().GetCCTX(ctx, nonce)
 	if err != nil {
-		return "", errors.Wrapf(err, "error getting cctx for nonce %d", nonce)
+		return "", err
 	}
 
 	txid := send.GetCurrentOutboundParam().Hash

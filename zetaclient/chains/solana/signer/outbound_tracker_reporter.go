@@ -18,7 +18,7 @@ import (
 // it reports tx to outbound tracker only if it's confirmed by the Solana network.
 func (signer *Signer) reportToOutboundTracker(
 	ctx context.Context,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	chainID int64,
 	nonce uint64,
 	txSig sol.Signature,
@@ -83,13 +83,10 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// report outbound hash to zetacore
-			zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, chainID, nonce, txSig.String())
-			if err != nil {
-				logger.Err(err).Msg("error adding outbound to tracker")
-			} else if zetaHash != "" {
-				logger.Info().Str(logs.FieldZetaTx, zetaHash).Msg("added outbound to tracker")
-			} else {
-				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
+			zhash, err := zetaRepo.PostOutboundTracker(ctx, logger, nonce, txSig.String())
+			if zhash == "" && err == nil {
+				// exit goroutine only when the tracker contains the hash (reported by either this
+				// or other signers)
 				logger.Info().Msg("outbound now exists in tracker")
 				return nil
 			}

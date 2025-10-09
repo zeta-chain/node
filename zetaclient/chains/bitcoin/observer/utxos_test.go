@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"golang.org/x/exp/rand"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -45,7 +46,9 @@ func Test_SelectUTXOs(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, selected.UTXOs)
 		require.Zero(t, selected.Value)
-		require.ErrorContains(t, err, "error getting cctx for nonce 0")
+		require.ErrorIs(t, err, zrepo.ErrClient)
+		require.ErrorIs(t, err, zrepo.ErrClientGetCCTX)
+		require.ErrorContains(t, err, "for nonce 0")
 	})
 
 	t.Run("nonce = 1, should pass when nonce mark 0 is set", func(t *testing.T) {

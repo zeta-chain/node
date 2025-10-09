@@ -48,11 +48,8 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	const priorityFee = 0
 
 	// #nosec G115 always positive
-	_, err = ob.ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
-	if err != nil {
-		return errors.Wrap(err, "PostVoteGasPrice error")
-	}
-
-	return nil
+	block := uint64(blockNumber)
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, feeRateEstimated, priorityFee, block)
+	return err
 }

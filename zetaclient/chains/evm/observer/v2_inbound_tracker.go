@@ -66,7 +66,11 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositInboundVote(eventDeposit)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+			)
 			if err != nil || !allowMultipleCalls {
 				return err
 			}
@@ -87,7 +91,11 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+			)
 			if err != nil || !allowMultipleCalls {
 				return err
 			}
@@ -108,7 +116,11 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newCallInboundVote(eventCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+			)
 			if err != nil || !allowMultipleCalls {
 				return err
 			}

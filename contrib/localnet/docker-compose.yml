@@ -36,7 +36,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: ${ZETACORED_START_PERIOD-30s}
-      start_interval: 1s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -365,7 +364,7 @@ services:
       - ssh:/root/.ssh
 
   grafana:
-    image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
+    image: grafana/grafana:main
     container_name: grafana
     hostname: grafana
     profiles:
@@ -385,12 +384,14 @@ services:
       - prometheus
 
   prometheus:
-    image: ghcr.io/zeta-chain/prom-prometheus:v2.53.1
+    image: prom/prometheus:v3.6.0
     container_name: prometheus
     hostname: prometheus
     profiles:
       - monitoring
       - all
+    ports:
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -399,8 +400,31 @@ services:
     depends_on:
       - zetacore0
 
+  redis:
+    image: redis:7-alpine
+    container_name: zetachain-exporter-redis
+    hostname: zetachain-exporter-redis
+    profiles:
+      - monitoring
+      - all
+    ports:
+      - "6379:6379"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.36
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
   zetachain-exporter:
-    image: zetachain/zetachain-exporter:v2.0.6
+    image: zetachain/zetachain-exporter:v4.10.0
     container_name: zetachain-exporter
     hostname: zetachain-exporter
     profiles:
@@ -411,20 +435,29 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.32
+    volumes:
+      - ./config-localnet.json:/config.json
     environment:
-      - ETH_EVM_URL=http://eth:8545
-      - ZETA_EVM_URL=http://zetacore0:8545
-      - ZETA_LCD_URL=http://zetacore0:1317
-      - ZETA_TENDERMINT_URL=http://zetacore0:26657
-      - ETH_CHAIN_ID=1337
-      - ZETA_CHAIN_ID=7001
-      - REFRESH_INTERVAL=15
-      - FAST_REFRESH_INTERVAL=1
+      # Load configuration from file
+      - CONFIG_FILE=/config.json
+
+      
+      # Redis configuration
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_INSTANCE=localnet-1
+      
+      # Optional: Seed sample data for testing
+      # - SEED_MISSED_INBOUNDS_SAMPLE=1
     depends_on:
       zetacore0:
         condition: service_healthy
       eth:
         condition: service_started
+      redis:
+        condition: service_healthy
 
   loki:
     container_name: loki
@@ -475,3 +508,4 @@ volumes:
   ssh:
   preparams:
   grafana_storage:
+  redis_data:
