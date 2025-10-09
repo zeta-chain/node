@@ -72,6 +72,7 @@ type SolanaClient interface {
 		*solrpc.GetTransactionOpts,
 	) (*solrpc.GetTransactionResult, error)
 
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendTransactionWithOpts(context.Context,
 		*sol.Transaction,
 		solrpc.TransactionOpts,

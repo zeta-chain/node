@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 )
 
+// MsgUnreachable is the panic message returned by this module's functions when they get called.
 const MsgUnreachable = "unreachable"
 
 // ------------------------------------------------------------------------------------------------

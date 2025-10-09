@@ -62,7 +62,7 @@ type SuiClient interface {
 		models.SuiGetTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 
-	// Mutating function.
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SuiExecuteTransactionBlock(
 		context.Context,
 		models.SuiExecuteTransactionBlockRequest,
@@ -140,9 +140,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	if s.ClientMode.IsDryMode() {
-		logger.Info().
-			Stringer(logs.FieldMode, mode.DryMode).
-			Msg("skipping Sui signing, sending, and tracking")
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
 		return nil
 	}
 

@@ -26,6 +26,7 @@ type TONClient interface {
 
 	GetAccountState(context.Context, ton.AccountID) (rpc.Account, error)
 
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendMessage(context.Context, []byte) (uint32, error)
 }
 
@@ -109,9 +110,7 @@ func (s *Signer) processOutbound(
 	logger := s.Logger().Std.With().Fields(outbound.logFields).Logger()
 
 	if s.ClientMode.IsDryMode() {
-		logger.Info().
-			Stringer(logs.FieldMode, mode.DryMode).
-			Msg("skipping TON signing, sending, and tracking")
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
 		return Success, nil
 	}
 
