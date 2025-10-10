@@ -35,7 +35,7 @@ type MonitoringErrorWatcher func(ctx context.Context, monitorErrCh <-chan zetaer
 // ZetaRepo implements the Repository pattern by wrapping a zetacore client.
 // Each chain module must instantiate its own ZetaRepo.
 type ZetaRepo struct {
-	client ZetacoreClientRepo
+	client ZetacoreClient
 
 	connectedChain chains.Chain
 
@@ -44,6 +44,12 @@ type ZetaRepo struct {
 
 // New constructs a new ZetaRepo object.
 func New(client ZetacoreClient, connectedChain chains.Chain, clientMode mode.ClientMode) *ZetaRepo {
+	if client == nil {
+		return nil
+	}
+	if clientMode.IsDryMode() {
+		client = newDryZetacoreClient(client)
+	}
 	return &ZetaRepo{client, connectedChain, clientMode}
 }
 
@@ -108,7 +114,10 @@ func (repo *ZetaRepo) GetBTCTSSAddress(ctx context.Context) (string, error) {
 	return address, nil
 }
 
-func (repo *ZetaRepo) HasVoted(ctx context.Context, ballotIndex string, voterAddress string) (bool, error) {
+func (repo *ZetaRepo) HasVoted(ctx context.Context,
+	ballotIndex string,
+	voterAddress string,
+) (bool, error) {
 	return repo.client.HasVoted(ctx, ballotIndex, voterAddress)
 }
 

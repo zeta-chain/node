@@ -54,8 +54,13 @@ type ObserverSigner interface {
 	Stop()
 }
 
+type zetacoreClient interface {
+	Zetacore
+	zrepo.ZetacoreClient
+}
+
 type Dependencies struct {
-	Zetacore  zrepo.ZetacoreClient
+	Zetacore  zetacoreClient
 	TSS       tssrepo.TSSClient
 	DBPath    string
 	Telemetry *metrics.TelemetryServer

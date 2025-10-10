@@ -22,6 +22,22 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("invalid client", func(t *testing.T) {
+		repo := New(nil, chains.Ethereum, mode.StandardMode)
+		require.Nil(t, repo)
+	})
+
+	t.Run("dry-mode", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+		repo := New(client, chains.Ethereum, mode.DryMode)
+		require.NotNil(t, repo)
+
+		_, ok := repo.client.(*dryZetacoreClient)
+		require.True(t, ok)
+	})
+}
+
 func TestDryMode(t *testing.T) {
 	t.Run("PostOutboundTracker", func(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)

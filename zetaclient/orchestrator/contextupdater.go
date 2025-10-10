@@ -3,12 +3,13 @@ package orchestrator
 import (
 	"context"
 
+	cosmosmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
+	observer "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -18,13 +19,14 @@ type Zetacore interface {
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
 	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
-	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
-	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
-	GetTSS(ctx context.Context) (observertypes.TSS, error)
-	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
-	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
+	GetCrosschainFlags(ctx context.Context) (observer.CrosschainFlags, error)
+	GetChainParams(ctx context.Context) ([]*observer.ChainParams, error)
+	GetTSS(ctx context.Context) (observer.TSS, error)
+	GetKeyGen(ctx context.Context) (observer.Keygen, error)
+	GetOperationalFlags(ctx context.Context) (observer.OperationalFlags, error)
 	GetBaseGasPrice(ctx context.Context) (int64, error)
 	GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error)
+	GetZetaHotKeyBalance(context.Context) (cosmosmath.Int, error)
 }
 
 var ErrUpgradeRequired = errors.New("upgrade required")
@@ -76,7 +78,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		return errors.Wrap(err, "unable to fetch number of unconfirmed txs")
 	}
 
-	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
+	freshParams := make(map[int64]*observer.ChainParams, len(chainParams))
 
 	// check and update chain params for each chain
 	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
