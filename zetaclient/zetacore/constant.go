@@ -11,7 +11,7 @@ const (
 	PostGasPriceGasLimit = 1_500_000
 
 	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx (for zetachain itself)
-	PostVoteInboundGasLimit = 600_000
+	PostVoteInboundGasLimit = 500_000
 
 	// PostTSSGasLimit is the gas limit for voting on TSS keygen
 	PostTSSGasLimit = 500_000
