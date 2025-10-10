@@ -34,11 +34,11 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 
 		// mock cctx and ballot vote queries
 		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
-		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil).Once()
+		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil)
 
 		// add a failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddInternalInboundTracker(&msg)
+		ob.AddInternalInboundTracker(ctx, &msg)
 
 		// ACT
 		retryTime := time.Now().Add(internalTrackerRetryInterval)
@@ -52,14 +52,17 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 	t.Run("should remove internal tracker if the ballot is finalized", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
-		// add a failed inbound vote
+		// ARRANGE
+		// create a sample failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddInternalInboundTracker(&msg)
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found")).Once()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found")).Twice()
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
 
 		// ACT 1
 		retryTime1 := time.Now().Add(internalTrackerRetryInterval)
@@ -84,14 +87,17 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 	t.Run("should remove internal tracker if the voter has already voted", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
-		// add a failed inbound vote
+		// ARRANGE
+		// create a sample failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_ERC20, 1, 7000)
-		ob.AddInternalInboundTracker(&msg)
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
 		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
-		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Once()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Twice()
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
 
 		// ACT 1
 		retryTime1 := time.Now().Add(internalTrackerRetryInterval)
@@ -116,14 +122,17 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 	t.Run("should skip recently retried internal tracker", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
-		// add a failed inbound votes
+		// ARRANGE
+		// create a sample failed inbound vote
 		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
-		ob.AddInternalInboundTracker(&msg)
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
 		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
 
 		// ACT 1
 		retryTime1 := time.Now().Add(internalTrackerRetryInterval)
@@ -138,6 +147,55 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		trackers = ob.GetInboundInternalTrackers(ctx, retryTime2)
 
 		// ASSERT 2
+		require.Empty(t, trackers)
+	})
+}
+
+func Test_AddInternalInboundTracker(t *testing.T) {
+	ctx := context.Background()
+	chain := chains.Ethereum
+
+	t.Run("should not add internal inbound tracker if ballot is finalized", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create a sample failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+
+		// mock cctx as finalized
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(sample.CrossChainTx(t, msg.Digest()), nil)
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
+
+		// ACT
+		retryTime := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime)
+
+		// ASSERT
+		require.Empty(t, trackers)
+	})
+
+	t.Run("should not add internal inbound tracker if ballot is voted", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create a sample failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+
+		// mock ballot as voted
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(true, nil)
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
+
+		// ACT
+		retryTime := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime)
+
+		// ASSERT
 		require.Empty(t, trackers)
 	})
 }

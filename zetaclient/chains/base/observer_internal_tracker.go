@@ -36,21 +36,13 @@ func (ob *Observer) GetInboundInternalTrackers(
 	defer ob.mu.Unlock()
 
 	var (
-		voterAddress     = ob.ZetaRepo().GetOperatorAddress()
 		trackersToRemove = make([]string, 0)
 		internalTrackers = make([]crosschaintypes.InboundTracker, 0, len(ob.internalInboundTrackers))
 	)
 
-	// collect up to MaxInternalTrackersPerScan trackers
 	for ballot, tracker := range ob.internalInboundTrackers {
-		// skip those that are already finalized
-		if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
-			trackersToRemove = append(trackersToRemove, ballot)
-			continue
-		}
-
-		// skip those that have already voted
-		if hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress); err == nil && hasVoted {
+		// skip those that are already finalized or voted
+		if ob.isBallotFinalizedOrVoted(ctx, ballot) {
 			trackersToRemove = append(trackersToRemove, ballot)
 			continue
 		}
@@ -74,7 +66,7 @@ func (ob *Observer) GetInboundInternalTrackers(
 }
 
 // AddInternalInboundTracker adds an internal inbound tracker for given inbound vote.
-func (ob *Observer) AddInternalInboundTracker(msg *crosschaintypes.MsgVoteInbound) {
+func (ob *Observer) AddInternalInboundTracker(ctx context.Context, msg *crosschaintypes.MsgVoteInbound) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
@@ -89,6 +81,12 @@ func (ob *Observer) AddInternalInboundTracker(msg *crosschaintypes.MsgVoteInboun
 	)
 
 	if _, found := ob.internalInboundTrackers[ballot]; !found {
+		// a late error monitor goroutine may report a ballot that is already finalized or voted, ignore it
+		// this avoidd repetitivelly adding the same ballot to the cache, even if it gets removed soon next ticker
+		if ob.isBallotFinalizedOrVoted(ctx, ballot) {
+			return
+		}
+
 		ob.internalInboundTrackers[ballot] = tracker
 		ob.logger.Inbound.Info().
 			Str(logs.FieldBallotIndex, ballot).
@@ -96,6 +94,20 @@ func (ob *Observer) AddInternalInboundTracker(msg *crosschaintypes.MsgVoteInboun
 			Str(logs.FieldCoinType, tracker.Tracker.CoinType.String()).
 			Msg("added internal inbound tracker")
 	}
+}
+
+// isBallotFinalizedOrVoted returns true if the ballot is either finalized or voted
+func (ob *Observer) isBallotFinalizedOrVoted(ctx context.Context, ballot string) bool {
+	if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
+		return true
+	}
+
+	voterAddress := ob.ZetaRepo().GetOperatorAddress()
+	if hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress); err == nil && hasVoted {
+		return true
+	}
+
+	return false
 }
 
 // removeInternalInboundTracker removes an internal inbound tracker for given ballot.
@@ -128,7 +140,7 @@ func (ob *Observer) WatchMonitoringError(
 				Str(logs.FieldBallotIndex, monitorErr.Msg.Digest()).
 				Msg("error monitoring inbound vote")
 
-			ob.AddInternalInboundTracker(&monitorErr.Msg)
+			ob.AddInternalInboundTracker(ctx, &monitorErr.Msg)
 		}
 	case <-ctx.Done():
 		logger.Debug().
