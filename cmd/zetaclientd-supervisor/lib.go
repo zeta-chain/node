@@ -269,6 +269,7 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 
 		s.logger.Info().Msg("detected file-based upgrade trigger")
 
+		//#nosec G304 used for testing only
 		binURLBytes, err := os.ReadFile(zetaclientUpgradeTriggerFile)
 		if err != nil {
 			panic(fmt.Sprintf("read trigger file: %v", err))
