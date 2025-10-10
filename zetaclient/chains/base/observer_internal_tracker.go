@@ -23,12 +23,14 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschain
 	for ballot, tracker := range ob.internalInboundTrackers {
 		// skip those that are already finalized
 		if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
+			ob.logger.Inbound.Info().Msgf("removing ballot %s from internal tracker as it is already finalized", ballot)
 			trackersToRemove = append(trackersToRemove, ballot)
 			continue
 		}
 
 		// skip those that have already voted
 		if hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress); err == nil && hasVoted {
+			ob.logger.Inbound.Info().Msgf("removing ballot %s from internal tracker as it is already voted", ballot)
 			trackersToRemove = append(trackersToRemove, ballot)
 			continue
 		}
