@@ -2,14 +2,36 @@ package base
 
 import (
 	"context"
+	"time"
 
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
+const (
+	// internalTrackerRetryInterval is the minimum interval between retries for each internal tracker
+	// The vote tx may still be pending in mempool after each retry during mempool congestion, we should
+	// give some time for it to be processed, without retrying too often and causing unnecessary mempool spam.
+	internalTrackerRetryInterval = 5 * time.Minute
+)
+
+type InternalInboundTracker struct {
+	// CreatedAt is the time when the tracker is created
+	CreatedAt time.Time
+
+	// LastRetry is the time when the tracker was last retried
+	LastRetry time.Time
+
+	// Tracker is the inbound tracker struct
+	Tracker crosschaintypes.InboundTracker
+}
+
 // GetInboundInternalTrackers returns internal inbound trackers
-func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschaintypes.InboundTracker {
+func (ob *Observer) GetInboundInternalTrackers(
+	ctx context.Context,
+	retryTime time.Time,
+) []crosschaintypes.InboundTracker {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
@@ -35,7 +57,14 @@ func (ob *Observer) GetInboundInternalTrackers(ctx context.Context) []crosschain
 			continue
 		}
 
-		internalTrackers = append(internalTrackers, tracker)
+		// skip those that have already been retried recently
+		if retryTime.Sub(tracker.LastRetry) < internalTrackerRetryInterval {
+			continue
+		}
+
+		// update last retry timestamp
+		tracker.LastRetry = retryTime
+		internalTrackers = append(internalTrackers, tracker.Tracker)
 	}
 
 	// remove trackers for finalized ballots
@@ -52,16 +81,21 @@ func (ob *Observer) AddInternalInboundTracker(msg *crosschaintypes.MsgVoteInboun
 	defer ob.mu.Unlock()
 
 	var (
+		timeNow = time.Now()
 		ballot  = msg.Digest()
-		tracker = msg.InboundTracker()
+		tracker = &InternalInboundTracker{
+			CreatedAt: timeNow,
+			LastRetry: timeNow,
+			Tracker:   msg.InboundTracker(),
+		}
 	)
 
 	if _, found := ob.internalInboundTrackers[ballot]; !found {
 		ob.internalInboundTrackers[ballot] = tracker
 		ob.logger.Inbound.Info().
 			Str(logs.FieldBallotIndex, ballot).
-			Str(logs.FieldTx, tracker.TxHash).
-			Str(logs.FieldCoinType, tracker.CoinType.String()).
+			Str(logs.FieldTx, tracker.Tracker.TxHash).
+			Str(logs.FieldCoinType, tracker.Tracker.CoinType.String()).
 			Msg("added internal inbound tracker")
 	}
 }
@@ -72,8 +106,9 @@ func (ob *Observer) removeInternalInboundTracker(ballot string) {
 		delete(ob.internalInboundTrackers, ballot)
 		ob.logger.Inbound.Info().
 			Str(logs.FieldBallotIndex, ballot).
-			Str(logs.FieldTx, tracker.TxHash).
-			Str(logs.FieldCoinType, tracker.CoinType.String()).
+			Str(logs.FieldTx, tracker.Tracker.TxHash).
+			Str(logs.FieldCoinType, tracker.Tracker.CoinType.String()).
+			Stringer("time_elapsed", time.Since(tracker.CreatedAt)).
 			Msg("removed internal inbound tracker")
 	}
 }
