@@ -177,9 +177,12 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 
 	standardSolanaClient := solrpc.New(cfg.Endpoint)
 	if standardSolanaClient == nil {
-		return nil, errors.New("unable to create rpc client")
+		return nil, errors.New("unable to create RPC client")
 	}
 	var solanaClient solana.Client = standardSolanaClient
+	if clientMode.IsDryMode() {
+		solanaClient = dry.WrapSolanaClient(solanaClient)
+	}
 
 	observer, err := solbserver.New(baseObserver, solanaClient, gwAddress)
 	if err != nil {
