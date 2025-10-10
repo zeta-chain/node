@@ -39,4 +39,7 @@ const (
 
 	// OptionUnpause is the argument used in CmdUpdateERC20CustodyPauseStatus to unpause the ERC20 custody contract
 	OptionUnpause = "unpause"
+
+	// DefaultMempoolSize is the default size of mempool
+	DefaultMempoolSize = 3000
 )

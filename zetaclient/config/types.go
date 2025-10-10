@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/showa-93/go-mask"
+
+	"github.com/zeta-chain/node/pkg/constant"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -27,7 +29,8 @@ const (
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 
 	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
-	DefaultMempoolCongestionThreshold = 3000
+	// leave 20% of mempool space to allow txs get processed, otherwise the congestion may get even worse.
+	DefaultMempoolCongestionThreshold = constant.DefaultMempoolSize * 8 / 10
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client

@@ -43,6 +43,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	zevmserver "github.com/zeta-chain/node/server"
 	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
@@ -345,8 +346,6 @@ type appCreator struct {
 	encCfg testutil.TestEncodingConfig
 }
 
-const DefaultMaxTxs = 3000
-
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -356,7 +355,7 @@ func (ac appCreator) newApp(
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
-		maxTxs = DefaultMaxTxs
+		maxTxs = constant.DefaultMempoolSize
 	}
 	signerExtractor := app.NewEthSignerExtractionAdapter(mempool.NewDefaultSignerExtractionAdapter())
 	mpool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{
