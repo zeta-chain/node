@@ -12,9 +12,12 @@ import (
 	"context"
 
 	suimodel "github.com/block-vision/sui-go-sdk/models"
+	btcchainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
+	btcwire "github.com/btcsuite/btcd/wire"
 	sol "github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
@@ -27,8 +30,19 @@ const MsgUnreachable = "unreachable"
 // Bitcoin
 // ------------------------------------------------------------------------------------------------
 
-// TODO
-// See: https://github.com/zeta-chain/node/issues/4232
+type BitcoinClient struct {
+	bitcoin.Client
+}
+
+func WrapBitcoinClient(client bitcoin.Client) *BitcoinClient {
+	return &BitcoinClient{Client: client}
+}
+
+func (*BitcoinClient) SendRawTransaction(context.Context,
+	*btcwire.MsgTx, bool,
+) (*btcchainhash.Hash, error) {
+	panic(MsgUnreachable)
+}
 
 // ------------------------------------------------------------------------------------------------
 // EVM
@@ -49,8 +63,7 @@ func WrapSolanaClient(client solana.Client) *SolanaClient {
 	return &SolanaClient{Client: client}
 }
 
-func (*SolanaClient) SendTransactionWithOpts(context.Context,
-	*sol.Transaction,
+func (*SolanaClient) SendTransactionWithOpts(context.Context, *sol.Transaction,
 	solrpc.TransactionOpts,
 ) (sol.Signature, error) {
 	panic(MsgUnreachable)
