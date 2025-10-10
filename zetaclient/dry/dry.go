@@ -14,10 +14,12 @@ import (
 	suimodel "github.com/block-vision/sui-go-sdk/models"
 	btcchainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	btcwire "github.com/btcsuite/btcd/wire"
+	eth "github.com/ethereum/go-ethereum/core/types"
 	sol "github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
@@ -48,8 +50,17 @@ func (*BitcoinClient) SendRawTransaction(context.Context,
 // EVM
 // ------------------------------------------------------------------------------------------------
 
-// TODO
-// See: https://github.com/zeta-chain/node/issues/4231
+type EVMClient struct {
+	evm.Client
+}
+
+func WrapEVMClient(client evm.Client) *EVMClient {
+	return &EVMClient{Client: client}
+}
+
+func (*EVMClient) SendTransaction(context.Context, *eth.Transaction) error {
+	panic(MsgUnreachable)
+}
 
 // ------------------------------------------------------------------------------------------------
 // Solana

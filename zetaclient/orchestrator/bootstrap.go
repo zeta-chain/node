@@ -119,6 +119,9 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", cfg.Endpoint)
 	}
 	var evmClient evm.Client = standardEvmClient
+	if clientMode.IsDryMode() {
+		evmClient = dry.WrapEVMClient(evmClient)
+	}
 
 	baseObserver, err := oc.newBaseObserver(clientMode, chain, chain.Name())
 	if err != nil {
