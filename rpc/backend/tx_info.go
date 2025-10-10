@@ -56,7 +56,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		}
 
 		// the `res.MsgIndex` is inferred from tx index, should be within the bound.
-		msg, ok := tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
+		msg, ok := b.DecodeMsgEthereumTxFromCosmosTx(tx)
 		if !ok {
 			return nil, errors.New("invalid ethereum tx")
 		}
@@ -198,12 +198,13 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 			return nil, fmt.Errorf("failed to decode tx: %w", err)
 		}
 
-		ethMsg = tx.GetMsgs()[res.MsgIndex].(*evmtypes.MsgEthereumTx)
-		if ethMsg == nil {
-			b.Logger.Error("failed to get eth msg")
-			return nil, fmt.Errorf("failed to get eth msg")
+		ethMsgDecoded, err := DecodeMsgEthereumTxFromCosmosMsg(tx.GetMsgs()[res.MsgIndex], b.ChainConfig().ChainID)
+		if err != nil {
+			b.Logger.Error("failed to get eth msg", "error", err.Error())
+			return nil, err
 		}
 
+		ethMsg = ethMsgDecoded
 		txData, err = evmtypes.UnpackTxData(ethMsg.Data)
 		if err != nil {
 			b.Logger.Error("failed to unpack tx data", "error", err.Error())
@@ -239,7 +240,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	}
 
 	var from common.Address
-	if additional != nil {
+	if additional != nil || len(ethMsg.From) != 0 {
 		from = common.BytesToAddress(ethMsg.From)
 	} else if ethMsg.Data != nil {
 		from, err = ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(b.EvmChainID))
