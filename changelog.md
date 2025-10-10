@@ -48,6 +48,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 
 ## v36.0.0
 
