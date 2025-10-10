@@ -722,6 +722,52 @@ type ExecuteMsg struct {
 	Data     []byte
 }
 
+type ExecuteMsgAddressLookupTable struct {
+	AddressLookupTableAddress [32]byte
+	WritableIndexes           []uint8
+	Data                      []byte
+}
+
+func (m *ExecuteMsgAddressLookupTable) Encode() ([]byte, error) {
+	return executeMsgAddressLookupTableAbi.Pack(m)
+}
+
+func (m *ExecuteMsgAddressLookupTable) Decode(msgbz []byte) error {
+	unpacked, err := executeMsgAddressLookupTableAbi.Unpack(msgbz)
+	if err != nil {
+		return errors.Wrap(err, "error unpacking execute msg AddressLookupTable")
+	}
+
+	jsonMsg, err := json.Marshal(unpacked[0])
+	if err != nil {
+		return errors.Wrap(err, "error marshalling execute msg AddressLookupTable [0]")
+	}
+
+	err = json.Unmarshal(jsonMsg, m)
+	if err != nil {
+		return errors.Wrap(err, "error unmarshalling execute msg AddressLookupTable")
+	}
+
+	return nil
+}
+
+var executeMsgAddressLookupTableAbi = mustGetExecuteMsgAddressLookupTableAbi()
+
+func mustGetExecuteMsgAddressLookupTableAbi() abi.Arguments {
+	abiType, err := abi.NewType("tuple", "struct MsgAddressLookupTable", []abi.ArgumentMarshaling{
+		{Name: "addressLookupTableAddress", Type: "bytes32"},
+		{Name: "writableIndexes", Type: "uint8[]"},
+		{Name: "data", Type: "bytes"},
+	})
+	if err != nil {
+		panic(errors.Wrap(err, "error creating abi type for ExecuteMsgAddressLookupTable"))
+	}
+
+	return abi.Arguments{
+		{Type: abiType, Name: "msgAddressLookupTable"},
+	}
+}
+
 func (m *ExecuteMsg) Encode() ([]byte, error) {
 	return executeMsgAbi.Pack(m)
 }
@@ -767,4 +813,80 @@ func mustGetExecuteMsgAbi() abi.Arguments {
 	return abi.Arguments{
 		{Type: abiType, Name: "msg"},
 	}
+}
+
+// GenericExecuteMsg is a wrapper type that can hold either ExecuteMsg or ExecuteMsgAddressLookupTable.
+type GenericExecuteMsg struct {
+	Legacy *ExecuteMsg
+	Alt    *ExecuteMsgAddressLookupTable
+}
+
+// DecodeExecuteMsg tries to decode into ExecuteMsg first, then ExecuteMsgAddressLookupTable.
+func DecodeExecuteMsg(msgbz []byte) (*GenericExecuteMsg, error) {
+	// Try legacy ExecuteMsg
+	{
+		unpacked, err := executeMsgAbi.Unpack(msgbz)
+		if err == nil {
+			jsonMsg, err := json.Marshal(unpacked[0])
+			if err == nil {
+				var legacy ExecuteMsg
+				if err := json.Unmarshal(jsonMsg, &legacy); err == nil {
+					return &GenericExecuteMsg{Legacy: &legacy}, nil
+				}
+			}
+		}
+	}
+
+	// Fallback: try ExecuteMsgAddressLookupTable
+	{
+		unpacked, err := executeMsgAddressLookupTableAbi.Unpack(msgbz)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to decode as either ExecuteMsg or ExecuteMsgAddressLookupTable")
+		}
+		jsonMsg, err := json.Marshal(unpacked[0])
+		if err != nil {
+			return nil, errors.Wrap(err, "error marshalling execute msg AddressLookupTable [0]")
+		}
+		var alt ExecuteMsgAddressLookupTable
+		if err := json.Unmarshal(jsonMsg, &alt); err != nil {
+			return nil, errors.Wrap(err, "error unmarshalling execute msg AddressLookupTable")
+		}
+		return &GenericExecuteMsg{Alt: &alt}, nil
+	}
+}
+
+// Data returns the raw data payload regardless of variant.
+func (g *GenericExecuteMsg) Data() []byte {
+	if g.Legacy != nil {
+		return g.Legacy.Data
+	}
+	if g.Alt != nil {
+		return g.Alt.Data
+	}
+	return nil
+}
+
+// AddressLookupTableAddress returns the AddressLookupTable address if variant is ExecuteMsgAddressLookupTable, else zero address.
+func (g *GenericExecuteMsg) AddressLookupTableAddress() *solana.PublicKey {
+	if g.Alt != nil {
+		pk := solana.PublicKey(g.Alt.AddressLookupTableAddress)
+		return &pk
+	}
+	return nil
+}
+
+// Accounts returns account metadata if variant is ExecuteMsg, else nil.
+func (g *GenericExecuteMsg) Accounts() []AccountMeta {
+	if g.Legacy != nil {
+		return g.Legacy.Accounts
+	}
+	return nil
+}
+
+// WritableIndexes returns writable indexes if variant is ExecuteMsgAddressLookupTable, else nil.
+func (g *GenericExecuteMsg) WritableIndexes() []uint8 {
+	if g.Alt != nil {
+		return g.Alt.WritableIndexes
+	}
+	return nil
 }

@@ -23,6 +23,8 @@ type Zetacore interface {
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
+	GetBaseGasPrice(ctx context.Context) (int64, error)
+	GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error)
 }
 
 var ErrUpgradeRequired = errors.New("upgrade required")
@@ -64,6 +66,16 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		return errors.Wrap(err, "unable to fetch operational flags")
 	}
 
+	currentBaseFee, err := zc.GetBaseGasPrice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch base gas price")
+	}
+
+	unconfirmedTxCount, err := zc.GetNumberOfUnconfirmedTxs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch number of unconfirmed txs")
+	}
+
 	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
 
 	// check and update chain params for each chain
@@ -99,6 +111,8 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		freshParams,
 		crosschainFlags,
 		operationalFlags,
+		currentBaseFee,
+		unconfirmedTxCount,
 	)
 }
 

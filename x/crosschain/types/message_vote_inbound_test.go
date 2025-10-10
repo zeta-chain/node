@@ -670,6 +670,15 @@ func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
 	}
 }
 
+func TestMsgVoteInbound_InboundTracker(t *testing.T) {
+	msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+	tracker := msg.InboundTracker()
+
+	require.Equal(t, msg.SenderChainId, tracker.ChainId)
+	require.Equal(t, msg.InboundHash, tracker.TxHash)
+	require.Equal(t, msg.CoinType, tracker.CoinType)
+}
+
 func TestMsgVoteInbound_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {

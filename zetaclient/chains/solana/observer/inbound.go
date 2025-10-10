@@ -130,6 +130,7 @@ func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes
 				ob.Logger().Inbound,
 				msg,
 				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
 			)
 			if err != nil {
 				return err

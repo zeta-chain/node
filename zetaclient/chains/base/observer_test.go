@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -27,7 +27,7 @@ const (
 )
 
 type testSuite struct {
-	*base.Observer
+	*Observer
 	db       *db.DB
 	tss      *mocks.TSS
 	zetacore *mocks.ZetacoreClient
@@ -56,6 +56,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
+	chainParams.IsSupported = true
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
 		SafeInboundCount:  defaultConfirmationCount,
 		SafeOutboundCount: defaultConfirmationCount,
@@ -63,20 +64,20 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	if testOpts.ConfirmationParams != nil {
 		chainParams.ConfirmationParams = testOpts.ConfirmationParams
 	}
-	zetacoreClient := mocks.NewZetacoreClient(t)
+	zetacoreClient := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{}).WithZetaChain()
 	tss := mocks.NewTSS(t)
 
 	database := createDatabase(t)
 
 	// create observer
 	zetaRepo := zrepo.New(zetacoreClient, chain, mode.StandardMode)
-	logger := base.DefaultLogger()
-	ob, err := base.NewObserver(
+	logger := DefaultLogger()
+	ob, err := NewObserver(
 		chain,
 		chainParams,
 		zetaRepo,
 		tss,
-		base.DefaultBlockCacheSize,
+		DefaultBlockCacheSize,
 		nil,
 		database,
 		logger,
@@ -98,7 +99,7 @@ func TestNewObserver(t *testing.T) {
 	appContext := zctx.New(config.New(false), nil, zerolog.Nop())
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSS(t)
-	blockCacheSize := base.DefaultBlockCacheSize
+	blockCacheSize := DefaultBlockCacheSize
 
 	database := createDatabase(t)
 
@@ -140,7 +141,7 @@ func TestNewObserver(t *testing.T) {
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob, err := base.NewObserver(
+			ob, err := NewObserver(
 				tt.chain,
 				tt.chainParams,
 				zrepo.New(tt.zetacoreClient, tt.chain, mode.StandardMode),
@@ -148,7 +149,7 @@ func TestNewObserver(t *testing.T) {
 				tt.blockCacheSize,
 				nil,
 				database,
-				base.DefaultLogger(),
+				DefaultLogger(),
 			)
 			if tt.fail {
 				require.ErrorContains(t, err, tt.message)
@@ -211,6 +212,7 @@ func TestObserverGetterAndSetter(t *testing.T) {
 		logger.Inbound.Info().Msg("print inbound log")
 		logger.Outbound.Info().Msg("print outbound log")
 		logger.Compliance.Info().Msg("print compliance log")
+		logger.Sampled.Info().Msg("print sampled log")
 	})
 }
 
@@ -303,7 +305,7 @@ func TestOutboundID(t *testing.T) {
 
 func TestLoadLastBlockScanned(t *testing.T) {
 	chain := chains.Ethereum
-	envvar := base.EnvVarLatestBlockByChain(chain)
+	envvar := EnvVarLatestBlockByChain(chain)
 
 	t.Run("should be able to load last block scanned", func(t *testing.T) {
 		// create observer and open db
@@ -353,7 +355,7 @@ func TestLoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(100)
 
 		// set env var to 'latest'
-		os.Setenv(envvar, base.EnvVarLatestBlock)
+		os.Setenv(envvar, EnvVarLatestBlock)
 
 		// last block scanned should remain 0
 		err := ob.LoadLastBlockScanned()
@@ -419,7 +421,7 @@ func TestReadWriteDBLastBlockScanned(t *testing.T) {
 }
 func TestLoadLastTxScanned(t *testing.T) {
 	chain := chains.SolanaDevnet
-	envvar := base.EnvVarLatestTxByChain(chain)
+	envvar := EnvVarLatestTxByChain(chain)
 	lastTx := "5LuQMorgd11p8GWEw6pmyHCDtA26NUyeNFhLWPNk2oBoM9pkag1LzhwGSRos3j4TJLhKjswFhZkGtvSGdLDkmqsk"
 
 	t.Run("should be able to load last tx scanned", func(t *testing.T) {

@@ -28,8 +28,8 @@ type LastStuckOutbound struct {
 	StuckFor time.Duration
 }
 
-// ObserveMempool monitors pending outbound txs in the mempool.
-func (ob *Observer) ObserveMempool(ctx context.Context) error {
+// ObserveBTCMempool monitors pending outbound txs in the Bitcoin mempool.
+func (ob *Observer) ObserveBTCMempool(ctx context.Context) error {
 	err := ob.refreshLastStuckOutbound(ctx)
 	if err != nil {
 		return errors.Wrap(err, "refresh last stuck outbound failed")

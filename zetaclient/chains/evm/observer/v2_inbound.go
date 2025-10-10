@@ -108,6 +108,7 @@ func (ob *Observer) observeGatewayDeposit(
 			ob.Logger().Inbound,
 			&msg,
 			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
@@ -255,6 +256,7 @@ func (ob *Observer) observeGatewayCall(
 			ob.Logger().Inbound,
 			&msg,
 			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 		if err != nil {
 			return lastScanned - 1, err
@@ -391,6 +393,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 			ob.Logger().Inbound,
 			&msg,
 			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time

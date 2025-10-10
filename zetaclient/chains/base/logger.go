@@ -41,6 +41,9 @@ type ObserverLogger struct {
 
 	// the logger for the compliance check
 	Compliance zerolog.Logger
+
+	// the sampled logger for frequent operations of a chain observer
+	Sampled zerolog.Logger
 }
 
 // NewLogger initializes the base loggers

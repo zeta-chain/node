@@ -34,11 +34,35 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ProcessInboundTrackers observes inbound trackers from zetacore
+// ProcessInboundTrackers processes inbound trackers from zetacore
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
 		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
@@ -64,6 +88,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
+			Bool("is_internal", isInternal).
 			Msg("checking inbound tracker")
 
 		// try processing the tracker for v2 inbound
@@ -96,6 +121,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 		}
 	}
+
 	return nil
 }
 
@@ -332,7 +358,7 @@ func (ob *Observer) observeZetaSent(
 		}
 
 		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
-		_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound, msg, gasLimit)
+		_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound, msg, gasLimit, ob.WatchMonitoringError)
 		if err != nil {
 			return beingScanned - 1, err // we have to re-scan from this block next time
 		}
@@ -415,7 +441,7 @@ func (ob *Observer) observeERC20Deposited(
 		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
 			_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound,
-				msg, zetacore.PostVoteInboundExecutionGasLimit)
+				msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 			if err != nil {
 				// we have to re-scan from this block next time
 				return beingScanned - 1, err
@@ -501,6 +527,7 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 			ob.Logger().Inbound,
 			msg,
 			zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 	}
 
@@ -561,6 +588,7 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 			ob.Logger().Inbound,
 			msg,
 			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 	}
 
@@ -606,6 +634,7 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 			ob.Logger().Inbound,
 			msg,
 			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
 		)
 	}
 

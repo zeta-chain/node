@@ -2,7 +2,6 @@ package observer
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"cosmossdk.io/math"
@@ -56,7 +55,9 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			return fmt.Errorf("%w (Sui digest %q)", err, digest)
+			err = errors.Wrapf(err, "Sui digest %q", digest)
+			logger.Error().Err(err).Send()
+			continue // does not block other CCTXs from being processed
 		}
 
 		if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {

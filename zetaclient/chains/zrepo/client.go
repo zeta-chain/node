@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschain "github.com/zeta-chain/node/x/crosschain/types"
 	fungible "github.com/zeta-chain/node/x/fungible/types"
 	observer "github.com/zeta-chain/node/x/observer/types"
@@ -53,6 +54,7 @@ type ZetacoreWriter interface {
 		gasLimit uint64,
 		retryGasLimit uint64,
 		_ *crosschain.MsgVoteInbound,
+		monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 	) (string, string, error)
 
 	PostOutboundTracker(_ context.Context,
@@ -91,6 +93,8 @@ type ZetacoreClientRepo interface {
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 
 	GetBTCTSSAddress(context.Context, ChainID) (string, error)
+
+	HasVoted(context.Context, string, string) (bool, error)
 }
 
 // ZetacoreClient is the client interface that interacts with zetacore.
@@ -131,4 +135,8 @@ type ZetacoreClient interface {
 	GetZetaHotKeyBalance(context.Context) (cosmosmath.Int, error)
 
 	GetUpgradePlan(context.Context) (*upgrade.Plan, error)
+
+	GetBaseGasPrice(context.Context) (int64, error)
+
+	GetNumberOfUnconfirmedTxs(context.Context) (int, error)
 }

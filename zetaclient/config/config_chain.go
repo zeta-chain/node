@@ -9,6 +9,10 @@ import (
 const (
 	// MaxBlocksPerScan is the maximum number of blocks to scan in one ticker
 	MaxBlocksPerScan = 100
+
+	// MaxInboundTrackersPerScan is the maximum number of inbound trackers to scan in one ticker
+	// This is to not add too much pressure to the zetacore when missed inbounds happen frequently.
+	MaxInboundTrackersPerScan = 10
 )
 
 // New constructs Config optionally with default values.
@@ -22,6 +26,7 @@ func New(setDefaults bool) Config {
 	}
 
 	if setDefaults {
+		cfg.MempoolCongestionThreshold = DefaultMempoolCongestionThreshold
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()

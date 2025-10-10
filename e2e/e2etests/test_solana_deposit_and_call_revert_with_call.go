@@ -1,9 +1,7 @@
 package e2etests
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
@@ -62,23 +60,13 @@ func TestSolanaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 
-	// verify that pda of solana connected program balance is increased
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        ethcommon.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	// verify that pda of solana connected program balance is increased and fields are set
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello deposit and call", pda.LastRevertMessage)
 	privkey := r.GetSolanaPrivKey()
 	require.Equal(r, privkey.PublicKey().String(), pda.LastRevertSender.String())
 
+	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
+	require.NoError(r, err)
 	require.Greater(r, connectedPdaInfoBefore.Value.Lamports+depositAmount.Uint64(), connectedPdaInfo.Value.Lamports)
 }

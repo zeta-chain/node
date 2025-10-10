@@ -60,10 +60,6 @@ func (s *Sui) Start(ctx context.Context) error {
 		return err
 	}
 
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
 			scheduler.GroupName(s.group()),
@@ -85,18 +81,15 @@ func (s *Sui) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().GasPriceTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !s.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(s.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
-	register(s.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGenericSkipper)
+	register(s.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
 	register(s.observer.ObserveInbound, "observe_inbounds", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)
@@ -151,9 +144,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		maxNonce   = firstNonce + lookback
 	)
 
-	for i := range cctxList {
+	for i, cctx := range cctxList {
 		var (
-			cctx           = cctxList[i]
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
 			nonce          = outboundParams.TssNonce
@@ -190,7 +182,6 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
 				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
 			}
-
 			return nil
 		})
 	}

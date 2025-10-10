@@ -417,5 +417,6 @@ replace (
 
 	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250821154530-f0addce1e5ac
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 )
