@@ -515,7 +515,7 @@ func (msg *MsgWithdrawSPL) Hash() [32]byte {
 
 	message = append(message, msg.recipientAta.Bytes()...)
 
-	message = append(message, byte(msg.decimals))
+	message = append(message, msg.decimals)
 
 	return crypto.Keccak256Hash(message)
 }
