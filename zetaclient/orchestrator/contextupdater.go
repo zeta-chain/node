@@ -5,6 +5,7 @@ import (
 
 	cosmosmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	cometbft "github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -14,7 +15,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-type Zetacore interface {
+type ZetacoreClient interface {
+	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 	GetBlockHeight(ctx context.Context) (int64, error)
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
@@ -33,7 +35,7 @@ var ErrUpgradeRequired = errors.New("upgrade required")
 
 // UpdateAppContext fetches latest data from Zetacore and updates the AppContext.
 // Also detects if an upgrade is required. If an upgrade is required, it returns ErrUpgradeRequired.
-func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, logger zerolog.Logger) error {
+func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc ZetacoreClient, logger zerolog.Logger) error {
 	bn, err := zc.GetBlockHeight(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get zeta block height")
@@ -119,7 +121,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 }
 
 // returns an error if an upgrade is required
-func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc Zetacore) error {
+func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc ZetacoreClient) error {
 	plan, err := zc.GetUpgradePlan(ctx)
 	switch {
 	case err != nil:

@@ -18,13 +18,15 @@ import (
 type ChainID = int64
 type Nonce = uint64
 
+// ZetacoreClient contains the zetacore client functions used by ZetaRepo.
 type ZetacoreClient interface {
-	zetacoreReaderClient
-	zetacoreWriterClient
+	ZetacoreReaderClient
+	ZetacoreWriterClient
 }
 
-// zetacoreReaderClient contains the functions that do not mutate ZetaChain state.
-type zetacoreReaderClient interface {
+// ZetacoreReaderClient contains the zetacore client functions used by ZetaRepo that do not mutate
+// ZetaChain state.
+type ZetacoreReaderClient interface {
 	Chain() chains.Chain
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
@@ -54,8 +56,9 @@ type zetacoreReaderClient interface {
 	GetBTCTSSAddress(context.Context, ChainID) (string, error)
 }
 
-// zetacoreWriterClient contains the functions that mutate ZetaChain state.
-type zetacoreWriterClient interface {
+// ZetacoreReaderClient contains the zetacore client functions used by ZetaRepo that do mutate
+// ZetaChain state.
+type ZetacoreWriterClient interface {
 	PostVoteGasPrice(_ context.Context,
 		_ chains.Chain,
 		gasPrice uint64,
@@ -93,56 +96,4 @@ type zetacoreWriterClient interface {
 		_ Nonce,
 		txHash string,
 	) (string, error)
-}
-
-// ------------------------------------------------------------------------------------------------
-// dry-mode
-// ------------------------------------------------------------------------------------------------
-
-const unreachableMsg = "called an unreachable dryZetacoreClient function"
-
-// dryZetacoreClient is a dry-wrapper for the zetacore client.
-// It overrides mutating functions from the underlying client that panic when called.
-type dryZetacoreClient struct {
-	zetacoreReaderClient
-
-	// writerClient is deliberately not embedded so the compiler can ensure that all mutating
-	// methods are explicitly overridden.
-	writerClient zetacoreWriterClient
-}
-
-func newDryZetacoreClient(client ZetacoreClient) *dryZetacoreClient {
-	return &dryZetacoreClient{zetacoreReaderClient: client, writerClient: client}
-}
-
-func (*dryZetacoreClient) PostVoteGasPrice(context.Context, chains.Chain, uint64, uint64, uint64,
-) (string, error) {
-	panic(unreachableMsg)
-}
-
-func (*dryZetacoreClient) PostVoteTSS(context.Context, string, int64, chains.ReceiveStatus,
-) (string, error) {
-	panic(unreachableMsg)
-}
-
-func (*dryZetacoreClient) PostVoteBlameData(context.Context, *blame.Blame, ChainID, string,
-) (string, error) {
-	panic(unreachableMsg)
-}
-
-func (*dryZetacoreClient) PostVoteOutbound(context.Context, uint64, uint64,
-	*crosschain.MsgVoteOutbound,
-) (string, string, error) {
-	panic(unreachableMsg)
-}
-
-func (*dryZetacoreClient) PostVoteInbound(context.Context, uint64, uint64,
-	*crosschain.MsgVoteInbound, chan<- zetaerrors.ErrTxMonitor,
-) (string, string, error) {
-	panic(unreachableMsg)
-}
-
-func (*dryZetacoreClient) PostOutboundTracker(context.Context, ChainID, Nonce, string,
-) (string, error) {
-	panic(unreachableMsg)
 }

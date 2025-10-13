@@ -26,11 +26,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
+// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits
+// for an error from the monitorVote channel.
 const monitoringErrHandlerRoutineTimeout = 5 * time.Minute
 
 // MonitoringErrorWatcher is the function type for watching inbound vote monitoring errors.
-type MonitoringErrorWatcher func(ctx context.Context, monitorErrCh <-chan zetaerrors.ErrTxMonitor, zetaTxHash string)
+type MonitoringErrorWatcher func(_ context.Context, _ <-chan zetaerrors.ErrTxMonitor, zhash string)
 
 // ZetaRepo implements the Repository pattern by wrapping a zetacore client.
 // Each chain module must instantiate its own ZetaRepo.
@@ -46,9 +47,6 @@ type ZetaRepo struct {
 func New(client ZetacoreClient, connectedChain chains.Chain, clientMode mode.ClientMode) *ZetaRepo {
 	if client == nil {
 		return nil
-	}
-	if clientMode.IsDryMode() {
-		client = newDryZetacoreClient(client)
 	}
 	return &ZetaRepo{client, connectedChain, clientMode}
 }
@@ -226,14 +224,22 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 		return "", nil
 	}
 
-	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
-	// Note: the canceller is not used because we want to allow the goroutines to run until they time out
-	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), monitoringErrHandlerRoutineTimeout)
+	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction.
+	// NOTE: the canceller is not used because we want to allow the goroutines to run until they
+	//       time out.
+	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx,
+		context.Background(),
+		monitoringErrHandlerRoutineTimeout,
+	)
 
 	// Post vote to zetacore.
-	const gasLimit = zetacore.PostVoteInboundGasLimit
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
-	zhash, ballot, err := repo.client.PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
+	zhash, ballot, err := repo.client.PostVoteInbound(ctxWithTimeout,
+		zetacore.PostVoteInboundGasLimit,
+		retryGasLimit,
+		msg,
+		monitorErrCh,
+	)
 	if err != nil {
 		err = newClientError(ErrClientVoteInbound, err)
 		logger.Error().Err(err).Send()
@@ -246,7 +252,7 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 	} else {
 		logger.Info().Str(logs.FieldZetaTx, zhash).Msg("posted inbound vote")
 
-		// watch for monitoring error for this vote
+		// Watch for monitoring errors for this vote.
 		if monitorErrWatcher != nil {
 			go func() {
 				monitorErrWatcher(ctxWithTimeout, monitorErrCh, zhash)
@@ -329,6 +335,11 @@ func (repo *ZetaRepo) GetForeignCoinsFromAsset(ctx context.Context,
 	return &coins, nil
 }
 
+func (repo *ZetaRepo) CCTXExists(ctx context.Context, hash string) (bool, error) {
+	f := repo.client.GetCctxByHash
+	return exists(ctx, hash, f, grpccodes.InvalidArgument, ErrClientGetCCTXByHash)
+}
+
 // ------------------------------------------------------------------------------------------------
 // Auxiliary functions
 // ------------------------------------------------------------------------------------------------
@@ -351,7 +362,7 @@ func checkCode(err error, code grpccodes.Code) error {
 	return nil
 }
 
-// exists is the generic function used by cctxExists and ballotExists to check for CCTXs and
+// exists is the generic function used by CCTXExists and ballotExists to check for CCTXs and
 // ballots.
 func exists[T any](ctx context.Context,
 	hashOrID string, // hash of a CCTX or the ID of a ballot
@@ -368,11 +379,6 @@ func exists[T any](ctx context.Context,
 		return false, nil
 	}
 	return res != nil, nil
-}
-
-func (repo *ZetaRepo) CCTXExists(ctx context.Context, hash string) (bool, error) {
-	f := repo.client.GetCctxByHash
-	return exists(ctx, hash, f, grpccodes.InvalidArgument, ErrClientGetCCTXByHash)
 }
 
 func (repo *ZetaRepo) ballotExists(ctx context.Context, id string) (bool, error) {

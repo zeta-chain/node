@@ -8,6 +8,7 @@ import (
 	observer "github.com/zeta-chain/node/x/observer/types"
 )
 
+// ZetacoreClient contains the zetacore client functions used by ShutdownListener and TSSListener.
 type ZetacoreClient interface {
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 	GetKeyGen(context.Context) (observer.Keygen, error)
