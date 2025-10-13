@@ -17,13 +17,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 type BTCSignTestSuite struct {
 	suite.Suite
-	testSigner interfaces.TSSSigner
+	testSigner tssrepo.TSSClient
 }
 
 const (
@@ -132,7 +132,7 @@ func getWalletTX(
 }
 
 func getTSSTX(
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 	tx *wire.MsgTx,
 	sigHashes *txscript.TxSigHashes,
 	idx int,

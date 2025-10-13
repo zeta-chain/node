@@ -1,5 +1,7 @@
-// Package interfaces provides interfaces for clients and signers for the chain to interact with
-package interfaces
+// Package tssrepo provides an abstraction layer for interactions with the TSS signer client.
+//
+// TODO: implement the repository (see: https://github.com/zeta-chain/node/issues/4304).
+package tssrepo
 
 import (
 	"context"
@@ -7,8 +9,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
-// TSSSigner is the interface for the TSS signer.
-type TSSSigner interface {
+// TSSClient contains TSS client functions.
+type TSSClient interface {
 	PubKey() tss.PubKey
 
 	Sign(_ context.Context,

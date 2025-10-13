@@ -1,11 +1,12 @@
-// Package dry provides dry-client wrappers for the standard clients of the connected chains.
+// Package dry provides dry-client wrappers for the TSS signer and for the standard clients of the
+// connected chains.
 //
 // A dry-client wrapper overrides mutating functions from the underlying client.
 // These overridden functions panic with MsgUnreacheable when called.
 //
 // Dry-client wrappers are redundant.
-// They and serve as an additional safeguard layer that guarantees that dry-mode zetaclient nodes
-// never mutate the state of the connected chains.
+// They serve as an additional safeguard layer that guarantees that dry-mode zetaclient nodes never
+// participate in signing and never mutate the state of the connected chains.
 package dry
 
 import (
@@ -23,15 +24,46 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 // MsgUnreachable is the panic message returned by this module's functions when they get called.
 const MsgUnreachable = "unreachable"
 
 // ------------------------------------------------------------------------------------------------
+// TSS
+// ------------------------------------------------------------------------------------------------
+
+// TSSClient is a dry-wrapper for TSS clients.
+type TSSClient struct {
+	// client is deliberately not embedded so the compiler can ensure that all mutating
+	// methods are explicitly overridden.
+	client tssrepo.TSSClient
+}
+
+func WrapTSSClient(client tssrepo.TSSClient) *TSSClient {
+	return &TSSClient{client}
+}
+
+func (signer *TSSClient) PubKey() tss.PubKey {
+	return signer.client.PubKey()
+}
+
+func (*TSSClient) Sign(context.Context, []byte, uint64, uint64, int64) ([65]byte, error) {
+	panic(MsgUnreachable)
+}
+
+func (*TSSClient) SignBatch(context.Context, [][]byte, uint64, uint64, int64,
+) ([][65]byte, error) {
+	panic(MsgUnreachable)
+}
+
+// ------------------------------------------------------------------------------------------------
 // Bitcoin
 // ------------------------------------------------------------------------------------------------
 
+// BitcoinClient is a dry-wrapper for Bitcoin clients.
 type BitcoinClient struct {
 	bitcoin.Client
 }
@@ -50,6 +82,7 @@ func (*BitcoinClient) SendRawTransaction(context.Context,
 // EVM
 // ------------------------------------------------------------------------------------------------
 
+// EVMClient is a dry-wrapper for EVM clients.
 type EVMClient struct {
 	evm.Client
 }
@@ -66,6 +99,7 @@ func (*EVMClient) SendTransaction(context.Context, *eth.Transaction) error {
 // Solana
 // ------------------------------------------------------------------------------------------------
 
+// SolanaClient is a dry-wrapper for Solana clients.
 type SolanaClient struct {
 	solana.Client
 }
@@ -84,6 +118,7 @@ func (*SolanaClient) SendTransactionWithOpts(context.Context, *sol.Transaction,
 // Sui
 // ------------------------------------------------------------------------------------------------
 
+// SuiClient is a dry-wrapper for Sui clients.
 type SuiClient struct {
 	sui.Client
 }
@@ -102,6 +137,7 @@ func (*SuiClient) SuiExecuteTransactionBlock(context.Context,
 // TON
 // ------------------------------------------------------------------------------------------------
 
+// TONClient is a dry-wrapper for TON clients.
 type TONClient struct {
 	ton.Client
 }
