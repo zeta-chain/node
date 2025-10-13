@@ -380,6 +380,10 @@ func (msg *MsgExecute) Hash() [32]byte {
 
 	message = append(message, msg.data...)
 
+	for _, r := range msg.remainingAccounts {
+		message = append(message, r.PublicKey.Bytes()...)
+	}
+
 	return crypto.Keccak256Hash(message)
 }
 
@@ -510,6 +514,8 @@ func (msg *MsgWithdrawSPL) Hash() [32]byte {
 	message = append(message, msg.mintAccount.Bytes()...)
 
 	message = append(message, msg.recipientAta.Bytes()...)
+
+	message = append(message, byte(msg.decimals))
 
 	return crypto.Keccak256Hash(message)
 }
@@ -715,6 +721,10 @@ func (msg *MsgExecuteSPL) Hash() [32]byte {
 
 	message = append(message, msg.data...)
 
+	for _, r := range msg.remainingAccounts {
+		message = append(message, r.PublicKey.Bytes()...)
+	}
+
 	return crypto.Keccak256Hash(message)
 }
 
@@ -815,6 +825,7 @@ func (msg *MsgWhitelist) Hash() [32]byte {
 	message = append(message, buff...)
 
 	message = append(message, msg.whitelistCandidate.Bytes()...)
+	message = append(message, msg.whitelistEntry.Bytes()...)
 
 	return crypto.Keccak256Hash(message)
 }
