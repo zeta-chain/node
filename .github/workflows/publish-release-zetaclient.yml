@@ -69,8 +69,10 @@ jobs:
           cat changelog-current.md
 
       - name: Set Version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          echo "GITHUB_TAG_VERSION=${{ inputs.version }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_VERSION=${VERSION_INPUT}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         shell: bash
