@@ -37,6 +37,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 * [4313](https://github.com/zeta-chain/node/pull/4313) - add dry-mode to Sui and add client wrappers to Sui and TON
 * [4317](https://github.com/zeta-chain/node/pull/4317) - add dry-mode to Solana
+* [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
 
 ### Tests
 
