@@ -6,6 +6,7 @@ import (
 
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -52,8 +53,12 @@ func (ob *Observer) GetInboundInternalTrackers(
 			continue
 		}
 
-		// update last retry timestamp
-		tracker.LastRetry = retryTime
+		// update last retry timestamp for the first MaxInboundTrackersPerScan trackers
+		// excessive trackers will NOT be picked up by inbound tracker scanner
+		if len(internalTrackers) < config.MaxInboundTrackersPerScan {
+			tracker.LastRetry = retryTime
+		}
+
 		internalTrackers = append(internalTrackers, tracker.Tracker)
 	}
 

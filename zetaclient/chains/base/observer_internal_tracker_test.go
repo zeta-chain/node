@@ -12,6 +12,8 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 func Test_GetInboundInternalTrackers(t *testing.T) {
@@ -148,6 +150,47 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 
 		// ASSERT 2
 		require.Empty(t, trackers)
+	})
+
+	t.Run("should only update timestamp for the first MaxInboundTrackersPerScan trackers", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create MaxInboundTrackersPerScan + 1 sample failed inbound votes and mock up queries
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		msgs := make([]crosschaintypes.MsgVoteInbound, config.MaxInboundTrackersPerScan+1)
+		for i := range config.MaxInboundTrackersPerScan + 1 {
+			msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+			msgs[i] = msg
+
+			ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+			ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
+			ob.AddInternalInboundTracker(ctx, &msgs[i])
+		}
+
+		// ACT 1
+		// should update timestamp for MaxInboundTrackersPerScan trackers
+		retryTime1 := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime1)
+
+		// ASSERT
+		// should return all MaxInboundTrackersPerScan + 1 trackers
+		require.Len(t, trackers, config.MaxInboundTrackersPerScan+1)
+
+		// ACT 2
+		// should return only one last remaining tracker
+		trackers = ob.GetInboundInternalTrackers(ctx, retryTime1)
+
+		// ASSERT 2
+		require.Len(t, trackers, 1)
+
+		// ACT 3
+		// should return all MaxInboundTrackersPerScan + 1 trackers after another retry interval
+		retryTime2 := retryTime1.Add(internalTrackerRetryInterval)
+		trackers = ob.GetInboundInternalTrackers(ctx, retryTime2)
+
+		// ASSERT 3
+		require.Len(t, trackers, config.MaxInboundTrackersPerScan+1)
 	})
 }
 
