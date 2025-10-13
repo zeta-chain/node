@@ -1,0 +1,78 @@
+env:
+  - CGO_ENABLED=1
+  - CC_darwin_arm64=oa64-clang
+  - CXX_darwin_arm64=oa64-clang++
+  - CC_darwin_amd64=o64-clang
+  - CXX_darwin_amd64=o64-clang+
+  - CC_linux_arm64=aarch64-linux-gnu-gcc
+  - CXX_linux_arm64=aarch64-linux-gnu-g++
+  - CC_linux_amd64=x86_64-linux-gnu-gcc
+  - CXX_linux_amd64=x86_64-linux-gnu-g++
+  - CC_windows_amd64=x86_64-w64-mingw32-gcc
+  - CXX_windows_amd64=x86_64-w64-mingw32-g++
+  - VERSION={{ .Version }}
+  - BUILDTIME={{ .Date }}
+
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+
+builds:
+  - id: "zetacored"
+    main: ./cmd/zetacored
+    binary: "zetacored-{{ .Os }}-{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: &default_flags
+      - -tags=pebbledb,ledger
+    ldflags: &default_ldflags
+      - -X github.com/cosmos/cosmos-sdk/version.Name=zetacore
+      - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
+      - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
+      - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
+      - -X github.com/zeta-chain/node/pkg/constant.Name=zetacored
+      - -X github.com/zeta-chain/node/pkg/constant.Version={{ .Version }}
+      - -X github.com/zeta-chain/node/pkg/constant.CommitHash={{ .FullCommit }}
+      - -X github.com/zeta-chain/node/pkg/constant.BuildTime={{ .CommitDate }}
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .CommitDate }}
+      - -buildid=
+      - -s -w
+
+archives:
+  - format: binary
+    name_template: "{{ .Binary }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+release:
+  draft: false
+  target_commitish: "{{ .FullCommit }}"
+  prerelease: auto
+  mode: append
