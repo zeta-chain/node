@@ -82,9 +82,9 @@ func (_m *EVMClient) BlockNumber(_a0 context.Context) (uint64, error) {
 	return r0, r1
 }
 
-// CallContract provides a mock function with given fields: ctx, call, blockNumber
-func (_m *EVMClient) CallContract(ctx context.Context, call ethereum.CallMsg, blockNumber *big.Int) ([]byte, error) {
-	ret := _m.Called(ctx, call, blockNumber)
+// CallContract provides a mock function with given fields: _a0, _a1, blockNumber
+func (_m *EVMClient) CallContract(_a0 context.Context, _a1 ethereum.CallMsg, blockNumber *big.Int) ([]byte, error) {
+	ret := _m.Called(_a0, _a1, blockNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CallContract")
@@ -93,10 +93,10 @@ func (_m *EVMClient) CallContract(ctx context.Context, call ethereum.CallMsg, bl
 	var r0 []byte
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.CallMsg, *big.Int) ([]byte, error)); ok {
-		return rf(ctx, call, blockNumber)
+		return rf(_a0, _a1, blockNumber)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.CallMsg, *big.Int) []byte); ok {
-		r0 = rf(ctx, call, blockNumber)
+		r0 = rf(_a0, _a1, blockNumber)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -104,7 +104,7 @@ func (_m *EVMClient) CallContract(ctx context.Context, call ethereum.CallMsg, bl
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ethereum.CallMsg, *big.Int) error); ok {
-		r1 = rf(ctx, call, blockNumber)
+		r1 = rf(_a0, _a1, blockNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -112,9 +112,9 @@ func (_m *EVMClient) CallContract(ctx context.Context, call ethereum.CallMsg, bl
 	return r0, r1
 }
 
-// CodeAt provides a mock function with given fields: ctx, contract, blockNumber
-func (_m *EVMClient) CodeAt(ctx context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error) {
-	ret := _m.Called(ctx, contract, blockNumber)
+// CodeAt provides a mock function with given fields: _a0, contract, blockNumber
+func (_m *EVMClient) CodeAt(_a0 context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error) {
+	ret := _m.Called(_a0, contract, blockNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CodeAt")
@@ -123,10 +123,10 @@ func (_m *EVMClient) CodeAt(ctx context.Context, contract common.Address, blockN
 	var r0 []byte
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address, *big.Int) ([]byte, error)); ok {
-		return rf(ctx, contract, blockNumber)
+		return rf(_a0, contract, blockNumber)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address, *big.Int) []byte); ok {
-		r0 = rf(ctx, contract, blockNumber)
+		r0 = rf(_a0, contract, blockNumber)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -134,7 +134,7 @@ func (_m *EVMClient) CodeAt(ctx context.Context, contract common.Address, blockN
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, common.Address, *big.Int) error); ok {
-		r1 = rf(ctx, contract, blockNumber)
+		r1 = rf(_a0, contract, blockNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -142,9 +142,9 @@ func (_m *EVMClient) CodeAt(ctx context.Context, contract common.Address, blockN
 	return r0, r1
 }
 
-// EstimateGas provides a mock function with given fields: ctx, call
-func (_m *EVMClient) EstimateGas(ctx context.Context, call ethereum.CallMsg) (uint64, error) {
-	ret := _m.Called(ctx, call)
+// EstimateGas provides a mock function with given fields: _a0, _a1
+func (_m *EVMClient) EstimateGas(_a0 context.Context, _a1 ethereum.CallMsg) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for EstimateGas")
@@ -153,16 +153,16 @@ func (_m *EVMClient) EstimateGas(ctx context.Context, call ethereum.CallMsg) (ui
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.CallMsg) (uint64, error)); ok {
-		return rf(ctx, call)
+		return rf(_a0, _a1)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.CallMsg) uint64); ok {
-		r0 = rf(ctx, call)
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ethereum.CallMsg) error); ok {
-		r1 = rf(ctx, call)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -170,9 +170,9 @@ func (_m *EVMClient) EstimateGas(ctx context.Context, call ethereum.CallMsg) (ui
 	return r0, r1
 }
 
-// FilterLogs provides a mock function with given fields: ctx, q
-func (_m *EVMClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error) {
-	ret := _m.Called(ctx, q)
+// FilterLogs provides a mock function with given fields: _a0, _a1
+func (_m *EVMClient) FilterLogs(_a0 context.Context, _a1 ethereum.FilterQuery) ([]types.Log, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FilterLogs")
@@ -181,10 +181,10 @@ func (_m *EVMClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]
 	var r0 []types.Log
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.FilterQuery) ([]types.Log, error)); ok {
-		return rf(ctx, q)
+		return rf(_a0, _a1)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.FilterQuery) []types.Log); ok {
-		r0 = rf(ctx, q)
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]types.Log)
@@ -192,7 +192,7 @@ func (_m *EVMClient) FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ethereum.FilterQuery) error); ok {
-		r1 = rf(ctx, q)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -258,9 +258,9 @@ func (_m *EVMClient) HealthCheck(ctx context.Context) (time.Time, error) {
 	return r0, r1
 }
 
-// PendingCodeAt provides a mock function with given fields: ctx, account
-func (_m *EVMClient) PendingCodeAt(ctx context.Context, account common.Address) ([]byte, error) {
-	ret := _m.Called(ctx, account)
+// PendingCodeAt provides a mock function with given fields: _a0, _a1
+func (_m *EVMClient) PendingCodeAt(_a0 context.Context, _a1 common.Address) ([]byte, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PendingCodeAt")
@@ -269,10 +269,10 @@ func (_m *EVMClient) PendingCodeAt(ctx context.Context, account common.Address) 
 	var r0 []byte
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address) ([]byte, error)); ok {
-		return rf(ctx, account)
+		return rf(_a0, _a1)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address) []byte); ok {
-		r0 = rf(ctx, account)
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -280,7 +280,7 @@ func (_m *EVMClient) PendingCodeAt(ctx context.Context, account common.Address) 
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, common.Address) error); ok {
-		r1 = rf(ctx, account)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -288,9 +288,9 @@ func (_m *EVMClient) PendingCodeAt(ctx context.Context, account common.Address) 
 	return r0, r1
 }
 
-// PendingNonceAt provides a mock function with given fields: ctx, account
-func (_m *EVMClient) PendingNonceAt(ctx context.Context, account common.Address) (uint64, error) {
-	ret := _m.Called(ctx, account)
+// PendingNonceAt provides a mock function with given fields: _a0, _a1
+func (_m *EVMClient) PendingNonceAt(_a0 context.Context, _a1 common.Address) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PendingNonceAt")
@@ -299,16 +299,16 @@ func (_m *EVMClient) PendingNonceAt(ctx context.Context, account common.Address)
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address) (uint64, error)); ok {
-		return rf(ctx, account)
+		return rf(_a0, _a1)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, common.Address) uint64); ok {
-		r0 = rf(ctx, account)
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, common.Address) error); ok {
-		r1 = rf(ctx, account)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -334,9 +334,9 @@ func (_m *EVMClient) SendTransaction(_a0 context.Context, _a1 *types.Transaction
 	return r0
 }
 
-// SubscribeFilterLogs provides a mock function with given fields: ctx, q, ch
-func (_m *EVMClient) SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error) {
-	ret := _m.Called(ctx, q, ch)
+// SubscribeFilterLogs provides a mock function with given fields: _a0, _a1, _a2
+func (_m *EVMClient) SubscribeFilterLogs(_a0 context.Context, _a1 ethereum.FilterQuery, _a2 chan<- types.Log) (ethereum.Subscription, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SubscribeFilterLogs")
@@ -345,10 +345,10 @@ func (_m *EVMClient) SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQ
 	var r0 ethereum.Subscription
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.FilterQuery, chan<- types.Log) (ethereum.Subscription, error)); ok {
-		return rf(ctx, q, ch)
+		return rf(_a0, _a1, _a2)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, ethereum.FilterQuery, chan<- types.Log) ethereum.Subscription); ok {
-		r0 = rf(ctx, q, ch)
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(ethereum.Subscription)
@@ -356,7 +356,7 @@ func (_m *EVMClient) SubscribeFilterLogs(ctx context.Context, q ethereum.FilterQ
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, ethereum.FilterQuery, chan<- types.Log) error); ok {
-		r1 = rf(ctx, q, ch)
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -514,36 +514,6 @@ func (_m *EVMClient) TransactionReceipt(_a0 context.Context, _a1 common.Hash) (*
 
 	if rf, ok := ret.Get(1).(func(context.Context, common.Hash) error); ok {
 		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// TransactionSender provides a mock function with given fields: _a0, _a1, block, index
-func (_m *EVMClient) TransactionSender(_a0 context.Context, _a1 *types.Transaction, block common.Hash, index uint) (common.Address, error) {
-	ret := _m.Called(_a0, _a1, block, index)
-
-	if len(ret) == 0 {
-		panic("no return value specified for TransactionSender")
-	}
-
-	var r0 common.Address
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *types.Transaction, common.Hash, uint) (common.Address, error)); ok {
-		return rf(_a0, _a1, block, index)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *types.Transaction, common.Hash, uint) common.Address); ok {
-		r0 = rf(_a0, _a1, block, index)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.Address)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *types.Transaction, common.Hash, uint) error); ok {
-		r1 = rf(_a0, _a1, block, index)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -51,7 +51,7 @@ type Observer struct {
 	zetaRepo *zrepo.ZetaRepo
 
 	// tssSigner is the TSS signer
-	tssSigner interfaces.TSSSigner
+	tssSigner tssrepo.TSSClient
 
 	// lastBlock is the last block height of the observed chain
 	lastBlock uint64
@@ -91,7 +91,7 @@ func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
 	zetaRepo *zrepo.ZetaRepo,
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 	blockCacheSize int,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
@@ -191,7 +191,7 @@ func (ob *Observer) ZetaRepo() *zrepo.ZetaRepo {
 }
 
 // TSS returns the tss signer for the observer.
-func (ob *Observer) TSS() interfaces.TSSSigner {
+func (ob *Observer) TSS() tssrepo.TSSClient {
 	return ob.tssSigner
 }
 

@@ -149,7 +149,6 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 
 		if params.ReceiverChainId != chainID {
 			b.outboundLogger(outboundID).Error().Msg("schedule CCTX: chain id mismatch")
-
 			continue
 		}
 

@@ -61,14 +61,17 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 
 	cfg, found := app.Config().GetBTCConfig(chain.ID())
 	if !found {
-		return nil, errors.Wrap(errSkipChain, "unable to find btc config")
+		return nil, errors.Wrap(errSkipChain, "unable to find BTC config")
 	}
 
 	standardBitcoinClient, err := btcclient.New(cfg, chain.ID(), oc.logger.Logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create rpc client")
+		return nil, errors.Wrap(err, "unable to create RPC client")
 	}
 	var bitcoinClient bitcoin.Client = standardBitcoinClient
+	if clientMode.IsDryMode() {
+		bitcoinClient = dry.WrapBitcoinClient(bitcoinClient)
+	}
 
 	var (
 		rawChain = chain.RawChain()
@@ -116,6 +119,9 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", cfg.Endpoint)
 	}
 	var evmClient evm.Client = standardEvmClient
+	if clientMode.IsDryMode() {
+		evmClient = dry.WrapEVMClient(evmClient)
+	}
 
 	baseObserver, err := oc.newBaseObserver(clientMode, chain, chain.Name())
 	if err != nil {
@@ -177,9 +183,12 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 
 	standardSolanaClient := solrpc.New(cfg.Endpoint)
 	if standardSolanaClient == nil {
-		return nil, errors.New("unable to create rpc client")
+		return nil, errors.New("unable to create RPC client")
 	}
 	var solanaClient solana.Client = standardSolanaClient
+	if clientMode.IsDryMode() {
+		solanaClient = dry.WrapSolanaClient(solanaClient)
+	}
 
 	observer, err := solbserver.New(baseObserver, solanaClient, gwAddress)
 	if err != nil {
