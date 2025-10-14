@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	ethbind "github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	eth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -24,13 +24,28 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// EVMClient is the interface for the EVM RPC client
+// EVMClient is the interface for the EVM RPC client.
+//
+// This interface contains functions from go-ethereum's bind.ContractBackend.
+// We are intentionally not embedding ContractBackend in EVMClient because we want to make it
+// explicit and clear which methods are part of EVMClient.
 //
 //go:generate mockery --name EVMClient --filename evm_client.go --case underscore --output ../../../testutils/mocks
 type EVMClient interface {
-	ethbind.ContractBackend
-
+	PendingCodeAt(context.Context, ethcommon.Address) ([]byte, error)
+	PendingNonceAt(context.Context, ethcommon.Address) (uint64, error)
+	SubscribeFilterLogs(context.Context, ethereum.FilterQuery, chan<- eth.Log) (ethereum.Subscription, error)
+	EstimateGas(context.Context, ethereum.CallMsg) (uint64, error)
+	CodeAt(_ context.Context, contract ethcommon.Address, blockNumber *big.Int) ([]byte, error)
+	CallContract(_ context.Context, _ ethereum.CallMsg, blockNumber *big.Int) ([]byte, error)
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendTransaction(context.Context, *eth.Transaction) error
+
+	HealthCheck(ctx context.Context) (time.Time, error)
+
+	FilterLogs(context.Context, ethereum.FilterQuery) ([]eth.Log, error)
+
+	SuggestGasTipCap(ctx context.Context) (*big.Int, error)
 
 	SuggestGasPrice(context.Context) (*big.Int, error)
 
@@ -45,14 +60,6 @@ type EVMClient interface {
 	TransactionByHashCustom(context.Context, string) (*client.Transaction, error)
 
 	TransactionReceipt(context.Context, ethcommon.Hash) (*eth.Receipt, error)
-
-	TransactionSender(_ context.Context,
-		_ *eth.Transaction,
-		block ethcommon.Hash,
-		index uint,
-	) (ethcommon.Address, error)
-
-	HealthCheck(ctx context.Context) (time.Time, error)
 }
 
 // Observer is the observer for evm chains
