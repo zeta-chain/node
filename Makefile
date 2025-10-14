@@ -70,6 +70,8 @@ go.sum: go.mod
 
 test: clean-test-dir run-test
 
+test-clean : clean-test-dir clean-testcache run-test
+
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
@@ -89,6 +91,9 @@ clean-test-dir:
 	@rm -rf x/crosschain/client/integrationtests/.zetacored
 	@rm -rf x/crosschain/client/querytests/.zetacored
 	@rm -rf x/observer/client/querytests/.zetacored
+
+clean-testcache:
+	@go clean -testcache
 
 ###############################################################################
 ###                          Install commands                               ###

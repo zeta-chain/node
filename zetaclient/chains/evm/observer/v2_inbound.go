@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -104,6 +105,7 @@ func (ob *Observer) observeGatewayDeposit(
 			}
 		}
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,
@@ -252,6 +254,7 @@ func (ob *Observer) observeGatewayCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (Call)")
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,
@@ -389,6 +392,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (DepositAndCall)")
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,

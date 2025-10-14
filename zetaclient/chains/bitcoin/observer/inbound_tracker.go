@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -60,6 +62,7 @@ func (ob *Observer) observeInboundTrackers(
 }
 
 // CheckReceiptForBtcTxHash checks the receipt for a btc tx hash
+// TODO : rename this function as it also posts the vote
 func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
@@ -124,6 +127,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return msg.Digest(), nil
 	}
 
+	metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(false)).Inc()
 	return ob.ZetaRepo().VoteInbound(ctx,
 		ob.logger.Inbound,
 		msg,

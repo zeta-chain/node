@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
@@ -93,7 +94,7 @@ func (ob *Observer) observeInboundTrackers(
 
 		// try processing the tracker for v2 inbound
 		// filter error if event is not found, in this case we run v1 tracker process
-		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt, isInternal); err != nil &&
 			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
 			return err
 		} else if err == nil {
@@ -104,11 +105,11 @@ func (ob *Observer) observeInboundTrackers(
 		// try processing the tracker for v1 inbound
 		switch tracker.CoinType {
 		case coin.CoinType_Zeta:
-			_, err = ob.checkAndVoteInboundTokenZeta(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenZeta(ctx, tx, receipt, true, isInternal)
 		case coin.CoinType_ERC20:
-			_, err = ob.checkAndVoteInboundTokenERC20(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenERC20(ctx, tx, receipt, true, isInternal)
 		case coin.CoinType_Gas:
-			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true, isInternal, true)
 		default:
 			return fmt.Errorf(
 				"unknown coin type %s for inbound %s chain %d",
@@ -356,7 +357,7 @@ func (ob *Observer) observeZetaSent(
 		if msg == nil {
 			continue
 		}
-
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
 		_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound, msg, gasLimit, ob.WatchMonitoringError)
 		if err != nil {
@@ -440,6 +441,8 @@ func (ob *Observer) observeERC20Deposited(
 
 		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
+			// increment prometheus counter for a new observation , as this event is valid and unique
+			metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 			_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound,
 				msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 			if err != nil {
@@ -470,11 +473,13 @@ func (ob *Observer) observeTSSReceive(ctx context.Context, startBlock, toBlock u
 }
 
 // checkAndVoteInboundTokenZeta checks and votes on the given inbound Zeta token
+// This is currently used for tracker votes only
 func (ob *Observer) checkAndVoteInboundTokenZeta(
 	ctx context.Context,
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	isInternal bool,
 ) (string, error) {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -523,6 +528,7 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 		return "", nil
 	}
 	if vote {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).Inc()
 		return ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			msg,
@@ -540,6 +546,7 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	isInternal bool,
 ) (string, error) {
 	// check confirmations
 	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
@@ -584,6 +591,7 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 		return "", nil
 	}
 	if vote {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).Inc()
 		return ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			msg,
@@ -601,6 +609,8 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	isTracker bool,
+	isInternal bool,
 ) (string, error) {
 	// check confirmations
 	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
@@ -630,6 +640,12 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 		return "", nil
 	}
 	if vote {
+		if isTracker {
+			metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).
+				Inc()
+		} else {
+			metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+		}
 		return ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			msg,
@@ -837,7 +853,7 @@ func (ob *Observer) observeTSSReceiveInBlock(ctx context.Context, blockNumber ui
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 			}
 
-			_, err = ob.checkAndVoteInboundTokenGas(ctx, &tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenGas(ctx, &tx, receipt, true, false, false)
 			if err != nil {
 				return errors.Wrapf(
 					err,

@@ -6,6 +6,7 @@ import (
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // GetInboundInternalTrackers returns internal inbound trackers
@@ -61,6 +62,7 @@ func (ob *Observer) AddInternalInboundTracker(msg *crosschaintypes.MsgVoteInboun
 			Str(logs.FieldTx, tracker.TxHash).
 			Str(logs.FieldCoinType, tracker.CoinType.String()).
 			Msg("added internal inbound tracker")
+		metrics.ActiveInternalTrackers.WithLabelValues(ob.chain.Name).Set(float64(len(ob.internalInboundTrackers)))
 	}
 }
 
@@ -73,6 +75,7 @@ func (ob *Observer) removeInternalInboundTracker(ballot string) {
 			Str(logs.FieldTx, tracker.TxHash).
 			Str(logs.FieldCoinType, tracker.CoinType.String()).
 			Msg("removed internal inbound tracker")
+		metrics.ActiveInternalTrackers.WithLabelValues(ob.chain.Name).Set(float64(len(ob.internalInboundTrackers)))
 	}
 }
 
@@ -93,11 +96,13 @@ func (ob *Observer) WatchMonitoringError(
 				Str(logs.FieldBallotIndex, monitorErr.Msg.Digest()).
 				Msg("error monitoring inbound vote")
 
+			metrics.TransactionsAddedToInternalTrackerTotal.WithLabelValues(ob.chain.Name).Inc()
 			ob.AddInternalInboundTracker(&monitorErr.Msg)
 		}
 	case <-ctx.Done():
 		logger.Debug().
 			Str(logs.FieldZetaTx, zetaHash).
 			Msg("no monitoring error received, the inbound vote likely succeeded")
+		metrics.SuccessfulInboundVotesTotal.WithLabelValues(ob.chain.Name).Inc()
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // constants for monitoring tx results
@@ -156,6 +157,7 @@ func (c *Client) monitorVoteInboundResult(
 		logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("failed to execute inbound vote")
 
 	case strings.Contains(txResult.RawLog, "out of gas"):
+		metrics.InboundVotesWithOutOfGasErrorsTotal.WithLabelValues(c.chain.Name).Inc()
 		// record this ready-to-execute ballot for future gas adjustment
 		// The 500K is enough for regular inbound vote, out of gas error happens only on the finalizing vote
 		c.addReadyToExecuteInboundBallot(msg.Digest(), txResult.GasWanted)

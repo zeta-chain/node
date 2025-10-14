@@ -231,31 +231,25 @@ var (
 		Help:      "Total number of inbound observations from block scan",
 	}, []string{"chain"})
 
-	InboundObservationsZetacoreTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+	InboundObservationsTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
-		Name:      "inbound_observations_zetacore_tracker_total",
-		Help:      "Total number of inbound observations added through zetacore tracker",
-	}, []string{"chain"})
+		Name:      "inbound_observations_tracker_total",
+		Help:      "Total number of inbound observations added through trackers",
+	}, []string{"chain", "internal"})
 
-	InboundObservationsInternalTrackerTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: ZetaClientNamespace,
-		Name:      "inbound_observations_internal_tracker_total",
-		Help:      "Total number of inbound observations added through internal tracker",
-	}, []string{"chain"})
-
-	VotesPostedWith500kGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: ZetaClientNamespace,
-		Name:      "inbound_votes_posted_500k_gas_limit_total",
-		Help:      "Total number of inbound votes posted with 500k gas limit",
-	}, []string{"chain"})
-
-	TransactionsWithOutOfGasErrorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+	InboundVotesWithOutOfGasErrorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "inbound_votes_out_of_gas_errors_total",
 		Help:      "Total number of inbound votes with out-of-gas errors",
 	}, []string{"chain"})
 
-	VotesPostedWith7MGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+	InboundVotesPostedWith500KGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "inbound_votes_posted_500k_gas_limit_total",
+		Help:      "Total number of inbound votes posted with 5M gas limit",
+	}, []string{"chain"})
+
+	InboundVotesPostedWith7MGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "inbound_votes_posted_7m_gas_limit_total",
 		Help:      "Total number of inbound votes posted with 7M gas limit",
