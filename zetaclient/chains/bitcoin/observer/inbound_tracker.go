@@ -53,7 +53,7 @@ func (ob *Observer) observeInboundTrackers(
 			Stringer(logs.FieldCoinType, tracker.CoinType).
 			Bool("is_internal", isInternal).
 			Msg("processing inbound tracker")
-		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
+		if _, err := ob.CheckReceiptAndPostVoteForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err
 		}
 	}
@@ -61,9 +61,8 @@ func (ob *Observer) observeInboundTrackers(
 	return nil
 }
 
-// CheckReceiptForBtcTxHash checks the receipt for a btc tx hash
-// TODO : rename this function as it also posts the vote
-func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
+// CheckReceiptAndPostVoteForBtcTxHash checks the receipt for a btc tx hash
+func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing btc tx hash")

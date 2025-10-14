@@ -227,7 +227,7 @@ var (
 
 	InboundObservationsBlockScanTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
-		Name:      "inbound_observations_block_scan_total",
+		Name:      "inbound_votes_block_scan_total",
 		Help:      "Total number of inbound observations from block scan",
 	}, []string{"chain"})
 

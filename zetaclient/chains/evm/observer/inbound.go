@@ -287,6 +287,8 @@ func (ob *Observer) fetchLogs(ctx context.Context, startBlock, toBlock uint64) (
 
 // observeZetaSent queries the ZetaSent event from the connector contract and posts to zetacore
 // returns the last block successfully scanned
+//
+//	This is currently used for block-scan votes only
 func (ob *Observer) observeZetaSent(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -371,6 +373,8 @@ func (ob *Observer) observeZetaSent(
 
 // observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetacore
 // returns the last block successfully scanned
+//
+//	This is currently used for block-scan votes only
 func (ob *Observer) observeERC20Deposited(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -441,7 +445,6 @@ func (ob *Observer) observeERC20Deposited(
 
 		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
-			// increment prometheus counter for a new observation , as this event is valid and unique
 			metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 			_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound,
 				msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
@@ -541,6 +544,7 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 }
 
 // checkAndVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
+// This is currently used for tracker votes only
 func (ob *Observer) checkAndVoteInboundTokenERC20(
 	ctx context.Context,
 	tx *client.Transaction,
@@ -604,6 +608,7 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 }
 
 // checkAndVoteInboundTokenGas checks and votes on the given inbound gas token
+// This is currently used for tracker and block-scan votes
 func (ob *Observer) checkAndVoteInboundTokenGas(
 	ctx context.Context,
 	tx *client.Transaction,
