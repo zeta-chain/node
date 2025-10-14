@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Signer Sui outbound transaction signer.
@@ -51,11 +52,6 @@ type SuiClient interface {
 
 	MoveCall(context.Context, models.MoveCallRequest) (models.TxnMetaData, error)
 
-	SuiExecuteTransactionBlock(
-		context.Context,
-		models.SuiExecuteTransactionBlockRequest,
-	) (models.SuiTransactionBlockResponse, error)
-
 	InspectTransactionBlock(
 		context.Context,
 		models.SuiDevInspectTransactionBlockRequest,
@@ -64,6 +60,12 @@ type SuiClient interface {
 	SuiGetTransactionBlock(
 		context.Context,
 		models.SuiGetTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SuiExecuteTransactionBlock(
+		context.Context,
+		models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 }
 
@@ -135,6 +137,11 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	if err := sui.ValidateAddress(receiver); err != nil {
 		validReceiver = false
 		logger.Error().Err(err).Str("receiver", receiver).Msg("invalid receiver address")
+	}
+
+	if s.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return nil
 	}
 
 	// broadcast tx according to compliance check result

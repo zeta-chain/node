@@ -188,7 +188,7 @@ func Test_P2PH(t *testing.T) {
 	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
-	// would ordinarily be the real transaction that is being spent.  It
+	// would ordinarily be the real transaction that is being spent. It
 	// contains a single output that pays to address in the amount of 1 BTC.
 	originTx := wire.NewMsgTx(wire.TxVersion)
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
@@ -204,7 +204,7 @@ func Test_P2PH(t *testing.T) {
 	// Create the transaction to redeem the fake transaction.
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
 
-	// Add the input(s) the redeeming transaction will spend.  There is no
+	// Add the input(s) the redeeming transaction will spend. There is no
 	// signature script at this point since it hasn't been created or signed
 	// yet, hence nil is provided for it.
 	prevOut = wire.NewOutPoint(&originTxHash, 0)
@@ -221,7 +221,7 @@ func Test_P2PH(t *testing.T) {
 		return privKey, true, nil
 	}
 	// Notice that the script database parameter is nil here since it isn't
-	// used.  It must be specified when pay-to-script-hash transactions are
+	// used. It must be specified when pay-to-script-hash transactions are
 	// being signed.
 	sigScript, err := txscript.SignTxOutput(&chaincfg.MainNetParams,
 		redeemTx, 0, originTx.TxOut[0].PkScript, txscript.SigHashAll,
@@ -257,7 +257,7 @@ func Test_P2WPH(t *testing.T) {
 	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
-	// would ordinarily be the real transaction that is being spent.  It
+	// would ordinarily be the real transaction that is being spent. It
 	// contains a single output that pays to address in the amount of 1 BTC.
 	originTx := wire.NewMsgTx(wire.TxVersion)
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
@@ -272,7 +272,7 @@ func Test_P2WPH(t *testing.T) {
 	// Create the transaction to redeem the fake transaction.
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
 
-	// Add the input(s) the redeeming transaction will spend.  There is no
+	// Add the input(s) the redeeming transaction will spend. There is no
 	// signature script at this point since it hasn't been created or signed
 	// yet, hence nil is provided for it.
 	prevOut = wire.NewOutPoint(&originTxHash, 0)

@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 const (
@@ -72,6 +73,7 @@ type SolanaClient interface {
 		*solrpc.GetTransactionOpts,
 	) (*solrpc.GetTransactionResult, error)
 
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendTransactionWithOpts(context.Context,
 		*sol.Transaction,
 		solrpc.TransactionOpts,
@@ -184,6 +186,11 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx       = !signer.PassesCompliance(cctx)
 		outboundGetter outboundGetter
 	)
+
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
 
 	switch coinType {
 	case coin.CoinType_Cmd:

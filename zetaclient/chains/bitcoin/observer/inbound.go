@@ -127,6 +127,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 					ob.logger.Inbound,
 					msg,
 					zetacore.PostVoteInboundExecutionGasLimit,
+					ob.WatchMonitoringError,
 				)
 				if err != nil {
 					// we have to re-scan this block next time

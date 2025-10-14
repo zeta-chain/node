@@ -69,7 +69,7 @@ func TestDryMode(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &voteInboundMsg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &voteInboundMsg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Empty(t, ballot)
 		require.Contains(t, buffer.String(), "skipping inbound vote")
@@ -114,7 +114,7 @@ func TestVoteInbound(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Equal(t, mockBallot, ballot)
 		require.Contains(t, buffer.String(), "posted inbound vote")
@@ -133,7 +133,7 @@ func TestVoteInbound(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Equal(t, mockBallot, ballot)
 		require.Contains(t, buffer.String(), "already voted on the inbound")
@@ -152,7 +152,7 @@ func TestVoteInbound(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 		require.Contains(t, buffer.String(), "invalid vote-inbound message")
@@ -168,7 +168,7 @@ func TestVoteInbound(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Equal(t, ballot, msg.Digest())
 		require.Contains(t, buffer.String(), "not voting on inbound; CCTX exists but the ballot does not")
@@ -185,7 +185,7 @@ func TestVoteInbound(t *testing.T) {
 		var buffer bytes.Buffer
 		logger := zerolog.New(&buffer)
 
-		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit)
+		ballot, err := repo.VoteInbound(context.Background(), logger, &msg, retryGasLimit, nil)
 		require.NoError(t, err)
 		require.Equal(t, ballot, msg.Digest())
 		require.Contains(t, buffer.String(), "posted inbound vote")
@@ -322,7 +322,7 @@ func TestExists(t *testing.T) {
 			var exists bool
 			var err error
 			if testCase.hash != "" {
-				exists, err = repo.cctxExists(context.Background(), testCase.hash)
+				exists, err = repo.CCTXExists(context.Background(), testCase.hash)
 			} else if testCase.id != "" {
 				exists, err = repo.ballotExists(context.Background(), testCase.id)
 			} else {

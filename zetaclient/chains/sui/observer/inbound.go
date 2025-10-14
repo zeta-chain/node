@@ -84,10 +84,36 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		return err
 	}
 
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []cctypes.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
+
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
+				Bool("is_internal", isInternal).
 				Msg("unable to process inbound tracker")
 		}
 	}
@@ -137,7 +163,8 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	logger := ob.Logger().Inbound
-	_, err = ob.ZetaRepo().VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
 		return err
 	}

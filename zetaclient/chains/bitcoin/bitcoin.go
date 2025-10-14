@@ -86,6 +86,7 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optOutboundSkipper)
 	register(b.observer.ObserveBTCMempool, "observe_btc_mempool", optMempoolInterval, optOutboundSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
@@ -148,7 +149,6 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 
 		if params.ReceiverChainId != chainID {
 			b.outboundLogger(outboundID).Error().Msg("schedule CCTX: chain id mismatch")
-
 			continue
 		}
 

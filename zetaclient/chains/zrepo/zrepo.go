@@ -7,6 +7,7 @@ package zrepo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	cometbft "github.com/cometbft/cometbft/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -15,13 +16,21 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	fungible "github.com/zeta-chain/node/x/fungible/types"
 	observer "github.com/zeta-chain/node/x/observer/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
+const monitoringErrHandlerRoutineTimeout = 5 * time.Minute
+
+// MonitoringErrorWatcher is the function type for watching inbound vote monitoring errors.
+type MonitoringErrorWatcher func(ctx context.Context, monitorErrCh <-chan zetaerrors.ErrTxMonitor, zetaTxHash string)
 
 // ZetaRepo implements the Repository pattern by wrapping a zetacore client.
 // Each chain module must instantiate its own ZetaRepo.
@@ -99,6 +108,10 @@ func (repo *ZetaRepo) GetBTCTSSAddress(ctx context.Context) (string, error) {
 	return address, nil
 }
 
+func (repo *ZetaRepo) HasVoted(ctx context.Context, ballotIndex string, voterAddress string) (bool, error) {
+	return repo.client.HasVoted(ctx, ballotIndex, voterAddress)
+}
+
 // ------------------------------------------------------------------------------------------------
 // Voting & Posting Trackers
 // ------------------------------------------------------------------------------------------------
@@ -159,6 +172,7 @@ func (repo *ZetaRepo) VoteGasPrice(ctx context.Context, logger zerolog.Logger,
 func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 	msg *cc.MsgVoteInbound,
 	retryGasLimit uint64,
+	monitorErrWatcher MonitoringErrorWatcher,
 ) (string, error) {
 	logger = logger.With().
 		Str(logs.FieldTx, msg.InboundHash).
@@ -173,7 +187,7 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 
 		cctxIndex := msg.Digest()
 
-		cctxExists, err := repo.cctxExists(ctx, cctxIndex)
+		cctxExists, err := repo.CCTXExists(ctx, cctxIndex)
 		if err != nil {
 			return "", err
 		}
@@ -203,9 +217,14 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 		return "", nil
 	}
 
+	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
+	// Note: the canceller is not used because we want to allow the goroutines to run until they time out
+	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), monitoringErrHandlerRoutineTimeout)
+
 	// Post vote to zetacore.
 	const gasLimit = zetacore.PostVoteInboundGasLimit
-	zhash, ballot, err := repo.client.PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
+	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
+	zhash, ballot, err := repo.client.PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
 	if err != nil {
 		err = newClientError(ErrClientVoteInbound, err)
 		logger.Error().Err(err).Send()
@@ -217,6 +236,13 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 		logger.Info().Msg("already voted on the inbound")
 	} else {
 		logger.Info().Str(logs.FieldZetaTx, zhash).Msg("posted inbound vote")
+
+		// watch for monitoring error for this vote
+		if monitorErrWatcher != nil {
+			go func() {
+				monitorErrWatcher(ctxWithTimeout, monitorErrCh, zhash)
+			}()
+		}
 	}
 
 	return ballot, nil
@@ -335,7 +361,7 @@ func exists[T any](ctx context.Context,
 	return res != nil, nil
 }
 
-func (repo *ZetaRepo) cctxExists(ctx context.Context, hash string) (bool, error) {
+func (repo *ZetaRepo) CCTXExists(ctx context.Context, hash string) (bool, error) {
 	f := repo.client.GetCctxByHash
 	return exists(ctx, hash, f, grpccodes.InvalidArgument, ErrClientGetCCTXByHash)
 }

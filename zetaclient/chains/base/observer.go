@@ -6,14 +6,16 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -28,6 +30,9 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
+
+	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
+	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
 
 	// defaultSampledLogInterval is the default interval for sampled logs
 	defaultSampledLogInterval = 10
@@ -46,7 +51,7 @@ type Observer struct {
 	zetaRepo *zrepo.ZetaRepo
 
 	// tssSigner is the TSS signer
-	tssSigner interfaces.TSSSigner
+	tssSigner tssrepo.TSSClient
 
 	// lastBlock is the last block height of the observed chain
 	lastBlock uint64
@@ -58,6 +63,10 @@ type Observer struct {
 	lastTxScanned string
 
 	blockCache *lru.Cache
+
+	// internalInboundTrackers stores trackers for inbounds that failed to vote on due to broadcasting error (e.g. tx dropped)
+	// the contents of the map may vary from observer to observer, depending on individual situation
+	internalInboundTrackers map[string]crosschaintypes.InboundTracker
 
 	// db is the database to persist data
 	db *db.DB
@@ -82,7 +91,7 @@ func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
 	zetaRepo *zrepo.ZetaRepo,
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 	blockCacheSize int,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
@@ -94,19 +103,20 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetaRepo:         zetaRepo,
-		tssSigner:        tssSigner,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
+		chain:                   chain,
+		chainParams:             chainParams,
+		zetaRepo:                zetaRepo,
+		tssSigner:               tssSigner,
+		lastBlock:               0,
+		lastBlockScanned:        0,
+		lastTxScanned:           "",
+		ts:                      ts,
+		db:                      database,
+		blockCache:              blockCache,
+		internalInboundTrackers: make(map[string]crosschaintypes.InboundTracker),
+		mu:                      &sync.Mutex{},
+		logger:                  newObserverLogger(chain, logger),
+		stop:                    make(chan struct{}),
 	}, nil
 }
 
@@ -181,7 +191,7 @@ func (ob *Observer) ZetaRepo() *zrepo.ZetaRepo {
 }
 
 // TSS returns the tss signer for the observer.
-func (ob *Observer) TSS() interfaces.TSSSigner {
+func (ob *Observer) TSS() tssrepo.TSSClient {
 	return ob.tssSigner
 }
 
