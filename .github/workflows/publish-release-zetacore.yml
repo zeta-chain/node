@@ -120,7 +120,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          gh release upload ${{ env.GITHUB_TAG_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
+          gh release upload "${GITHUB_TAG_VERSION}" "${{ steps.attestation.outputs.bundle-path }}"
 
       - name: Clean Up Workspace
         if: always()
