@@ -231,7 +231,7 @@ func DecodeScript(script []byte) ([]byte, bool, error) {
 }
 
 // EncodeAddress returns a human-readable payment address given a ripemd160 hash
-// and netID which encodes the bitcoin network and address type.  It is used
+// and netID which encodes the bitcoin network and address type. It is used
 // in both pay-to-pubkey-hash (P2PKH) and pay-to-script-hash (P2SH) address
 // encoding.
 // Note: this function is a copy of the function in btcutil/address.go
