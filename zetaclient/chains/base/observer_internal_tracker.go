@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/pkg/errors"
+
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -43,7 +45,12 @@ func (ob *Observer) GetInboundInternalTrackers(
 
 	for ballot, tracker := range ob.internalInboundTrackers {
 		// skip those that are already finalized or voted
-		if ob.isBallotFinalizedOrVoted(ctx, ballot) {
+		finalizedOrVoted, err := ob.ballotIsFinalizedOrVoted(ctx, ballot)
+		if err != nil {
+			ob.logger.Inbound.Error().Err(err).Str(logs.FieldBallotIndex, ballot).Msg("unable to check ballot status")
+			continue
+		}
+		if finalizedOrVoted {
 			trackersToRemove = append(trackersToRemove, ballot)
 			continue
 		}
@@ -88,7 +95,11 @@ func (ob *Observer) AddInternalInboundTracker(ctx context.Context, msg *crosscha
 	if _, found := ob.internalInboundTrackers[ballot]; !found {
 		// a late error monitor goroutine may report a ballot that is already finalized or voted, ignore it
 		// this avoidd repetitivelly adding the same ballot to the cache, even if it gets removed soon next ticker
-		if ob.isBallotFinalizedOrVoted(ctx, ballot) {
+		finalizedOrVoted, err := ob.ballotIsFinalizedOrVoted(ctx, ballot)
+		if err != nil {
+			// print and ignore error, we still add it to the cache and check it later in 'GetInboundInternalTrackers'
+			ob.logger.Inbound.Error().Err(err).Str(logs.FieldBallotIndex, ballot).Msg("ballot status is unknown")
+		} else if finalizedOrVoted {
 			return
 		}
 
@@ -101,18 +112,26 @@ func (ob *Observer) AddInternalInboundTracker(ctx context.Context, msg *crosscha
 	}
 }
 
-// isBallotFinalizedOrVoted returns true if the ballot is either finalized or voted
-func (ob *Observer) isBallotFinalizedOrVoted(ctx context.Context, ballot string) bool {
-	if exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot); err == nil && exist {
-		return true
+// ballotIsFinalizedOrVoted returns true if the ballot is either finalized or voted
+func (ob *Observer) ballotIsFinalizedOrVoted(ctx context.Context, ballot string) (bool, error) {
+	exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if cctx exists")
+	}
+	if exist {
+		return true, nil
 	}
 
 	voterAddress := ob.ZetaRepo().GetOperatorAddress()
-	if hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress); err == nil && hasVoted {
-		return true
+	hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if voter has voted")
+	}
+	if hasVoted {
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 // removeInternalInboundTracker removes an internal inbound tracker for given ballot.

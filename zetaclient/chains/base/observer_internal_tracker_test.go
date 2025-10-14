@@ -14,6 +14,13 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+)
+
+var (
+	// validCCTXErr is a valid error from zetacore client query 'GetCctxByHash'
+	validCCTXErr = grpcstatus.Error(grpccodes.InvalidArgument, "a valid GRPC error (CCTX)")
 )
 
 func Test_GetInboundInternalTrackers(t *testing.T) {
@@ -35,7 +42,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// mock cctx and ballot vote queries
-		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
+		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, validCCTXErr)
 		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil)
 
 		// add a failed inbound vote
@@ -60,7 +67,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found")).Twice()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr).Twice()
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
 
 		// add a failed inbound vote
@@ -95,7 +102,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr)
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Twice()
 
 		// add a failed inbound vote
@@ -130,7 +137,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 
 		// mock cctx and ballot vote queries
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr)
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
 
 		// add a failed inbound vote
@@ -152,6 +159,40 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 		require.Empty(t, trackers)
 	})
 
+	t.Run("should skip internal tracker if unable to check ballot status", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create a sample failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+
+		// mock cctx and ballot vote queries
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr).Twice()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Twice()
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
+
+		// ACT 1
+		retryTime1 := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime1)
+
+		// ASSERT 1
+		require.Len(t, trackers, 1)
+		require.EqualValues(t, 1, len(trackers))
+
+		// mock ballot status as unknown by returning an error
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("invalid GRPC error")).Once()
+
+		// retry with shorter interval
+		retryTime2 := retryTime1.Add(internalTrackerRetryInterval)
+		trackers = ob.GetInboundInternalTrackers(ctx, retryTime2)
+
+		// ASSERT 2
+		require.Empty(t, trackers)
+	})
+
 	t.Run("should only update timestamp for the first MaxInboundTrackersPerScan trackers", func(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
@@ -163,7 +204,7 @@ func Test_GetInboundInternalTrackers(t *testing.T) {
 			msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
 			msgs[i] = msg
 
-			ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+			ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr)
 			ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil)
 			ob.AddInternalInboundTracker(ctx, &msgs[i])
 		}
@@ -228,7 +269,7 @@ func Test_AddInternalInboundTracker(t *testing.T) {
 
 		// mock ballot as voted
 		voterAddress := ob.ZetaRepo().GetOperatorAddress()
-		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("not found"))
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr)
 		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(true, nil)
 
 		// add a failed inbound vote
@@ -240,6 +281,61 @@ func Test_AddInternalInboundTracker(t *testing.T) {
 
 		// ASSERT
 		require.Empty(t, trackers)
+	})
+
+	t.Run("should still add internal inbound tracker if failed to check cctx existence", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create a sample failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+
+		// mock unknown ballot status
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, errors.New("invalid GRPC error")).Once()
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
+
+		// mock non-existent cctx and ballot as not voted
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr).Once()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Once()
+
+		// ACT
+		retryTime := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime)
+
+		// ASSERT
+		require.Len(t, trackers, 1)
+		require.Equal(t, msg.InboundTracker(), trackers[0])
+	})
+
+	t.Run("should still add internal inbound tracker if failed to check ballot vote status", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// ARRANGE
+		// create a sample failed inbound vote
+		msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+
+		// mock unknown ballot vote status
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr).Once()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), mock.Anything).Return(false, errors.New("some error")).Once()
+
+		// add a failed inbound vote
+		ob.AddInternalInboundTracker(ctx, &msg)
+
+		// mock non-existent cctx and ballot as not voted
+		voterAddress := ob.ZetaRepo().GetOperatorAddress()
+		ob.zetacore.On("GetCctxByHash", ctx, msg.Digest()).Return(nil, validCCTXErr).Once()
+		ob.zetacore.On("HasVoted", ctx, msg.Digest(), voterAddress).Return(false, nil).Once()
+
+		// ACT
+		retryTime := time.Now().Add(internalTrackerRetryInterval)
+		trackers := ob.GetInboundInternalTrackers(ctx, retryTime)
+
+		// ASSERT
+		require.Len(t, trackers, 1)
+		require.Equal(t, msg.InboundTracker(), trackers[0])
 	})
 }
 
@@ -253,7 +349,7 @@ func Test_WatchMonitoringError(t *testing.T) {
 		monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
 
 		// mock cctx and ballot vote queries
-		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, errors.New("not found"))
+		ob.zetacore.On("GetCctxByHash", ctx, mock.Anything).Return(nil, validCCTXErr)
 		ob.zetacore.On("HasVoted", ctx, mock.Anything, mock.Anything).Return(false, nil)
 
 		// ACT
