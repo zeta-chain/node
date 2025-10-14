@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"maps"
 	"strings"
 	"sync"
 
@@ -149,12 +150,8 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	// deep copy evm configs
-	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
-	for chainID, evmConfig := range c.EVMChainConfigs {
-		copied[chainID] = evmConfig
-	}
-	return copied
+	// shallow copy evm configs (sufficient for current struct with immutable fields)
+	return maps.Clone(c.EVMChainConfigs)
 }
 
 // GetBTCConfig returns the BTC config for the given chain ID

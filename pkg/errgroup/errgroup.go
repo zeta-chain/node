@@ -25,8 +25,8 @@ type Group struct {
 	//   upstream errgroup by value
 	// - we can't copy an errgroup, which means we can't embed by value
 	// (We could get around this with our own initialization-Once, but that
-	// seems even more convoluted.)  So we just copy -- it's not that much
-	// code.  The only change below is to add catchPanics(), in Go().
+	// seems even more convoluted.) So we just copy -- it's not that much
+	// code. The only change below is to add catchPanics(), in Go().
 	cancel  func()
 	wg      sync.WaitGroup
 	errOnce sync.Once
@@ -79,14 +79,14 @@ func (g *Group) Go(f func() error) {
 }
 
 // fromPanicValue takes a value recovered from a panic and converts it into an
-// error, for logging purposes.  If the value is nil, it returns nil instead of
+// error, for logging purposes. If the value is nil, it returns nil instead of
 // an error.
 //
 // Use like:
 //
 //	 defer func() {
 //			err := fromPanicValue(recover())
-//			// log or otheriwse use err
+//			// log or otherwise use err
 //		}()
 func fromPanicValue(i interface{}) error {
 	switch value := i.(type) {
