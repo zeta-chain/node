@@ -25,7 +25,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -104,7 +104,7 @@ func Test_NewObserver(t *testing.T) {
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   *client.Client
-		tssSigner   interfaces.TSSSigner
+		tssSigner   tssrepo.TSSClient
 		logger      base.Logger
 		before      func()
 		after       func()

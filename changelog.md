@@ -37,6 +37,9 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 * [4313](https://github.com/zeta-chain/node/pull/4313) - add dry-mode to Sui and add client wrappers to Sui and TON
 * [4317](https://github.com/zeta-chain/node/pull/4317) - add dry-mode to Solana
+* [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
+* [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
+* [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
 
 ### Tests
 
