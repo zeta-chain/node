@@ -61,14 +61,17 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 
 	cfg, found := app.Config().GetBTCConfig(chain.ID())
 	if !found {
-		return nil, errors.Wrap(errSkipChain, "unable to find btc config")
+		return nil, errors.Wrap(errSkipChain, "unable to find BTC config")
 	}
 
 	standardBitcoinClient, err := btcclient.New(cfg, chain.ID(), oc.logger.Logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create rpc client")
+		return nil, errors.Wrap(err, "unable to create RPC client")
 	}
 	var bitcoinClient bitcoin.Client = standardBitcoinClient
+	if clientMode.IsDryMode() {
+		bitcoinClient = dry.WrapBitcoinClient(bitcoinClient)
+	}
 
 	var (
 		rawChain = chain.RawChain()
