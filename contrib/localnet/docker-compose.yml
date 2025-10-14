@@ -424,7 +424,7 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 
   zetachain-exporter:
-    image: zetachain/zetachain-exporter:v4.10.0
+    image: zetachain/zetachain-exporter:v4.11.0
     container_name: zetachain-exporter
     hostname: zetachain-exporter
     profiles:
