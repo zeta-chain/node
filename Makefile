@@ -208,7 +208,7 @@ docs-zetacored:
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored
 
-mocks:start-localnet
+mocks:
 	@echo "--> Generating mocks"
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
