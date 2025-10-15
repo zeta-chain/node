@@ -162,7 +162,7 @@ func NewTransactionFromMsg(
 	return NewRPCTransaction(msg, blockHash, blockNumber, index, baseFee, chainID)
 }
 
-// NewTransactionFromData returns a transaction that will serialize to the RPC
+// NewRPCTransaction returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
 func NewRPCTransaction(
 	msg *evmtypes.MsgEthereumTx,

@@ -26,14 +26,11 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 	const maxTimeout = time.Minute
 
 	// prepare logger
-	logger := zerolog.Ctx(ctx).With().
-		Str(logs.FieldMethod, "reportOutboundTracker").
-		Str(logs.FieldTx, digest).
-		Logger()
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldTx, digest).Logger()
 
 	alreadySet := s.SetBeingReportedFlag(digest)
 	if alreadySet {
-		logger.Info().Msg("Outbound is already being observed for the tracker")
+		logger.Info().Msg("outbound is already being observed for the tracker")
 		return nil
 	}
 
@@ -62,12 +59,12 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 		}
 		attempts++
 
-		res, err := s.client.SuiGetTransactionBlock(ctx, req)
+		res, err := s.suiClient.SuiGetTransactionBlock(ctx, req)
 		switch {
 		case ctx.Err() != nil:
-			return errors.Wrap(ctx.Err(), "Failed to get transaction block")
+			return errors.Wrap(ctx.Err(), "failed to get transaction block")
 		case err != nil:
-			logger.Error().Err(err).Msg("Failed to get transaction block")
+			logger.Error().Err(err).Msg("failed to get transaction block")
 			continue
 		case res.Effects.Status.Status == client.TxStatusFailure:
 			// failed outbound should be ignored as it cannot increment the gateway nonce.
@@ -87,6 +84,6 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 
 // note that at this point we don't care whether tx was successful or not.
 func (s *Signer) postTrackerVote(ctx context.Context, nonce uint64, digest string) error {
-	_, err := s.zetacore.PostOutboundTracker(ctx, s.Chain().ChainId, nonce, digest)
+	_, err := s.zetacoreClient.PostOutboundTracker(ctx, s.Chain().ChainId, nonce, digest)
 	return err
 }

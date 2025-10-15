@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -65,11 +64,30 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL before withdraw: %s", connectedPdaBalanceBefore.Value.Amount)
 
+	// create encoded msg
+	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
+
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+		},
+		Data: []byte("hello"),
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
 		withdrawAmount,
 		approvedAmount,
-		[]byte("hello"),
+		msgEncoded,
 		gatewayzevm.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
@@ -85,20 +103,7 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
 	// check pda account info of connected program
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
-
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        common.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "hello", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 

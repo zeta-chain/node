@@ -40,8 +40,8 @@ func TestScheduler(t *testing.T) {
 		assert.Equal(t, int32(2), counter)
 
 		// Check logs
-		assert.Contains(t, ts.logger.String(), "Stopped scheduler task")
-		assert.Contains(t, ts.logger.String(), `"task.group":"default"`)
+		assert.Contains(t, ts.logger.String(), "stopped scheduler task")
+		assert.Contains(t, ts.logger.String(), `"task_group":"default"`)
 	})
 
 	t.Run("More opts", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestScheduler(t *testing.T) {
 		assert.Equal(t, int32(4), counter)
 
 		// Also check that log fields are present
-		assert.Contains(t, ts.logger.String(), `"task.name":"counter-inc","task.group":"my-custom-group"`)
+		assert.Contains(t, ts.logger.String(), `"task_name":"counter-inc","task_group":"my-custom-group"`)
 		assert.Contains(t, ts.logger.String(), `"blockchain":"doge","validators":["alice","bob"]`)
 	})
 
@@ -222,7 +222,7 @@ func TestScheduler(t *testing.T) {
 
 		// ASSERT #1
 		shutdownLogPattern := func(group, name string) string {
-			const pattern = `"task\.name":"%s","task\.group":"%s",.*"message":"Stopped scheduler task"`
+			const pattern = `"task_name":"%s","task_group":"%s",.*"message":"stopped scheduler task"`
 			return fmt.Sprintf(pattern, name, group)
 		}
 
@@ -272,8 +272,8 @@ func TestScheduler(t *testing.T) {
 
 		// ASSERT
 		assert.Equal(t, int64(21), counter)
-		assert.Contains(t, ts.logger.String(), "Stopped scheduler task")
-		assert.Contains(t, ts.logger.String(), `"task.type":"block_ticker"`)
+		assert.Contains(t, ts.logger.String(), "stopped scheduler task")
+		assert.Contains(t, ts.logger.String(), `"task_type":"block_ticker"`)
 	})
 
 	t.Run("Block tick: tick is slower than the block", func(t *testing.T) {

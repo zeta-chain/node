@@ -18,7 +18,9 @@ import (
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
-	client  RPC
+
+	suiClient SuiClient
+
 	gateway *sui.Gateway
 
 	// nonce -> sui outbound tx
@@ -29,8 +31,8 @@ type Observer struct {
 	gasPriceMu     sync.RWMutex
 }
 
-// RPC represents subset of Sui RPC methods.
-type RPC interface {
+// SuiClient represents subset of Sui SuiClient methods.
+type SuiClient interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
@@ -43,12 +45,12 @@ type RPC interface {
 }
 
 // New Observer constructor.
-func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observer {
+func New(baseObserver *base.Observer, suiClient SuiClient, gateway *sui.Gateway) *Observer {
 	ob := &Observer{
-		Observer: baseObserver,
-		client:   client,
-		gateway:  gateway,
-		txMap:    make(map[uint64]models.SuiTransactionBlockResponse),
+		Observer:  baseObserver,
+		suiClient: suiClient,
+		gateway:   gateway,
+		txMap:     make(map[uint64]models.SuiTransactionBlockResponse),
 	}
 
 	ob.LoadLastTxScanned()
@@ -61,9 +63,9 @@ func (ob *Observer) Gateway() *sui.Gateway { return ob.gateway }
 
 // CheckRPCStatus checks the RPC status of the chain.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	blockTime, err := ob.client.HealthCheck(ctx)
+	blockTime, err := ob.suiClient.HealthCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to check rpc health")
+		return errors.Wrap(err, "unable to check Sui client health")
 	}
 
 	// It's not a "real" block latency as Sui uses concept of "checkpoints"
@@ -72,7 +74,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	return nil
 }
 
-// PostGasPrice posts Sui gas price to zetacore.
+// ObserveGasPrice posts Sui gas price to zetacore.
 // Note (1) that Sui changes gas per EPOCH (not block)
 // Note (2) that SuiXGetCurrentEpoch() is deprecated.
 //
@@ -84,30 +86,31 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 // - "During regular network usage, users are NOT expected to pay tips"
 // - "Validators update the ReferencePrice every epoch (~24h)"
 // - "Storage price is updated infrequently through gov proposals"
-func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	checkpoint, err := ob.client.GetLatestCheckpoint(ctx)
+func (ob *Observer) ObserveGasPrice(ctx context.Context) error {
+	checkpoint, err := ob.suiClient.GetLatestCheckpoint(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get latest checkpoint")
 	}
 
-	epochNum, err := uint64FromStr(checkpoint.Epoch)
+	epoch, err := uint64FromStr(checkpoint.Epoch)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse epoch number")
 	}
 
 	// gas price in MIST. 1 SUI = 10^9 MIST (a billion)
 	// e.g. { "jsonrpc": "2.0", "id": 1, "result": "750" }
-	gasPrice, err := ob.client.SuiXGetReferenceGasPrice(ctx)
+	gasPrice, err := ob.suiClient.SuiXGetReferenceGasPrice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get ref gas price")
 	}
 
-	// no priority fee for Sui
+	// There's no concept of priority fee in Sui.
 	const priorityFee = 0
 
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, priorityFee, epoch)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote for gas price")
+		return err
 	}
 
 	ob.setLatestGasPrice(gasPrice)

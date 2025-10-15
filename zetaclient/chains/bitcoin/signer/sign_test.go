@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -204,6 +205,7 @@ func Test_AddWithdrawTxOutputs(t *testing.T) {
 		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
 		base.DefaultLogger(),
+		mode.StandardMode,
 	)
 	signer := New(
 		baseSigner,

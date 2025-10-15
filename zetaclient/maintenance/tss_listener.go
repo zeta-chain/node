@@ -11,19 +11,19 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 const tssListenerTicker = 5 * time.Second
 
 // TSSListener is a struct that listens for TSS updates, new keygen, and new TSS key generation.
 type TSSListener struct {
-	client interfaces.ZetacoreClient
+	client zrepo.ZetacoreClient
 	logger zerolog.Logger
 }
 
 // NewTSSListener creates a new TSSListener.
-func NewTSSListener(client interfaces.ZetacoreClient, logger zerolog.Logger) *TSSListener {
+func NewTSSListener(client zrepo.ZetacoreClient, logger zerolog.Logger) *TSSListener {
 	log := logger.With().Str("module", "tss_listener").Logger()
 
 	return &TSSListener{
@@ -64,7 +64,7 @@ func (tl *TSSListener) waitForUpdate(ctx context.Context) error {
 		case <-ticker.C:
 			tssNew, err := tl.client.GetTSS(ctx)
 			if err != nil {
-				tl.logger.Warn().Err(err).Msg("unable to get new tss")
+				tl.logger.Warn().Err(err).Msg("unable to get new TSS")
 				continue
 			}
 			// If the TSS address is not updated, continue loop
@@ -73,13 +73,13 @@ func (tl *TSSListener) waitForUpdate(ctx context.Context) error {
 			}
 
 			tl.logger.Info().
-				Str("tss.old", tss.TssPubkey).
-				Str("tss.new", tssNew.TssPubkey).
-				Msgf("TSS address is updated")
+				Str("tss_old", tss.TssPubkey).
+				Str("tss_new", tssNew.TssPubkey).
+				Msg("updated the TSS address")
 
 			return nil
 		case <-ctx.Done():
-			tl.logger.Info().Msg("waitForTSSUpdate stopped")
+			tl.logger.Info().Msg("stopped waiting for updates in the TSS listener")
 			return nil
 		}
 	}
@@ -94,7 +94,7 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 		retry.DefaultConstantBackoff(),
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to get initial tss history")
+		return errors.Wrap(err, "failed to get initial TSS history")
 	}
 
 	tssLen := len(tssHistoricalList)
@@ -117,12 +117,12 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 			}
 
 			tl.logger.Info().
-				Int("tssLen", tssLen).
-				Int("tssLenUpdated", tssLenUpdated).
-				Msg("tss list updated")
+				Int("from_length", tssLen).
+				Int("to_length", tssLenUpdated).
+				Msg("updated the TSS list")
 			return nil
 		case <-ctx.Done():
-			tl.logger.Info().Msg("waitForNewKeyGeneration stopped")
+			tl.logger.Info().Msg("stopped waiting for new key generation in the TSS listener")
 			return nil
 		}
 	}
@@ -133,7 +133,7 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 	// Initial Keygen retrieval
 	keygen, err := tl.client.GetKeyGen(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get initial tss history")
+		return errors.Wrap(err, "failed to get initial TSS history")
 	}
 
 	ticker := time.NewTicker(tssListenerTicker)
@@ -155,7 +155,8 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 				continue
 			// Keygen is pending but block number is not updated, continue loop.
 			// Most likely the zetaclient is waiting for the keygen block to arrive.
-			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen && keygenUpdated.BlockNumber <= keygen.BlockNumber:
+			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen &&
+				keygenUpdated.BlockNumber <= keygen.BlockNumber:
 				continue
 			}
 
@@ -163,12 +164,10 @@ func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
 			// 1. Keygen is pending
 			// 2. Block number is updated
 
-			tl.logger.Info().
-				Int64("blockNumber", keygenUpdated.BlockNumber).
-				Msg("got new keygen")
+			tl.logger.Info().Int64("block_number", keygenUpdated.BlockNumber).Msg("got new keygen")
 			return nil
 		case <-ctx.Done():
-			tl.logger.Info().Msg("waitForNewKeygen stopped")
+			tl.logger.Info().Msg("stopped waiting for new keygen in the TSS listener")
 			return nil
 		}
 	}

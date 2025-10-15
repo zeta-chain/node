@@ -34,7 +34,7 @@ const (
 // Note:  OP_RETURN based memo is prioritized over tapscript memo if both are present.
 func GetBtcEventWithWitness(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
@@ -42,10 +42,7 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	lf := map[string]any{
-		logs.FieldMethod: "GetBtcEventWithWitness",
-		logs.FieldTx:     tx.Txid,
-	}
+	lf := map[string]any{logs.FieldTx: tx.Txid}
 
 	if len(tx.Vout) < 1 {
 		logger.Debug().Fields(lf).Msg("no output")
@@ -57,12 +54,16 @@ func GetBtcEventWithWitness(
 	}
 
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
-		logger.Debug().Err(err).Fields(lf).Msgf("irrelevant recipient: %s", tx.Vout[0].ScriptPubKey.Hex)
+		logger.Debug().
+			Err(err).
+			Fields(lf).
+			Str("recipient", tx.Vout[0].ScriptPubKey.Hex).
+			Msg("irrelevant recipient")
 		return nil, nil
 	}
 
 	// event found, get sender address
-	fromAddress, err := rpc.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
+	fromAddress, err := bitcoinClient.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
@@ -71,12 +72,15 @@ func GetBtcEventWithWitness(
 	// 1. sender is empty, we don't know whom to refund if this tx gets reverted in zetacore
 	// 2. the tx is an outbound (sender is TSS) and we should not process it as an inbound
 	if fromAddress == "" || strings.EqualFold(fromAddress, tssAddress) {
-		logger.Info().Fields(lf).Msgf("skipping transaction for sender: %s", fromAddress)
+		logger.Info().
+			Fields(lf).
+			Str("sender", fromAddress).
+			Msg("skipping transaction")
 		return nil, nil
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, rpc, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
@@ -89,7 +93,7 @@ func GetBtcEventWithWitness(
 	if err != nil {
 		amount = 0
 		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
-		logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
+		logger.Error().Err(err).Fields(lf).Msg("unable to deduct depositor fee")
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
@@ -98,13 +102,13 @@ func GetBtcEventWithWitness(
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Fields(lf).Msgf("found OP_RETURN memo: %s", hex.EncodeToString(memo))
+		logger.Debug().Fields(lf).Str("memo", hex.EncodeToString(memo)).Msg("found OP_RETURN memo")
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
+		logger.Debug().Fields(lf).Str("memo", hex.EncodeToString(memo)).Msg("found inscription memo")
 
 		// override the sender address with the initiator of the inscription's commit tx
-		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
+		if fromAddress, err = bitcoinClient.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
 			return nil, errors.Wrap(err, "unable to get inscription initiator")
 		}
 	} else {
@@ -135,7 +139,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 
 	lastElement, err := hex.DecodeString(witness[length-1])
 	if err != nil {
-		logger.Debug().Msgf("invalid witness element")
+		logger.Debug().Msg("invalid witness element")
 		return nil
 	}
 
@@ -149,14 +153,14 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	}
 
 	if len(witness) < 2 {
-		logger.Debug().Msgf("not script path spending detected, ignore")
+		logger.Debug().Msg("not script path spending detected, ignore")
 		return nil
 	}
 
 	// only the script is the focus here, ignore checking control block or whatever else
 	script, err := hex.DecodeString(witness[len(witness)-2])
 	if err != nil {
-		logger.Debug().Msgf("witness script cannot be decoded from hex, ignore")
+		logger.Debug().Msg("witness script cannot be decoded from hex, ignore")
 		return nil
 	}
 	return script
@@ -165,13 +169,18 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 // Try to extract the memo from the OP_RETURN
 func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	if len(tx.Vout) < 2 {
-		logger.Debug().Msgf("txn %s has fewer than 2 outputs, not target OP_RETURN txn", tx.Txid)
+		logger.Debug().
+			Str(logs.FieldBtcTxid, tx.Txid).
+			Msg("txn has fewer than 2 outputs, not target OP_RETURN txn")
 		return nil
 	}
 
 	memo, found, err := common.DecodeOpReturnMemo(tx.Vout[1].ScriptPubKey.Hex)
 	if err != nil {
-		logger.Error().Err(err).Msgf("tryExtractOpRet: error decoding OP_RETURN memo: %s", tx.Vout[1].ScriptPubKey.Hex)
+		logger.Error().
+			Err(err).
+			Str("memo", tx.Vout[1].ScriptPubKey.Hex).
+			Msg("error decoding OP_RETURN memo")
 		return nil
 	}
 
@@ -189,15 +198,24 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 			continue
 		}
 
-		logger.Debug().Msgf("potential witness script, tx %s, input idx %d", tx.Txid, i)
+		logger.Debug().
+			Str(logs.FieldTx, tx.Txid).
+			Int("input_index", i).
+			Msg("potential witness script")
 
 		memo, found, err := common.DecodeScript(script)
 		if err != nil || !found {
-			logger.Debug().Msgf("invalid witness script, tx %s, input idx %d", tx.Txid, i)
+			logger.Debug().
+				Str(logs.FieldTx, tx.Txid).
+				Int("input_index", i).
+				Msg("invalid witness script")
 			continue
 		}
 
-		logger.Debug().Msgf("found memo in inscription, tx %s, input idx %d", tx.Txid, i)
+		logger.Debug().
+			Str(logs.FieldTx, tx.Txid).
+			Int("input_index", i).
+			Msg("found memo in inscription")
 		return memo
 	}
 

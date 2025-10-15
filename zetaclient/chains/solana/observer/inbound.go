@@ -11,44 +11,43 @@ import (
 	"github.com/rs/zerolog"
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-const (
-	// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
-	MaxSignaturesPerTicker = 100
-)
+// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
+const MaxSignaturesPerTicker = 100
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
-	pageLimit := solanarpc.DefaultPageLimit
+	pageLimit := repo.DefaultPageLimit
 
 	// scan from gateway 1st signature if last scanned tx is absent in the database
 	// the 1st gateway signature is typically the program initialization
 	if ob.LastTxScanned() == "" {
-		lastSig, err := solanarpc.GetFirstSignatureForAddress(ctx, ob.solClient, ob.gatewayID, pageLimit)
+		lastSig, err := ob.solanaRepo.GetFirstSignatureForAddress(ctx, ob.gatewayID, pageLimit)
 		if err != nil {
-			return errors.Wrapf(err, "error GetFirstSignatureForAddress for chain %d address %s", chainID, ob.gatewayID)
+			format := "error GetFirstSignatureForAddress for chain %d address %s"
+			return errors.Wrapf(err, format, chainID, ob.gatewayID)
 		}
 		ob.WithLastTxScanned(lastSig.String())
 	}
 
 	// query last finalized slot
-	lastSlot, errSlot := ob.solClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	lastSlot, errSlot := ob.solanaClient.GetSlot(ctx, rpc.CommitmentFinalized)
 	if errSlot != nil {
 		ob.Logger().Inbound.Err(errSlot).Msg("unable to get last slot")
 	}
 
 	// get all signatures for the gateway address since last scanned signature
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
-	signatures, err := solanarpc.GetSignaturesForAddressUntil(ctx, ob.solClient, ob.gatewayID, lastSig, pageLimit)
+	signatures, err := ob.solanaRepo.GetSignaturesForAddressUntil(ctx, ob.gatewayID, lastSig, pageLimit)
 	if err != nil {
-		ob.Logger().Inbound.Err(err).Msg("error GetSignaturesForAddressUntil")
+		ob.Logger().Inbound.Err(err).Msg("error calling GetSignaturesForAddressUntil")
 		return err
 	}
 
@@ -59,9 +58,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 	} else {
 		ob.Logger().Inbound.Info().
-			Str(logs.FieldMethod, "ObserveInbound").
 			Int("signatures", len(signatures)).
-			Int64(logs.FieldChain, chainID).
 			Msg("got wrong amount of signatures")
 	}
 
@@ -72,12 +69,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// process successfully signature only
 		if sig.Err == nil {
-			txResult, err := solanarpc.GetTransaction(ctx, ob.solClient, sig.Signature)
+			txResult, err := ob.solanaRepo.GetTransaction(ctx, sig.Signature)
 			switch {
-			case errors.Is(err, solanarpc.ErrUnsupportedTxVersion):
+			case errors.Is(err, repo.ErrUnsupportedTxVersion):
 				ob.Logger().Inbound.Warn().
-					Stringer("tx.signature", sig.Signature).
-					Msg("ObserveInbound: skip unsupported transaction")
+					Stringer("tx_signature", sig.Signature).
+					Msg("observe inbound: skip unsupported transaction")
 			// just save the sig to last scanned txs
 			case err != nil:
 				// we have to re-scan this signature on next ticker
@@ -89,8 +86,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 					// Log the error but continue processing other transactions
 					ob.Logger().Inbound.Error().
 						Err(err).
-						Str("tx.signature", sigString).
-						Msg("ObserveInbound: error filtering events, skipping")
+						Str("tx_signature", sigString).
+						Msg("observe inbound: error filtering events, skipping")
 					continue
 				}
 
@@ -104,18 +101,16 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
 		if err = ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
-			ob.Logger().
-				Inbound.Error().
+			ob.Logger().Inbound.Error().
 				Err(err).
-				Str("tx.signature", sigString).
-				Msg("ObserveInbound: error saving last sig")
+				Str("tx_signature", sigString).
+				Msg("observe inbound: error saving last sig")
 		}
 
-		ob.Logger().
-			Inbound.Info().
-			Str("tx.signature", sigString).
-			Uint64("tx.slot", sig.Slot).
-			Msg("ObserveInbound: last scanned sig")
+		ob.Logger().Inbound.Info().
+			Str("tx_signature", sigString).
+			Uint64("tx_slot", sig.Slot).
+			Msg("observe inbound: last scanned sig")
 
 		// take a rest if max signatures per ticker is reached
 		if len(signatures)-i >= MaxSignaturesPerTicker {
@@ -131,9 +126,14 @@ func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
-			_, err := ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err := ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
 			if err != nil {
-				return errors.Wrapf(err, "error PostVoteInbound")
+				return err
 			}
 		}
 	}
@@ -183,12 +183,12 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 
 	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender,
 		event.SenderChainID,
 		event.Sender,
 		event.Receiver,
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		cosmosmath.NewUint(event.Amount),
 		hex.EncodeToString(event.Memo),
 		event.TxHash,
@@ -217,7 +217,7 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 		return false
 	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
-			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
+			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, &event.CoinType)
 		return false
 	default:
 		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")

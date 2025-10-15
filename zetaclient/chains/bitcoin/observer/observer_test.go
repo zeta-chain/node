@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"gorm.io/gorm"
 
@@ -22,7 +23,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -42,7 +44,7 @@ func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransaction
 	require.NoError(t, err)
 
 	//Create some Transaction entries in the DB
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		txResult := btcjson.GetTransactionResult{
 			Amount:          float64(i),
 			Fee:             0,
@@ -77,42 +79,42 @@ func Test_NewObserver(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name         string
-		chain        chains.Chain
-		btcClient    *mocks.BitcoinClient
-		chainParams  observertypes.ChainParams
-		coreClient   interfaces.ZetacoreClient
-		tss          interfaces.TSSSigner
-		logger       base.Logger
-		ts           *metrics.TelemetryServer
-		errorMessage string
-		before       func()
-		after        func()
+		name           string
+		chain          chains.Chain
+		btcClient      *mocks.BitcoinClient
+		chainParams    observertypes.ChainParams
+		zetacoreClient zrepo.ZetacoreClient
+		tssSigner      tssrepo.TSSClient
+		logger         base.Logger
+		ts             *metrics.TelemetryServer
+		errorMessage   string
+		before         func()
+		after          func()
 	}{
 		{
-			name:        "should be able to create observer",
-			chain:       chain,
-			btcClient:   btcClient,
-			chainParams: params,
-			coreClient:  nil,
-			tss:         mocks.NewTSS(t),
+			name:           "should be able to create observer",
+			chain:          chain,
+			btcClient:      btcClient,
+			chainParams:    params,
+			zetacoreClient: nil,
+			tssSigner:      mocks.NewTSS(t),
 		},
 		{
-			name:         "should fail if net params is not found",
-			chain:        chains.Chain{ChainId: 111}, // invalid chain id
-			btcClient:    btcClient,
-			chainParams:  params,
-			coreClient:   nil,
-			tss:          mocks.NewTSS(t),
-			errorMessage: "unable to get BTC net params",
+			name:           "should fail if net params is not found",
+			chain:          chains.Chain{ChainId: 111}, // invalid chain id
+			btcClient:      btcClient,
+			chainParams:    params,
+			zetacoreClient: nil,
+			tssSigner:      mocks.NewTSS(t),
+			errorMessage:   "unable to get BTC net params",
 		},
 		{
-			name:        "should fail if env var us invalid",
-			chain:       chain,
-			btcClient:   btcClient,
-			chainParams: params,
-			coreClient:  nil,
-			tss:         mocks.NewTSS(t),
+			name:           "should fail if env var us invalid",
+			chain:          chain,
+			btcClient:      btcClient,
+			chainParams:    params,
+			zetacoreClient: nil,
+			tssSigner:      mocks.NewTSS(t),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
 				os.Setenv(envVar, "invalid")
@@ -143,8 +145,8 @@ func Test_NewObserver(t *testing.T) {
 			baseObserver, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.coreClient,
-				tt.tss,
+				zrepo.New(tt.zetacoreClient, tt.chain, mode.StandardMode),
+				tt.tssSigner,
 				100,
 				tt.ts,
 				database,
@@ -153,7 +155,7 @@ func Test_NewObserver(t *testing.T) {
 			require.NoError(t, err)
 
 			// create observer
-			ob, err := New(tt.chain, baseObserver, tt.btcClient)
+			ob, err := New(baseObserver, tt.btcClient, tt.chain)
 			if tt.errorMessage != "" {
 				require.ErrorContains(t, err, tt.errorMessage)
 				require.Nil(t, ob)
@@ -297,11 +299,11 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	client := mocks.NewBitcoinClient(t)
 	zetacore := mocks.NewZetacoreClient(t)
 
-	var tss interfaces.TSSSigner
+	var tssSigner tssrepo.TSSClient
 	if chains.IsBitcoinMainnet(chain.ChainId) {
-		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
+		tssSigner = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 	} else {
-		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
+		tssSigner = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
 	}
 
 	// create logger
@@ -324,8 +326,8 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacore,
-		tss,
+		zrepo.New(zetacore, chain, mode.StandardMode),
+		tssSigner,
 		100,
 		&metrics.TelemetryServer{},
 		database,
@@ -333,7 +335,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	)
 	require.NoError(t, err)
 
-	ob, err := New(chain, baseObserver, client)
+	ob, err := New(baseObserver, client, chain)
 	require.NoError(t, err)
 
 	ts := &testSuite{

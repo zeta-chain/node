@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	zetasolrpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	tonrpc "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -144,7 +144,9 @@ func reportPreflightMetricsSolana(ctx context.Context, app *zctx.AppContext, cha
 		return errors.New("unable to create solana rpc client")
 	}
 
-	blockTime, err := zetasolrpc.HealthCheck(ctx, rpcClient)
+	// TODO: The Solana repositorty should be injected as a dependency into this function. We
+	// should not have to instantiate the Solana client here.
+	blockTime, err := solrepo.New(rpcClient).HealthCheck(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get solana last block time")
 	}
@@ -177,7 +179,7 @@ func reportPreflightMetricsSui(ctx context.Context, app *zctx.AppContext, chain 
 		return nil
 	}
 
-	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
+	suiClient := suiclient.New(cfg.Endpoint)
 
 	blockTime, err := suiClient.HealthCheck(ctx)
 	if err != nil {

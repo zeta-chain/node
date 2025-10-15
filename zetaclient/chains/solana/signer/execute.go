@@ -2,17 +2,22 @@ package signer
 
 import (
 	"context"
+	"encoding/hex"
+	stderrors "errors"
 	"fmt"
 
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
 
 // prepareExecuteTx prepares execute outbound
@@ -26,7 +31,7 @@ func (signer *Signer) prepareExecuteTx(
 	params := cctx.GetCurrentOutboundParam()
 
 	// create msg execute
-	msg, msgIn, err := signer.createMsgExecute(cctx, cancelTx)
+	msg, msgIn, err := signer.createMsgExecute(ctx, cctx, cancelTx)
 	if err != nil {
 		return signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 	}
@@ -43,12 +48,102 @@ func (signer *Signer) prepareExecuteTx(
 			return nil, errors.Wrap(err, "error creating execute instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, params.CallOptions.GasLimit)
+		return signer.createOutboundWithFallback(
+			ctx,
+			inst,
+			msgIn,
+			params.CallOptions.GasLimit,
+			msg.AddressLookupTable(),
+			msg.AddressLookupTableStateAddresses(),
+		)
 	}, nil
+}
+
+func (signer *Signer) prepareExecuteMsg(
+	cctx *types.CrossChainTx,
+) (contracts.ExecuteType, *contracts.GenericExecuteMsg, error) {
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return executeType, nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	msg, err := contracts.DecodeExecuteMsg(message)
+	if err != nil {
+		return executeType, nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	return executeType, msg, nil
+}
+
+func (signer *Signer) prepareExecuteMsgParams(
+	ctx context.Context,
+	msg *contracts.GenericExecuteMsg,
+) ([]*sol.AccountMeta, sol.PublicKeySlice, error) {
+	remainingAccounts := []*sol.AccountMeta{}
+	if msg.AddressLookupTableAddress() == nil {
+		for _, a := range msg.Legacy.Accounts {
+			remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
+				PublicKey:  sol.PublicKey(a.PublicKey),
+				IsWritable: a.IsWritable,
+			})
+		}
+
+		return remainingAccounts, nil, nil
+	}
+
+	if !zctx.EnableSolanaAddressLookupTableFeatureFlag(ctx) {
+		return nil, nil, stderrors.New("solana AddressLookupTable feature is disabled")
+	}
+
+	client, ok := signer.solanaClient.(*rpc.Client)
+	if !ok {
+		return nil, nil, stderrors.New(
+			"solana AddressLookupTable requires *rpc.Client; got different SolanaClient implementation",
+		)
+	}
+	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
+		ctx,
+		client,
+		*msg.AddressLookupTableAddress(),
+		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
+	)
+
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot get alt")
+	}
+
+	writableSet := make(map[int]struct{}, len(msg.Alt.WritableIndexes))
+	for _, j := range msg.Alt.WritableIndexes {
+		writableSet[int(j)] = struct{}{}
+	}
+
+	for i, a := range alt.Addresses {
+		_, isWritable := writableSet[i]
+		remainingAccounts = append(remainingAccounts, &sol.AccountMeta{
+			PublicKey:  a,
+			IsWritable: isWritable,
+		})
+	}
+
+	return remainingAccounts, alt.Addresses, nil
 }
 
 // createMsgExecute creates execute and increment nonce messages
 func (signer *Signer) createMsgExecute(
+	ctx context.Context,
 	cctx *types.CrossChainTx,
 	cancelTx bool,
 ) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
@@ -81,12 +176,9 @@ func (signer *Signer) createMsgExecute(
 		return nil, nil, errors.Wrap(err, "cannot validate sender")
 	}
 
-	remainingAccounts := []*solana.AccountMeta{}
-	for _, a := range msg.Accounts {
-		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
-			PublicKey:  solana.PublicKey(a.PublicKey),
-			IsWritable: a.IsWritable,
-		})
+	remainingAccounts, addressLookupTableStateAddresses, err := signer.prepareExecuteMsgParams(ctx, msg)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot prepare execute msg params")
 	}
 
 	msgExecute := contracts.NewMsgExecute(
@@ -95,9 +187,11 @@ func (signer *Signer) createMsgExecute(
 		amount,
 		to,
 		sender,
-		msg.Data,
+		msg.Data(),
 		executeType,
 		remainingAccounts,
+		msg.AddressLookupTableAddress(),
+		addressLookupTableStateAddresses,
 	)
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
 
@@ -105,7 +199,7 @@ func (signer *Signer) createMsgExecute(
 }
 
 // createExecuteInstruction wraps the execute 'msg' into a Solana instruction.
-func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solana.GenericInstruction, error) {
+func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*sol.GenericInstruction, error) {
 	// create execute instruction with program call data
 	discriminator := contracts.DiscriminatorExecute
 	var dataBytes []byte
@@ -114,7 +208,7 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		serializedInst, err := borsh.Serialize(contracts.ExecuteRevertInstructionParams{
 			Discriminator: discriminator,
 			Amount:        msg.Amount(),
-			Sender:        solana.MustPublicKeyFromBase58(msg.Sender()),
+			Sender:        sol.MustPublicKeyFromBase58(msg.Sender()),
 			Data:          msg.Data(),
 			Signature:     msg.SigRS(),
 			RecoveryID:    msg.SigV(),
@@ -149,15 +243,15 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		return nil, errors.Wrap(err, "cannot decode connected pda address")
 	}
 
-	predefinedAccounts := []*solana.AccountMeta{
-		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-		solana.Meta(signer.pda).WRITE(),
-		solana.Meta(msg.To()).WRITE(),
-		solana.Meta(destinationProgramPda).WRITE(),
+	predefinedAccounts := []*sol.AccountMeta{
+		sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+		sol.Meta(signer.pda).WRITE(),
+		sol.Meta(msg.To()).WRITE(),
+		sol.Meta(destinationProgramPda).WRITE(),
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:        signer.gatewayID,
 		DataBytes:     dataBytes,
 		AccountValues: allAccounts,
@@ -178,7 +272,7 @@ func validateSender(sender string, executeType contracts.ExecuteType) (string, e
 	}
 
 	// for revert execute, sender should be a Solana address
-	senderSol, err := solana.PublicKeyFromBase58(sender)
+	senderSol, err := sol.PublicKeyFromBase58(sender)
 	if err != nil {
 		return "", errors.Wrapf(err, "invalid execute revert sender %s", sender)
 	}

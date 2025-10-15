@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -49,16 +48,10 @@ var (
 
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+		return err
 	}
-
-	// prepare logger fields
-	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Logger()
 
 	// process outbound trackers
 	for _, tracker := range trackers {
@@ -68,11 +61,13 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, tracker.Nonce).Logger()
+
 		// get original cctx parameters
-		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
+		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 		if err != nil {
-			// take a rest if zetacore RPC breaks
-			return errors.Wrapf(err, "GetCctxByNonce error for chain %d nonce %d", chainID, tracker.Nonce)
+			logger.Error().Err(err).Send()
+			continue // does not block other CCTXs from being processed
 		}
 		coinType := cctx.InboundParams.CoinType
 
@@ -83,11 +78,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
 				txCount++
 				txResult = result
-
-				logger.Info().
-					Str(logs.FieldTx, txHash.TxHash).
-					Uint64(logs.FieldNonce, nonce).
-					Msg("Confirmed outbound")
+				logger.Info().Str(logs.FieldTx, txHash.TxHash).Msg("confirmed outbound")
 			}
 		}
 
@@ -97,9 +88,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		} else if txCount > 1 {
 			// Should not happen. We can't tell which txHash is true.
 			// It might happen (e.g. bug, glitchy/hacked endpoint)
-			logger.Error().
-				Uint64(logs.FieldNonce, nonce).
-				Msgf("Finalized multiple (%d) outbound", txCount)
+			logger.Error().Int("count", txCount).Msg("finalized multiple outbounds")
 		}
 	}
 
@@ -167,39 +156,25 @@ func (ob *Observer) PostVoteOutbound(
 	nonce uint64,
 	coinType coin.CoinType,
 ) {
+	logger := ob.Logger().Outbound.With().
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, outboundHash).
+		Logger()
+
 	// create outbound vote message
 	msg := ob.CreateMsgVoteOutbound(cctxIndex, outboundHash, txResult, valueReceived, status, nonce, coinType)
 
-	// prepare logger fields
-	logFields := map[string]any{
-		logs.FieldNonce: nonce,
-		logs.FieldTx:    outboundHash,
-	}
-
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
 	// and the vote msg won't trigger ZEVM interaction
-	const (
-		gasLimit = zetacore.PostVoteOutboundGasLimit
-	)
+	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
 	retryGasLimit := zetacore.PostVoteOutboundRetryGasLimit
 	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	// post vote to zetacore
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		ob.Logger().Outbound.Error().Err(err).Fields(logFields).Msg("PostVoteOutbound: error posting outbound vote")
-		return
-	}
-
-	// print vote tx hash and ballot
-	if zetaTxHash != "" {
-		logFields[logs.FieldZetaTx] = zetaTxHash
-		logFields[logs.FieldBallot] = ballot
-		ob.Logger().Outbound.Info().Fields(logFields).Msg("PostVoteOutbound: posted outbound vote")
-	}
+	// NOTE: ignoring VoteOutbound's errors
+	_, _, _ = ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg) //nolint:dogsled
 }
 
 // CreateMsgVoteOutbound creates a vote outbound message for Solana chain
@@ -221,10 +196,10 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		outboundGasLimit = 0
 	)
 
-	creator := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+	creator := ob.ZetaRepo().GetOperatorAddress()
 
 	return crosschaintypes.NewMsgVoteOutbound(
-		creator.String(),
+		creator,
 		cctxIndex,
 		outboundHash,
 		txResult.Slot, // instead of using block, Solana explorer uses slot for indexing
@@ -251,7 +226,6 @@ func (ob *Observer) CheckFinalizedTx(
 	// prepare logger fields
 	chainID := ob.Chain().ChainId
 	logger := ob.Logger().Outbound.With().
-		Str(logs.FieldMethod, "CheckFinalizedTx").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txHash).Logger()
@@ -259,29 +233,30 @@ func (ob *Observer) CheckFinalizedTx(
 	// convert txHash to signature
 	sig, err := solana.SignatureFromBase58(txHash)
 	if err != nil {
-		logger.Error().Err(err).Msg("SignatureFromBase58 error")
+		logger.Error().Err(err).Msg("error calling SignatureFromBase58")
 		return nil, false
 	}
 
 	// query transaction using "finalized" commitment to avoid re-org
-	txResult, err := ob.solClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
-		Commitment: rpc.CommitmentFinalized,
+	txResult, err := ob.solanaClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
+		Commitment:                     rpc.CommitmentFinalized,
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 	})
 	if err != nil {
-		logger.Error().Err(err).Msg("GetTransaction error")
+		logger.Error().Err(err).Msg("error calling GetTransaction")
 		return nil, false
 	}
 
 	// the tx must be successful in order to effectively increment the nonce
 	if txResult.Meta.Err != nil {
-		logger.Error().Any("Err", txResult.Meta.Err).Msg("tx is not successful")
+		logger.Error().Any("tx_meta_err", txResult.Meta.Err).Msg("tx was not successful")
 		return nil, false
 	}
 
 	// parse gateway instruction from tx result
 	inst, err := ParseGatewayInstruction(txResult, ob.gatewayID, coinType, nonce)
 	if err != nil {
-		logger.Error().Err(err).Msg("ParseGatewayInstruction error")
+		logger.Error().Err(err).Msg("error calling ParseGatewayInstruction")
 		return nil, false
 	}
 
@@ -295,7 +270,9 @@ func (ob *Observer) CheckFinalizedTx(
 	// check tx authorization
 	if signerECDSA != ob.TSS().PubKey().AddressEVM() {
 		logger.Error().
-			Msgf("tx signer %s is not matching current TSS address %s", signerECDSA, ob.TSS().PubKey().AddressEVM())
+			Stringer("signer", signerECDSA).
+			Stringer("address", ob.TSS().PubKey().AddressEVM()).
+			Msg("tx signer is not matching current TSS address")
 		return nil, false
 	}
 

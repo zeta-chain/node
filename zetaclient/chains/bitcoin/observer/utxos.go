@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // SelectedUTXOs is a struct containing the selected UTXOs' details.
@@ -42,7 +43,7 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	utxos, err := ob.rpc.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
+	utxos, err := ob.bitcoinClient.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
 	if err != nil {
 		return err
 	}
@@ -180,18 +181,28 @@ func (ob *Observer) SelectUTXOs(
 
 // findNonceMarkUTXO finds the nonce-mark UTXO in the list of UTXOs.
 func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
+	logger := ob.logger.Outbound
+
 	tssAddress := ob.TSSAddressString()
 	amount := chains.NonceMarkAmount(nonce)
+
 	for i, utxo := range ob.utxos {
 		sats, err := common.GetSatoshis(utxo.Amount)
 		if err != nil {
-			ob.logger.Outbound.Error().Err(err).Msgf("FindNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
+			logger.Error().
+				Err(err).
+				Any("utxo", utxo).
+				Msg("error getting satoshis for utxo")
+			return i, err
 		}
 		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid && utxo.Vout == 0 {
-			ob.logger.Outbound.Info().
-				Msgf("FindNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
+			logger.Info().
+				Str(logs.FieldBtcTxid, utxo.TxID).
+				Int64("amount", sats).
+				Msg("found nonce-mark utxo")
 			return i, nil
 		}
 	}
+
 	return -1, fmt.Errorf("FindNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }

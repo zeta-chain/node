@@ -46,7 +46,7 @@ func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 		return s.withdrawCap.objectID, nil
 	}
 
-	s.Logger().Std.Info().Msg("WithdrawCap cache expired, fetching new objectID")
+	s.Logger().Std.Info().Msg("withdrawCap cache expired; fetching new objectID")
 
 	objectID, err := s.getWithdrawCapID(ctx)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *Signer) getWithdrawCapIDCached(ctx context.Context) (string, error) {
 
 	s.withdrawCap.set(objectID)
 
-	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("WithdrawCap objectID fetched")
+	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("withdrawCap objectID fetched")
 
 	return objectID, nil
 }
@@ -65,7 +65,7 @@ func (s *Signer) getWithdrawCapID(ctx context.Context) (string, error) {
 	owner := s.TSS().PubKey().AddressSui()
 	structType := s.gateway.WithdrawCapType()
 
-	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
+	objectID, err := s.suiClient.GetOwnedObjectID(ctx, owner, structType)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to get owned object ID")
 	}
@@ -88,7 +88,7 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 
 	s.messageContext.set(objectID)
 
-	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("MessageContext objectID fetched")
+	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("MessageContext objectID fetched")
 
 	return objectID, nil
 }
@@ -100,7 +100,7 @@ func (s *Signer) getMessageContextID(ctx context.Context) (string, error) {
 		return "", errors.Wrap(err, "unable to get dynamic field name")
 	}
 
-	response, err := s.client.SuiXGetDynamicFieldObject(ctx, models.SuiXGetDynamicFieldObjectRequest{
+	response, err := s.suiClient.SuiXGetDynamicFieldObject(ctx, models.SuiXGetDynamicFieldObjectRequest{
 		ObjectId: s.gateway.ObjectID(),
 		DynamicFieldName: models.DynamicFieldObjectName{
 			Type:  "vector<u8>",

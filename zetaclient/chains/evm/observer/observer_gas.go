@@ -5,6 +5,8 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostGasPrice posts gas price to zetacore.
@@ -32,15 +34,9 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get block number")
 	}
 
-	_, err = ob.
-		ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee, blockNum)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to post vote for gas price")
-	}
-
-	return nil
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice.Uint64(), priorityFee, blockNum)
+	return err
 }
 
 // DeterminePriorityFee determines the chain priority fee.
@@ -76,10 +72,10 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 		return false, errors.Wrap(err, "unable to get base fee")
 	}
 
-	ob.Logger().GasPrice.Info().
-		Int64("observer.chain_id", ob.Chain().ChainId).
-		Str("observer.base_fee", baseFee.String()).
-		Msg("Fetched base fee for chain")
+	ob.Logger().Chain.Info().
+		Str(logs.FieldModule, logs.ModNameGasPrice).
+		Stringer("base_fee", baseFee).
+		Msg("fetched base fee")
 
 	// EIP-1559 is supported if base fee is not zero.
 	// Not that, for example, BSC supports EIP-1559 but base fee is zero.
