@@ -19,8 +19,14 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Deploy the GasConsumer contract
-	gasConsumerAddress, _, _, err := testgasconsumer.DeployTestGasConsumer(r.ZEVMAuth, r.ZEVMClient)
+	// gas limit is currently 4M
+	gasConsumerAddress, txDeploy, _, err := testgasconsumer.DeployTestGasConsumer(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		big.NewInt(5000000),
+	)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// perform the deposit and call to the GasConsumer contract
 	tx := r.ETHDepositAndCall(

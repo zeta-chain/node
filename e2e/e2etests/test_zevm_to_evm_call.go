@@ -13,7 +13,8 @@ import (
 )
 
 func TestZEVMToEVMCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 0)
+	require.Len(r, args, 1)
+	gasLimit := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
 
@@ -29,6 +30,7 @@ func TestZEVMToEVMCall(r *runner.E2ERunner, args []string) {
 		gatewayzevm.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined

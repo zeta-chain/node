@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -38,18 +37,8 @@ func TestZEVMToSolanaCall(r *runner.E2ERunner, _ []string) {
 	// check pda account info of connected program
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
-	require.NoError(r, err)
 
-	type ConnectedPdaInfo struct {
-		Discriminator [8]byte
-		LastSender    common.Address
-		LastMessage   string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
+	pda := r.ParseConnectedPda(connectedPda)
 	require.Equal(r, "simple call", pda.LastMessage)
 	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
 }

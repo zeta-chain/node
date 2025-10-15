@@ -15,13 +15,15 @@ import (
 )
 
 func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 0)
+	require.Len(r, args, 1)
+	gasLimit := utils.ParseBigInt(r, args[0])
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// deploy testabort contract
-	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// perform the withdraw
 	tx := r.ZEVMToEMVCall(
@@ -34,6 +36,7 @@ func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined

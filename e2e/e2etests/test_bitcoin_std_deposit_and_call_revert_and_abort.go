@@ -23,10 +23,12 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	amount := 0.00000001 // 1 satoshi so revert fails because of insufficient gas
 
 	// deploy testabort contract
-	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	// Create a memo to call non-existing contract
+	abortMessage := "abort message"
 	inboundMemo := &memo.InboundMemo{
 		Header: memo.Header{
 			Version:     0,
@@ -37,7 +39,9 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 			Receiver: sample.EthAddress(), // non-existing contract
 			Payload:  []byte("a payload"),
 			RevertOptions: types.RevertOptions{
-				AbortAddress: testAbortAddr.Hex(),
+				CallOnRevert:  false,
+				AbortAddress:  testAbortAddr.Hex(),
+				RevertMessage: []byte(abortMessage),
 			},
 		},
 	}
@@ -60,4 +64,9 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.True(r, aborted)
+
+	// check revert message was used
+	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, abortMessage)
+	require.NoError(r, err)
+	require.EqualValues(r, []byte(abortMessage), abortContext.RevertMessage)
 }

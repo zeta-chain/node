@@ -74,7 +74,6 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 		"client",
 		"upgrade",
 		"--json", // output in JSON format for easier parsing
-		"--skip-dependency-verification",
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
 	}...)
@@ -83,7 +82,7 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	// run command and show output
 	startTime := time.Now()
 	output, err := cmdUpgrade.Output()
-	require.NoError(r, err)
+	require.NoError(r, err, "Sui upgrade gateway package failed: \n%s", string(output))
 
 	r.Logger.Info("Sui gateway package upgrade took %f seconds: \n%s", time.Since(startTime).Seconds(), string(output))
 

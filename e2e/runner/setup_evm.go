@@ -67,11 +67,16 @@ func (r *E2ERunner) SetupEVM() {
 		initializerData,
 	)
 	require.NoError(r, err)
+	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
 
 	r.GatewayEVMAddr = gatewayProxyAddress
 	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(gatewayProxyAddress, r.EVMClient)
 	require.NoError(r, err)
 	r.Logger.Info("Gateway EVM contract address: %s, tx hash: %s", gatewayEVMAddr.Hex(), txGateway.Hash().Hex())
+
+	updateAdditionalFeeTx, err := r.GatewayEVM.UpdateAdditionalActionFee(r.EVMAuth, big.NewInt(2e5))
+	require.NoError(r, err)
+	ensureTxReceipt(updateAdditionalFeeTx, "Updating additional fee failed")
 
 	// Deploy erc20custody proxy contract
 	r.Logger.Info("Deploying ERC20Custody contract")
@@ -207,4 +212,30 @@ func (r *E2ERunner) DeployZetaConnectorNative(ensureTxReceipt func(tx *ethtypes.
 		zetaConnectorNativeAddress.Hex(),
 		txZetaConnectorNativeHash.Hash().Hex(),
 	)
+}
+
+// DeployTestDAppV2EVM deploys the test DApp V2 contract for EVM
+func (r *E2ERunner) DeployTestDAppV2EVM() {
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage)
+	}
+
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+		r.EVMAuth,
+		r.EVMClient,
+		false,
+		r.GatewayEVMAddr,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	// Initialize the test dapp contract instance
+	r.TestDAppV2EVMAddr = testDAppV2Addr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
+	require.NoError(r, err)
+
+	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, isZetaChain)
 }

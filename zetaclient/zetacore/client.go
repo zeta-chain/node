@@ -22,13 +22,10 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/fanout"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
-
-var _ interfaces.ZetacoreClient = &Client{}
 
 // Client is the client to send tx to zetacore
 type Client struct {
@@ -51,6 +48,10 @@ type Client struct {
 
 	// blocksFanout that receives new block events from Zetacore via websockets
 	blocksFanout *fanout.FanOut[ctypes.EventDataNewBlock]
+
+	// readyToExecuteInboundBallots tracks the failed ballots (ballot -> gas limit) due to out of gas
+	// these ballots are pending and waiting for the finalizing vote to come in and trigger the execution
+	readyToExecuteInboundBallots map[string]uint64
 
 	mu sync.RWMutex
 }
@@ -101,8 +102,6 @@ func NewClient(
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
 	}
-
-	log := logger.With().Str(logs.FieldModule, "zetacoreClient").Logger()
 
 	cfg := config.ClientConfiguration{
 		ChainHost:    cosmosREST(chainIP),
@@ -165,8 +164,9 @@ func NewClient(
 
 	return &Client{
 		Clients: zetacoreClients,
-		logger:  log,
-		config:  cfg,
+
+		logger: logger.With().Str(logs.FieldModule, logs.ModNameZetaCoreClient).Logger(),
+		config: cfg,
 
 		cosmosClientContext: cosmosContext,
 		cometBFTClient:      cometBFTClient,
@@ -178,6 +178,8 @@ func NewClient(
 		keys:        keys,
 		chainID:     chainID,
 		chain:       zetaChain,
+
+		readyToExecuteInboundBallots: make(map[string]uint64),
 	}, nil
 }
 

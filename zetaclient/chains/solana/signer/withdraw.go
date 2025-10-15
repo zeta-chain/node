@@ -2,10 +2,9 @@ package signer
 
 import (
 	"context"
-	"encoding/hex"
 
 	"cosmossdk.io/errors"
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
@@ -42,35 +41,8 @@ func (signer *Signer) prepareWithdrawTx(
 			return nil, errors.Wrap(err, "error creating withdraw instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0)
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0, nil, nil)
 	}, nil
-}
-
-func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
-	var executeType contracts.ExecuteType
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
-		executeType = contracts.ExecuteTypeRevert
-	} else {
-		executeType = contracts.ExecuteTypeCall
-	}
-
-	var message []byte
-	if executeType == contracts.ExecuteTypeRevert {
-		message = cctx.RevertOptions.RevertMessage
-	} else {
-		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
-		}
-		message = messageToDecode
-	}
-
-	var msg contracts.ExecuteMsg
-	if err := msg.Decode(message); err != nil {
-		return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
-	}
-
-	return executeType, msg, nil
 }
 
 // createMsgWithdraw creates a withdraw and increment nonce messages
@@ -101,7 +73,7 @@ func (signer *Signer) createMsgWithdraw(
 }
 
 // createWithdrawInstruction wraps the withdraw 'msg' into a Solana instruction.
-func (signer *Signer) createWithdrawInstruction(msg contracts.MsgWithdraw) (*solana.GenericInstruction, error) {
+func (signer *Signer) createWithdrawInstruction(msg contracts.MsgWithdraw) (*sol.GenericInstruction, error) {
 	// create withdraw instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.WithdrawInstructionParams{
 		Discriminator: contracts.DiscriminatorWithdraw,
@@ -115,13 +87,13 @@ func (signer *Signer) createWithdrawInstruction(msg contracts.MsgWithdraw) (*sol
 		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
 	}
 
-	inst := &solana.GenericInstruction{
+	inst := &sol.GenericInstruction{
 		ProgID:    signer.gatewayID,
 		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(msg.To()).WRITE(),
+		AccountValues: []*sol.AccountMeta{
+			sol.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+			sol.Meta(signer.pda).WRITE(),
+			sol.Meta(msg.To()).WRITE(),
 		},
 	}
 

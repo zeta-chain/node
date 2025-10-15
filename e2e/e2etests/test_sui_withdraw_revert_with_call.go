@@ -21,10 +21,11 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// ARRANGE
-	// given signer
+	// given TSS and receiver balances in Sui network
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
-	signerBalanceBefore := r.SuiGetSUIBalance(signer.Address())
+	receiverBalanceBefore := r.SuiGetSUIBalance(signer.Address())
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -72,8 +73,18 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
+	// the receiver balance in Sui network should remain unchanged
+	receiverBalanceAfter := r.SuiGetSUIBalance(signer.Address())
+	require.Equal(r, receiverBalanceBefore, receiverBalanceAfter)
+
+	// the TSS balance in Sui network should be lower than the balance before
+	// reason is that the CCTX gas budget does not cover the cost of a cancel tx.
+	// TSS slightly lost gas tokens even if the gas budget has been forwarded to TSS.
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.Less(r, tssBalanceAfter, tssBalanceBefore)
+
 	// should have called 'onRevert'
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
 
 	// sender and message should match
 	sender, err := r.TestDAppV2ZEVM.SenderWithMessage(
@@ -82,10 +93,6 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, sender)
-
-	// signer balance should remain unchanged in Sui chain
-	signerBalanceAfter := r.SuiGetSUIBalance(signer.Address())
-	require.Equal(r, signerBalanceBefore, signerBalanceAfter)
 
 	// the dApp address should get reverted amount
 	dAppBalanceAfter, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)

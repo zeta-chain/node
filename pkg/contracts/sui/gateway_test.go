@@ -754,6 +754,59 @@ func Test_ParseOutboundEvent(t *testing.T) {
 	}
 }
 
+func Test_ParseDynamicFieldValueStr(t *testing.T) {
+	tests := []struct {
+		name   string
+		data   models.SuiParsedData
+		want   string
+		errMsg string
+	}{
+		{
+			name: "valid dynamic field value",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{
+						"value": "0x123",
+					},
+				},
+			},
+			want: "0x123",
+		},
+		{
+			name: "missing value field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{},
+				},
+			},
+			errMsg: "missing value field",
+		},
+		{
+			name: "value field type mismatch",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"value": 123},
+				},
+			},
+			errMsg: "want string, got int for dynamic field value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseDynamicFieldValueStr(tt.data)
+			if tt.errMsg != "" {
+				require.Empty(t, got)
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func Test_ParseGatewayNonce(t *testing.T) {
 	tests := []struct {
 		name   string

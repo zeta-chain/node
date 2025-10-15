@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 const restartListenerTicker = 10 * time.Second
@@ -21,7 +21,7 @@ const restartListenerTicker = 10 * time.Second
 // ShutdownListener is a struct that listens for scheduled shutdown notices via the observer
 // operational flags
 type ShutdownListener struct {
-	client interfaces.ZetacoreClient
+	client zrepo.ZetacoreClient
 	logger zerolog.Logger
 
 	lastRestartHeightMissed int64
@@ -30,7 +30,7 @@ type ShutdownListener struct {
 }
 
 // NewShutdownListener creates a new ShutdownListener.
-func NewShutdownListener(client interfaces.ZetacoreClient, logger zerolog.Logger) *ShutdownListener {
+func NewShutdownListener(client zrepo.ZetacoreClient, logger zerolog.Logger) *ShutdownListener {
 	log := logger.With().Str("module", "shutdown_listener").Logger()
 	return &ShutdownListener{
 		client:     client,

@@ -249,10 +249,10 @@ func NewMetrics() (*Metrics, error) {
 
 // Start starts the metrics server
 func (m *Metrics) Start(_ context.Context) error {
-	log.Info().Msg("metrics server starting")
+	log.Info().Msg("starting metrics server")
 
 	if err := m.s.ListenAndServe(); err != nil {
-		return errors.Wrap(err, "fail to start metric server")
+		return errors.Wrap(err, "failed to start metrics server")
 	}
 
 	return nil

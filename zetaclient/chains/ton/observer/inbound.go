@@ -13,156 +13,228 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-const paginationLimit = 100
+// ------------------------------------------------------------------------------------------------
+// ObserveInbound
+// ------------------------------------------------------------------------------------------------
 
-// ObserveInbound observes Gateway's account for new transactions [INBOUND AND OUTBOUND]
+// ObserveInbounds observes the gateway for new transactions, inbounds and outbounds alike.
 //
-// Due to TON's architecture we have to scan for all net-new transactions.
-// The main purpose is to observe inbounds from TON.
-// Note that we might also have *outbounds* here (if a signer broadcasts a tx, it will be observed here).
-//
-// The name `ObserveInbound` is used for consistency with other chains.
-func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	lt, hashBits, err := ob.ensureLastScannedTx(ctx)
+// The name "ObserveInbounds" is used for consistency with other chains.
+// Also, the main purpose of this function is to indeed observe TON inbounds.
+// However, when a signer broadcasts a transaction (an outbound), it also gets observed here.
+// This happens because of TON's architecture (we have to scan for all net-new transactions).
+func (ob *Observer) ObserveInbounds(ctx context.Context) error {
+	logger := ob.Logger().Inbound
+
+	lastScannedTx, err := ob.getLastScannedTransaction(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get last scanned tx")
+		return errors.Wrap(err, "unable to get the last scanned transaction")
 	}
 
-	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
+	rawTxs, err := ob.tonRepo.GetNextTransactions(ctx, logger, lastScannedTx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get transactions")
+		return errors.Wrap(err, "unable to get the next transactions to be processed")
 	}
 
-	switch {
-	case len(txs) == 0:
-		// noop
-		return nil
-	case len(txs) > paginationLimit:
-		ob.Logger().Inbound.Info().
-			Msgf("observeGateway: got %d transactions. Taking first %d", len(txs), paginationLimit)
-
-		txs = txs[:paginationLimit]
-	default:
-		ob.Logger().Inbound.Info().Msgf("observeGateway: got %d transactions", len(txs))
-	}
-
-	for i := range txs {
-		var skip bool
-
-		tx, err := ob.gateway.ParseTransaction(txs[i])
-		switch {
-		case errors.Is(err, toncontracts.ErrParse) || errors.Is(err, toncontracts.ErrUnknownOp):
-			skip = true
-		case err != nil:
-			// should not happen
-			return errors.Wrap(err, "unexpected error")
-		case tx.ExitCode != 0:
-			skip = true
-			ob.Logger().Inbound.Warn().Fields(txLogFields(tx)).Msg("observeGateway: observed a failed tx")
+	for _, rawTx := range rawTxs {
+		tx, err := ob.parseTransaction(rawTx)
+		if err != nil {
+			return err
 		}
 
-		if skip {
-			tx = &toncontracts.Transaction{Transaction: txs[i]}
-			txHash := rpc.TransactionToHashString(tx.Transaction)
-			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
-			ob.setLastScannedTx(tx)
-			continue
-		}
-
-		// Should not happen
-		//goland:noinspection GoDfaConstantCondition
+		// Skip unparseable transactions.
 		if tx == nil {
-			return errors.New("tx is nil")
-		}
-
-		// As we might have outbounds here, let's ensure outbound tracker.
-		// TON signer broadcasts ExtInMsgInfo with `src=null, dest=gateway`, so it will be observed here
-		if tx.IsOutbound() {
-			if err = ob.addOutboundTracker(ctx, tx); err != nil {
-				ob.Logger().Inbound.
-					Error().Err(err).
-					Fields(txLogFields(tx)).
-					Msg("observeGateway: unable to add outbound tracker")
-
-				return errors.Wrap(err, "unable to add outbound tracker")
-			}
-
-			ob.setLastScannedTx(tx)
+			tx = &toncontracts.Transaction{Transaction: rawTx}
+			encodedTx := encoder.EncodeTx(tx.Transaction)
+			ob.saveLastScannedTransaction(tx)
+			logger.Warn().Str(logs.FieldTx, encodedTx).Msg("skipping unparseable transaction")
 			continue
 		}
 
-		// Ok, let's process a new inbound tx
-		if err := ob.voteInbound(ctx, tx); err != nil {
-			ob.Logger().Inbound.
-				Error().Err(err).
-				Fields(txLogFields(tx)).
-				Msg("observeGateway: unable to vote for inbound tx")
+		txLogger := logger.With().Fields(txLogFields(tx)).Logger()
 
-			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
+		// Skip failed transactions.
+		if tx.ExitCode != 0 {
+			ob.saveLastScannedTransaction(tx)
+			txLogger.Warn().Msg("skipping failed transaction")
+			continue
 		}
 
-		ob.setLastScannedTx(tx)
+		// Process outbounds and inbounds.
+		switch {
+		case tx.IsOutbound():
+			err := ob.addOutboundTracker(ctx, tx)
+			if err != nil {
+				msg := "unable to add outbound tracker"
+				txLogger.Error().Err(err).Msg(msg)
+				return errors.Wrapf(err, "%s: %s", msg, tx.Hash().Hex())
+			}
+		case tx.IsInbound():
+			err := ob.voteInbound(ctx, tx)
+			if err != nil {
+				msg := "unable to vote for inbound transaction"
+				txLogger.Error().Err(err).Msg(msg)
+				return errors.Wrapf(err, "%s: %s", msg, tx.Hash().Hex())
+			}
+		default:
+			return errors.New("unreachable code (internal error)")
+		}
+
+		ob.saveLastScannedTransaction(tx)
 	}
 
 	return nil
 }
 
-// ProcessInboundTrackers handles adhoc trackers that were somehow missed by
-func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
-	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+// getLastScannedTransaction returns the last scanned transaction from the database.
+//
+// If there is no transaction in the database, it queries the blockchain for 20th most recent
+// transaction and (arbitrarily) returns it as the last scanned transaction.
+func (ob *Observer) getLastScannedTransaction(ctx context.Context) (string, error) {
+	encodedTx := ob.LastTxScanned()
+	if encodedTx != "" {
+		return encodedTx, nil
 	}
 
-	// noop
-	if len(trackers) == 0 {
+	const limit = 20 // arbitrary
+	tx, err := ob.tonRepo.GetTransactionByIndex(ctx, limit)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to query the blockchain")
+	}
+
+	encodedTx = encoder.EncodeTx(*tx)
+	ob.WithLastTxScanned(encodedTx)
+	return encodedTx, nil
+}
+
+// saveLastScannedTransaction sets the last scanned transaction and stores it in the database.
+func (ob *Observer) saveLastScannedTransaction(tx *toncontracts.Transaction) {
+	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
+
+	encodedHash := encoder.EncodeTx(tx.Transaction)
+	ob.WithLastTxScanned(encodedHash)
+
+	err := ob.WriteLastTxScannedToDB(encodedHash)
+	if err != nil {
+		logger.Error().Err(err).Msg("error writing last scanned transaction to the database")
+		return
+	}
+
+	logger.Info().Msg("last scanned transaction saved to the database")
+}
+
+// addOutboundTracker adds an outbound tracker to zetacore.
+// In most cases it does nothing because signers usually add trackers first.
+func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Transaction) error {
+	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
+
+	auth, err := tx.OutboundAuth()
+	if err != nil {
+		return err
+	}
+
+	txSigner := auth.Signer
+	tssSigner := ob.TSS().PubKey().AddressEVM()
+
+	if txSigner != tssSigner {
+		logger.Warn().Stringer("signer", txSigner).Msg("skipping transaction; signer is not TSS")
 		return nil
 	}
 
-	gatewayAccountID := ob.gateway.AccountID()
+	nonce := uint64(auth.Seqno)
+	hash := encoder.EncodeTx(tx.Transaction)
 
-	// a single error should not block other trackers
+	_, err = ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, hash)
+
+	return err
+}
+
+// ------------------------------------------------------------------------------------------------
+// ProcessInboundTrackers
+// ------------------------------------------------------------------------------------------------
+
+// ProcessInboundTrackers processes inbound trackers (ad hoc inbounds that were missed).
+//
+// It processes each tracker individually (continues executing despite any errors so it does not
+// block other trackers).
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
+	if err != nil {
+		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
+	}
+
+	logSkippedTracker := func(hash string, reason string, err error) {
+		ob.Logger().Inbound.Warn().
+			Err(err).
+			Str(logs.FieldTx, hash).
+			Str("reason", reason).
+			Bool("is_internal", isInternal).
+			Msg("skipping inbound tracker")
+	}
+
 	for _, tracker := range trackers {
-		txHash := tracker.TxHash
+		encodedHash := tracker.TxHash
 
-		lt, hash, err := rpc.TransactionHashFromString(txHash)
+		raw, err := ob.tonRepo.GetTransactionByHash(ctx, encodedHash)
 		if err != nil {
-			ob.logSkippedTracker(txHash, "unable_to_parse_hash", err)
+			logSkippedTracker(encodedHash, "query failed", err)
 			continue
 		}
 
-		raw, err := ob.rpc.GetTransaction(ctx, gatewayAccountID, lt, hash)
+		tx, err := ob.parseTransaction(*raw)
 		if err != nil {
-			ob.logSkippedTracker(txHash, "unable_to_get_tx", err)
+			logSkippedTracker(encodedHash, "unexpected parsing error", err)
+			continue
+		}
+		if tx == nil {
+			logSkippedTracker(encodedHash, "unparseable transaction", nil)
 			continue
 		}
 
-		tx, err := ob.gateway.ParseTransaction(raw)
-
-		switch {
-		case errors.Is(err, toncontracts.ErrParse) || errors.Is(err, toncontracts.ErrUnknownOp):
-			ob.logSkippedTracker(txHash, "unrelated_tx", err)
-			continue
-		case err != nil:
-			// should not happen
-			ob.logSkippedTracker(txHash, "unexpected_error", err)
-			continue
-		case tx.ExitCode != 0:
-			ob.logSkippedTracker(txHash, "failed_tx", nil)
-			continue
-		case tx.IsOutbound():
-			ob.logSkippedTracker(txHash, "outbound_tx", nil)
+		if tx.ExitCode != 0 {
+			logSkippedTracker(encodedHash, "failed transaction", nil)
 			continue
 		}
 
-		if err := ob.voteInbound(ctx, tx); err != nil {
-			ob.logSkippedTracker(txHash, "vote_failed", err)
+		if tx.IsOutbound() {
+			logSkippedTracker(encodedHash, "outbound transaction", nil)
+			continue
+		}
+
+		err = ob.voteInbound(ctx, tx)
+		if err != nil {
+			logSkippedTracker(encodedHash, "vote failed", err)
 			continue
 		}
 	}
@@ -170,58 +242,187 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	return nil
 }
 
-// inboundData represents extract data from a TON inbound deposit
-type inboundData struct {
+// ------------------------------------------------------------------------------------------------
+// Shared auxiliary functions
+// ------------------------------------------------------------------------------------------------
+
+// parseTransaction parses a TON transaction.
+//
+// It only returns an error when it encounters unexpected parsing errors.
+// Otherwise, it returns nil for both fields.
+func (ob *Observer) parseTransaction(raw ton.Transaction) (*toncontracts.Transaction, error) {
+	tx, err := ob.gateway.ParseTransaction(raw)
+	if err != nil {
+		switch {
+		case errors.Is(err, toncontracts.ErrParse):
+			fallthrough
+		case errors.Is(err, toncontracts.ErrUnknownOp):
+			return nil, nil
+		default:
+			return nil, errors.Wrap(err, "unexpected error")
+		}
+	}
+
+	if tx == nil {
+		return nil, errors.New("transaction is nil") // should not happen
+	}
+
+	return tx, nil
+}
+
+// voteInbound sends a VoteInbound message to zetacore.
+// It handles donations and non-compliant inbounds.
+func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) error {
+	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
+
+	// Skip donations.
+	if tx.Operation == toncontracts.OpDonate {
+		logger.Info().Msg("thank you rich folk for your donation!")
+		return nil
+	}
+
+	inbound, err := newInbound(tx)
+	if err != nil {
+		return errors.Wrap(err, "unable to extract inbound data")
+	}
+
+	// Don't vote for inbounds that are not compliant.
+	if !inbound.isCompliant() {
+		compliance.PrintComplianceLog(
+			ob.Logger().Inbound,
+			ob.Logger().Compliance,
+			false,
+			ob.Chain().ChainId,
+			encoder.EncodeTx(inbound.tx.Transaction),
+			inbound.sender.ToRaw(),
+			inbound.receiver.Hex(),
+			&inbound.coinType,
+		)
+		return nil
+	}
+
+	operatorAddress := ob.ZetaRepo().GetOperatorAddress()
+	senderChain := ob.Chain().ChainId
+	zetaChain := ob.ZetaRepo().ZetaChain().ChainId
+
+	logger = ob.Logger().Inbound
+	msg := inbound.intoVoteMessage(operatorAddress, senderChain, zetaChain)
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func txLogFields(tx *toncontracts.Transaction) map[string]any {
+	return map[string]any{
+		logs.FieldTx: encoder.EncodeTx(tx.Transaction),
+		"is_inbound": tx.IsInbound(),
+		"op_code":    tx.Operation,
+		"exit_code":  tx.ExitCode,
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+// Inbound
+// ------------------------------------------------------------------------------------------------
+
+// Inbound represents a TON inbound deposit.
+type Inbound struct {
 	tx *toncontracts.Transaction
 
 	sender   ton.AccountID
 	receiver eth.Address
 
-	coinType       coin.CoinType
-	amount         math.Uint
-	message        []byte
+	amount   math.Uint
+	coinType coin.CoinType
+
+	message []byte
+
 	isContractCall bool
 }
 
-// Sends PostVoteInbound to zetacore
-func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) error {
-	// noop
-	if tx.Operation == toncontracts.OpDonate {
-		ob.Logger().Inbound.Info().Fields(txLogFields(tx)).Msg("Thank you rich folk for your donation!")
-		return nil
+// newInbound creates a new Inbound from a toncontracts.Transaction.
+func newInbound(tx *toncontracts.Transaction) (*Inbound, error) {
+	inbound := &Inbound{tx: tx}
+
+	switch tx.Operation {
+	case toncontracts.OpDeposit:
+		castTx, err := tx.Deposit()
+		if err != nil {
+			return nil, err
+		}
+		inbound.sender = castTx.Sender
+		inbound.receiver = castTx.Recipient
+		inbound.amount = castTx.Amount
+		inbound.coinType = coin.CoinType_Gas
+		inbound.message = []byte{}
+		inbound.isContractCall = false
+	case toncontracts.OpDepositAndCall:
+		castTx, err := tx.DepositAndCall()
+		if err != nil {
+			return nil, err
+		}
+		inbound.sender = castTx.Sender
+		inbound.receiver = castTx.Recipient
+		inbound.amount = castTx.Amount
+		inbound.coinType = coin.CoinType_Gas
+		inbound.message = castTx.CallData
+		inbound.isContractCall = true
+	case toncontracts.OpCall:
+		castTx, err := tx.Call()
+		if err != nil {
+			return nil, err
+		}
+		inbound.sender = castTx.Sender
+		inbound.receiver = castTx.Recipient
+		inbound.amount = math.NewUint(0)
+		inbound.coinType = coin.CoinType_NoAssetCall
+		inbound.message = castTx.CallData
+		inbound.isContractCall = true
+	default:
+		return nil, fmt.Errorf("unknown operation: %d", tx.Operation)
 	}
 
-	inbound, err := extractInboundData(tx)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to extract inbound data")
-	case ob.inboundComplianceCheck(inbound):
-		// do nothing
-		return nil
-	}
+	return inbound, nil
+}
 
+func (inbound *Inbound) isCompliant() bool {
+	return !config.ContainRestrictedAddress(
+		inbound.receiver.Hex(),
+		inbound.sender.ToRaw(),
+		inbound.sender.ToHuman(false, false),
+		inbound.sender.ToHuman(true, false),
+	)
+}
+
+func (inbound *Inbound) intoVoteMessage(
+	operatorAddress string,
+	senderChain int64,
+	zetaChain int64,
+) *types.MsgVoteInbound {
 	const (
-		seqno         = 0  // ton doesn't use sequential block numbers
-		eventIndex    = 0  // not applicable for TON
-		asset         = "" // empty for gas coin
-		gasLimit      = zetacore.PostVoteInboundCallOptionsGasLimit
-		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
+		seqno      = 0  // TON does not use sequential block numbers
+		eventIndex = 0  // not applicable for TON
+		asset      = "" // empty for gas coin
+		gasLimit   = zetacore.PostVoteInboundCallOptionsGasLimit
 	)
 
 	var (
-		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-		inboundHash     = rpc.TransactionToHashString(inbound.tx.Transaction)
-		sender          = inbound.sender.ToRaw()
-		receiver        = inbound.receiver.Hex()
+		inboundHash = encoder.EncodeTx(inbound.tx.Transaction)
+		sender      = inbound.sender.ToRaw()
+		receiver    = inbound.receiver.Hex()
 	)
 
-	msg := types.NewMsgVoteInbound(
-		operatorAddress.String(),
+	return types.NewMsgVoteInbound(
+		operatorAddress,
 		sender,
-		ob.Chain().ChainId,
+		senderChain,
 		sender,
 		receiver,
-		ob.ZetacoreClient().Chain().ChainId,
+		zetaChain,
 		inbound.amount,
 		hex.EncodeToString(inbound.message),
 		inboundHash,
@@ -236,169 +437,4 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		types.ConfirmationMode_SAFE,
 		types.WithCrossChainCall(inbound.isContractCall),
 	)
-
-	_, err = ob.PostVoteInbound(ctx, msg, retryGasLimit)
-	if err != nil {
-		return errors.Wrap(err, "unable to vote for inbound tx")
-	}
-
-	return nil
-}
-
-// extractInboundData parses Gateway tx into deposit (TON sender, amount, memo)
-func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
-	in := inboundData{
-		tx:             tx,
-		sender:         ton.AccountID{},
-		receiver:       eth.Address{},
-		amount:         math.Uint{},
-		coinType:       coin.CoinType_Gas,
-		message:        []byte{},
-		isContractCall: false,
-	}
-
-	switch tx.Operation {
-	case toncontracts.OpDeposit:
-		d, err := tx.Deposit()
-		if err != nil {
-			return inboundData{}, err
-		}
-
-		in.sender = d.Sender
-		in.receiver = d.Recipient
-		in.amount = d.Amount
-
-		return in, nil
-	case toncontracts.OpDepositAndCall:
-		d, err := tx.DepositAndCall()
-		if err != nil {
-			return inboundData{}, err
-		}
-
-		in.sender = d.Sender
-		in.receiver = d.Recipient
-		in.amount = d.Amount
-		in.message = d.CallData
-		in.isContractCall = true
-
-		return in, nil
-	case toncontracts.OpCall:
-		c, err := tx.Call()
-		if err != nil {
-			return inboundData{}, err
-		}
-
-		in.sender = c.Sender
-		in.receiver = c.Recipient
-		in.coinType = coin.CoinType_NoAssetCall
-		in.amount = math.NewUint(0)
-		in.message = c.CallData
-		in.isContractCall = true
-
-		return in, nil
-
-	default:
-		return inboundData{}, fmt.Errorf("unknown operation %d", tx.Operation)
-	}
-}
-
-func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool) {
-	var addresses = []string{
-		inbound.receiver.Hex(),
-		inbound.sender.ToRaw(),
-		inbound.sender.ToHuman(false, false),
-		inbound.sender.ToHuman(true, false),
-	}
-
-	if !zetaclientconfig.ContainRestrictedAddress(addresses...) {
-		return false
-	}
-
-	txHash := rpc.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
-
-	compliance.PrintComplianceLog(
-		ob.Logger().Inbound,
-		ob.Logger().Compliance,
-		false,
-		ob.Chain().ChainId,
-		txHash,
-		inbound.sender.ToRaw(),
-		inbound.receiver.Hex(),
-		inbound.coinType.String(),
-	)
-
-	return true
-}
-
-// ensureLastScannedTx or query the latest tx from RPC
-func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
-	// always expect init state.
-	if txHash := ob.LastTxScanned(); txHash != "" {
-		return rpc.TransactionHashFromString(txHash)
-	}
-
-	// get last txs from RPC and pick the oldest one
-	const limit = 20
-
-	txs, err := ob.rpc.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
-	switch {
-	case err != nil:
-		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")
-	case len(txs) == 0:
-		return 0, ton.Bits256{}, errors.New("no transactions found")
-	}
-
-	tx := txs[len(txs)-1]
-
-	// note this data is not persisted to DB unless real inbound is processed
-	ob.WithLastTxScanned(rpc.TransactionToHashString(tx))
-
-	return tx.Lt, ton.Bits256(tx.Hash()), nil
-}
-
-func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
-	txHash := rpc.TransactionToHashString(tx.Transaction)
-
-	ob.WithLastTxScanned(txHash)
-
-	if err := ob.WriteLastTxScannedToDB(txHash); err != nil {
-		ob.Logger().Inbound.Error().
-			Err(err).
-			Fields(txLogFields(tx)).
-			Msgf("setLastScannedTX: unable to WriteLastTxScannedToDB")
-
-		return
-	}
-
-	ob.Logger().Inbound.Info().
-		Fields(txLogFields(tx)).
-		Msg("setLastScannedTX: WriteLastTxScannedToDB")
-}
-
-func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
-	ob.Logger().Inbound.Warn().
-		Str("transaction.hash", hash).
-		Str("skip_reason", reason).
-		Err(err).
-		Msg("Skipping tracker")
-}
-
-func txLogFields(tx *toncontracts.Transaction) map[string]any {
-	return map[string]any{
-		"transaction.hash":           rpc.TransactionToHashString(tx.Transaction),
-		"transaction.ton.is_inbound": tx.IsInbound(),
-		"transaction.ton.op_code":    tx.Operation,
-		"transaction.ton.exit_code":  tx.ExitCode,
-	}
-}
-
-//nolint:unused // used for in tests
-func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
-	return rpc.BlockIDExt{
-		Workchain: int(id.Workchain),
-		Seqno:     id.Seqno,
-		Shard:     fmt.Sprintf("%d", id.Shard),
-		RootHash:  id.RootHash.Base64(),
-		FileHash:  id.FileHash.Base64(),
-	}
 }

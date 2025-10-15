@@ -81,23 +81,19 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	receiver string,
 	amount *big.Int,
 	zrc20 ethcommon.Address,
-	payload sui.CallPayload,
+	message []byte,
 	gasLimit *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	// ACT
-	payloadBytes, err := payload.PackABI()
-	require.NoError(r, err)
-
 	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
 		zrc20,
-		payloadBytes,
+		message,
 		gatewayzevm.CallOptions{
 			GasLimit:        gasLimit,
 			IsArbitraryCall: false, // always authenticated call
@@ -235,28 +231,6 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Addres
 	copy(message[74:], receiver)
 
 	return sui.NewCallPayload(argumentTypes, objects, message)
-}
-
-// TODO: https://github.com/zeta-chain/node/issues/4066
-// remove legacy payload builder after re-enabling authenticated call
-// SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
-// The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayloadLegacy(suiAddress string) (sui.CallPayload, error) {
-	// only the CCTX's coinType is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
-	}
-
-	// create the payload message from the sui address
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	if err != nil {
-		return sui.CallPayload{}, err
-	}
-
-	return sui.NewCallPayload(argumentTypes, objects, message), nil
 }
 
 // SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
@@ -470,13 +444,16 @@ func (r *E2ERunner) suiExecuteTx(
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
-		Options:     models.SuiTransactionBlockOptions{ShowEffects: true},
+		TxBytes:   tx.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:       true,
+			ShowObjectChanges: true,
+		},
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
-	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess)
+	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess, "tx failed: %s", resp.Effects.Status.Error)
 
 	return resp
 }

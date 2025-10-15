@@ -30,14 +30,20 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "get deployer signer")
 	suiAddress := signer.Address()
 
-	// create a 'on_call' payload that gives authorization to a random address,
-	// such that the 'r.EVMAddress()' becomes an unauthorized sender in the 'on_call'
-	authorizedSender := sample.EthAddress()
-	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
+	// given receiver and TSS balances in Sui network
+	receiverBalanceBefore := r.SuiGetSUIBalance(suiAddress)
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
 	dAppBalanceBefore, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
+	require.NoError(r, err)
+
+	// create a 'on_call' payload that gives authorization to a random address,
+	// such that the 'r.EVMAddress()' becomes an unauthorized sender in the 'on_call'
+	authorizedSender := sample.EthAddress()
+	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
+	message, err := payloadOnCall.PackABI()
 	require.NoError(r, err)
 
 	// given random payload for 'onRevert'
@@ -53,7 +59,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		r.SUIZRC20Addr,
-		payloadOnCall,
+		message,
 		gasLimit,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
@@ -70,8 +76,17 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
+	// the receiver balance in Sui network should remain the same
+	receiverBalanceAfter := r.SuiGetSUIBalance(suiAddress)
+	require.Equal(r, receiverBalanceBefore, receiverBalanceAfter)
+
+	// the TSS balance in Sui network should be higher or equal to the balance before
+	// reason is that the max budget is refunded to the TSS
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
+
 	// should have called 'onRevert'
-	r.AssertTestDAppZEVMCalled(true, payloadOnRevert, big.NewInt(0))
+	r.AssertTestDAppZEVMCalled(true, payloadOnRevert, nil, big.NewInt(0))
 
 	// sender and message should match
 	sender, err := r.TestDAppV2ZEVM.SenderWithMessage(

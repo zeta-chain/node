@@ -8,6 +8,7 @@ import (
 	ctypes "github.com/cometbft/cometbft/types"
 
 	"github.com/zeta-chain/node/pkg/fanout"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // NewBlockSubscriber subscribes to comet bft new block events.
@@ -33,7 +34,7 @@ func (c *Client) NewBlockSubscriber(ctx context.Context) (chan ctypes.EventDataN
 				// the subscription should automatically reconnect after zetacore
 				// restart, but we should log this just in case that logic is not
 				// working
-				c.logger.Warn().Msg("Block subscriber: no blocks after 10 seconds")
+				c.logger.Warn().Msg("block subscriber: no blocks after 10 seconds")
 			case <-ctx.Done():
 				closeConsumer()
 				return
@@ -53,11 +54,11 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 
 	// noop
 	if c.blocksFanout != nil {
-		c.logger.Info().Msg("Resolved existing block subscriber")
+		c.logger.Info().Msg("resolved existing block subscriber")
 		return c.blocksFanout, nil
 	}
 
-	c.logger.Info().Msg("Subscribing to block events")
+	c.logger.Info().Msg("subscribing to block events")
 
 	// Subscribe to comet bft events
 	eventsChan, err := c.cometBFTClient.Subscribe(context.Background(), "", ctypes.EventQueryNewBlock.String())
@@ -65,7 +66,7 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 		return nil, errors.Wrap(err, "unable to subscribe to new block events")
 	}
 
-	c.logger.Info().Msg("Subscribed to block events")
+	c.logger.Info().Msg("subscribed to block events")
 
 	// Create block chan
 	blockChan := make(chan ctypes.EventDataNewBlock)
@@ -75,11 +76,15 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 		for event := range eventsChan {
 			newBlockEvent, ok := event.Data.(ctypes.EventDataNewBlock)
 			if !ok {
-				c.logger.Error().Msgf("expecting new block event, got %T", event.Data)
+				c.logger.Error().
+					Type("event_type", event.Data).
+					Msg("expecting NewBlock event")
 				continue
 			}
 
-			c.logger.Debug().Int64("height", newBlockEvent.Block.Height).Msg("Received new block event")
+			c.logger.Debug().
+				Int64(logs.FieldBlock, newBlockEvent.Block.Height).
+				Msg("received NewBlock event")
 
 			blockChan <- newBlockEvent
 		}

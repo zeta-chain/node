@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 )
 
@@ -57,7 +57,7 @@ func TestTONWithdrawMasterchain(r *runner.E2ERunner, args []string) {
 	require.Len(r, cctx.OutboundParams, 2, "expected 2 outbound params")
 
 	// Let's query ton tx
-	lt, hash, err := rpc.TransactionHashFromString(cctx.OutboundParams[0].Hash)
+	lt, hash, err := encoder.DecodeHash(cctx.OutboundParams[0].Hash)
 	require.NoError(r, err)
 
 	// And ensure that this is an "increase seqno" transaction

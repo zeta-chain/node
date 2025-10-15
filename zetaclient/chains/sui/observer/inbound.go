@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -48,13 +49,13 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 	}
 
 	// Sui has a nice access-pattern of scrolling through contract events
-	events, _, err := ob.client.QueryModuleEvents(ctx, query)
+	events, _, err := ob.suiClient.QueryModuleEvents(ctx, query)
 	if err != nil {
 		return errors.Wrap(err, "unable to query module events")
 	}
 
 	if len(events) == 0 {
-		ob.Logger().Inbound.Debug().Msg("No inbound events found")
+		ob.Logger().Inbound.Debug().Msg("found no inbound events")
 		return nil
 	}
 
@@ -63,7 +64,7 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 		Str("package", packageID).
 		Str("cursor", cursor).
 		Int("events", len(events)).
-		Msg("Processing inbound events")
+		Msg("processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
@@ -75,18 +76,18 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("TX not found or not finalized. Pausing")
+				Msg("tx not found or not finalized; pausing")
 			return nil
 		case errors.Is(err, errCompliance):
 			// skip restricted tx and update the cursor
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Tx contains restricted address. Skipping")
+				Msg("tx contains restricted address; skipping")
 		case err != nil:
 			// failed processing also updates the cursor
 			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("Unable to process inbound event")
+				Msg("unable to process inbound event")
 		}
 
 		// update the cursor
@@ -100,18 +101,42 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []cctypes.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
-				Msg("Unable to process inbound tracker")
+				Bool("is_internal", isInternal).
+				Msg("unable to process inbound tracker")
 		}
 	}
 
@@ -133,7 +158,7 @@ func (ob *Observer) processInboundEvent(
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
 	case errors.Is(err, sui.ErrParseEvent):
-		ob.Logger().Inbound.Err(err).Msg("Unable to parse event. Skipping")
+		ob.Logger().Inbound.Err(err).Msg("unable to parse event; skipping")
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
@@ -149,7 +174,7 @@ func (ob *Observer) processInboundEvent(
 			Digest:  event.TxHash,
 			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
 		}
-		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
+		txFresh, err := ob.suiClient.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
 		}
@@ -162,9 +187,11 @@ func (ob *Observer) processInboundEvent(
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
 
-	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	logger := ob.Logger().Inbound
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote inbound")
+		return err
 	}
 
 	return nil
@@ -180,7 +207,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 		},
 	}
 
-	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
+	tx, err := ob.suiClient.SuiGetTransactionBlock(ctx, req)
 	if err != nil {
 		return errors.Wrapf(err, "unable to get transaction block")
 	}
@@ -221,24 +248,32 @@ func (ob *Observer) constructInboundVote(
 			event.TxHash,
 			deposit.Sender,
 			deposit.Receiver.String(),
-			asset,
+			&coinType,
 		)
 		return nil, errCompliance
 	}
 
-	// Sui uses checkpoint seq num instead of block height
+	// a valid inbound should be successful
+	// in theory, Sui protocol should erase emitted events if tx failed, just in case
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return nil, errors.Errorf("inbound is failed: %s", tx.Effects.Status.Error)
+	}
+
+	// Sui uses checkpoint seq num instead of block height.
+	// If checkpoint is invalid (e.g. 0), the tx status remains unclear (e.g. maybe pending).
+	// In this case, we should signal the caller to stop scanning further by returning errTxNotFound.
 	checkpointSeqNum, err := uint64FromStr(tx.Checkpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse checkpoint")
+	if err != nil || checkpointSeqNum == 0 {
+		return nil, errors.Wrap(errTxNotFound, fmt.Sprintf("invalid checkpoint: %s", tx.Checkpoint))
 	}
 
 	return cctypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		deposit.Sender,
 		ob.Chain().ChainId,
 		deposit.Sender,
 		deposit.Receiver.String(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		deposit.Amount,
 		hex.EncodeToString(deposit.Payload),
 		event.TxHash,

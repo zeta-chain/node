@@ -9,7 +9,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -25,11 +24,9 @@ func (c *Client) ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*ty
 	return list, total, err
 }
 
-// GetAllOutboundTrackerByChain returns all outbound trackers for a chain
-func (c *Client) GetAllOutboundTrackerByChain(
-	ctx context.Context,
+// GetOutboundTrackers returns all outbound trackers for a chain in ascending order.
+func (c *Client) GetOutboundTrackers(ctx context.Context,
 	chainID int64,
-	order interfaces.Order,
 ) ([]types.OutboundTracker, error) {
 	in := &types.QueryAllOutboundTrackerByChainRequest{
 		Chain: chainID,
@@ -47,15 +44,9 @@ func (c *Client) GetAllOutboundTrackerByChain(
 		return nil, errors.Wrap(err, "failed to get all outbound trackers")
 	}
 
-	if order == interfaces.Ascending {
-		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
-			return resp.OutboundTracker[i].Nonce < resp.OutboundTracker[j].Nonce
-		})
-	} else if order == interfaces.Descending {
-		sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
-			return resp.OutboundTracker[i].Nonce > resp.OutboundTracker[j].Nonce
-		})
-	}
+	sort.SliceStable(resp.OutboundTracker, func(i, j int) bool {
+		return resp.OutboundTracker[i].Nonce < resp.OutboundTracker[j].Nonce
+	})
 
 	return resp.OutboundTracker, nil
 }

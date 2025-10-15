@@ -19,8 +19,9 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	value := utils.ParseBigInt(r, args[0])
 
 	r.Logger.Info("Deploying example contract")
-	exampleAddr, _, exampleContract, err := example.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	exampleAddr, txDeploy, exampleContract, err := example.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	r.Logger.Info("Example contract deployed")
 
@@ -55,12 +56,13 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 	// Checking example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, exampleContract, value, r.EVMAddress().Bytes())
+	utils.WaitAndVerifyExampleContractCall(r, exampleContract, value, r.EVMAddress().Bytes())
 	r.Logger.Info("Cross-chain call succeeded")
 
 	r.Logger.Info("Deploying reverter contract")
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
+	reverterAddr, txDeploy, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 
 	r.Logger.Info("Example reverter deployed")
 

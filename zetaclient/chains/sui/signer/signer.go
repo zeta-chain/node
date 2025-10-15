@@ -13,56 +13,78 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Signer Sui outbound transaction signer.
 type Signer struct {
 	*base.Signer
-	client         RPC
+
+	zetacoreClient zrepo.ZetacoreClient
+	suiClient      SuiClient
+
 	gateway        *sui.Gateway
 	withdrawCap    *tssOwnedObject
 	messageContext *tssOwnedObject
-
-	zetacore interfaces.ZetacoreClient
 }
 
-// RPC represents Sui rpc.
-type RPC interface {
+// SuiClient represents the Sui RPC client.
+type SuiClient interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
-	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
-	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
-	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
-	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
-	SuiExecuteTransactionBlock(
-		ctx context.Context,
-		req models.SuiExecuteTransactionBlockRequest,
-	) (models.SuiTransactionBlockResponse, error)
+	SuiXGetDynamicFieldObject(
+		_ context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
+	) (models.SuiObjectResponse, error)
+
+	GetOwnedObjectID(_ context.Context,
+		ownerAddress string,
+		structType string,
+	) (string, error)
+
+	GetObjectParsedData(_ context.Context, objectID string) (models.SuiParsedData, error)
+
+	SuiMultiGetObjects(context.Context,
+		models.SuiMultiGetObjectsRequest,
+	) ([]*models.SuiObjectResponse, error)
+
+	GetSuiCoinObjectRefs(_ context.Context,
+		owner string,
+		minBalanceMist uint64,
+	) ([]*suiptb.ObjectRef, error)
+
+	MoveCall(context.Context, models.MoveCallRequest) (models.TxnMetaData, error)
+
 	InspectTransactionBlock(
-		ctx context.Context,
-		req models.SuiDevInspectTransactionBlockRequest,
+		context.Context,
+		models.SuiDevInspectTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
+
 	SuiGetTransactionBlock(
-		ctx context.Context,
-		req models.SuiGetTransactionBlockRequest,
+		context.Context,
+		models.SuiGetTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SuiExecuteTransactionBlock(
+		context.Context,
+		models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 }
 
 // New Signer constructor.
-func New(
-	baseSigner *base.Signer,
-	client RPC,
+func New(baseSigner *base.Signer,
+	zetacoreClient zrepo.ZetacoreClient,
+	suiClient SuiClient,
 	gateway *sui.Gateway,
-	zetacore interfaces.ZetacoreClient,
 ) *Signer {
 	return &Signer{
 		Signer:         baseSigner,
-		client:         client,
+		zetacoreClient: zetacoreClient,
+		suiClient:      suiClient,
 		gateway:        gateway,
-		zetacore:       zetacore,
 		withdrawCap:    &tssOwnedObject{},
 		messageContext: &tssOwnedObject{},
 	}
@@ -92,7 +114,10 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	if gatewayNonce != nonce {
-		logger.Info().Msgf("gateway nonce %d does not match CCTX nonce %d, skip broadcast", gatewayNonce, nonce)
+		logger.Info().
+			Uint64("gateway_nonce", gatewayNonce).
+			Uint64("cctx_nonce", nonce).
+			Msg("gateway nonce does not match CCTX nonce; skip broadcast")
 		return nil
 	}
 
@@ -116,7 +141,12 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	receiver := cctx.GetCurrentOutboundParam().Receiver
 	if err := sui.ValidateAddress(receiver); err != nil {
 		validReceiver = false
-		logger.Error().Err(err).Str("receiver", receiver).Msg("Invalid receiver address")
+		logger.Error().Err(err).Str("receiver", receiver).Msg("invalid receiver address")
+	}
+
+	if s.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return nil
 	}
 
 	// broadcast tx according to compliance check result

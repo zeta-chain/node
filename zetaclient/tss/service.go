@@ -150,7 +150,7 @@ func NewService(
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Service, error) {
-	logger = logger.With().Str(logs.FieldModule, "tss_service").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssService).Logger()
 
 	// defaults, can be overridden by opts
 	cfg := serviceConfig{
@@ -172,7 +172,9 @@ func NewService(
 		return nil, errors.Wrap(err, "invalid tss pub key")
 	}
 
-	logger.Info().Msgf("Setting max pending signatures to %d", cfg.maxPendingSignatures)
+	logger.Info().
+		Uint64("to", cfg.maxPendingSignatures).
+		Msg("setting max pending signatures")
 
 	return &Service{
 		tss:           keySigner,
@@ -230,8 +232,9 @@ func (s *Service) SignBatch(
 	)
 
 	if sigs, ok := s.getSignatureCached(chainID, req); ok {
-		s.logger.Info().Fields(keysignLogFields(req, nonce, chainID)).Msg("Signature cache hit")
-
+		s.logger.Info().
+			Fields(keysignLogFields(req, nonce, chainID)).
+			Msg("signature cache hit")
 		return sigs, nil
 	}
 
@@ -240,8 +243,7 @@ func (s *Service) SignBatch(
 	case errors.Is(err, ratelimit.ErrThrottled):
 		s.logger.Warn().
 			Fields(keysignLogFields(req, nonce, chainID)).
-			Msg("Signature request throttled")
-
+			Msg("signature request throttled")
 		return nil, err
 	case err != nil:
 		// unexpected error (not related to failed key sign)
@@ -271,9 +273,9 @@ func (s *Service) SignBatch(
 }
 
 func (s *Service) Stop() {
-	s.logger.Info().Msg("Stopping TSS service")
+	s.logger.Info().Msg("stopping TSS service")
 	s.tss.Stop()
-	s.logger.Info().Msg("TSS service stopped")
+	s.logger.Info().Msg("stopped TSS service")
 }
 
 var (
@@ -308,8 +310,8 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 			s.metrics.SignLatency.With(signLabelsError).Observe(latency)
 		}
 
-		lf["tss.success"] = res.Status == thorcommon.Success
-		lf["tss.latency"] = math.Round(latency*100) / 100
+		lf["tss_success"] = res.Status == thorcommon.Success
+		lf["tss_latency"] = math.Round(latency*100) / 100
 
 		s.logger.Info().Fields(lf).Msg("TSS keysign response")
 	}()
@@ -330,8 +332,8 @@ func (s *Service) blameFailure(
 
 	s.logger.Error().Err(errFailure).
 		Fields(lf).
-		Any("tss.fail_blame", res.Blame).
-		Msg("Keysign failed")
+		Any("tss_fail_blame", res.Blame).
+		Msg("keysign failed")
 
 	// register blame metrics
 	for _, node := range res.Blame.BlameNodes {
@@ -365,8 +367,8 @@ func (s *Service) blameFailure(
 
 	s.logger.Info().
 		Fields(lf).
-		Str("tss.blame_tx_hash", zetaHash).
-		Msg("Posted blame data to zetacore")
+		Str("tss_blame_tx_hash", zetaHash).
+		Msg("posted blame data to zetacore")
 
 	return errFailure
 }
@@ -412,9 +414,9 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 
 	return map[string]any{
 		msgField:           must(req.MsgID()),
-		"tss.chain_id":     chainID,
-		"tss.block_height": blockHeight,
-		"tss.nonce":        nonce,
+		"tss_chain_id":     chainID,
+		"tss_block_height": blockHeight,
+		"tss_nonce":        nonce,
 	}
 }
 

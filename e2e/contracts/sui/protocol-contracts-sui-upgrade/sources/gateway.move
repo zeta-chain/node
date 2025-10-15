@@ -3,12 +3,14 @@ module gateway::gateway;
 use gateway::evm;
 use std::ascii;
 use std::ascii::String;
+use std::ascii::string;
 use std::type_name::{get, into_string};
 use sui::bag::{Self, Bag};
 use sui::balance::{Self, Balance};
 use sui::coin::{Self, Coin};
 use sui::event;
 use sui::sui::SUI;
+use sui::dynamic_field as df;
 
 // === Errors ===
 
@@ -23,6 +25,9 @@ const EDepositPaused: u64 = 7;
 const EInvalidSenderAddress: u64 = 8;
 
 const PayloadMaxLength: u64 = 1024;
+
+// === Dynamic Field Keys ===
+const ACTIVE_MESSAGE_CONTEXT_KEY: vector<u8> = b"active_message_context";
 
 // === Structs ===
 
@@ -39,7 +44,6 @@ public struct Gateway has key {
     nonce: u64,
     active_withdraw_cap: ID,
     active_whitelist_cap: ID,
-    active_message_context: ID,
     deposit_paused: bool,
 }
 
@@ -97,6 +101,13 @@ public struct NonceIncreaseEvent has copy, drop {
     nonce: u64,
 }
 
+// DonateEvent is emitted when a user donates tokens to the gateway
+public struct DonateEvent has copy, drop {
+    coin_type: String,
+    amount: u64,
+    sender: address,
+}
+
 // === Initialization ===
 
 fun init(ctx: &mut TxContext) {
@@ -115,13 +126,6 @@ fun init(ctx: &mut TxContext) {
         id: object::new(ctx),
     };
 
-    // to set/reset the message context during authenticated calls, the caller must have the MessageContextCap
-    let message_context = MessageContext {
-        id: object::new(ctx),
-        sender: ascii::string(b""),
-        target: @0x0,
-    };
-
     // create and share the gateway object
     let mut gateway = Gateway {
         id: object::new(ctx),
@@ -129,7 +133,6 @@ fun init(ctx: &mut TxContext) {
         nonce: 0,
         active_withdraw_cap: object::id(&withdraw_cap),
         active_whitelist_cap: object::id(&whitelist_cap),
-        active_message_context: object::id(&message_context),
         deposit_paused: false,
     };
 
@@ -139,7 +142,6 @@ fun init(ctx: &mut TxContext) {
     transfer::transfer(withdraw_cap, tx_context::sender(ctx));
     transfer::transfer(whitelist_cap, tx_context::sender(ctx));
     transfer::transfer(admin_cap, tx_context::sender(ctx));
-    transfer::transfer(message_context, tx_context::sender(ctx));
     transfer::share_object(gateway);
 }
 
@@ -153,10 +155,12 @@ entry fun upgraded(): bool {
 // increase_nonce increases the nonce of the gateway
 // it is used when a failed outbound needs to be reported to ZetaChain
 // it is sent by the tss and therefore requires the withdraw cap
-entry fun increase_nonce(gateway: &mut Gateway, nonce: u64, cap: &WithdrawCap, ctx: &TxContext) {
-    assert!(gateway.active_withdraw_cap == object::id(cap), EInactiveWithdrawCap);
-    assert!(nonce == gateway.nonce, ENonceMismatch);
-    gateway.nonce = nonce + 1;
+entry fun increase_nonce(gateway: &mut Gateway, nonce: u64, gas_budget: u64, cap: &WithdrawCap, ctx: &mut TxContext) {
+    // withdraw gas budget to the TSS to reimburse gas expenses
+    let (coins, coins_gas_budget) = withdraw_impl<SUI>(gateway, 0, nonce, gas_budget, cap, ctx);
+
+    coin::destroy_zero(coins);
+    transfer::public_transfer(coins_gas_budget, tx_context::sender(ctx));
 
     // Emit event
     event::emit(NonceIncreaseEvent {
@@ -301,6 +305,27 @@ public entry fun deposit_and_call<T>(
     });
 }
 
+// donate allows the user to donate tokens to the gateway without triggering a deposit
+public entry fun donate<T>(
+    gateway: &mut Gateway,
+    coins: Coin<T>,
+    ctx: &mut TxContext,
+) {
+    let amount = coins.value();
+    let coin_name = coin_name<T>();
+
+    // use check_receiver_and_deposit_to_vault to deposit and provide the zero address as receiver
+    // receiver is only passed to the function to ensure the address is valid
+    check_receiver_and_deposit_to_vault(gateway, coins, string(b"0x0000000000000000000000000000000000000000"));
+
+    // Emit donate event
+    event::emit(DonateEvent {
+        coin_type: coin_name,
+        amount: amount,
+        sender: tx_context::sender(ctx),
+    });
+}
+
 // check_receiver_and_deposit_to_vault is a helper function that checks the receiver address and deposits the coin
 fun check_receiver_and_deposit_to_vault<T>(
     gateway: &mut Gateway,
@@ -394,12 +419,18 @@ public fun issue_message_context_impl(
     _cap: &AdminCap,
     ctx: &mut TxContext,
 ): MessageContext {
+    // remove existing message context ID if any
+    df::remove_if_exists<vector<u8>, ID>(&mut gateway.id, ACTIVE_MESSAGE_CONTEXT_KEY);
+
+    // create a new message context
     let message_context = MessageContext {
         id: object::new(ctx),
         sender: ascii::string(b""),
         target: @0x0,
     };
-    gateway.active_message_context = object::id(&message_context);
+    
+    // store the new active message context ID in the dynamic field
+    df::add(&mut gateway.id, ACTIVE_MESSAGE_CONTEXT_KEY, object::id(&message_context));
     message_context
 }
 
@@ -426,7 +457,11 @@ public fun active_whitelist_cap(gateway: &Gateway): ID {
 }
 
 public fun active_message_context(gateway: &Gateway): ID {
-    gateway.active_message_context
+    if (df::exists_(&gateway.id, ACTIVE_MESSAGE_CONTEXT_KEY)) {
+        *df::borrow(&gateway.id, ACTIVE_MESSAGE_CONTEXT_KEY)
+    } else {
+        object::id_from_address(@0x0)
+    }
 }
 
 public fun message_context_sender(message_context: &MessageContext): String {

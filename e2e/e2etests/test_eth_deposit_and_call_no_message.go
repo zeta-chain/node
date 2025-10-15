@@ -33,5 +33,5 @@ func TestETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	// check the payload was received on the contract
 	messageIndex, err := r.TestDAppV2ZEVM.GetNoMessageIndex(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
-	r.AssertTestDAppZEVMCalled(true, messageIndex, amount)
+	r.AssertTestDAppZEVMCalled(true, messageIndex, r.EVMAddress().Bytes(), amount)
 }

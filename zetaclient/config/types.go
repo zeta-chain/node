@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"maps"
 	"strings"
 	"sync"
 
@@ -25,6 +26,9 @@ const (
 
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
+
+	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
+	DefaultMempoolCongestionThreshold = 3000
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -73,6 +77,15 @@ type ComplianceConfig struct {
 	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
+// FeatureFlags contains feature flags for controlling new and experimental features
+type FeatureFlags struct {
+	// EnableMultipleCalls enables multiple calls from the same transaction
+	EnableMultipleCalls bool `json:"EnableMultipleCalls"`
+
+	// EnableSolanaAddressLookupTable enables using Solana Address Lookup Table for withdraw and call
+	EnableSolanaAddressLookupTable bool `json:"EnableSolanaAddressLookupTable"`
+}
+
 // Config is the config for ZetaClient
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
@@ -97,6 +110,13 @@ type Config struct {
 	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath          string         `json:"RelayerKeyPath"`
 
+	// MaxBaseFee is the maximum base fee allowed for zetaclient to send ZetaChain transactions
+	MaxBaseFee int64 `json:"MaxBaseFee"`
+
+	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore mempool to consider it congested
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this threshold.
+	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
+
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
 	BTCChainConfigs map[int64]BTCConfig `json:"BTCChainConfigs"`
@@ -106,6 +126,9 @@ type Config struct {
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
+
+	// feature flags for controlling new and experimental features
+	FeatureFlags FeatureFlags `json:"FeatureFlags"`
 
 	mu *sync.RWMutex
 }
@@ -124,12 +147,8 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	// deep copy evm configs
-	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
-	for chainID, evmConfig := range c.EVMChainConfigs {
-		copied[chainID] = evmConfig
-	}
-	return copied
+	// shallow copy evm configs (sufficient for current struct with immutable fields)
+	return maps.Clone(c.EVMChainConfigs)
 }
 
 // GetBTCConfig returns the BTC config for the given chain ID
@@ -218,10 +237,45 @@ func (c Config) GetRelayerKeyPath() string {
 	return c.RelayerKeyPath
 }
 
+// GetMaxBaseFee returns the max base fee
+func (c Config) GetMaxBaseFee() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MaxBaseFee
+}
+
+// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to consider it congested
+func (c Config) GetMempoolCongestionThreshold() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MempoolCongestionThreshold
+}
+
 func (c EVMConfig) Empty() bool {
 	return c.Endpoint == ""
 }
 
 func (c BTCConfig) Empty() bool {
 	return c.RPCHost == ""
+}
+
+// GetFeatureFlags returns the feature flags
+func (c Config) GetFeatureFlags() FeatureFlags {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags
+}
+
+// IsEnableMultipleCallsEnabled returns true if multiple calls from same transaction are enabled
+func (c Config) IsEnableMultipleCallsEnabled() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableMultipleCalls
+}
+
+// IsEnableSolanaAddressLookupTable returns true if Solana Address Lookup Table is enabled for withdraw and call
+func (c Config) IsEnableSolanaAddressLookupTable() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableSolanaAddressLookupTable
 }

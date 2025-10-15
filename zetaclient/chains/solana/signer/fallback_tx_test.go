@@ -10,7 +10,7 @@ import (
 )
 
 func makeTestRpcError(message string, logs []string) *jsonrpc.RPCError {
-	var rawLogs []interface{}
+	var rawLogs []any
 	for _, l := range logs {
 		rawLogs = append(rawLogs, l)
 	}
@@ -18,7 +18,7 @@ func makeTestRpcError(message string, logs []string) *jsonrpc.RPCError {
 	return &jsonrpc.RPCError{
 		Code:    -32002,
 		Message: message,
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"logs": rawLogs,
 		},
 	}

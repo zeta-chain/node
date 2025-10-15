@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
@@ -57,11 +58,9 @@ func TestSigner(t *testing.T) {
 		const withdrawCapID = "0xWithdrawCapID"
 		ts.MockWithdrawCapID(withdrawCapID)
 
-		// TODO: https://github.com/zeta-chain/node/issues/4066
-		// bring back MessageContextID
 		// Given mocked MessageContextID
-		// const messageContextID = "0xMessageContextID"
-		// ts.MockMessageContextID(messageContextID)
+		const messageContextID = "0xMessageContextID"
+		ts.MockMessageContextID(messageContextID)
 
 		// Given expected MoveCall
 		txBytes := base64.StdEncoding.EncodeToString([]byte("raw_tx_bytes"))
@@ -172,6 +171,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
@@ -261,6 +261,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
@@ -357,8 +358,8 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
-	baseSigner := base.NewSigner(chain, tss, logger)
-	signer := New(baseSigner, suiMock, gw, zetacore)
+	baseSigner := base.NewSigner(chain, tss, logger, mode.StandardMode)
+	signer := New(baseSigner, zetacore, suiMock, gw)
 
 	ts := &testSuite{
 		t:        t,
@@ -393,8 +394,15 @@ func (ts *testSuite) MockWithdrawCapID(id string) {
 }
 
 func (ts *testSuite) MockMessageContextID(id string) {
-	tss, structType := ts.TSS.PubKey().AddressSui(), ts.Gateway.MessageContextType()
-	ts.SuiMock.On("GetOwnedObjectID", mock.Anything, tss, structType).Return(id, nil)
+	ts.SuiMock.On("SuiXGetDynamicFieldObject", mock.Anything, mock.Anything).Maybe().Return(models.SuiObjectResponse{
+		Data: &models.SuiObjectData{
+			Content: &models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"value": id},
+				},
+			},
+		},
+	}, nil)
 }
 
 func (ts *testSuite) MockMoveCall(assert func(req models.MoveCallRequest), txBytesBase64 string) {

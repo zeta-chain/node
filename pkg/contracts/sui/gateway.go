@@ -423,6 +423,23 @@ func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (eve
 	return event, w, err
 }
 
+// ParseDynamicFieldValueStr parses the dynamic field's value from object data as string
+func ParseDynamicFieldValueStr(data models.SuiParsedData) (string, error) {
+	// dynamic field object contains 3 fields: id, name, value
+	// the 'value' is what the dynamic field stores
+	rawValue, ok := data.Fields["value"]
+	if !ok {
+		return "", errors.New("missing value field")
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		return "", errors.Errorf("want string, got %T for dynamic field value", rawValue)
+	}
+
+	return value, nil
+}
+
 // ParseGatewayNonce parses gateway nonce from event.
 func ParseGatewayNonce(data models.SuiParsedData) (uint64, error) {
 	fields := data.Fields

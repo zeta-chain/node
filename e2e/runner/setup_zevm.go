@@ -26,6 +26,21 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+const (
+	evmInboundTicker             = 2
+	evmOutboundTicker            = 3
+	evmGasPriceTicker            = 5
+	evmOutboundScheduleInterval  = 5
+	evmOutboundScheduleLookahead = 100
+
+	btcGasPriceTicker            = 5
+	btcWatchUtxoTicker           = 1
+	btcInboundTicker             = 1
+	btcOutboundTicker            = 3
+	btcOutboundScheduleInterval  = 5
+	btcOutboundScheduleLookahead = 5
+)
+
 // EmissionsPoolFunding represents the amount of ZETA to fund the emissions pool with
 // This is the same value as used originally on mainnet (20M ZETA)
 var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
@@ -316,10 +331,17 @@ func (r *E2ERunner) SetupZEVMTestDappV2(ensureTxReceipt func(tx *ethtypes.Transa
 	require.True(r, isZetaChain)
 }
 
-// UpdateProtocolContractsInChainParams update the erc20 custody contract and gateway address in the chain params
+// InitializeChainParams initializes the values for the chain params of the EVM and BTC chains
+func (r *E2ERunner) InitializeChainParams(testLegacy bool) {
+	r.InitializeEVMChainParams(testLegacy)
+	r.InitializeBTCChainParams()
+}
+
+// InitializeEVMChainParams initializes the values for the chain params of the EVM chain
+// it update the erc20 custody contract and gateway address in the chain params and the ticker values
 // TODO: should be used for all protocol contracts including the ZETA connector
 // https://github.com/zeta-chain/node/issues/3257
-func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
+func (r *E2ERunner) InitializeEVMChainParams(testLegacy bool) {
 	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
 	require.NoError(r, err)
 
@@ -352,7 +374,75 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 		chainParams.ConnectorContractAddress = r.ConnectorNativeAddr.Hex()
 	}
 
+	// Update ticker values
+	chainParams.InboundTicker = evmInboundTicker
+	chainParams.OutboundTicker = evmOutboundTicker
+	chainParams.GasPriceTicker = evmGasPriceTicker
+	chainParams.OutboundScheduleInterval = evmOutboundScheduleInterval
+	chainParams.OutboundScheduleLookahead = evmOutboundScheduleLookahead
+
 	// update the chain params
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
+}
+
+// InitializeBTCChainParams initializes the values for the chain params of the BTC chain
+// it updates the ticker values
+func (r *E2ERunner) InitializeBTCChainParams() {
+	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
+	require.NoError(r, err)
+
+	btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
+	require.NoError(r, err)
+
+	// find old chain params
+	var (
+		chainParams *observertypes.ChainParams
+		found       bool
+	)
+	for _, cp := range res.ChainParams.ChainParams {
+		if cp.ChainId == btcChainID {
+			chainParams = cp
+			found = true
+			break
+		}
+	}
+	require.True(r, found, "Chain params not found for chain id %d", btcChainID)
+
+	// Update ticker values
+	chainParams.GasPriceTicker = btcGasPriceTicker
+	chainParams.WatchUtxoTicker = btcWatchUtxoTicker
+	chainParams.InboundTicker = btcInboundTicker
+	chainParams.OutboundTicker = btcOutboundTicker
+	chainParams.OutboundScheduleInterval = btcOutboundScheduleInterval
+	chainParams.OutboundScheduleLookahead = btcOutboundScheduleLookahead
+
+	// update the chain params
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
+	require.NoError(r, err)
+}
+
+// DeployTestDAppV2ZEVM deploys the test DApp V2 contract
+func (r *E2ERunner) DeployTestDAppV2ZEVM() {
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := e2eutils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage+" tx hash: "+tx.Hash().Hex())
+	}
+
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		true,
+		r.GatewayEVMAddr,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+
+	r.TestDAppV2ZEVMAddr = testDAppV2Addr
+	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, isZetaChain)
 }

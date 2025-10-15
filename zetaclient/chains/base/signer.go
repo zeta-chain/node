@@ -9,9 +9,10 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Signer is the base structure for grouping the common logic between chain signers.
@@ -20,8 +21,8 @@ type Signer struct {
 	// chain contains static information about the external chain
 	chain chains.Chain
 
-	// tss is the TSS signer
-	tss interfaces.TSSSigner
+	// tssSigner is the TSS signer
+	tssSigner tssrepo.TSSClient
 
 	// logger contains the loggers used by signer
 	logger Logger
@@ -34,26 +35,34 @@ type Signer struct {
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
 	mu sync.Mutex
+
+	ClientMode mode.ClientMode
 }
 
 // NewSigner creates a new base signer.
-func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Signer {
+func NewSigner(
+	chain chains.Chain,
+	tssSigner tssrepo.TSSClient,
+	logger Logger,
+	clientMode mode.ClientMode,
+) *Signer {
 	withLogFields := func(log zerolog.Logger) zerolog.Logger {
 		return log.With().
+			Str(logs.FieldModule, logs.ModNameSigner).
 			Int64(logs.FieldChain, chain.ChainId).
-			Str(logs.FieldModule, "signer").
 			Logger()
 	}
 
 	return &Signer{
 		chain:                 chain,
-		tss:                   tss,
+		tssSigner:             tssSigner,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
 		logger: Logger{
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
 		},
+		ClientMode: clientMode,
 	}
 }
 
@@ -63,8 +72,8 @@ func (s *Signer) Chain() chains.Chain {
 }
 
 // TSS returns the tss signer for the signer.
-func (s *Signer) TSS() interfaces.TSSSigner {
-	return s.tss
+func (s *Signer) TSS() tssrepo.TSSClient {
+	return s.tssSigner
 }
 
 // Logger returns the logger for the signer.
@@ -122,25 +131,25 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 
 	switch {
 	case active == found:
-		// noop
+		// no-op
 	case active:
 		now := time.Now().UTC()
 		s.activeOutbounds[outboundID] = now
 
 		s.logger.Std.Info().
-			Bool("outbound.active", active).
-			Str("outbound.id", outboundID).
-			Time("outbound.timestamp", now).
-			Int("outbound.total", len(s.activeOutbounds)).
+			Bool("outbound_active", active).
+			Str(logs.FieldOutboundID, outboundID).
+			Time("outbound_timestamp", now).
+			Int("outbound_total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
 	default:
 		timeTaken := time.Since(startedAt)
 
 		s.logger.Std.Info().
-			Bool("outbound.active", active).
-			Str("outbound.id", outboundID).
-			Float64("outbound.time_taken", timeTaken.Seconds()).
-			Int("outbound.total", len(s.activeOutbounds)).
+			Bool("outbound_active", active).
+			Str(logs.FieldOutboundID, outboundID).
+			Float64("outbound_time_taken", timeTaken.Seconds()).
+			Int("outbound_total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
 
 		delete(s.activeOutbounds, outboundID)
@@ -171,7 +180,7 @@ func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
 		cctx.Index,
 		cctx.InboundParams.Sender,
 		params.Receiver,
-		params.CoinType.String(),
+		&params.CoinType,
 	)
 
 	return false

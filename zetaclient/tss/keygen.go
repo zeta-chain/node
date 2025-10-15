@@ -51,7 +51,7 @@ func KeygenCeremony(
 	ceremony := keygenCeremony{
 		tss:      server,
 		zetacore: zc,
-		logger:   logger.With().Str(logs.FieldModule, "tss_keygen").Logger(),
+		logger:   logger.With().Str(logs.FieldModule, logs.ModNameTssKeyGen).Logger(),
 	}
 
 	task := func(ctx context.Context, t *ticker.Ticker) error {
@@ -59,7 +59,7 @@ func KeygenCeremony(
 		switch {
 		case shouldRetry:
 			if err != nil && !errors.Is(err, context.Canceled) {
-				logger.Error().Err(err).Msg("Keygen error. Retrying...")
+				logger.Error().Err(err).Msg("keygen error; retrying...")
 			}
 
 			// continue the ticker
@@ -73,7 +73,7 @@ func KeygenCeremony(
 		}
 	}
 
-	err := ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "tss_keygen"))
+	err := ticker.Run(ctx, interval, task, ticker.WithLogger(logger, "TSSKeygenTicker"))
 	if err != nil {
 		return observertypes.TSS{}, err
 	}
@@ -123,15 +123,15 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 		return true, nil
 	case zetaHeight < keygenHeight:
 		k.logger.Info().
-			Int64("keygen.height", keygenHeight).
+			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Msgf("Waiting for keygen block to arrive or new keygen block to be set")
+			Msg("waiting for keygen block to arrive or new keygen block to be set")
 		return true, nil
 	case zetaHeight > keygenHeight:
 		k.logger.Info().
-			Int64("keygen.height", keygenHeight).
+			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Msgf("Waiting for keygen finalization")
+			Msg("waiting for keygen finalization")
 		return true, nil
 	}
 
@@ -139,7 +139,7 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 	// Let's perform TSS Keygen and then post successful/failed vote to zetacore
 	newPubKey, err := k.performKeygen(ctx, keygenTask)
 	if err != nil {
-		k.logger.Error().Err(err).Msg("Keygen failed. Broadcasting failed TSS vote")
+		k.logger.Error().Err(err).Msg("keygen failed; broadcasting failed TSS vote")
 
 		// Vote for failure
 		failedVoteHash, err := k.zetacore.PostVoteTSS(ctx, "", keygenTask.BlockNumber, receiveFailed)
@@ -148,8 +148,8 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 		}
 
 		k.logger.Info().
-			Str("keygen.failed_vote_tx_hash", failedVoteHash).
-			Msg("Broadcasted failed TSS keygen vote")
+			Str("keygen_failed_vote_tx_hash", failedVoteHash).
+			Msg("broadcasted failed TSS keygen vote")
 
 		return true, nil
 	}
@@ -160,13 +160,13 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 	}
 
 	k.logger.Info().
-		Str("keygen.success_vote_tx_hash", successVoteHash).
-		Msg("Broadcasted successful TSS keygen vote")
+		Str("keygen_success_vote_tx_hash", successVoteHash).
+		Msg("broadcasted successful TSS keygen vote")
 
-	k.logger.Info().Msg("Performing TSS key-sign test")
+	k.logger.Info().Msg("performing TSS key-sign test")
 
 	if err = TestKeySign(k.tss, newPubKey, k.logger); err != nil {
-		k.logger.Error().Err(err).Msg("Failed to test TSS keygen")
+		k.logger.Error().Err(err).Msg("failed to test TSS keygen")
 		// signing can fail even if tss keygen is successful
 	}
 
@@ -177,9 +177,9 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 // If fails, then it will post blame data to zetacore and return an error.
 func (k *keygenCeremony) performKeygen(ctx context.Context, keygenTask observertypes.Keygen) (string, error) {
 	k.logger.Warn().
-		Int64("keygen.block", keygenTask.BlockNumber).
-		Strs("keygen.tss_signers", keygenTask.GranteePubkeys).
-		Msg("Performing a keygen!")
+		Int64("keygen_block", keygenTask.BlockNumber).
+		Strs("keygen_tss_signers", keygenTask.GranteePubkeys).
+		Msg("performing a keygen")
 
 	req := keygen.NewRequest(keygenTask.GranteePubkeys, keygenTask.BlockNumber, Version, Algo)
 
@@ -192,18 +192,18 @@ func (k *keygenCeremony) performKeygen(ctx context.Context, keygenTask observert
 	case res.Status == tsscommon.Success && res.PubKey != "":
 		// desired outcome
 		k.logger.Info().
-			Interface("keygen.response", res).
-			Interface("keygen.tss_public_key", res.PubKey).
-			Msg("Keygen successfully generated!")
+			Interface("keygen_response", res).
+			Interface("keygen_tss_public_key", res.PubKey).
+			Msg("keygen successfully generated")
 		return res.PubKey, nil
 	}
 
 	// Something went wrong, let's post blame results and then FAIL
 	k.logger.Error().
-		Str("keygen.blame_round", res.Blame.Round).
-		Str("keygen.fail_reason", res.Blame.FailReason).
-		Interface("keygen.blame_nodes", res.Blame.BlameNodes).
-		Msg("Keygen failed! Sending blame data to zetacore")
+		Str("keygen_blame_round", res.Blame.Round).
+		Str("keygen_fail_reason", res.Blame.FailReason).
+		Interface("keygen_blame_nodes", res.Blame.BlameNodes).
+		Msg("keygen failed; sending blame data to zetacore")
 
 	// increment blame counter
 	for _, node := range res.Blame.BlameNodes {
@@ -223,7 +223,7 @@ func (k *keygenCeremony) performKeygen(ctx context.Context, keygenTask observert
 		return "", errors.Wrap(err, "unable to post blame data to zetacore")
 	}
 
-	k.logger.Info().Str("keygen.blame_tx_hash", zetaHash).Msg("Posted blame data to zetacore")
+	k.logger.Info().Str("keygen_blame_tx_hash", zetaHash).Msg("posted blame data to zetacore")
 
 	return "", errors.Errorf("keygen failed: %s", res.Blame.FailReason)
 }
@@ -248,7 +248,7 @@ func (k *keygenCeremony) waitForBlock(ctx context.Context) error {
 	}
 
 	for {
-		k.logger.Info().Msg("Waiting for the next block to arrive")
+		k.logger.Info().Msg("waiting for the next block to arrive")
 		newHeight, err := k.zetacore.GetBlockHeight(ctx)
 		switch {
 		case err != nil:
@@ -278,7 +278,7 @@ var testKeySignData = []byte("hello meta")
 
 // TestKeySign performs a TSS key-sign test of sample data.
 func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logger) error {
-	logger = logger.With().Str(logs.FieldModule, "tss_keysign").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssKeySign).Logger()
 
 	tssPubKey, err := NewPubKeyFromBech32(tssPubKeyBec32)
 	if err != nil {
@@ -288,9 +288,9 @@ func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logg
 	hashedData := crypto.Keccak256Hash(testKeySignData)
 
 	logger.Info().
-		Str("keysign.test_data", string(testKeySignData)).
-		Str("keysign.test_data_hash", hashedData.String()).
-		Msg("Performing TSS key-sign test")
+		Str("keysign_test_data", string(testKeySignData)).
+		Str("keysign_test_data_hash", hashedData.String()).
+		Msg("performing TSS key-sign test")
 
 	req := keysign.NewRequest(
 		tssPubKey.Bech32String(),
@@ -305,7 +305,7 @@ func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logg
 	case err != nil:
 		return errors.Wrap(err, "key signing request error")
 	case res.Status != tsscommon.Success:
-		logger.Error().Interface("keysign.fail_blame", res.Blame).Msg("Keysign failed")
+		logger.Error().Interface("keysign_fail_blame", res.Blame).Msg("keysign failed")
 		return errors.Wrapf(err, "key signing is not successful (status %d)", res.Status)
 	case len(res.Signatures) == 0:
 		return errors.New("signatures list is empty")
@@ -314,13 +314,13 @@ func TestKeySign(keySigner KeySigner, tssPubKeyBec32 string, logger zerolog.Logg
 	// 32B msg hash, 32B R, 32B S, 1B RC
 	signature := res.Signatures[0]
 
-	logger.Info().Interface("keysign.signature", signature).Msg("Received signature from TSS")
+	logger.Info().Interface("keysign_signature", signature).Msg("received signature from TSS")
 
 	if _, err = VerifySignature(signature, tssPubKey, hashedData.Bytes()); err != nil {
 		return errors.Wrap(err, "signature verification failed")
 	}
 
-	logger.Info().Msg("TSS key-sign test passed")
+	logger.Info().Msg("passed TSS key-sign test")
 
 	return nil
 }

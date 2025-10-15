@@ -1,12 +1,14 @@
 package runner
 
 import (
+	"encoding/binary"
 	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -20,9 +22,93 @@ import (
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
+// solanaNodeSyncTolerance is the time tolerance for the Solana nodes behind a RPC to be synced
+const solanaNodeSyncTolerance = 30 * time.Second
+
 // Connected programs used to test sol and spl withdraw and call
 var ConnectedProgramID = solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
 var ConnectedSPLProgramID = solana.MustPublicKeyFromBase58("8iUjRRhUCn8BjrvsWPfj8mguTe9L81ES4oAUApiF8JFC")
+
+// prefundedRandomWalletAddresses contains the base58-encoded addresses of prefunded random wallets
+// used for testing big number of accounts in payload. These are randomly generated and funded in start-solana.sh script
+var prefundedRandomWalletAddresses = []string{
+	"4C2kkMnqXMfPJ8PPK5v6TCg42k5z16f2kzqVocXoSDcq",
+	"3tqcVCVz5Jztwnku1H9zpvjaWshSpHakMuX4xUJQuuuA",
+	"7duGsuv6nB3yr15EuWuHEDD7rWovpAnjuveXJ5ySZuFV",
+	"8vjuCrCKVfnBGinWjc33zLRnG8iy53wj3YWHhKqvTE7o",
+	"bzkoxG5YMeWxKfNcjzbEHb3XaGTY4NLKfejjDmxVhhY",
+	"GUjKWPmnXNwPLR6kcrkLSBARmQdYnySPpxVNEUGFLs72",
+	"5oqdTyA78hpeP8RTwRBmoxCvp1V7DFicKj7T2DvtDDQM",
+	"C481t79gpWbsWwPD9eJZTAo5TSaTBet8icEkiPhwKLDx",
+	"EJvNNovWkfQYrmyMncqVvHNde2QJpSA4EJk355vyQWph",
+	"EkUpd7HFbSYPJEDbXZeDsCG19Hj5vbKTUt4rzpPYKsTM",
+	"7c7TqqdbKRWDNLVAxNa481F355AAij1fdSRttzUNVNeD",
+	"FuefjNTywey57U2zW6SmBWaJsCx7E84jmWUCbk52sBHR",
+	"fczqc5N5arnKbvMj1kgg9P1FpYPQBmJsyTXcrmK9bbp",
+	"GyH4mpobR6g2npNo5vRNcs2Cv8CxDKbK82p34kNCB4p2",
+	"9XYF8U1srAkUETkywtFrZsApipENiMU3C8Rnz5aPib94",
+	"ABnm3PMB4onvCFriWg7eBcNSmiye9iq9rRdeBViJqWif",
+	"AEydLk3RXZv67wry7EMZmS1uHLYdH8ia6xdsYri4hyB2",
+	"ArDNFdmDzrRP13UTJ4nyP11NfjV6aiQrxNwFUnwm3h8N",
+	"FzAt9aPKFUy1D2Qq8u7myYW8HFqKLzbQS2paaWz8iAmZ",
+	"9RybduN4CJHaZXvUiHoZ7KsHS9dgv1NCSAdJZaRJDW5U",
+	"C54jMgtk2umaJYoPD8aF3hmuH8XkAz2xA4sxr2ZtJABV",
+	"8kRqLbezvj4apyaK6fanurQJjhDQwn6wnW1Yr9H96gsT",
+	"2fddFSJoGJ2YuAZWxEvK9pRXXWLSKJ44rfJNVZg5WHBn",
+	"GW9oi4yqAUFBcUNUHqz56FRdfHU6Md1t9o7i2svL1XcG",
+	"Gre1nqrE1KyBbBH2Xb4qVQWFFdyXetLR5rruJpJkNhkV",
+	"BUrJRTsFVqnuLeq4Vfs7NrrU6EsL957n4tBZGoRRxkza",
+	"3tE2kKyPfuwC5rZUpJ9NaKMBf5og7G3rVTzE9CNMm9Q9",
+	"CFEQ79VSAupXWmdzvmjNtef5BybDVYXBKeh8frNHZiYe",
+	"bTnsajQuybXV6Wf9V7a8wQrwaWZ1WskkmUUChimkWmc",
+	"4dpxhhomWY3A9ey9g7EfxRQKfXnikfM4tRrFAgQf8Y8n",
+	"aQJPrcj4LNNHh9UK41sfcACFspaFR7wgcUTgmSKRXiB",
+	"5ndhaFZ48eKyU7f66vq7WSbjZRh9WhpnbgdMwDRrvgj4",
+	"G7m7dSWH5tb1WC2g86vqA1UvdKJVNCU9td1TR8j8wQXo",
+	"3tf2MkQzmLHBjnsmRwKnJQgASrmUggxK2Q3PiFd99tDn",
+	"3X31YYsRw8We2YhsK29QtVwXXk783HbbYDGAV1HBjcBD",
+	"FhDjU5r4MWx6KdfY7MVx6w1YJf6tvRJyj6mbxqU8N3F7",
+	"57xqRiBeQjHgrYqhXUHRKh9WU9Ukya79U3hM7QPr13Gy",
+	"7pjSLC42Er4KPdVLZW7VGkxU9tLZKBqt4apwyZzuWyYU",
+	"jyDrCsnuvxGM9H7YE2rLsBYoFoSHWABFoi7P61FaQ3Q",
+	"GUHXNHugMc22rkX6Mz4GMU4Vj1hbPa3DCrfCDRQFWQ2b",
+	"2azGMpfp91pqd5gXpZJWK8egdpgUxDkhXK8UYHtRjiZa",
+	"CPH4QdmL4yNB9KBpr3bQwUQxdQbMeUKsUyos2ViHaNTB",
+	"GKNqfGFsK1Th32GSRkT9kaiA7w89GKJJmGVV5ibo8xn2",
+	"GzuWB5nf2NH15Ssk15n3Zd72iykMoPm8Qx5TPCUS99LC",
+	"7eAojuq3vcrev41DuVFgpZ1yagQhpUNhUn2uXnKo7A41",
+	"BCuFo9AhTREJ5bgJzCrhXzckmAoyscrDDkggixX6t3c5",
+	"FUnpGc7v43bvBvC584gQXiRdcuCMnDoXLXbJmMNkg3wQ",
+	"FtFPeHGXZhgacdNoXh2dYKBZkgmTq9YYoUZX97hyjgh4",
+	"2f3V4h5z9jds59EeFVqViVKuZrMoYM3xb3eq8fWWuN7Y",
+	"BEvgtgRX7DdUrZ8Jrw5SMLctA7pQ76ScGry73mEzH869",
+	"FD8pHBAwhq2VtHQQSTpdpnmiEoMNfFzJhQXGhSQVkdcQ",
+	"HqQuQ9wF3QE7RwiYdgB88SnHwi1n5Q2ogidy7WfZJGgb",
+	"Dg2fDYcuvRxCBtZtf1rB2bgbc4KTmy8KMC22Y4JFX7Qd",
+	"p6pGSE2rLDH7yiiZ7bKoNZcB3YaszRsRDQ5rVRuTXiz",
+	"HEg2w4Ev5ouoZB51Tmhj4DBPG7jrxKaTrf9GfKYubBbG",
+	"A5mcmJHSMARvaQcYXGQ96Nx1h4sFeReJNTCBxqxxMqrF",
+}
+
+// ConnectedPdaInfo is struct representing example connected programs pda
+type ConnectedPdaInfo struct {
+	Discriminator     [8]byte
+	LastSender        ethcommon.Address
+	LastMessage       string
+	LastRevertSender  solana.PublicKey
+	LastRevertMessage string
+}
+
+// ParseConnectedPda deserializes connectedPda into ConnectedPdaInfo struct
+func (r *E2ERunner) ParseConnectedPda(connectedPda solana.PublicKey) ConnectedPdaInfo {
+	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
+	require.NoError(r, err)
+	pda := ConnectedPdaInfo{}
+	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
+	require.NoError(r, err)
+
+	return pda
+}
 
 // ComputePdaAddress computes the PDA address for the gateway program
 func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
@@ -661,9 +747,9 @@ func (r *E2ERunner) CallSOLZRC20(
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 		},
 		Data: data,
 	}
@@ -716,7 +802,7 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	amount *big.Int,
 	approveAmount *big.Int,
-	data []byte,
+	msgEncoded []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiver := r.ConnectedSPLProgram.String()
@@ -730,31 +816,6 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	require.NoError(r, err)
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
-
-	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58(receiver)
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
-	require.NoError(r, err)
-
-	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
-	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
-
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
-			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
-	}
-
-	msgEncoded, err := msg.Encode()
-	require.NoError(r, err)
 
 	// withdraw
 	tx, err = r.GatewayZEVM.WithdrawAndCall(
@@ -775,4 +836,168 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	return tx
+}
+
+// WaitAndVerifySPLBalanceChange waits for the SPL balance of the given address to change by the given delta amount
+// This function is to tolerate the fact that the balance update may not be synced across Solana nodes behind a RPC.
+func (r *E2ERunner) WaitAndVerifySPLBalanceChange(
+	ata solana.PublicKey,
+	oldBalance *big.Int,
+	change utils.BalanceChange,
+) {
+	// wait until the expected balance is reached or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
+
+	for {
+		time.Sleep(checkInterval)
+		require.False(r, time.Since(startTime) > solanaNodeSyncTolerance, "timeout waiting for SPL balance change")
+
+		result, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
+		if err != nil {
+			r.Logger.Info("unable to get SPL balance: %s", err.Error())
+			continue
+		}
+		newBalance := utils.ParseBigInt(r, result.Value.Amount)
+
+		if oldBalance.Cmp(newBalance) == 0 {
+			r.Logger.Info("SPL balance has not changed yet")
+			continue
+		}
+		r.Logger.Info("SPL balance changed from %d to %d on address %s", oldBalance, newBalance, ata.String())
+
+		change.Verify(r, oldBalance, newBalance)
+
+		return
+	}
+}
+
+// SetupTestAddressLookupTableWithRandomWallets sets up AddressLookupTable with random accounts provided in setup solana script, with accounts provided as argument
+// used to test AddressLookupTables with large amount of accounts
+func (r *E2ERunner) SetupTestAddressLookupTableWithRandomWallets(
+	accounts []solana.PublicKey,
+) (solana.PublicKey, []solana.PublicKey) {
+	privkey := r.GetSolanaPrivKey()
+
+	recentSlot, err := r.SolanaClient.GetSlot(r.Ctx, rpc.CommitmentFinalized)
+	require.NoError(r, err)
+
+	// prefunded random wallets used for testing big number of accounts in payload
+	// they are randomly generated and funded in start-solana.sh script
+	randomWallets := make([]solana.PublicKey, len(prefundedRandomWalletAddresses))
+	for i, addr := range prefundedRandomWalletAddresses {
+		randomWallets[i] = solana.MustPublicKeyFromBase58(addr)
+	}
+
+	accounts = append(accounts, randomWallets...)
+
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, recentSlot)
+
+	addressLookupTableAddress, bump, err := solana.FindProgramAddress(
+		[][]byte{privkey.PublicKey().Bytes(), buf},
+		solana.AddressLookupTableProgramID,
+	)
+	require.NoError(r, err)
+
+	// create AddressLookupTable and extend 2 times due to large amount of accounts
+	createAddressLookupTableInstruction := addresslookuptable.NewCreateAddressLookupTableInstruction(recentSlot, bump, addressLookupTableAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createAddressLookupTableInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	// need to wait a bit for AddressLookupTable to be active
+	time.Sleep(1 * time.Second)
+
+	extendAddressLookupTableInstruction := addresslookuptable.NewExtendAddressLookupTableInstruction(accounts[:30], addressLookupTableAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendAddressLookupTableInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	time.Sleep(1 * time.Second)
+
+	extendAddressLookupTableInstruction = addresslookuptable.NewExtendAddressLookupTableInstruction(accounts[30:], addressLookupTableAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendAddressLookupTableInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	return addressLookupTableAddress, randomWallets
+}
+
+// SetupTestAddressLookupTableWithRandomWallets sets up AddressLookupTable with random accounts provided in setup solana script, with accounts provided as argument
+// using only 10 accounts because this is creating ATAs, and point is not to test accounts amount, just execute SPL functionality
+func (r *E2ERunner) SetupTestAddressLookupTableWithRandomWalletsSPL(
+	accounts []solana.PublicKey,
+) (solana.PublicKey, []solana.PublicKey) {
+	privkey := r.GetSolanaPrivKey()
+
+	recentSlot, err := r.SolanaClient.GetSlot(r.Ctx, rpc.CommitmentFinalized)
+	require.NoError(r, err)
+
+	// prefunded random wallets used for testing big number of accounts in payload
+	// they are randomly generated and funded in start-solana.sh script
+	randomWallets := make([]solana.PublicKey, 10)
+	for i := 0; i < 10; i++ {
+		randomWallets[i] = solana.MustPublicKeyFromBase58(prefundedRandomWalletAddresses[i])
+	}
+
+	randomWalletsAta := []solana.PublicKey{}
+	for _, acc := range randomWallets {
+		ata := r.ResolveSolanaATA(r.GetSolanaPrivKey(), acc, r.SPLAddr)
+		randomWalletsAta = append(randomWalletsAta, ata)
+	}
+
+	accounts = append(accounts, randomWalletsAta...)
+
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, recentSlot)
+
+	addressLookupTableAddress, bump, err := solana.FindProgramAddress(
+		[][]byte{privkey.PublicKey().Bytes(), buf},
+		solana.AddressLookupTableProgramID,
+	)
+	require.NoError(r, err)
+
+	// create AddressLookupTable and extend it
+	createAddressLookupTableInstruction := addresslookuptable.NewCreateAddressLookupTableInstruction(recentSlot, bump, addressLookupTableAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createAddressLookupTableInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	// need to wait a bit for AddressLookupTable to be active
+	time.Sleep(1 * time.Second)
+
+	extendAddressLookupTableInstruction := addresslookuptable.NewExtendAddressLookupTableInstruction(accounts, addressLookupTableAddress, privkey.PublicKey(), privkey.PublicKey()).
+		Build()
+
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{extendAddressLookupTableInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+	r.BroadcastTxSync(signedTx)
+
+	time.Sleep(1 * time.Second)
+
+	return addressLookupTableAddress, randomWalletsAta
 }

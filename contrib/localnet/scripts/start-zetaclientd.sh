@@ -14,6 +14,12 @@ set_sepolia_endpoint() {
   jq '.EVMChainConfigs."11155111".Endpoint = "http://eth2:8545"' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }
 
+enable_multiple_calls() {
+  jq '.FeatureFlags = {"EnableMultipleCalls": true, "EnableSolanaAddressLookupTable": true}' \
+    /root/.zetacored/config/zetaclient_config.json > tmp.json && \
+  mv tmp.json /root/.zetacored/config/zetaclient_config.json
+}
+
 # import a relayer private key (e.g. Solana relayer key)
 import_relayer_key() {
   local num="$1"
@@ -86,6 +92,8 @@ if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
 
     # import relayer private key for zetaclient0
     import_relayer_key 0
+    # add feature flags to existing config
+    enable_multiple_calls
 
     # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
@@ -108,6 +116,8 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
 
   # import relayer private key for zetaclient{$num}
   import_relayer_key "${num}"
+  # add feature flags to existing config
+  enable_multiple_calls
 
   # check if the option is additional-evm
   # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)

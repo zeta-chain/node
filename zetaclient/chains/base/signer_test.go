@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"testing"
@@ -7,20 +7,20 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 // createSigner creates a new signer for testing
-func createSigner(t *testing.T) *base.Signer {
+func createSigner(t *testing.T) *Signer {
 	// constructor parameters
 	chain := chains.Ethereum
 	tss := mocks.NewTSS(t)
-	logger := base.DefaultLogger()
+	logger := DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, tss, logger)
+	return NewSigner(chain, tss, logger, mode.StandardMode)
 }
 
 func TestNewSigner(t *testing.T) {

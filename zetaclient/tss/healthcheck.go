@@ -39,7 +39,7 @@ func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckPro
 		p.Interval = 30 * time.Second
 	}
 
-	logger = logger.With().Str(logs.FieldModule, "tss_healthcheck").Logger()
+	logger = logger.With().Str(logs.FieldModule, logs.ModNameTssHealthCheck).Logger()
 
 	// Ping & collect round trip time
 	var (
@@ -77,7 +77,10 @@ func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckPro
 				result := <-ping.Ping(ctx, host, peerID)
 				if result.Error != nil {
 					result.RTT = -1 // indicates ping error
-					logger.Error().Str("peer_id", peerID.String()).Err(result.Error).Msg("ping error")
+					logger.Error().
+						Err(result.Error).
+						Str("peer_id", peerID.String()).
+						Msg("ping error")
 				}
 
 				mu.Lock()

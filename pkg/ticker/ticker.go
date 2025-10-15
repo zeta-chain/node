@@ -67,7 +67,7 @@ type Opt func(*Ticker)
 // WithLogger sets the logger for the Ticker.
 func WithLogger(log zerolog.Logger, name string) Opt {
 	return func(t *Ticker) {
-		t.logger = log.With().Str("ticker.name", name).Logger()
+		t.logger = log.With().Str("ticker_name", name).Logger()
 	}
 }
 

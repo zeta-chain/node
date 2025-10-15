@@ -47,7 +47,7 @@ func (_m *ZetacoreClient) WithPostOutboundTracker(zetaTxHash string) *ZetacoreCl
 }
 
 func (_m *ZetacoreClient) WithPostVoteInbound(zetaTxHash string, ballotIndex string) *ZetacoreClient {
-	_m.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	_m.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Maybe().
 		Return(zetaTxHash, ballotIndex, nil)
 
@@ -65,8 +65,12 @@ func (_m *ZetacoreClient) WithRateLimiterFlags(flags *crosschaintypes.RateLimite
 	return _m
 }
 
-func (_m *ZetacoreClient) MockGetCctxByHash(err error) *ZetacoreClient {
-	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
+func (_m *ZetacoreClient) MockGetCctxByHash(cctxIndex string, err error) *ZetacoreClient {
+	var cctx *crosschaintypes.CrossChainTx
+	if cctxIndex != "" {
+		cctx = &crosschaintypes.CrossChainTx{Index: cctxIndex}
+	}
+	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(cctx, err)
 	return _m
 }
 

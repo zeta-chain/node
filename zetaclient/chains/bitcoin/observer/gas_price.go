@@ -25,12 +25,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		feeRateEstimated = client.FeeRateRegnet
 	case chains.NetworkType_testnet:
 		// testnet RPC 'EstimateSmartFee' can return unreasonable high fee rate
-		feeRateEstimated, err = common.GetRecentFeeRate(ctx, ob.rpc, ob.netParams)
+		feeRateEstimated, err = common.GetRecentFeeRate(ctx, ob.bitcoinClient, ob.netParams)
 		if err != nil {
 			return errors.Wrapf(err, "unable to get recent fee rate")
 		}
 	case chains.NetworkType_mainnet:
-		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1)
+		feeRateEstimated, err = ob.bitcoinClient.GetEstimatedFeeRate(ctx, 1)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
@@ -39,7 +39,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	}
 
 	// query the current block number
-	blockNumber, err := ob.rpc.GetBlockCount(ctx)
+	blockNumber, err := ob.bitcoinClient.GetBlockCount(ctx)
 	if err != nil {
 		return errors.Wrap(err, "GetBlockCount error")
 	}
@@ -48,11 +48,8 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	const priorityFee = 0
 
 	// #nosec G115 always positive
-	_, err = ob.ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
-	if err != nil {
-		return errors.Wrap(err, "PostVoteGasPrice error")
-	}
-
-	return nil
+	block := uint64(blockNumber)
+	logger := ob.Logger().Chain
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, feeRateEstimated, priorityFee, block)
+	return err
 }
