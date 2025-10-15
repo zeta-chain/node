@@ -391,6 +391,26 @@ start-upgrade-test-light: zetanode-upgrade
 	export USE_ZETAE2E_ANTE=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+# test zetaclientd-only light upgrade , the test does not wait for the upgrade height , but it is still used to signify that this is a light upgrade[height < 100 == light upgrade]
+start-upgrade-test-zetaclient-light: zetanode-upgrade
+	@echo "--> Starting zetaclientd-only light upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=60 && \
+	export USE_ZETAE2E_ANTE=true && \
+	export E2E_ARGS="--upgrade-contracts" && \
+	export UPGRADE_ZETACLIENT_ONLY=true && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient -f docker-compose-upgrade.yml up -d
+
+# test zetaclientd-only upgrade , the test does not wait for the upgrade height , but it is still used to signify that this is not a light upgrade[height > 100 == regular upgrade]
+start-upgrade-test-zetaclient: zetanode-upgrade solana
+	@echo "--> Starting upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=260 && \
+	export USE_ZETAE2E_ANTE=true && \
+	export E2E_ARGS="--test-solana --test-sui" && \
+	export UPGRADE_ZETACLIENT_ONLY=true && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient --profile solana --profile sui -f docker-compose-upgrade.yml up -d
+
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \

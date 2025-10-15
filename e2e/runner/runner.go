@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"sync"
 	"time"
 
@@ -59,7 +60,8 @@ type E2ERunnerOption func(*E2ERunner)
 
 // Important ENV
 const (
-	EnvKeyLocalnetMode = "LOCALNET_MODE"
+	EnvKeyLocalnetMode          = "LOCALNET_MODE"
+	EnvKeyUpgradeZetaclientOnly = "UPGRADE_ZETACLIENT_ONLY"
 
 	LocalnetModeUpgrade      = "upgrade"
 	LocalNetModeTSSMigration = "tss-migration"
@@ -493,6 +495,15 @@ func (r *E2ERunner) IsRunningUpgrade() bool {
 
 func (r *E2ERunner) IsRunningTssMigration() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningZetaclientOnlyUpgrade() bool {
+	value := os.Getenv(EnvKeyUpgradeZetaclientOnly)
+	enabled, err := strconv.ParseBool(value)
+	if err != nil {
+		return false
+	}
+	return enabled
 }
 
 func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {

@@ -55,6 +55,7 @@ by calling `updateAdditionalActionFee` admin function.
 * [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
 * [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
 * [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
+* [4310](https://github.com/zeta-chain/node/pull/4310) - add zetaclient only upgrade tests
 
 ## v36.0.0
 

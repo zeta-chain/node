@@ -69,6 +69,23 @@ copy_genesis_file() {
   fi
 }
 
+# Create zetaclientd upgrade trigger files on all available zetaclient containers
+create_zetaclientd_upgrade_trigger() {
+  local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3")
+  local download_url="http://upgrade-host:8000/zetaclientd"
+
+  for node in "${nodes[@]}"; do
+    # Skip if node is not accessible
+    ssh -q root@$node "exit" 2>/dev/null || continue
+
+    echo "Creating upgrade trigger file on $node"
+    ssh root@$node "echo '$download_url' > /root/.zetaclientd/zetaclientd-upgrade-trigger" || continue
+    echo "Upgrade trigger file created on $node with URL: $download_url"
+  done
+
+  echo "Zetaclientd upgrade trigger creation completed"
+}
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -291,6 +308,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # shellcheck disable=SC2155
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
   USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE:=false}
+  UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY:=false}
 
   # if enabled, fetches zetae2e binary from the previous version
   # ante means "before" in Latin (used in Cosmos terminology)
@@ -319,38 +337,39 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # Run zetae2e, if the upgrade height is greater than 100 to populate the state
   if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
     echo "Running E2E command to setup the networks and populate the state..."
+      # Use light flag to ensure tests can complete before the upgrade height
+      zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
+      if [ $? -ne 0 ]; then
+        echo "First E2E failed"
+        exit 1
+      fi
+  fi
 
-    # Use light flag to ensure tests can complete before the upgrade height
-    # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
-    zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
-    if [ $? -ne 0 ]; then
-      echo "First E2E failed"
-      exit 1
+  # If this is a zetaclient only upgrade , update the binary and proceed , if not wait for the upgrade height
+  if [ "$UPGRADE_ZETACLIENT_ONLY" = true ]; then
+    echo "Zetaclientd-only upgrade mode: updating zetaclientd to $NEW_VERSION"
+    create_zetaclientd_upgrade_trigger
+  else
+    echo "Waiting for upgrade height..."
+      CURRENT_HEIGHT=0
+      WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
+      while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
+      do
+        CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
+        echo Current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
+        sleep 2
+      done
+
+      echo "Waiting 10 seconds for node to restart..."
+      sleep 10
+    if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
+      echo "Version did not change after upgrade height, maybe the upgrade did not run?"
+      exit 2
     fi
   fi
 
-  echo "Waiting for upgrade height..."
-  CURRENT_HEIGHT=0
-  WAIT_HEIGHT=$(( UPGRADE_HEIGHT - 1 ))
-  # wait for upgrade height
-  while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
-  do
-    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
-    echo Current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
-    sleep 2
-  done
-
-  echo "Waiting 10 seconds for node to restart..."
-  sleep 10
-
   NEW_VERSION=$(get_zetacored_version)
-
   echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
-
-  if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
-    echo "Version did not change after upgrade height, maybe the upgrade did not run?"
-    exit 2
-  fi
 
   # wait for zevm endpoint to come up
   sleep 10

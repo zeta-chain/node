@@ -326,6 +326,7 @@ services:
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
       - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
+      - UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
@@ -336,6 +337,7 @@ services:
     hostname: upgrade-host
     profiles:
       - upgrade
+      - upgrade-zetaclient
       - all
     entrypoint: ["/root/start-upgrade-host.sh"]
     networks:
@@ -345,24 +347,24 @@ services:
       - ssh:/root/.ssh
 
   upgrade-orchestrator:
-    # must run from old node for api compatibility
-    image: zetanode:old
-    container_name: upgrade-orchestrator
-    hostname: upgrade-orchestrator
-    profiles:
-      - upgrade
-      - all
-    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.251
-    depends_on:
-      - zetacore0
-      - upgrade-host
-    environment:
-      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
-    volumes:
-      - ssh:/root/.ssh
+   # must run from old node for api compatibility
+   image: zetanode:old
+   container_name: upgrade-orchestrator
+   hostname: upgrade-orchestrator
+   profiles:
+     - upgrade
+     - all
+   entrypoint: ["/root/start-upgrade-orchestrator.sh"]
+   networks:
+     mynetwork:
+       ipv4_address: 172.20.0.251
+   depends_on:
+     - zetacore0
+     - upgrade-host
+   environment:
+     - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+   volumes:
+     - ssh:/root/.ssh
 
   grafana:
     image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
