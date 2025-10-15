@@ -62,7 +62,8 @@ func (ob *Observer) observeInboundTrackers(
 }
 
 // CheckReceiptAndPostVoteForBtcTxHash checks the receipt for a btc tx hash
-func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context, txHash string, vote bool, isInternal bool) (string, error) {
+func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context,
+	txHash string, vote bool, isInternal bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing btc tx hash")
