@@ -156,8 +156,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
 
 		testStress        = testEthStress || testSolanaStress || testSuiStress || testZEVMStress
-		shouldSetupSolana = setupSolana || testSolana || testStress
-		shouldSetupSui    = setupSui || testSui || testStress
+		shouldSetupSolana = setupSolana || testSolana || testSolanaStress
+		shouldSetupSui    = setupSui || testSui || testSuiStress
 		shouldSetupTON    = setupTON || testTON
 	)
 
