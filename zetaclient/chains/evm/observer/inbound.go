@@ -109,7 +109,7 @@ func (ob *Observer) observeInboundTrackers(
 		case coin.CoinType_ERC20:
 			_, err = ob.checkAndVoteInboundTokenERC20(ctx, tx, receipt, true, isInternal)
 		case coin.CoinType_Gas:
-			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true, isInternal, true)
+			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true, true, isInternal)
 		default:
 			return fmt.Errorf(
 				"unknown coin type %s for inbound %s chain %d",

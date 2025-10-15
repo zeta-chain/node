@@ -53,7 +53,7 @@ func (ob *Observer) observeInboundTrackers(
 			Stringer(logs.FieldCoinType, tracker.CoinType).
 			Bool("is_internal", isInternal).
 			Msg("processing inbound tracker")
-		if _, err := ob.CheckReceiptAndPostVoteForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
+		if _, err := ob.CheckReceiptAndPostVoteForBtcTxHash(ctx, tracker.TxHash, true, isInternal); err != nil {
 			return err
 		}
 	}
@@ -62,7 +62,7 @@ func (ob *Observer) observeInboundTrackers(
 }
 
 // CheckReceiptAndPostVoteForBtcTxHash checks the receipt for a btc tx hash
-func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
+func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context, txHash string, vote bool, isInternal bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing btc tx hash")
@@ -126,7 +126,7 @@ func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context, txH
 		return msg.Digest(), nil
 	}
 
-	metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(false)).Inc()
+	metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).Inc()
 	return ob.ZetaRepo().VoteInbound(ctx,
 		ob.logger.Inbound,
 		msg,

@@ -246,7 +246,7 @@ var (
 	InboundVotesPostedWith500KGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "inbound_votes_posted_500k_gas_limit_total",
-		Help:      "Total number of inbound votes posted with 5M gas limit",
+		Help:      "Total number of inbound votes posted with 500K gas limit",
 	}, []string{"chain"})
 
 	InboundVotesPostedWith7MGasLimitTotal = promauto.NewCounterVec(prometheus.CounterOpts{
