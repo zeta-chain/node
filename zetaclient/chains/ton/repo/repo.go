@@ -130,6 +130,6 @@ func (repo *TONRepo) GetNextTransactions(ctx context.Context, logger zerolog.Log
 			txs = txs[:PaginationLimit]
 		}
 	}
-	
+
 	return txs, nil
 }
