@@ -1,4 +1,5 @@
 {
+  "localnet_mode": true,
   "networks": {
     "zeta": {
       "primary": "http://zetacore0:8545",
