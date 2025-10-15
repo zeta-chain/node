@@ -14,14 +14,58 @@ jobs:
         fetch-depth: 0
 
     - name: Check for CHANGELOG.md changes
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+      id: check_changelog
       run: |
-        git fetch origin ${{ github.base_ref }}
-        CHANGELOG_DIFF=$(git diff ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- changelog.md)
-        echo "${CHANGELOG_DIFF}"
-        if [ -z "$CHANGELOG_DIFF" ]; then
-          echo "ERROR: No changes detected in CHANGELOG.md. Please update the changelog."
-          exit 1
+        echo "needs_update=false" >> $GITHUB_OUTPUT
+        
+        if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-changelog') }}" == "false" ]]; then
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGELOG_DIFF=$(git diff ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- changelog.md)
+          echo "${CHANGELOG_DIFF}"
+          if [ -z "$CHANGELOG_DIFF" ]; then
+            echo "No changes detected in CHANGELOG.md"
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG.md has been updated."
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
         else
-          echo "CHANGELOG.md has been updated."
+          echo "Skipping changelog check due to no-changelog label"
         fi
+
+
+    - name: Auto-update changelog
+      if: steps.check_changelog.outputs.needs_update == 'true'
+      run: |
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+        
+        # Create the changelog entry
+        ENTRY="* $PR_TITLE - @$PR_AUTHOR (#$PR_NUMBER)"
+        
+        # Add entry under Unreleased section
+        if grep -q "## Unreleased" changelog.md; then
+          sed -i "/## Unreleased/a\\
+        \\
+        $ENTRY" changelog.md
+        else
+          # If no Unreleased section, add at the top
+          sed -i "1i\\
+        ## Unreleased\\
+        \\
+        $ENTRY\\
+        " changelog.md
+        fi
+        
+        echo "Added entry to changelog.md: $ENTRY"
+
+    - name: Commit and push changes
+      if: steps.check_changelog.outputs.needs_update == 'true'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        git add changelog.md
+        git commit -m "chore: auto-update changelog for PR #${{ github.event.pull_request.number }}"
+        git push  
