@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -46,9 +47,10 @@ type EVMClient interface {
 
 	IsTxConfirmed(_ context.Context, txHash string, confirmations uint64) (bool, error)
 
-	SendTransaction(context.Context, *eth.Transaction) error
-
 	Signer() eth.Signer
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SendTransaction(context.Context, *eth.Transaction) error
 }
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
@@ -240,7 +242,7 @@ func (signer *Signer) broadcast(ctx context.Context, tx *eth.Transaction) error 
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -262,14 +264,14 @@ func (signer *Signer) TryProcessOutbound(
 	// prepare logger and a few local variables
 	var (
 		params = cctx.GetCurrentOutboundParam()
-		myID   = zetacoreClient.GetKeys().GetOperatorAddress()
+		myID   = zetaRepo.GetOperatorAddress()
 		logger = signer.Logger().Std.With().
 			Int64(logs.FieldChain, signer.Chain().ChainId).
 			Uint64(logs.FieldNonce, params.TssNonce).
 			Str(logs.FieldCctxIndex, cctx.Index).
 			Str("cctx_receiver", params.Receiver).
 			Stringer("cctx_amount", params.Amount).
-			Stringer("signer", myID).
+			Str("signer", myID).
 			Logger()
 	)
 	logger.Info().Msg("TryProcessOutbound")
@@ -310,13 +312,18 @@ func (signer *Signer) TryProcessOutbound(
 
 	logger = logger.With().Uint64("gas_price", txData.gas.Price.Uint64()).Logger()
 
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
+
 	// sign outbound
 	tx, err := signer.SignOutboundFromCCTX(
 		ctx,
 		logger,
 		cctx,
 		txData,
-		zetacoreClient,
+		zetaRepo,
 		toChain,
 	)
 	if err != nil {
@@ -328,7 +335,7 @@ func (signer *Signer) TryProcessOutbound(
 	logger = logger.With().Str(logs.FieldTx, tx.Hash().Hex()).Logger()
 
 	// Broadcast Signed Tx
-	signer.BroadcastOutbound(ctx, tx, cctx, logger, zetacoreClient, txData)
+	signer.BroadcastOutbound(ctx, tx, cctx, logger, zetaRepo, txData)
 }
 
 // SignOutboundFromCCTX signs an outbound transaction from a given cctx
@@ -339,7 +346,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	logger zerolog.Logger,
 	cctx *crosschaintypes.CrossChainTx,
 	outboundData *OutboundData,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	_ zctx.Chain,
 ) (*eth.Transaction, error) {
 	switch {
@@ -366,7 +373,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	case cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2:
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
-	case IsPendingOutboundFromZetaChain(cctx, zetacoreClient):
+	case IsPendingOutboundFromZetaChain(cctx, zetaRepo):
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msg("calling SignGasWithdraw")
@@ -378,7 +385,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 			logger.Info().Msg("calling SignConnectorOnReceive")
 			return signer.SignConnectorOnReceive(ctx, outboundData)
 		}
-	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetacoreClient.Chain().ChainId:
+	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetaRepo.ZetaChain().ChainId:
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Zeta:
 			logger.Info().Msg("calling SignConnectorOnRevert")
@@ -411,7 +418,7 @@ func (signer *Signer) BroadcastOutbound(
 	tx *eth.Transaction,
 	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	txData *OutboundData,
 ) {
 	app, err := zctx.FromContext(ctx)
@@ -465,14 +472,14 @@ func (signer *Signer) BroadcastOutbound(
 
 		// broadcast success, report to tracker
 		if err = signer.broadcast(ctx, tx); err == nil {
-			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
+			signer.reportToOutboundTracker(ctx, zetaRepo, toChain.ID(), nonce, outboundHash, logger)
 			return nil
 		}
 
 		// handle different broadcast errors
 		retry, report := zetacore.HandleBroadcastError(err, nonce, toChain.ID(), outboundHash)
 		if report {
-			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
+			signer.reportToOutboundTracker(ctx, zetaRepo, toChain.ID(), nonce, outboundHash, logger)
 			return nil
 		}
 		if retry {
@@ -498,10 +505,9 @@ func (signer *Signer) BroadcastOutbound(
 // TODO(revamp): move to another package more general for cctx functions
 func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
-
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 ) bool {
-	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
+	return cctx.InboundParams.SenderChainId == zetaRepo.ZetaChain().ChainId &&
 		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound
 }
 

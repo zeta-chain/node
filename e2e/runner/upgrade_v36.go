@@ -22,7 +22,7 @@ func (r *E2ERunner) RunSetup(testLegacy bool) {
 	require.NoError(r, err)
 	ensureTxReceipt(updateAdditionalFeeTx, "Updating additional fee failed")
 	r.UpgradeGatewayZEVM()
-	r.UpdateProtocolContractsInChainParams(testLegacy)
+	r.InitializeChainParams(testLegacy)
 	r.DeployTestDAppV2ZEVM()
 	r.DeployTestDAppV2EVM()
 }

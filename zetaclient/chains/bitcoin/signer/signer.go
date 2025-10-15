@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 const (
@@ -36,8 +37,10 @@ type BitcoinClient interface {
 	GetNetworkInfo(context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(context.Context, *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(_ context.Context, confTarget int64) (uint64, error)
-	SendRawTransaction(_ context.Context, _ *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 	GetMempoolTxsAndFees(_ context.Context, childHash string) (client.MempoolTxsAndFees, error)
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SendRawTransaction(_ context.Context, _ *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.
@@ -106,11 +109,11 @@ func (signer *Signer) TryProcessOutbound(
 		logs.FieldCctxIndex: cctx.Index,
 		logs.FieldNonce:     params.TssNonce,
 	}
-	signerAddress, err := observer.ZetacoreClient().GetKeys().GetAddress()
+	signerAddress, err := observer.ZetaRepo().GetKeysAddress()
 	if err != nil {
 		return
 	}
-	lf["signer"] = signerAddress.String()
+	lf["signer"] = signerAddress
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// query network info to get minRelayFee (typically 1000 satoshis)
@@ -140,6 +143,11 @@ func (signer *Signer) TryProcessOutbound(
 		stuckTx, found = observer.LastStuckOutbound()
 		rbfTx          = found && stuckTx.Nonce == txData.nonce
 	)
+
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
 
 	// sign outbound
 	if !rbfTx {
@@ -211,14 +219,7 @@ func (signer *Signer) BroadcastOutbound(
 	}
 
 	// add tx to outbound tracker so that all observers know about it
-	zetaHash, err := ob.ZetacoreClient().PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
-	if err != nil {
-		logger.Err(err).Msg("unable to add Bitcoin outbound tracker")
-	} else {
-		logger.Info().
-			Str(logs.FieldZetaTx, zetaHash).
-			Msg("add Bitcoin outbound tracker successfully")
-	}
+	_, _ = ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, txHash)
 
 	// try including this outbound as early as possible, no need to wait for outbound tracker
 	_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)

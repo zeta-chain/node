@@ -7,22 +7,49 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // ProcessInboundTrackers processes inbound trackers
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
 		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
 			Stringer(logs.FieldCoinType, tracker.CoinType).
+			Bool("is_internal", isInternal).
 			Msg("processing inbound tracker")
 		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err
@@ -58,9 +85,9 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
 	}
 
-	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
+	tss, err := ob.ZetaRepo().GetBTCTSSAddress(ctx)
 	if err != nil {
-		return "", errors.Wrapf(err, "error getting btc tss address for chain %d", ob.Chain().ChainId)
+		return "", err
 	}
 
 	// check confirmation
@@ -97,5 +124,10 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		return msg.Digest(), nil
 	}
 
-	return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	return ob.ZetaRepo().VoteInbound(ctx,
+		ob.logger.Inbound,
+		msg,
+		zetacore.PostVoteInboundExecutionGasLimit,
+		ob.WatchMonitoringError,
+	)
 }

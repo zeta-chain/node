@@ -2,7 +2,6 @@ package signer
 
 import (
 	"context"
-	"encoding/hex"
 
 	"cosmossdk.io/errors"
 	sol "github.com/gagliardetto/solana-go"
@@ -42,35 +41,8 @@ func (signer *Signer) prepareWithdrawTx(
 			return nil, errors.Wrap(err, "error creating withdraw instruction")
 		}
 
-		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0)
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0, nil, nil)
 	}, nil
-}
-
-func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
-	var executeType contracts.ExecuteType
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
-		executeType = contracts.ExecuteTypeRevert
-	} else {
-		executeType = contracts.ExecuteTypeCall
-	}
-
-	var message []byte
-	if executeType == contracts.ExecuteTypeRevert {
-		message = cctx.RevertOptions.RevertMessage
-	} else {
-		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
-		}
-		message = messageToDecode
-	}
-
-	var msg contracts.ExecuteMsg
-	if err := msg.Decode(message); err != nil {
-		return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
-	}
-
-	return executeType, msg, nil
 }
 
 // createMsgWithdraw creates a withdraw and increment nonce messages

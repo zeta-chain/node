@@ -55,9 +55,9 @@ func (e *EVM) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := e.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := e.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -72,17 +72,9 @@ func (e *EVM) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(e.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !e.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(e.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(e.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(e.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -96,7 +88,8 @@ func (e *EVM) Start(ctx context.Context) error {
 	// Observers
 	register(e.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(e.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(e.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
+	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(e.observer.CheckRPCStatus, "check_rpc_status")
 	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
@@ -152,9 +145,9 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
 	)
 
-	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := e.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	trackerSet, err := e.getTrackerSet(ctx)
@@ -223,7 +216,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			go e.signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				e.observer.ZetacoreClient(),
+				e.observer.ZetaRepo(),
 				zetaHeight,
 			)
 		}
@@ -263,11 +256,9 @@ func (e *EVM) updateChainParams(ctx context.Context) error {
 }
 
 func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
-	chainID := e.observer.Chain().ChainId
-
-	trackers, err := e.observer.ZetacoreClient().GetOutboundTrackers(ctx, chainID)
+	trackers, err := e.observer.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get outbound trackers")
+		return nil, err
 	}
 
 	set := make(map[uint64]struct{})

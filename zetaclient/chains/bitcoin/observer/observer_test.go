@@ -23,7 +23,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -44,7 +44,7 @@ func setupDBTxResults(t *testing.T) (*gorm.DB, map[string]btcjson.GetTransaction
 	require.NoError(t, err)
 
 	//Create some Transaction entries in the DB
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		txResult := btcjson.GetTransactionResult{
 			Amount:          float64(i),
 			Fee:             0,
@@ -84,7 +84,7 @@ func Test_NewObserver(t *testing.T) {
 		btcClient      *mocks.BitcoinClient
 		chainParams    observertypes.ChainParams
 		zetacoreClient zrepo.ZetacoreClient
-		tssSigner      interfaces.TSSSigner
+		tssSigner      tssrepo.TSSClient
 		logger         base.Logger
 		ts             *metrics.TelemetryServer
 		errorMessage   string
@@ -145,13 +145,12 @@ func Test_NewObserver(t *testing.T) {
 			baseObserver, err := base.NewObserver(
 				tt.chain,
 				tt.chainParams,
-				tt.zetacoreClient,
+				zrepo.New(tt.zetacoreClient, tt.chain, mode.StandardMode),
 				tt.tssSigner,
 				100,
 				tt.ts,
 				database,
 				tt.logger,
-				mode.StandardMode,
 			)
 			require.NoError(t, err)
 
@@ -300,7 +299,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	client := mocks.NewBitcoinClient(t)
 	zetacore := mocks.NewZetacoreClient(t)
 
-	var tssSigner interfaces.TSSSigner
+	var tssSigner tssrepo.TSSClient
 	if chains.IsBitcoinMainnet(chain.ChainId) {
 		tssSigner = mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 	} else {
@@ -327,13 +326,12 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	baseObserver, err := base.NewObserver(
 		chain,
 		chainParams,
-		zetacore,
+		zrepo.New(zetacore, chain, mode.StandardMode),
 		tssSigner,
 		100,
 		&metrics.TelemetryServer{},
 		database,
 		baseLogger,
-		mode.StandardMode,
 	)
 	require.NoError(t, err)
 

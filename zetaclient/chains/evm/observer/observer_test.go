@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -24,7 +25,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -73,6 +74,8 @@ func getAppContext(
 		chainParams,
 		*sample.CrosschainFlags(),
 		sample.OperationalFlags(),
+		0,
+		0,
 	)
 	require.NoError(t, err)
 
@@ -101,7 +104,7 @@ func Test_NewObserver(t *testing.T) {
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   *client.Client
-		tssSigner   interfaces.TSSSigner
+		tssSigner   tssrepo.TSSClient
 		logger      base.Logger
 		before      func()
 		after       func()
@@ -187,13 +190,12 @@ func Test_NewObserver(t *testing.T) {
 			baseObserver, err := base.NewObserver(
 				chain,
 				tt.chainParams,
-				zetacoreClient,
+				zrepo.New(zetacoreClient, chain, mode.StandardMode),
 				tt.tssSigner,
 				1000,
 				tt.ts,
 				database,
 				tt.logger,
-				mode.StandardMode,
 			)
 			require.NoError(t, err)
 			ob, err := New(baseObserver, tt.evmClient)
@@ -431,8 +433,8 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	log := zerolog.New(zerolog.NewTestWriter(t)).With().Caller().Logger()
 	logger := base.Logger{Std: log, Compliance: log}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database,
-		logger, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, chainParams,
+		zrepo.New(zetacore, chain, mode.StandardMode), tss, 1000, nil, database, logger)
 	require.NoError(t, err)
 
 	ob, err := New(baseObserver, evmMock)

@@ -42,10 +42,14 @@ const (
 	flagTestEthStress          = "test-stress-eth"
 	flagTestSolanaStress       = "test-stress-solana"
 	flagTestSuiStress          = "test-stress-sui"
+	flagTestZEVMStress         = "test-stress-zevm"
 	flagIterations             = "iterations"
 	flagTestSolana             = "test-solana"
-	flagTestTON                = "test-ton"
 	flagTestSui                = "test-sui"
+	flagTestTON                = "test-ton"
+	flagSetupSolana            = "setup-solana"
+	flagSetupSui               = "setup-sui"
+	flagSetupTON               = "setup-ton"
 	flagSkipRegular            = "skip-regular"
 	flagLight                  = "light"
 	flagSetupOnly              = "setup-only"
@@ -83,12 +87,16 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestEthStress, false, "set to true to run eth stress tests")
-	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run solana stress tests")
+	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run Solana stress tests")
 	cmd.Flags().Bool(flagTestSuiStress, false, "set to true to run sui stress tests")
+	cmd.Flags().Bool(flagTestZEVMStress, false, "set to true to run direct zevm stress tests")
 	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
-	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
+	cmd.Flags().Bool(flagTestSolana, false, "set to true to run Solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagTestSui, false, "set to true to run Sui tests")
+	cmd.Flags().Bool(flagSetupSolana, false, "set to true to setup Solana protocol contracts during setup")
+	cmd.Flags().Bool(flagSetupSui, false, "set to true to setup Sui protocol contracts during setup")
+	cmd.Flags().Bool(flagSetupTON, false, "set to true to setup TON protocol contracts during setup")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -125,10 +133,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testEthStress          = must(cmd.Flags().GetBool(flagTestEthStress))
 		testSolanaStress       = must(cmd.Flags().GetBool(flagTestSolanaStress))
 		testSuiStress          = must(cmd.Flags().GetBool(flagTestSuiStress))
+		testZEVMStress         = must(cmd.Flags().GetBool(flagTestZEVMStress))
 		iterations             = must(cmd.Flags().GetInt(flagIterations))
 		testSolana             = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON                = must(cmd.Flags().GetBool(flagTestTON))
 		testSui                = must(cmd.Flags().GetBool(flagTestSui))
+		setupSolana            = must(cmd.Flags().GetBool(flagSetupSolana))
+		setupSui               = must(cmd.Flags().GetBool(flagSetupSui))
+		setupTON               = must(cmd.Flags().GetBool(flagSetupTON))
 		skipRegular            = must(cmd.Flags().GetBool(flagSkipRegular))
 		light                  = must(cmd.Flags().GetBool(flagLight))
 		setupOnly              = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -139,12 +151,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		testStress             = testEthStress || testSolanaStress || testSuiStress
-		setupSolana            = testSolana || testStress
-		setupSui               = testSui || testStress
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
+
+		testStress        = testEthStress || testSolanaStress || testSuiStress || testZEVMStress
+		shouldSetupSolana = setupSolana || testSolana || testSolanaStress
+		shouldSetupSui    = setupSui || testSui || testSuiStress
+		shouldSetupTON    = setupTON || testTON
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -215,11 +229,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 	noError(err)
 
-	// Drop this cond after TON e2e is included in the default suite
-	if !testTON {
-		conf.RPCs.TON = ""
-	}
-
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -271,7 +280,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
 
-		if setupSolana {
+		if shouldSetupSolana {
 			deployerRunner.SetupSolana(
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
@@ -286,22 +295,22 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			ERC20Addr: deployerRunner.ERC20Addr,
 			SPLAddr:   nil,
 		}
-		if setupSolana {
+		if shouldSetupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
+		deployerRunner.InitializeChainParams(testLegacy || testAdmin)
 
-		if testTON {
+		if shouldSetupTON {
 			deployerRunner.SetupTON(
 				conf.RPCs.TONFaucet,
 				conf.AdditionalAccounts.UserTON,
 			)
 		}
 
-		if setupSui {
+		if shouldSetupSui {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
@@ -390,6 +399,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			testEthStress,
 			testSolanaStress,
 			testSuiStress,
+			testZEVMStress,
 			&eg,
 		)
 	}
@@ -417,6 +427,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSolanaDepositThroughProgramName,
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestSolanaWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
 				e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
 				e2etests.TestZEVMToSolanaCallName,
@@ -438,6 +449,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
 				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 				// TODO move under admin tests
@@ -670,8 +682,22 @@ func runE2EStressTests(
 	testEthStress bool,
 	testSolanaStress bool,
 	testSuiStress bool,
+	testZEVMStress bool,
 	eg *errgroup.Group,
 ) {
+	if testZEVMStress {
+		eg.Go(
+			zevmPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressZEVMName},
+				deployerRunner.Account,
+				iterations,
+			),
+		)
+	}
+
 	if testEthStress {
 		eg.Go(
 			ethereumDepositPerformanceRoutine(

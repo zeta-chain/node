@@ -18,7 +18,7 @@ import (
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
 func (signer *Signer) reportToOutboundTracker(
 	ctx context.Context,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	chainID int64,
 	nonce uint64,
 	outboundHash string,
@@ -65,9 +65,9 @@ func (signer *Signer) reportToOutboundTracker(
 			// stop if the CCTX is already finalized for optimization purposes:
 			// 1. all monitoring goroutines should stop and release resources if the CCTX is finalized
 			// 2. especially reduces the lifetime of goroutines that monitor "nonce too low" tx hashes
-			cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
+			cctx, err := zetaRepo.GetCCTX(ctx, nonce)
 			if err != nil {
-				logger.Err(err).Msg("unable to query CCTX from Zetacore")
+				logger.Err(err).Send()
 			} else if !crosschainkeeper.IsPending(cctx) {
 				logger.Info().Msg("CCTX is already finalized")
 				return nil
@@ -84,13 +84,10 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// report outbound hash to tracker
-			zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, chainID, nonce, outboundHash)
-			if err != nil {
-				logger.Err(err).Msg("error adding outbound to tracker")
-			} else if zetaHash != "" {
-				logger.Info().Str(logs.FieldZetaTx, zetaHash).Msg("added outbound to tracker")
-			} else {
-				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
+			zhash, err := zetaRepo.PostOutboundTracker(ctx, logger, nonce, outboundHash)
+			if zhash == "" && err == nil {
+				// exit goroutine only when the tracker contains the hash (reported by either this
+				// or other signers)
 				logger.Info().Msg("outbound now exists in tracker")
 				return nil
 			}

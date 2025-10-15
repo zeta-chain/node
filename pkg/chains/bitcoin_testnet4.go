@@ -23,11 +23,11 @@ const (
 )
 
 var (
-	// bigOne is 1 represented as a big.Int.  It is defined here to avoid
+	// bigOne is 1 represented as a big.Int. It is defined here to avoid
 	// the overhead of creating it multiple times.
 	bigOne = big.NewInt(1)
 	// testNet3PowLimit is the highest proof of work value a Bitcoin block
-	// can have for the test network (version 3).  It is the value
+	// can have for the test network (version 3). It is the value
 	// 2^224 - 1.
 	testNet3PowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 224), bigOne)
 )
@@ -106,7 +106,7 @@ var testNet4GenesisBlock = wire.MsgBlock{
 }
 
 // TestNet4Params defines the network parameters for the test Bitcoin network
-// (version 4).  Not to be confused with the regression test network, this
+// (version 4). Not to be confused with the regression test network, this
 // network is sometimes simply called "testnet4".
 var TestNet4Params = chaincfg.Params{
 	Name:        "testnet4",

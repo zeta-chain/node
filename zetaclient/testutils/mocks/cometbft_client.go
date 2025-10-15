@@ -17,10 +17,11 @@ import (
 type CometBFTClient struct {
 	mock.Client
 
-	t      *testing.T
-	err    error
-	code   uint32
-	txHash bytes.HexBytes
+	t        *testing.T
+	err      error
+	code     uint32
+	txHash   bytes.HexBytes
+	txResult *coretypes.ResultTx
 
 	subscribers     map[string]chan<- coretypes.ResultEvent
 	subscribersLock sync.Mutex
@@ -52,6 +53,9 @@ func (c *CometBFTClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*core
 }
 
 func (c *CometBFTClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
+	if c.txResult != nil {
+		return c.txResult, c.err
+	}
 	return &coretypes.ResultTx{
 		Hash:   bytes.HexBytes{},
 		Height: 0,
@@ -78,6 +82,11 @@ func (c *CometBFTClient) SetBroadcastTxHash(hash string) *CometBFTClient {
 
 	c.txHash = b
 
+	return c
+}
+
+func (c *CometBFTClient) SetTxResult(txResult *coretypes.ResultTx) *CometBFTClient {
+	c.txResult = txResult
 	return c
 }
 

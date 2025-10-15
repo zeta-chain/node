@@ -79,17 +79,41 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx)
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []cctypes.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
 		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
+				Bool("is_internal", isInternal).
 				Msg("unable to process inbound tracker")
 		}
 	}
@@ -138,9 +162,11 @@ func (ob *Observer) processInboundEvent(
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
 
-	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	logger := ob.Logger().Inbound
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote inbound")
+		return err
 	}
 
 	return nil
@@ -206,12 +232,12 @@ func (ob *Observer) constructInboundVote(
 	}
 
 	return cctypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		deposit.Sender,
 		ob.Chain().ChainId,
 		deposit.Sender,
 		deposit.Receiver.String(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		deposit.Amount,
 		hex.EncodeToString(deposit.Payload),
 		event.TxHash,

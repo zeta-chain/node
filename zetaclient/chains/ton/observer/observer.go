@@ -9,7 +9,6 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/repo"
-	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 const outboundsCacheSize = 1024
@@ -18,8 +17,7 @@ const outboundsCacheSize = 1024
 type Observer struct {
 	*base.Observer
 
-	tonRepo  *repo.TONRepo
-	zetaRepo *zrepo.ZetaRepo
+	tonRepo *repo.TONRepo
 
 	gateway *toncontracts.Gateway // used to parse transactions
 
@@ -50,13 +48,9 @@ func New(baseObserver *base.Observer,
 
 	baseObserver.LoadLastTxScanned()
 
-	client := baseObserver.ZetacoreClient()
-	chain := baseObserver.Chain()
-	zetaRepo := zrepo.New(client, chain)
 	return &Observer{
 		Observer:  baseObserver,
 		tonRepo:   tonRepo,
-		zetaRepo:  zetaRepo,
 		gateway:   gateway,
 		outbounds: outbounds,
 	}, nil

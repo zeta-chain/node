@@ -3,6 +3,7 @@ package context
 
 import (
 	"fmt"
+	"math/big"
 	"slices"
 	"sync"
 
@@ -27,6 +28,12 @@ type AppContext struct {
 	// crosschainFlags is the current crosschain flags state
 	crosschainFlags  observertypes.CrosschainFlags
 	operationalFlags observertypes.OperationalFlags
+
+	// currentBaseFee is the current ZetaChain base fee
+	currentBaseFee int64
+
+	// unconfirmedTxCount is the number of unconfirmed txs in the zetacore mempool
+	unconfirmedTxCount int64
 
 	// logger is the logger of the app
 	logger zerolog.Logger
@@ -106,6 +113,48 @@ func (a *AppContext) GetOperationalFlags() observertypes.OperationalFlags {
 	return a.operationalFlags
 }
 
+// GetCurrentBaseFee returns the current ZetaChain base fee
+func (a *AppContext) GetCurrentBaseFee() int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.currentBaseFee
+}
+
+// IsMaxFeeExceeded returns true if the current base fee is greater than the configured max base fee
+// 0 max base fee means the feature is disabled and max base fee is ignored
+func (a *AppContext) IsMaxFeeExceeded() bool {
+	maxBaseFee := a.config.GetMaxBaseFee()
+	if maxBaseFee <= 0 {
+		return false
+	}
+
+	// convert maxBaseFee to Wei for comparison
+	const gweiToWei = 1_000_000_000
+	currentBaseFee := big.NewInt(a.GetCurrentBaseFee())
+	maxBaseFeeInWei := new(big.Int).Mul(big.NewInt(maxBaseFee), big.NewInt(gweiToWei))
+
+	return currentBaseFee.Cmp(maxBaseFeeInWei) > 0
+}
+
+// GetUnconfirmedTxCount returns the number of unconfirmed txs in the zetacore mempool
+func (a *AppContext) GetUnconfirmedTxCount() int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.unconfirmedTxCount
+}
+
+// IsMempoolCongested returns true if the mempool is congested
+// 0 mempool congestion threshold means the feature is disabled and congestion is ignored
+func (a *AppContext) IsMempoolCongested() bool {
+	mempoolThreshold := a.config.GetMempoolCongestionThreshold()
+	if mempoolThreshold <= 0 {
+		return false
+	}
+	return a.GetUnconfirmedTxCount() > mempoolThreshold
+}
+
 // Update updates AppContext and params for all chains
 // this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
@@ -113,6 +162,8 @@ func (a *AppContext) Update(
 	freshChainParams map[int64]*observertypes.ChainParams,
 	crosschainFlags observertypes.CrosschainFlags,
 	operationalFlags observertypes.OperationalFlags,
+	currentBaseFee int64,
+	unconfirmedTxCount int,
 ) error {
 	// some sanity checks
 	switch {
@@ -133,11 +184,18 @@ func (a *AppContext) Update(
 		return errors.Wrap(err, "unable to update chain registry")
 	}
 
+	// print warning if mempool is congested
+	if int64(unconfirmedTxCount) > a.config.GetMempoolCongestionThreshold() {
+		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	a.crosschainFlags = crosschainFlags
 	a.operationalFlags = operationalFlags
+	a.currentBaseFee = currentBaseFee
+	a.unconfirmedTxCount = int64(unconfirmedTxCount)
 
 	return nil
 }

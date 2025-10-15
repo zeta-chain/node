@@ -52,9 +52,9 @@ func (t *TON) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get app from context")
 	}
 
-	newBlockChan, err := t.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := t.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -69,17 +69,9 @@ func (t *TON) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(t.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !t.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(t.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(t.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(t.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -91,9 +83,10 @@ func (t *TON) Start(ctx context.Context) error {
 	}
 
 	register(t.observer.CheckRPCStatus, "check_rpc_status")
-	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGenericSkipper)
+	register(t.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
 	register(t.observer.ObserveInbounds, "observe_inbounds", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(t.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
@@ -130,17 +123,14 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
-	chain := t.observer.Chain()
 
-	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxs, err := t.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to list pending CCTXs")
+		return err
 	}
 
-	for i := range cctxList {
-		cctx := cctxList[i]
+	for _, cctx := range cctxs {
 		outboundID := base.OutboundIDFromCCTX(cctx)
-
 		err := t.processCCTX(ctx, outboundID, cctx, zetaHeight)
 		if err != nil {
 			t.outboundLogger(outboundID).Error().Err(err).Msg("failed to schedule CCTX")
@@ -172,12 +162,7 @@ func (t *TON) processCCTX(ctx context.Context,
 		return nil
 	}
 
-	go t.signer.TryProcessOutbound(
-		ctx,
-		cctx,
-		t.observer.ZetacoreClient(),
-		zetaHeight,
-	)
+	go t.signer.TryProcessOutbound(ctx, cctx, t.observer.ZetaRepo(), zetaHeight)
 
 	return nil
 }

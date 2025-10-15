@@ -26,6 +26,7 @@ type TONClient interface {
 
 	GetAccountState(context.Context, ton.AccountID) (rpc.Account, error)
 
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendMessage(context.Context, []byte) (uint32, error)
 }
 
@@ -58,14 +59,14 @@ func New(baseSigner *base.Signer, tonClient TONClient, gateway *toncontracts.Gat
 func (s *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	zetaBlockHeight uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
 	s.MarkOutbound(outboundID, true)
 	defer s.MarkOutbound(outboundID, false)
 
-	outcome, err := s.processOutbound(ctx, cctx, zetacoreClient, zetaBlockHeight)
+	outcome, err := s.processOutbound(ctx, cctx, zetaRepo, zetaBlockHeight)
 
 	logger := s.Logger().Std.With().
 		Str(logs.FieldOutboundID, outboundID).
@@ -90,7 +91,7 @@ func (s *Signer) TryProcessOutbound(
 func (s *Signer) processOutbound(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	zetaHeight uint64,
 ) (Outcome, error) {
 	// TODO: note that *InboundParams* are use used on purpose due to legacy reasons.
@@ -108,10 +109,8 @@ func (s *Signer) processOutbound(
 
 	logger := s.Logger().Std.With().Fields(outbound.logFields).Logger()
 
-	if s.ClientMode == mode.DryMode {
-		logger.Info().
-			Stringer(logs.FieldMode, mode.DryMode).
-			Msg("skipping TON signing, sending, and tracking")
+	if s.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
 		return Success, nil
 	}
 
@@ -139,7 +138,7 @@ func (s *Signer) processOutbound(
 
 	// it's okay to run this in the same goroutine
 	// because TryProcessOutbound method should be called in a goroutine
-	err = s.trackOutbound(ctx, zetacoreClient, outbound, gwState)
+	err = s.trackOutbound(ctx, zetaRepo, outbound, gwState)
 	if err != nil {
 		return Fail, errors.Wrap(err, "unable to track outbound")
 	}

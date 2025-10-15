@@ -17,12 +17,14 @@ import (
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/dry"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Orchestrator chain orchestrator.
@@ -54,7 +56,7 @@ type ObserverSigner interface {
 
 type Dependencies struct {
 	Zetacore  zrepo.ZetacoreClient
-	TSS       interfaces.TSSSigner
+	TSS       tssrepo.TSSClient
 	DBPath    string
 	Telemetry *metrics.TelemetryServer
 }
@@ -62,6 +64,13 @@ type Dependencies struct {
 func New(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logger) (*Orchestrator, error) {
 	if err := validateConstructor(scheduler, deps); err != nil {
 		return nil, errors.Wrap(err, "invalid args")
+	}
+
+	// TODO: hardcoded for now
+	// See: https://github.com/zeta-chain/node/issues/2865
+	clientMode := mode.StandardMode
+	if clientMode.IsDryMode() {
+		deps.TSS = dry.WrapTSSClient(deps.TSS)
 	}
 
 	return &Orchestrator{
@@ -393,11 +402,6 @@ func (oc *Orchestrator) logFeatureFlags(config config.Config) {
 
 	oc.logger.Info().
 		Bool("enable_multiple_calls", flags.EnableMultipleCalls).
+		Bool("enable_solana_address_lookup_table", flags.EnableSolanaAddressLookupTable).
 		Msg("feature flags status")
-
-	if config.IsEnableMultipleCallsEnabled() {
-		oc.logger.Info().Msg("EnableMultipleCalls is enabled - multiple calls from same tx will be allowed")
-	} else {
-		oc.logger.Info().Msg("EnableMultipleCalls is disabled - multiple calls from same tx will be filtered (only first event)")
-	}
 }
