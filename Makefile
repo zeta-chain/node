@@ -305,17 +305,17 @@ start-e2e-performance-test-1k: e2e-images solana
 start-stress-test-eth: e2e-images
 	@echo "--> Starting stress test for eth"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-zevm --test-stress-eth --iterations=1000" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring up -d
 
 start-stress-test-solana: e2e-images solana
 	@echo "--> Starting stress test for solana"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile stress up -d
 
 start-stress-test-sui: e2e-images
 	@echo "--> Starting stress test for sui"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
 	@echo "--> Starting e2e import-data test"
