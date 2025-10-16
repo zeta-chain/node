@@ -135,6 +135,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		tss,
 		metrics.NewTelemetryServer(),
 		db.SqliteInMemory,
+		config.Config{},
 		baseLogger,
 	)
 	require.NoError(t, err)

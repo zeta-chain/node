@@ -6,7 +6,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
-type Client interface {
+//nolint:revive
+type BitcoinClient interface {
 	common.BitcoinClient
 	signer.BitcoinClient
 	observer.BitcoinClient
