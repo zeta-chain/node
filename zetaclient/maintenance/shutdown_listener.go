@@ -56,7 +56,7 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 	)
 
 	bg.Work(ctx, o.waitForUpdate, bg.WithName("shutdown_listener.wait_for_update"), withLogger, onComplete)
-	bg.Work(ctx, o.checkIfSyncing, bg.WithName("shutdown_listener.check_if_syncing"), withLogger)
+	bg.Work(ctx, o.checkIfSyncing, bg.WithName("shutdown_listener.check_if_syncing"), withLogger, onComplete)
 }
 
 func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
@@ -78,7 +78,6 @@ func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
 			if err != nil {
 				return errors.Wrap(err, "unable to get sync status")
 			}
-			o.logger.Info().Bool("is_syncing", isSyncing).Msg("sync status")
 			if isSyncing {
 				return nil
 			}
