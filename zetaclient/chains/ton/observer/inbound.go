@@ -276,8 +276,8 @@ func (ob *Observer) parseTransaction(raw ton.Transaction) (*toncontracts.Transac
 // It handles donations and non-compliant inbounds.
 func (ob *Observer) voteInbound(ctx context.Context,
 	tx *toncontracts.Transaction,
-	isTracker bool,
-	isInternal bool,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
 
@@ -313,8 +313,9 @@ func (ob *Observer) voteInbound(ctx context.Context,
 
 	logger = ob.Logger().Inbound
 	msg := inbound.intoVoteMessage(operatorAddress, senderChain, zetaChain)
-	if isTracker {
-		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).Inc()
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
 	} else {
 		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 	}

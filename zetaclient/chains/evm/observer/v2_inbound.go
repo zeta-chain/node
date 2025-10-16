@@ -61,7 +61,7 @@ func (ob *Observer) isEventProcessable(
 // observeGatewayDeposit queries the gateway contract for deposit events
 // returns the last block successfully scanned
 //
-//	This is currently used for block-scan votes only
+//	This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDeposit(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -225,8 +225,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 // TODO: there are lot of similarities between this function and ObserveGatewayDeposit
 // logic should be factorized using interfaces and generics
 // https://github.com/zeta-chain/node/issues/2493
-//
-//	This is currently used for block-scan votes only
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -361,7 +360,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 
 // observeGatewayDepositAndCall queries the gateway contract for deposit and call events
 // returns the last block successfully scanned
-// This is currently used for block-scan votes only
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDepositAndCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,

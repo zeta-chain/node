@@ -224,6 +224,7 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 	// Post vote to zetacore.
 	const gasLimit = zetacore.PostVoteInboundGasLimit
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
+
 	zhash, ballot, err := repo.client.PostVoteInbound(ctxWithTimeout, gasLimit, retryGasLimit, msg, monitorErrCh)
 	if err != nil {
 		err = newClientError(ErrClientVoteInbound, err)

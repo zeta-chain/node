@@ -127,14 +127,14 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 func (ob *Observer) VoteInboundEvents(
 	ctx context.Context,
 	events []*clienttypes.InboundEvent,
-	isTracker bool,
-	isInternal bool,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
-			if isTracker {
-				metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).
+			if fromTracker {
+				metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
 					Inc()
 			} else {
 				metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()

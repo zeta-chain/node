@@ -43,7 +43,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false, false)
+		ballot, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -61,7 +61,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false, false)
+		_, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no ZetaSent event", func(t *testing.T) {
@@ -79,7 +79,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true, false)
+		ballot, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, true, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -100,7 +100,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true, false)
+		_, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, true, false)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")
@@ -128,7 +128,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false, false)
+		ballot, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -146,7 +146,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false, false)
+		_, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no Deposit event", func(t *testing.T) {
@@ -164,7 +164,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true, false)
+		ballot, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, true, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -186,7 +186,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true, false)
+		_, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, true, false)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")

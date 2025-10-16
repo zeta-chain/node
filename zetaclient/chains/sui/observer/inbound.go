@@ -134,8 +134,8 @@ func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
-	isTracker bool,
-	isInternal bool,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
@@ -167,8 +167,9 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	logger := ob.Logger().Inbound
-	if isTracker {
-		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternal)).Inc()
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
 	} else {
 		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 	}
