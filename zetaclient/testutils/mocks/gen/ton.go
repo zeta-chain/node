@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
-//go:generate mockery --name tonRPC --structname TONRPC --filename ton_rpc.go --output ./
+//go:generate mockery --name tonRPC --structname TONRPC --filename ton_rpc.go --output ../
 //nolint:unused // used for code gen
 type tonRPC interface {
 	GetAccountState(ctx context.Context, acc ton.AccountID) (rpc.Account, error)
