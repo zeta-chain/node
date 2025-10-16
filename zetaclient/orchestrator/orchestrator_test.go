@@ -129,14 +129,14 @@ func newTestSuite(t *testing.T) *testSuite {
 		tss              = mocks.NewTSS(t)
 	)
 
-	deps := &Dependencies{
-		Zetacore:  zetacore,
-		TSS:       tss,
-		DBPath:    db.SqliteInMemory,
-		Telemetry: metrics.NewTelemetryServer(),
-	}
-
-	v2, err := New(schedulerService, deps, baseLogger)
+	v2, err := New(
+		schedulerService,
+		zetacore,
+		tss,
+		metrics.NewTelemetryServer(),
+		db.SqliteInMemory,
+		baseLogger,
+	)
 	require.NoError(t, err)
 
 	ts := &testSuite{

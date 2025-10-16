@@ -1,12 +1,13 @@
-// Package dry provides dry-client wrappers for the TSS signer and for the standard clients of the
-// connected chains.
+// Package dry provides dry-client wrappers for the TSS signer, for the zetacore client, and for
+// the standard clients of the connected chains.
 //
 // A dry-client wrapper overrides mutating functions from the underlying client.
 // These overridden functions panic with MsgUnreacheable when called.
 //
 // Dry-client wrappers are redundant.
 // They serve as an additional safeguard layer that guarantees that dry-mode zetaclient nodes never
-// participate in signing and never mutate the state of the connected chains.
+// participate in signing, never mutate ZetaChain state, and never mutate the state of the
+// connected chains.
 package dry
 
 import (
@@ -18,18 +19,70 @@ import (
 	eth "github.com/ethereum/go-ethereum/core/types"
 	sol "github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	"github.com/zeta-chain/go-tss/blame"
 
+	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
+	crosschain "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 // MsgUnreachable is the panic message returned by this module's functions when they get called.
-const MsgUnreachable = "unreachable"
+const MsgUnreachable = "called an unreachable dry-mode function"
+
+// ------------------------------------------------------------------------------------------------
+// ZetaCore
+// ------------------------------------------------------------------------------------------------
+
+// ZetacoreClient is a dry-wrapper for zetacore clients.
+type ZetacoreClient struct {
+	// We only embed the reader client. The writer interface is deliberately not embedded so the
+	// compiler can ensure that all mutating methods are explicitly overridden.
+	zrepo.ZetacoreReaderClient
+}
+
+func WrapZetacoreClient(client zrepo.ZetacoreClient) *ZetacoreClient {
+	return &ZetacoreClient{ZetacoreReaderClient: client}
+}
+
+func (*ZetacoreClient) PostVoteGasPrice(context.Context, chains.Chain, uint64, uint64, uint64,
+) (string, error) {
+	panic(MsgUnreachable)
+}
+
+func (*ZetacoreClient) PostVoteTSS(context.Context, string, int64, chains.ReceiveStatus,
+) (string, error) {
+	panic(MsgUnreachable)
+}
+
+func (*ZetacoreClient) PostVoteBlameData(context.Context, *blame.Blame, int64, string,
+) (string, error) {
+	panic(MsgUnreachable)
+}
+
+func (*ZetacoreClient) PostVoteOutbound(context.Context, uint64, uint64,
+	*crosschain.MsgVoteOutbound,
+) (string, string, error) {
+	panic(MsgUnreachable)
+}
+
+func (*ZetacoreClient) PostVoteInbound(context.Context, uint64, uint64,
+	*crosschain.MsgVoteInbound, chan<- zetaerrors.ErrTxMonitor,
+) (string, string, error) {
+	panic(MsgUnreachable)
+}
+
+func (*ZetacoreClient) PostOutboundTracker(context.Context, int64, uint64, string,
+) (string, error) {
+	panic(MsgUnreachable)
+}
 
 // ------------------------------------------------------------------------------------------------
 // TSS
