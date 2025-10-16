@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
-
 	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -116,7 +114,7 @@ func (ob *Observer) AddInternalInboundTracker(ctx context.Context, msg *crosscha
 func (ob *Observer) ballotIsFinalizedOrVoted(ctx context.Context, ballot string) (bool, error) {
 	exist, err := ob.ZetaRepo().CCTXExists(ctx, ballot)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to check if cctx exists")
+		return false, err
 	}
 	if exist {
 		return true, nil
@@ -125,7 +123,7 @@ func (ob *Observer) ballotIsFinalizedOrVoted(ctx context.Context, ballot string)
 	voterAddress := ob.ZetaRepo().GetOperatorAddress()
 	hasVoted, err := ob.ZetaRepo().HasVoted(ctx, ballot, voterAddress)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to check if voter has voted")
+		return false, err
 	}
 	if hasVoted {
 		return true, nil
