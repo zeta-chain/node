@@ -17,7 +17,7 @@ import (
 
 // constants for monitoring tx results
 const (
-	monitorInterval   = constant.ZetaBlockTime / 2
+	monitorInterval   = constant.ZetaBlockTime
 	monitorRetryCount = 10
 )
 
@@ -120,9 +120,9 @@ func (c *Client) MonitorVoteInboundResult(
 		return retry.Retry(err)
 	}
 
-	//                               10 attempts,    2 seconds,     4 seconds max
-	// This will retry for a maximum of ~40 seconds with exponential backoff,
-	// However, this call is recursive for up to 1 layer and so the maxim time this can take is ~80 seconds
+	//                               10 attempts,    4 seconds,     8 seconds max
+	// This will retry for a maximum of ~80 seconds with exponential backoff,
+	// However, this call is recursive for up to 1 layer and so the maxim time this can take is ~160 seconds
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
 	if err != nil {
 		// All errors are forced to be retryable, we only return an error if the tx result cannot be queried

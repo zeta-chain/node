@@ -135,10 +135,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		}
 		depositedEvent, err := gatewayContract.ParseDeposited(ethlog)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, ethlog.TxHash).
 				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("invalid Deposit event")
+				Msg("failed to parse as Deposit event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -281,10 +281,10 @@ func (ob *Observer) parseAndValidateCallEvents(
 		}
 		calledEvent, err := gatewayContract.ParseCalled(log)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Call event")
+				Msg("failed to parse as Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -421,10 +421,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		}
 		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, ethlog.TxHash).
 				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("invalid DepositedAndCall event")
+				Msg("failed to parse as DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)

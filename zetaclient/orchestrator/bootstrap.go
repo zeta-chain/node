@@ -61,14 +61,17 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 
 	cfg, found := app.Config().GetBTCConfig(chain.ID())
 	if !found {
-		return nil, errors.Wrap(errSkipChain, "unable to find btc config")
+		return nil, errors.Wrap(errSkipChain, "unable to find BTC config")
 	}
 
 	standardBitcoinClient, err := btcclient.New(cfg, chain.ID(), oc.logger.Logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create rpc client")
+		return nil, errors.Wrap(err, "unable to create RPC client")
 	}
 	var bitcoinClient bitcoin.Client = standardBitcoinClient
+	if clientMode.IsDryMode() {
+		bitcoinClient = dry.WrapBitcoinClient(bitcoinClient)
+	}
 
 	var (
 		rawChain = chain.RawChain()
@@ -116,6 +119,9 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", cfg.Endpoint)
 	}
 	var evmClient evm.Client = standardEvmClient
+	if clientMode.IsDryMode() {
+		evmClient = dry.WrapEVMClient(evmClient)
+	}
 
 	baseObserver, err := oc.newBaseObserver(clientMode, chain, chain.Name())
 	if err != nil {
@@ -248,7 +254,7 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
 	baseSigner := oc.newBaseSigner(chain, clientMode)
-	signer := suisigner.New(baseSigner, oc.deps.Zetacore, suiClient, gateway)
+	signer := suisigner.New(baseSigner, oc.zetacoreClient, suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -327,7 +333,7 @@ func (oc *Orchestrator) newBaseObserver(
 		rawChainParams = chain.Params()
 	)
 
-	database, err := db.NewFromSqlite(oc.deps.DBPath, dbName, true)
+	database, err := db.NewFromSqlite(oc.dbPath, dbName, true)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to open database %s", dbName)
 	}
@@ -337,22 +343,31 @@ func (oc *Orchestrator) newBaseObserver(
 		blocksCacheSize = btcBlocksPerDay
 	}
 
-	zetaRepo := zrepo.New(oc.deps.Zetacore, *rawChain, clientMode)
+	var zetacoreClient zrepo.ZetacoreClient = oc.zetacoreClient
+	tssClient := oc.tssClient
+	if clientMode.IsDryMode() {
+		zetacoreClient = dry.WrapZetacoreClient(zetacoreClient)
+		tssClient = dry.WrapTSSClient(tssClient)
+	}
 
 	return base.NewObserver(
 		*rawChain,
 		*rawChainParams,
-		zetaRepo,
-		oc.deps.TSS,
+		zrepo.New(zetacoreClient, *rawChain, clientMode),
+		tssClient,
 		blocksCacheSize,
-		oc.deps.Telemetry,
+		oc.telemetry,
 		database,
 		oc.logger.base,
 	)
 }
 
 func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base, clientMode)
+	tssClient := oc.tssClient
+	if clientMode.IsDryMode() {
+		tssClient = dry.WrapTSSClient(tssClient)
+	}
+	return base.NewSigner(*chain.RawChain(), tssClient, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {

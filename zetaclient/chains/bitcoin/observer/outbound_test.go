@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -19,7 +19,7 @@ import (
 )
 
 // MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
-func MockBTCObserverMainnet(t *testing.T, tssSigner interfaces.TSSSigner) *Observer {
+func MockBTCObserverMainnet(t *testing.T, tssSigner tssrepo.TSSClient) *Observer {
 	// setup mock arguments
 	chain := chains.BitcoinMainnet
 	params := mocks.MockChainParams(chain.ChainId, 10)

@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 const (
@@ -36,8 +37,10 @@ type BitcoinClient interface {
 	GetNetworkInfo(context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(context.Context, *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(_ context.Context, confTarget int64) (uint64, error)
-	SendRawTransaction(_ context.Context, _ *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 	GetMempoolTxsAndFees(_ context.Context, childHash string) (client.MempoolTxsAndFees, error)
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SendRawTransaction(_ context.Context, _ *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.
@@ -140,6 +143,11 @@ func (signer *Signer) TryProcessOutbound(
 		stuckTx, found = observer.LastStuckOutbound()
 		rbfTx          = found && stuckTx.Nonce == txData.nonce
 	)
+
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
 
 	// sign outbound
 	if !rbfTx {

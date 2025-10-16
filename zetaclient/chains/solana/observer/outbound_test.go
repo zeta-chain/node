@@ -14,8 +14,8 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -76,7 +76,7 @@ func createTestObserver(
 	t *testing.T,
 	chain chains.Chain,
 	solanaClient observer.SolanaClient,
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 ) *observer.Observer {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)

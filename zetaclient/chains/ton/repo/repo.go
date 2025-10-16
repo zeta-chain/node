@@ -119,14 +119,16 @@ func (repo *TONRepo) GetNextTransactions(ctx context.Context, logger zerolog.Log
 	}
 
 	numberOfTransactions := len(txs)
-	logger.Info().Int("transactions", numberOfTransactions).Msg("observed some transactions")
+	if numberOfTransactions > 0 {
+		logger.Info().Int("transactions", numberOfTransactions).Msg("observed some transactions")
 
-	if numberOfTransactions > PaginationLimit {
-		logger.Info().
-			Int("transactions", numberOfTransactions).
-			Int("limit", PaginationLimit).
-			Msg("number of transactions exceeds pagination limit; processing only some")
-		txs = txs[:PaginationLimit]
+		if numberOfTransactions > PaginationLimit {
+			logger.Info().
+				Int("transactions", numberOfTransactions).
+				Int("limit", PaginationLimit).
+				Msg("number of transactions exceeds pagination limit; processing only some")
+			txs = txs[:PaginationLimit]
+		}
 	}
 
 	return txs, nil

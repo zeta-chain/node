@@ -13,8 +13,8 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -33,7 +33,7 @@ func Test_NewSigner(t *testing.T) {
 		chain        chains.Chain
 		chainParams  observertypes.ChainParams
 		solanaClient signer.SolanaClient
-		tssSigner    interfaces.TSSSigner
+		tssSigner    tssrepo.TSSClient
 		relayerKey   *keys.RelayerKey
 		ts           *metrics.TelemetryServer
 		logger       base.Logger

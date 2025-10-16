@@ -258,7 +258,6 @@ services:
     profiles:
       - solana
       - all
-      - stress
     restart: always
     ports:
       - "8899:8899"
@@ -292,7 +291,6 @@ services:
     profiles:
       - sui
       - all
-      - stress
     ports:
       - "9000:9000" # RPC
     environment:
@@ -424,7 +422,7 @@ services:
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 
   zetachain-exporter:
-    image: zetachain/zetachain-exporter:v4.10.0
+    image: zetachain/zetachain-exporter:v4.11.0
     container_name: zetachain-exporter
     hostname: zetachain-exporter
     profiles:

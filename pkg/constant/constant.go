@@ -39,4 +39,7 @@ const (
 
 	// OptionUnpause is the argument used in CmdUpdateERC20CustodyPauseStatus to unpause the ERC20 custody contract
 	OptionUnpause = "unpause"
+
+	// DefaultAppMempoolSize is the default size of ZetaChain mempool
+	DefaultAppMempoolSize = 3000
 )
