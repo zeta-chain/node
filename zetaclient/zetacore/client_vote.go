@@ -36,7 +36,7 @@ func (c *Client) PostVoteGasPrice(
 	}
 
 	hash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, PostGasPriceGasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, msg.Type(), "", PostGasPriceGasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (c *Client) PostVoteTSS(
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, PostTSSGasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, msg.Type(), "", PostTSSGasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *Client) PostVoteBlameData(
 	var gasLimit uint64 = PostBlameDataGasLimit
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, msg.Type(), "", gasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {
@@ -133,7 +133,7 @@ func (c *Client) PostVoteOutbound(
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, msg.Type(), msg.Digest(), gasLimit, authzMsg, authzSigner)
 	})
 	if err != nil {
 		return "", ballotIndex, errors.Wrap(err, "unable to broadcast vote outbound")
@@ -189,7 +189,7 @@ func (c *Client) PostVoteInbound(
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
-		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
+		return c.Broadcast(ctx, msg.Type(), msg.Digest(), gasLimit, authzMsg, authzSigner)
 	})
 
 	if err != nil {

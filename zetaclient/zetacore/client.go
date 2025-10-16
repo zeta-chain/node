@@ -46,6 +46,9 @@ type Client struct {
 	chainID     string
 	chain       chains.Chain
 
+	// messagePool is a pool of cached messages for broadcasting
+	messagePool *MessagePool
+
 	// blocksFanout that receives new block events from Zetacore via websockets
 	blocksFanout *fanout.FanOut[ctypes.EventDataNewBlock]
 
@@ -179,6 +182,7 @@ func NewClient(
 		chainID:     chainID,
 		chain:       zetaChain,
 
+		messagePool:                  NewMessagePool(),
 		readyToExecuteInboundBallots: make(map[string]uint64),
 	}, nil
 }
