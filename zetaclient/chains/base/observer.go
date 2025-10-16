@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
@@ -66,7 +65,7 @@ type Observer struct {
 
 	// internalInboundTrackers stores trackers for inbounds that failed to vote on due to broadcasting error (e.g. tx dropped)
 	// the contents of the map may vary from observer to observer, depending on individual situation
-	internalInboundTrackers map[string]crosschaintypes.InboundTracker
+	internalInboundTrackers map[string]*InternalInboundTracker
 
 	// db is the database to persist data
 	db *db.DB
@@ -113,7 +112,7 @@ func NewObserver(
 		ts:                      ts,
 		db:                      database,
 		blockCache:              blockCache,
-		internalInboundTrackers: make(map[string]crosschaintypes.InboundTracker),
+		internalInboundTrackers: make(map[string]*InternalInboundTracker),
 		mu:                      &sync.Mutex{},
 		logger:                  newObserverLogger(chain, logger),
 		stop:                    make(chan struct{}),
