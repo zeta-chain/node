@@ -139,4 +139,6 @@ type ZetacoreClient interface {
 	GetBaseGasPrice(context.Context) (int64, error)
 
 	GetNumberOfUnconfirmedTxs(context.Context) (int, error)
+
+	GetSyncStatus(context.Context) (bool, error)
 }

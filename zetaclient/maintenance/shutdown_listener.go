@@ -56,6 +56,37 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 	)
 
 	bg.Work(ctx, o.waitForUpdate, bg.WithName("shutdown_listener.wait_for_update"), withLogger, onComplete)
+	bg.Work(ctx, o.checkIfSyncing, bg.WithName("shutdown_listener.check_if_syncing"), withLogger)
+}
+
+func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
+	isSyncing, err := o.client.GetSyncStatus(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get sync status")
+	}
+	if isSyncing {
+		return nil
+	}
+
+	ticker := time.NewTicker(restartListenerTicker)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			isSyncing, err := o.client.GetSyncStatus(ctx)
+			if err != nil {
+				return errors.Wrap(err, "unable to get sync status")
+			}
+			o.logger.Info().Bool("is_syncing", isSyncing).Msg("sync status")
+			if isSyncing {
+				return nil
+			}
+		case <-ctx.Done():
+			o.logger.Info().Msg("checkIfCatchup (shutdown listener) stopped")
+			return nil
+		}
+	}
 }
 
 func (o *ShutdownListener) waitForUpdate(ctx context.Context) error {

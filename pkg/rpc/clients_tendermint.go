@@ -33,3 +33,12 @@ func (c *Clients) GetNodeInfo(ctx context.Context) (*cmtservice.GetNodeInfoRespo
 
 	return res, nil
 }
+
+func (c *Clients) GetSyncing(ctx context.Context) (bool, error) {
+	res, err := c.Tendermint.GetSyncing(ctx, &cmtservice.GetSyncingRequest{})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get syncing status")
+	}
+	return res.Syncing, nil
+
+}

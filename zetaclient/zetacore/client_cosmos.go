@@ -39,3 +39,11 @@ func (c *Client) GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error) {
 
 	return resp.Count, nil
 }
+
+func (c *Client) GetSyncStatus(ctx context.Context) (bool, error) {
+	syncing, err := c.Clients.GetSyncing(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get syncing status")
+	}
+	return syncing, nil
+}
