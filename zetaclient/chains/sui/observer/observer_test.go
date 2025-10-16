@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -281,13 +282,14 @@ func TestObserver(t *testing.T) {
 
 		ts.MockCCTXByNonce(cctx)
 
-		// Given outbound tracker
+		// Given outbound tracker containing two tx hashes, one of which is false
 		const digest = "0xSuiTxHash"
+		const digest2 = "0xSuiTxHashFalse"
 		tracker := cctypes.OutboundTracker{
 			Index:    "0xAAA",
 			ChainId:  ts.Chain().ChainId,
 			Nonce:    nonce,
-			HashList: []*cctypes.TxHash{{TxHash: digest}},
+			HashList: []*cctypes.TxHash{{TxHash: digest2}, {TxHash: digest}},
 		}
 
 		ts.MockOutboundTrackers([]cctypes.OutboundTracker{tracker})
@@ -339,8 +341,10 @@ func TestObserver(t *testing.T) {
 				},
 			},
 		}
+		tx2 := models.SuiTransactionBlockResponse{Digest: digest2}
 
-		ts.MockGetTxOnce(tx)
+		ts.MockGetTxOnce(tx, nil)
+		ts.MockGetTxOnce(tx2, errors.New("no tx found"))
 
 		// ACT
 		err = ts.ProcessOutboundTrackers(ts.ctx)
@@ -612,8 +616,21 @@ func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents 
 	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(res, nil).Once()
 }
 
-func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse) {
-	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, mock.Anything).Return(tx, nil).Once()
+func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse, err error) {
+	req := models.SuiGetTransactionBlockRequest{
+		Digest: tx.Digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEvents:  true,
+			ShowInput:   true,
+			ShowEffects: true,
+		},
+	}
+
+	if err == nil {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(tx, err).Once()
+	} else {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(models.SuiTransactionBlockResponse{}, err).Once()
+	}
 }
 
 func (ts *testSuite) CatchInboundVotes() {
