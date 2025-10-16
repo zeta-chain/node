@@ -264,7 +264,7 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 	}
 
 	baseSigner := oc.newBaseSigner(chain, clientMode)
-	signer := suisigner.New(baseSigner, oc.deps.Zetacore, suiClient, gateway)
+	signer := suisigner.New(baseSigner, oc.zetacoreClient, suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -343,7 +343,7 @@ func (oc *Orchestrator) newBaseObserver(
 		rawChainParams = chain.Params()
 	)
 
-	database, err := db.NewFromSqlite(oc.deps.DBPath, dbName, true)
+	database, err := db.NewFromSqlite(oc.dbPath, dbName, true)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to open database %s", dbName)
 	}
@@ -353,22 +353,31 @@ func (oc *Orchestrator) newBaseObserver(
 		blocksCacheSize = btcBlocksPerDay
 	}
 
-	zetaRepo := zrepo.New(oc.deps.Zetacore, *rawChain, clientMode)
+	var zetacoreClient zrepo.ZetacoreClient = oc.zetacoreClient
+	tssClient := oc.tssClient
+	if clientMode.IsDryMode() {
+		zetacoreClient = dry.WrapZetacoreClient(zetacoreClient)
+		tssClient = dry.WrapTSSClient(tssClient)
+	}
 
 	return base.NewObserver(
 		*rawChain,
 		*rawChainParams,
-		zetaRepo,
-		oc.deps.TSS,
+		zrepo.New(zetacoreClient, *rawChain, clientMode),
+		tssClient,
 		blocksCacheSize,
-		oc.deps.Telemetry,
+		oc.telemetry,
 		database,
 		oc.logger.base,
 	)
 }
 
 func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base, clientMode)
+	tssClient := oc.tssClient
+	if clientMode.IsDryMode() {
+		tssClient = dry.WrapTSSClient(tssClient)
+	}
+	return base.NewSigner(*chain.RawChain(), tssClient, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {

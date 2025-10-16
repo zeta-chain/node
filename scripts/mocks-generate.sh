@@ -7,12 +7,11 @@ go install github.com/vektra/mockery/v2@v2.53.3
 
 MOCK_DIRS=(
     "./testutil/keeper/mocks"
-    "./zetaclient/chains/zrepo"
     "./zetaclient/chains/bitcoin/client"
     "./zetaclient/chains/evm/observer"
     "./zetaclient/chains/ton/observer"
     "./zetaclient/chains/ton/signer"
-    "./zetaclient/testutils/mocks"
+    "./zetaclient/testutils/mocks/gen"
 )
 
 for dir in "${MOCK_DIRS[@]}"; do

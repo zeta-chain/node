@@ -29,7 +29,6 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 "MempoolCongestionThreshold": 3000,
 ```
 
-
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
@@ -40,6 +39,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
 * [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
 * [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
 * [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
 * [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
 
@@ -53,6 +53,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 
 ## v36.0.0
 

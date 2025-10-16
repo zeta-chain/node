@@ -21,7 +21,7 @@ import (
 
 // ReportPreflightMetrics performs a preflight check on preflight chains (where IsSuported=false) and updates metrics.
 // This helps to visualize the readiness of new chains to be enabled and observed by zetaclient.
-func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc Zetacore, logger zerolog.Logger) error {
+func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc ZetacoreClient, logger zerolog.Logger) error {
 	additionalChains, err := zc.GetAdditionalChains(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch additional chains")

@@ -57,6 +57,13 @@ func zevmPerformanceRoutine(
 			return err
 		}
 
+		if r.ReceiptTimeout == 0 {
+			r.ReceiptTimeout = 15 * time.Minute
+		}
+		if r.CctxTimeout == 0 {
+			r.CctxTimeout = 15 * time.Minute
+		}
+
 		r.Logger.Print("🏃 starting zevm performance tests")
 		startTime := time.Now()
 
@@ -98,6 +105,13 @@ func ethereumDepositPerformanceRoutine(
 		)
 		if err != nil {
 			return err
+		}
+
+		if r.ReceiptTimeout == 0 {
+			r.ReceiptTimeout = 15 * time.Minute
+		}
+		if r.CctxTimeout == 0 {
+			r.CctxTimeout = 15 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting Ethereum deposit performance tests")
