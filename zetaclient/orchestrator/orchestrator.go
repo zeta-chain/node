@@ -21,16 +21,18 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/dry"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Orchestrator chain orchestrator.
 type Orchestrator struct {
-	deps      *Dependencies
 	scheduler *scheduler.Scheduler
+
+	zetacoreClient zetacoreClient
+	tssClient      tssrepo.TSSClient
+	telemetry      *metrics.TelemetryServer
+	dbPath         string
 
 	chains map[int64]ObserverSigner
 	mu     sync.RWMutex
@@ -40,13 +42,17 @@ type Orchestrator struct {
 	logger loggers
 }
 
+// zetacoreClient aggregates the orchestrator and zrepo interfaces for ZetacoreClient.
+type zetacoreClient interface {
+	ZetacoreClient
+	zrepo.ZetacoreClient
+}
+
 type loggers struct {
 	zerolog.Logger
 	sampled zerolog.Logger
 	base    base.Logger
 }
-
-const schedulerGroup = scheduler.Group("orchestrator")
 
 type ObserverSigner interface {
 	Chain() chains.Chain
@@ -54,30 +60,37 @@ type ObserverSigner interface {
 	Stop()
 }
 
-type Dependencies struct {
-	Zetacore  zrepo.ZetacoreClient
-	TSS       tssrepo.TSSClient
-	DBPath    string
-	Telemetry *metrics.TelemetryServer
-}
+const schedulerGroup = scheduler.Group("orchestrator")
 
-func New(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logger) (*Orchestrator, error) {
-	if err := validateConstructor(scheduler, deps); err != nil {
-		return nil, errors.Wrap(err, "invalid args")
-	}
-
-	// TODO: hardcoded for now
-	// See: https://github.com/zeta-chain/node/issues/2865
-	clientMode := mode.StandardMode
-	if clientMode.IsDryMode() {
-		deps.TSS = dry.WrapTSSClient(deps.TSS)
+func New(
+	scheduler *scheduler.Scheduler,
+	zetacoreClient zetacoreClient,
+	tssClient tssrepo.TSSClient,
+	telemetry *metrics.TelemetryServer,
+	dbPath string,
+	logger base.Logger,
+) (*Orchestrator, error) {
+	switch {
+	case scheduler == nil:
+		return nil, errors.New("invalid scheduler")
+	case zetacoreClient == nil:
+		return nil, errors.New("invalid zetacore client")
+	case tssClient == nil:
+		return nil, errors.New("invalid TSS client")
+	case telemetry == nil:
+		return nil, errors.New("invalid telemetry server")
+	case dbPath == "":
+		return nil, errors.New("invalid database path")
 	}
 
 	return &Orchestrator{
-		scheduler: scheduler,
-		deps:      deps,
-		chains:    make(map[int64]ObserverSigner),
-		logger:    newLoggers(logger),
+		scheduler:      scheduler,
+		zetacoreClient: zetacoreClient,
+		tssClient:      tssClient,
+		telemetry:      telemetry,
+		dbPath:         dbPath,
+		chains:         make(map[int64]ObserverSigner),
+		logger:         newLoggers(logger),
 	}, nil
 }
 
@@ -87,7 +100,7 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 		return err
 	}
 
-	newBlocksChan, err := oc.deps.Zetacore.NewBlockSubscriber(ctx)
+	newBlocksChan, err := oc.zetacoreClient.NewBlockSubscriber(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to subscribe to new block")
 	}
@@ -133,7 +146,7 @@ func (oc *Orchestrator) UpdateContext(ctx context.Context) error {
 		return err
 	}
 
-	err = UpdateAppContext(ctx, app, oc.deps.Zetacore, oc.logger.Logger)
+	err = UpdateAppContext(ctx, app, oc.zetacoreClient, oc.logger.Logger)
 
 	switch {
 	case errors.Is(err, ErrUpgradeRequired):
@@ -251,19 +264,16 @@ func (oc *Orchestrator) updateMetrics(ctx context.Context) error {
 		return errors.Wrap(err, "unable get block from context")
 	}
 
-	zetacore := oc.deps.Zetacore
-	ts := oc.deps.Telemetry
-
 	zetaBlockHeight := block.Block.Height
 
 	// 0. Set block metrics
 	metrics.CoreBlockLatency.Set(time.Since(block.Block.Time).Seconds())
 	metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
 
-	ts.SetCoreBlockNumber(zetaBlockHeight)
+	oc.telemetry.SetCoreBlockNumber(zetaBlockHeight)
 
 	// 1. Fetch hot key balance
-	balance, err := zetacore.GetZetaHotKeyBalance(ctx)
+	balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get hot key balance")
 	}
@@ -274,11 +284,11 @@ func (oc *Orchestrator) updateMetrics(ctx context.Context) error {
 	// 3. Update telemetry
 	diff := oc.operatorBalance.Sub(balance)
 	if diff.GT(zero) && diff.LT(maxInt) {
-		ts.AddFeeEntry(zetaBlockHeight, diff.Int64())
+		oc.telemetry.AddFeeEntry(zetaBlockHeight, diff.Int64())
 	}
 
 	// 4. Update metrics
-	burnRate := ts.HotKeyBurnRate.GetBurnRate().Int64()
+	burnRate := oc.telemetry.HotKeyBurnRate.GetBurnRate().Int64()
 	metrics.HotKeyBurnRate.Set(float64(burnRate))
 
 	return nil
@@ -290,7 +300,7 @@ func (oc *Orchestrator) reportPreflightMetrics(ctx context.Context) error {
 		return err
 	}
 
-	return ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger)
+	return ReportPreflightMetrics(ctx, app, oc.zetacoreClient, oc.logger.Logger)
 }
 
 func (oc *Orchestrator) hasChain(chainID int64) bool {
@@ -366,25 +376,6 @@ func (oc *Orchestrator) removeMissingChains(presentChainIDs []int64) int {
 	}
 
 	return removed
-}
-
-func validateConstructor(s *scheduler.Scheduler, dep *Dependencies) error {
-	switch {
-	case s == nil:
-		return errors.New("scheduler is nil")
-	case dep == nil:
-		return errors.New("dependencies are nil")
-	case dep.Zetacore == nil:
-		return errors.New("zetacore is nil")
-	case dep.TSS == nil:
-		return errors.New("tss is nil")
-	case dep.Telemetry == nil:
-		return errors.New("telemetry is nil")
-	case dep.DBPath == "":
-		return errors.New("db path is empty")
-	}
-
-	return nil
 }
 
 func newLoggers(baseLogger base.Logger) loggers {
