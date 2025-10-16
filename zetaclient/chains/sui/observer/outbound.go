@@ -49,7 +49,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 			cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
 			if err != nil {
-				logger.Error().Err(err).Str(logs.FieldTx, digest).Msg("unable to get cctx")
+				logger.Error().Err(err).Str(logs.FieldTx, digest).Send()
 				continue // does not block other CCTXs from being processed
 			}
 
