@@ -41,6 +41,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
 * [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
 * [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
 
 ### Tests
 
