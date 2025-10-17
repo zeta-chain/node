@@ -46,6 +46,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
