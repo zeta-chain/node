@@ -81,7 +81,7 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 8,
+                "w": 4,
                 "x": 0,
                 "y": 1
             },
@@ -152,8 +152,8 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 8,
-                "x": 8,
+                "w": 4,
+                "x": 4,
                 "y": 1
             },
             "hideTimeOverride": false,
@@ -233,8 +233,8 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 8,
-                "x": 16,
+                "w": 4,
+                "x": 8,
                 "y": 1
             },
             "hideTimeOverride": false,
@@ -271,6 +271,158 @@
                 }
             ],
             "title": "Total Successful",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "prometheus"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "locale"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 12,
+                "y": 1
+            },
+            "hideTimeOverride": false,
+            "id": 18,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+            },
+            "pluginVersion": "10.2.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(zetaclient_transactions_added_to_internal_tracker_total{instance=\"172.20.0.24:8886\"})",
+                    "format": "time_series",
+                    "instant": false,
+                    "interval": "30s",
+                    "intervalFactor": 1,
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Transactions Added to Tracker",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "prometheus"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "null",
+                                "result": {
+                                    "text": "0"
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "locale"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 16,
+                "y": 1
+            },
+            "hideTimeOverride": false,
+            "id": 3,
+            "links": [],
+            "maxDataPoints": 100,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+            },
+            "pluginVersion": "10.2.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(zetaclient_internal_trackers_active{instance=\"172.20.0.24:8886\"})",
+                    "format": "time_series",
+                    "instant": false,
+                    "interval": "30s",
+                    "intervalFactor": 1,
+                    "refId": "A"
+                }
+            ],
+            "title": "Active Internal Trackers",
             "type": "stat"
         },
         {
@@ -685,7 +837,7 @@
                     "datasource": {
                         "uid": "prometheus"
                     },
-                    "expr": "(\n  zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} / \n  (\n    zetaclient_inbound_votes_block_scan_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} + \n    (zetaclient_inbound_observations_tracker_total{chain=\"goerli_localnet\", internal=\"false\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_block_scan_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} * 0)\n  )\n) * 100",
+                    "expr": "(\n  (\n    zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} + \n    zetaclient_transactions_added_to_internal_tracker_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} - \n    zetaclient_internal_trackers_active{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"}\n  ) / \n  zetaclient_inbound_votes_block_scan_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"}\n) * 100",
                     "format": "time_series",
                     "instant": false,
                     "interval": "30s",
@@ -794,85 +946,104 @@
             "type": "row"
         },
         {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
             "datasource": {
                 "uid": "prometheus"
             },
-            "description": "",
             "fieldConfig": {
                 "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "decimals": 0,
-                    "mappings": [
-                        {
-                            "options": {
-                                "match": "null",
-                                "result": {
-                                    "text": "0"
-                                }
-                            },
-                            "type": "special"
-                        }
-                    ],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "red",
-                                "value": 80
-                            }
-                        ]
-                    },
-                    "unit": "locale"
+                    "links": []
                 },
                 "overrides": []
             },
+            "fill": 3,
+            "fillGradient": 0,
             "gridPos": {
                 "h": 8,
-                "w": 6,
+                "w": 12,
                 "x": 0,
                 "y": 20
             },
+            "hiddenSeries": false,
             "hideTimeOverride": false,
-            "id": 3,
-            "links": [],
-            "maxDataPoints": 100,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "horizontal",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto",
-                "wideLayout": true
+            "id": 19,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "sideWidth": 350,
+                "total": false,
+                "values": true
             },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
             "pluginVersion": "10.2.2",
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
             "targets": [
                 {
                     "datasource": {
                         "uid": "prometheus"
                     },
-                    "expr": "sum(zetaclient_internal_trackers_active{instance=\"172.20.0.24:8886\"})",
+                    "expr": "zetaclient_internal_trackers_active{instance=\"172.20.0.24:8886\"}",
                     "format": "time_series",
                     "instant": false,
-                    "interval": "30s",
+                    "interval": "",
                     "intervalFactor": 1,
+                    "legendFormat": "{{chain}} - Active Trackers",
                     "refId": "A"
                 }
             ],
-            "title": "Active internal trackers",
-            "type": "stat"
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Active Internal Trackers by Chain",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "decimals": 0,
+                    "format": "locale",
+                    "label": "",
+                    "logBase": 1,
+                    "min": "0",
+                    "show": true
+                },
+                {
+                    "format": "none",
+                    "logBase": 1,
+                    "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
         },
         {
             "aliasColors": {},
@@ -892,8 +1063,8 @@
             "fillGradient": 0,
             "gridPos": {
                 "h": 8,
-                "w": 18,
-                "x": 6,
+                "w": 12,
+                "x": 12,
                 "y": 20
             },
             "hiddenSeries": false,
