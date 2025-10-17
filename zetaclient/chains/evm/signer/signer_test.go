@@ -139,31 +139,58 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 }
 
 func TestSigner_TryProcessOutbound(t *testing.T) {
-	ctx := makeCtx(t)
+	t.Run("standard", func(t *testing.T) {
+		ctx := makeCtx(t)
 
-	// ARRANGE
-	// Setup evm signer
-	evmSigner := newTestSuite(t)
-	cctx := getCCTX(t)
+		// ARRANGE
+		// Setup evm signer
+		evmSigner := newTestSuite(t)
+		cctx := getCCTX(t)
 
-	// Test with mock client that has keys
-	client := mocks.NewZetacoreClient(t).
-		WithKeys(&keys.Keys{}).
-		WithZetaChain().
-		WithPostVoteOutbound("", "")
-	zetaRepo := zrepo.New(client, chains.Ethereum, mode.StandardMode)
+		// Test with mock client that has keys
+		client := mocks.NewZetacoreClient(t).
+			WithKeys(&keys.Keys{}).
+			WithZetaChain().
+			WithPostVoteOutbound("", "")
+		zetaRepo := zrepo.New(client, chains.Ethereum, mode.StandardMode)
 
-	// mock evm client "NonceAt"
-	nonce := uint64(123)
-	evmSigner.evmServer.MockNonceAt(nonce)
+		// mock evm client "NonceAt"
+		nonce := uint64(123)
+		evmSigner.evmServer.MockNonceAt(nonce)
 
-	// ACT
-	evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
+		// ACT
+		evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
 
-	// ASSERT
-	// Check if cctx was signed and broadcasted
-	list := evmSigner.GetReportedTxList()
-	require.Len(t, *list, 1)
+		// ASSERT
+		// Check if cctx was signed and broadcasted
+		list := evmSigner.GetReportedTxList()
+		require.Len(t, *list, 1)
+	})
+
+	t.Run("dry", func(t *testing.T) {
+		ctx := makeCtx(t)
+
+		// ARRANGE
+		// Setup evm signer
+		evmSigner := newTestSuite(t)
+		evmSigner.ClientMode = mode.DryMode
+
+		cctx := getCCTX(t)
+
+		// Test with mock client that has keys
+		client := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+		zetaRepo := zrepo.New(client, chains.Ethereum, mode.DryMode)
+
+		// mock evm client "NonceAt"
+		nonce := uint64(123)
+		evmSigner.evmServer.MockNonceAt(nonce)
+
+		// ACT
+		evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
+
+		// ASSERT
+		require.Empty(t, *evmSigner.GetReportedTxList())
+	})
 }
 
 func TestSigner_BroadcastOutbound(t *testing.T) {

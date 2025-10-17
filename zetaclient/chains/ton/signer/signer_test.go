@@ -32,6 +32,38 @@ func TestSigner(t *testing.T) {
 	// ARRANGE
 	ts := newTestSuite(t)
 
+	const nonce uint64 = 2
+
+	withdrawalTx, increaseSeqnoTx := testSigner(t, ts, nonce)
+
+	// ASSERT
+	// Make sure signer send the tx the chain AND published the outbound tracker
+	require.Len(t, ts.trackerBag, 2)
+
+	tracker1 := ts.trackerBag[0]
+
+	require.Equal(t, uint64(nonce), tracker1.nonce)
+	require.Equal(t, encoder.EncodeTx(withdrawalTx), tracker1.hash)
+
+	tracker2 := ts.trackerBag[1]
+	require.Equal(t, uint64(nonce+1), tracker2.nonce)
+	require.Equal(t, encoder.EncodeTx(increaseSeqnoTx), tracker2.hash)
+}
+
+func TestDrySigner(t *testing.T) {
+	// ARRANGE
+	ts := newTestSuite(t)
+	ts.baseSigner.ClientMode = mode.DryMode
+
+	const nonce uint64 = 2
+
+	testSigner(t, ts, nonce)
+
+	// ASSERT
+	require.Len(t, ts.trackerBag, 0)
+}
+
+func testSigner(t *testing.T, ts *testSuite, nonce uint64) (ton.Transaction, ton.Transaction) {
 	// Given TON signer
 	signer := New(ts.baseSigner, ts.rpc, ts.gw)
 
@@ -41,7 +73,6 @@ func TestSigner(t *testing.T) {
 	const (
 		zetaHeight = 123
 		outboundID = "abc123"
-		nonce      = 2
 	)
 
 	amount := tonCoins(t, "5")
@@ -61,7 +92,7 @@ func TestSigner(t *testing.T) {
 	withdrawal := toncontracts.Withdrawal{
 		Recipient: receiver,
 		Amount:    amount,
-		Seqno:     nonce,
+		Seqno:     uint32(nonce),
 	}
 
 	ts.Sign(&withdrawal)
@@ -80,47 +111,37 @@ func TestSigner(t *testing.T) {
 	// Given expected increase_seqno
 	increaseSeqno := toncontracts.IncreaseSeqno{
 		ReasonCode: uint32(InvalidWorkchain),
-		Seqno:      nonce + 1,
+		Seqno:      uint32(nonce + 1),
 	}
 
 	ts.Sign(&increaseSeqno)
 
+	var withdrawalTx ton.Transaction
+	var increaseSeqnoTx ton.Transaction
+
 	// Given expected rpc calls
 	lt, hash := uint64(400), decodeHash(t, "df8a01053f50a74503dffe6802f357bf0e665bd1f3d082faccfebdea93cddfeb")
-	ts.OnGetAccountState(ts.gw.AccountID(), rpc.Account{LastTxLT: lt, LastTxHash: hash})
+	if !ts.baseSigner.ClientMode.IsDryMode() {
+		ts.OnGetAccountState(ts.gw.AccountID(), rpc.Account{LastTxLT: lt, LastTxHash: hash})
+		ts.OnSendMessage(0, nil)
 
-	ts.OnSendMessage(0, nil)
-
-	var (
-		withdrawalTx    = sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
+		// returns both txs
+		withdrawalTx = sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
 		increaseSeqnoTx = sample.TONIncreaseSeqno(t, ts.gw.AccountID(), increaseSeqno)
-	)
-
-	// returns both txs
-	ts.OnGetTransactionsSince(
-		ts.gw.AccountID(),
-		lt,
-		ton.Bits256(hash),
-		[]ton.Transaction{withdrawalTx, increaseSeqnoTx},
-		nil,
-	)
+		ts.OnGetTransactionsSince(
+			ts.gw.AccountID(),
+			lt,
+			ton.Bits256(hash),
+			[]ton.Transaction{withdrawalTx, increaseSeqnoTx},
+			nil,
+		)
+	}
 
 	// ACT
 	signer.TryProcessOutbound(ts.ctx, cctx1, ts.zetaRepo, zetaHeight)
 	signer.TryProcessOutbound(ts.ctx, cctx2, ts.zetaRepo, zetaHeight)
 
-	// ASSERT
-	// Make sure signer send the tx the chain AND published the outbound tracker
-	require.Len(t, ts.trackerBag, 2)
-
-	tracker1 := ts.trackerBag[0]
-
-	require.Equal(t, uint64(nonce), tracker1.nonce)
-	require.Equal(t, encoder.EncodeTx(withdrawalTx), tracker1.hash)
-
-	tracker2 := ts.trackerBag[1]
-	require.Equal(t, uint64(nonce+1), tracker2.nonce)
-	require.Equal(t, encoder.EncodeTx(increaseSeqnoTx), tracker2.hash)
+	return withdrawalTx, increaseSeqnoTx
 }
 
 type testSuite struct {
