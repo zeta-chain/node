@@ -310,7 +310,7 @@ start-stress-test-eth: e2e-images
 start-stress-test-solana: e2e-images solana
 	@echo "--> Starting stress test for solana"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile stress --profile monitoring up -d
 
 start-stress-test-sui: e2e-images
 	@echo "--> Starting stress test for sui"
