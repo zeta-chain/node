@@ -2,9 +2,18 @@
 
 ## Unreleased
 
+### Zetaclient Config
+
+* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
+
+```
+"PublicIP": "",
+"PublicDNS": "my.zetaclient.com",
+```
+
 ### Features
 
-* [4254](https://github.com/zeta-chain/node/pull/4234) - add additional support for zetaclient public DNS name
+* [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
 
 ## v36.0.0
 
