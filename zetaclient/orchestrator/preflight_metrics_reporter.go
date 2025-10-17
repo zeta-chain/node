@@ -144,7 +144,7 @@ func reportPreflightMetricsSolana(ctx context.Context, app *zctx.AppContext, cha
 		return errors.New("unable to create solana rpc client")
 	}
 
-	// TODO: The Solana repositorty should be injected as a dependency into this function. We
+	// TODO: The Solana repository should be injected as a dependency into this function. We
 	// should not have to instantiate the Solana client here.
 	blockTime, err := solrepo.New(rpcClient).HealthCheck(ctx)
 	if err != nil {
