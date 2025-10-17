@@ -2,7 +2,7 @@ package parsers
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -34,7 +34,7 @@ func ParsefileToObserverDetails(fp string) ([]ObserverInfoReader, error) {
 		return nil, err
 	}
 	file = filepath.Clean(file)
-	input, err := ioutil.ReadFile(file) // #nosec G304
+	input, err := os.ReadFile(file) // #nosec G304
 	if err != nil {
 		return nil, err
 	}

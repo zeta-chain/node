@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	zetaevmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
-	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -297,13 +297,14 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	if solClient == nil {
 		return fmt.Errorf("error creating rpc client")
 	}
+	solRepo := solrepo.New(solClient)
 
 	signature, err := solana.SignatureFromBase58(inboundHash)
 	if err != nil {
 		return fmt.Errorf("error parsing signature: %w", err)
 	}
 
-	txResult, err := solanarpc.GetTransaction(goCtx, solClient, signature)
+	txResult, err := solRepo.GetTransaction(goCtx, signature)
 	if err != nil {
 		return fmt.Errorf("error getting transaction: %w", err)
 	}

@@ -18,8 +18,10 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
@@ -341,8 +343,9 @@ func newTestSuite(t *testing.T) *testSuite {
 	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
-	baseSigner := base.NewSigner(chain, tss, logger)
-	signer := New(baseSigner, suiMock, gw, zetacore)
+	baseSigner := base.NewSigner(chain, tss, logger, mode.StandardMode)
+	zetaRepo := zrepo.New(zetacore, chain, mode.StandardMode)
+	signer := New(baseSigner, zetaRepo, suiMock, gw)
 
 	ts := &testSuite{
 		t:        t,

@@ -2,10 +2,34 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
+
 ### Zetaclient Config
 
-* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
+* Feature flags are introduced, this section should be added to Zetaclient Config after EVM Gateway contracts are upgraded, to enable multiple EVM calls in Zetaclient.
+Also EnableSolanaAddressLookupTable feature flag should be set.
 
+```
+"FeatureFlags": {
+  "EnableMultipleCalls": true,
+  "EnableSolanaAddressLookupTable": true
+}
+```
+
+* ZetaChain maximum base fee is introduced as an optional field. It is the maximum base fee, in Gwei, allowed for zetaclient to send out ZetaChain transactions.
+```
+"MaxBaseFee": 100,
+```
+
+* ZetaChain mempool congestion threshold is introduced as an optional field. Observation will stop if the number of unconfirmed transactions in the mempool is greater than this value.
+```
+"MempoolCongestionThreshold": 3000,
+```
+
+* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
 ```
 "PublicIP": "",
 "PublicDNS": "my.zetaclient.com",
@@ -13,13 +37,53 @@
 
 ### Features
 
+* [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
+* [4266](https://github.com/zeta-chain/node/pull/4266) - add support for Solana Address Lookup Table in withdraw and call
+* [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
+* [4313](https://github.com/zeta-chain/node/pull/4313) - add dry-mode to Sui and add client wrappers to Sui and TON
+* [4317](https://github.com/zeta-chain/node/pull/4317) - add dry-mode to Solana
+* [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
+* [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
+* [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
+* [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
+
+### Tests
+
+* [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+
+### Refactor
+
+* [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+
+### Fixes
+
+* [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
+* [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
 
 ## v36.0.0
 
 ### Features
 
 * [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4277](https://github.com/zeta-chain/node/pull/4277) - add dry-mode support for TON
+* [4295](https://github.com/zeta-chain/node/pull/4295) - monitor failed inbound votes and add them to an internal inbound tracker cache
+
+### Refactor
+
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
+
+### Fixes
+
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4291](https://github.com/zeta-chain/node/pull/4291) - adjust inbound retry gas limit and stop tx broadcasting on mempool congestion
 
 ## v33.0.0
 

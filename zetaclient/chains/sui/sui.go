@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Sui observer-signer.
@@ -43,7 +44,7 @@ func (s *Sui) Chain() chains.Chain {
 	return s.observer.Chain()
 }
 
-// Start starts observer-signer for processing inbound & outbound cross-chain transactions.
+// Start starts the observer-signer for processing inbound and outbound cross-chain transactions.
 func (s *Sui) Start(ctx context.Context) error {
 	if ok := s.observer.Observer.Start(); !ok {
 		return errors.New("observer is already started")
@@ -54,14 +55,10 @@ func (s *Sui) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := s.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := s.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -84,18 +81,15 @@ func (s *Sui) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().GasPriceTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(s.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !s.observer.ChainParams().IsSupported
-	})
-
-	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
-	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(s.observer.ObserveGasPrice, "observe_gas_price", optGasInterval, optGasPriceSkipper)
+	register(s.observer.ObserveInbound, "observe_inbounds", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)
@@ -127,12 +121,12 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 
 	time.Sleep(delay)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, s.observer.Chain())
+	cctxList, err := s.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
-	// noop
+	// no-op
 	if len(cctxList) == 0 {
 		return nil
 	}
@@ -150,9 +144,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		maxNonce   = firstNonce + lookback
 	)
 
-	for i := range cctxList {
+	for i, cctx := range cctxList {
 		var (
-			cctx           = cctxList[i]
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
 			nonce          = outboundParams.TssNonce
@@ -175,7 +168,7 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			// ProcessOutboundTrackers HAS fetched existing Sui outbound,
 			// Let's report this by voting to zetacore
 			if err := s.observer.VoteOutbound(ctx, cctx); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("VoteOutbound failed")
+				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling VoteOutbound")
 			}
 			continue
 		}
@@ -187,9 +180,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		// - Then this pair will be handled by ProcessOutboundTrackers -> OutboundCreated -> VoteOutbound
 		bg.Work(ctx, func(ctx context.Context) error {
 			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("ProcessCCTX failed")
+				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
 			}
-
 			return nil
 		})
 	}
@@ -221,7 +213,7 @@ func (s *Sui) updateChainParams(ctx context.Context) error {
 }
 
 func (s *Sui) outboundLogger(id string) *zerolog.Logger {
-	l := s.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -30,11 +29,9 @@ func (ob *Observer) OutboundCreated(nonce uint64) bool {
 // ProcessOutboundTrackers loads all freshly-included Sui transactions in-memory
 // for further voting by Observer-Signer.
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get outbound trackers")
+		return err
 	}
 
 	for _, tracker := range trackers {
@@ -45,32 +42,24 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		// should not happen
-		if len(tracker.HashList) == 0 {
-			// we don't want to block other cctxs, so let's error and continue
-			ob.Logger().Outbound.Error().
-				Str(logs.FieldMethod, "ProcessOutboundTrackers").
-				Uint64(logs.FieldNonce, nonce).
-				Str(logs.FieldTracker, tracker.Index).
-				Msg("Tracker hash list is empty!")
-			continue
-		}
+		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, nonce).Logger()
 
-		digest := tracker.HashList[0].TxHash
+		for _, txHash := range tracker.HashList {
+			digest := txHash.TxHash
 
-		cctx, err := ob.ZetacoreClient().GetCctxByNonce(ctx, chainID, tracker.Nonce)
-		if err != nil {
-			return errors.Wrapf(err, "unable to get cctx by nonce %d (sui digest %q)", tracker.Nonce, digest)
-		}
+			cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
+			if err != nil {
+				logger.Error().Err(err).Str(logs.FieldTx, digest).Send()
+				continue // does not block other CCTXs from being processed
+			}
 
-		if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {
-			// we don't want to block other cctxs, so let's error and continue
-			ob.Logger().Outbound.
-				Error().Err(err).
-				Str(logs.FieldMethod, "ProcessOutboundTrackers").
-				Uint64(logs.FieldNonce, nonce).
-				Str(logs.FieldTx, digest).
-				Msg("Unable to load outbound transaction")
+			if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {
+				// we don't want to block other cctxs, so let's log the error and continue
+				logger.Error().
+					Err(err).
+					Str(logs.FieldTx, digest).
+					Msg("unable to load outbound transaction")
+			}
 		}
 	}
 
@@ -135,7 +124,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 
 	// Create message
 	msg := cctypes.NewMsgVoteOutbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		cctx.Index,
 		tx.Digest,
 		checkpoint,
@@ -161,7 +150,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 
 // loadOutboundTx loads cross-chain outbound tx by digest and ensures its authenticity.
 func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cctypes.CrossChainTx, digest string) error {
-	res, err := ob.client.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
+	res, err := ob.suiClient.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
 		Digest: digest,
 		Options: models.SuiTransactionBlockOptions{
 			ShowEvents:  true,
@@ -228,19 +217,10 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to post vote outbound")
-	case zetaTxHash != "":
-		ob.Logger().Outbound.Info().
-			Str(logs.FieldTx, msg.ObservedOutboundHash).
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallot, ballot).
-			Msg("Outbound vote posted")
-	}
+	logger := ob.Logger().Outbound.With().Str(logs.FieldTx, msg.ObservedOutboundHash).Logger()
 
-	return nil
+	_, _, err := ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg)
+	return err
 }
 
 func (ob *Observer) getTx(nonce uint64) (models.SuiTransactionBlockResponse, bool) {

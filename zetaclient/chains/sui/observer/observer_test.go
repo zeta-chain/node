@@ -15,16 +15,21 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var someArgStub = map[string]any{}
@@ -53,7 +58,7 @@ func TestObserver(t *testing.T) {
 			Return("", nil)
 
 		// ACT
-		err := ts.PostGasPrice(ts.ctx)
+		err := ts.ObserveGasPrice(ts.ctx)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -114,7 +119,9 @@ func TestObserver(t *testing.T) {
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// ACT
 		err := ts.ObserveInbound(ts.ctx)
@@ -151,12 +158,12 @@ func TestObserver(t *testing.T) {
 		assert.Contains(
 			t,
 			ts.log.String(),
-			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 		assert.Contains(
 			t,
 			ts.log.String(),
-			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
 	})
 
@@ -240,7 +247,8 @@ func TestObserver(t *testing.T) {
 			}),
 		})
 
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// Given votes catcher
 		ts.CatchInboundVotes()
@@ -274,13 +282,14 @@ func TestObserver(t *testing.T) {
 
 		ts.MockCCTXByNonce(cctx)
 
-		// Given outbound tracker
+		// Given outbound tracker containing two tx hashes, one of which is false
 		const digest = "0xSuiTxHash"
+		const digest2 = "0xSuiTxHashFalse"
 		tracker := cctypes.OutboundTracker{
 			Index:    "0xAAA",
 			ChainId:  ts.Chain().ChainId,
 			Nonce:    nonce,
-			HashList: []*cctypes.TxHash{{TxHash: digest}},
+			HashList: []*cctypes.TxHash{{TxHash: digest2}, {TxHash: digest}},
 		}
 
 		ts.MockOutboundTrackers([]cctypes.OutboundTracker{tracker})
@@ -332,8 +341,10 @@ func TestObserver(t *testing.T) {
 				},
 			},
 		}
+		tx2 := models.SuiTransactionBlockResponse{Digest: digest2}
 
-		ts.MockGetTxOnce(tx)
+		ts.MockGetTxOnce(tx, nil)
+		ts.MockGetTxOnce(tx2, errors.New("no tx found"))
 
 		// ACT
 		err = ts.ProcessOutboundTrackers(ts.ctx)
@@ -544,7 +555,9 @@ func newTestSuite(t *testing.T) *testSuite {
 		Compliance: log.Logger,
 	}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
+	zetaRepo := zrepo.New(zetacore, chain, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetaRepo, tss, 1000, nil,
+		database, logger)
 	require.NoError(t, err)
 
 	suiMock := mocks.NewSuiClient(t)
@@ -597,18 +610,31 @@ func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events 
 	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(res, nil).Once()
 }
 
-func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse) {
-	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, mock.Anything).Return(tx, nil).Once()
+func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse, err error) {
+	req := models.SuiGetTransactionBlockRequest{
+		Digest: tx.Digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEvents:  true,
+			ShowInput:   true,
+			ShowEffects: true,
+		},
+	}
+
+	if err == nil {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(tx, err).Once()
+	} else {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(models.SuiTransactionBlockResponse{}, err).Once()
+	}
 }
 
 func (ts *testSuite) CatchInboundVotes() {
-	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
+	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound, _ chan<- zetaerrors.ErrTxMonitor) (string, string, error) {
 		ts.inboundVotesBag = append(ts.inboundVotesBag, msg)
 		return "", "", nil
 	}
 
 	ts.zetaMock.
-		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
 }
@@ -635,7 +661,7 @@ func (ts *testSuite) MockCCTXByNonce(cctx *cctypes.CrossChainTx) *mock.Call {
 
 func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *mock.Call {
 	return ts.zetaMock.
-		On("GetAllOutboundTrackerByChain", mock.Anything, ts.Chain().ChainId, mock.Anything).
+		On("GetOutboundTrackers", mock.Anything, ts.Chain().ChainId).
 		Return(trackers, nil)
 }
 

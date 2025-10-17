@@ -226,7 +226,7 @@ func (t *TelemetryServer) Stop() {
 	defer cancel()
 
 	if err := t.s.Shutdown(c); err != nil {
-		log.Error().Err(err).Msg("Failed to shutdown the TelemetryServer")
+		log.Error().Err(err).Msg("failed to shutdown the telemetry server")
 	}
 }
 
@@ -267,7 +267,7 @@ func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http
 	}
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		t.logger.Error().Err(err).Msg("Failed to write response")
+		t.logger.Error().Err(err).Msg("failed to write response")
 	}
 }
 
@@ -284,7 +284,7 @@ func (t *TelemetryServer) statusHandler(w http.ResponseWriter, _ *http.Request) 
 	defer t.mu.Unlock()
 	s, err := json.MarshalIndent(t.status, "", "\t")
 	if err != nil {
-		t.logger.Error().Err(err).Msg("Failed to marshal status")
+		t.logger.Error().Err(err).Msg("failed to marshal status")
 	}
 	fmt.Fprintf(w, "%s", s)
 }
@@ -313,7 +313,7 @@ func (t *TelemetryServer) connectedPeersHandler(w http.ResponseWriter, _ *http.R
 	peers := t.GetConnectedPeers()
 	data, err := json.Marshal(peers)
 	if err != nil {
-		t.logger.Error().Err(err).Msg("Failed to marshal known peers")
+		t.logger.Error().Err(err).Msg("failed to marshal known peers")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -329,7 +329,7 @@ func (t *TelemetryServer) pingRTTHandler(w http.ResponseWriter, _ *http.Request)
 	}
 	data, err := json.Marshal(rtt2)
 	if err != nil {
-		t.logger.Error().Err(err).Msg("Failed to marshal ping RTT")
+		t.logger.Error().Err(err).Msg("failed to marshal ping RTT")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -350,7 +350,7 @@ func logMiddleware() mux.MiddlewareFunc {
 				Str("route", r.URL.Path).
 				Str("port", r.URL.Port()).
 				Str("method", r.Method).
-				Msg("HTTP request received")
+				Msg("received an HTTP request")
 
 			handler.ServeHTTP(w, r)
 		})

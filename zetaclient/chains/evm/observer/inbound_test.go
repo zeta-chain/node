@@ -18,6 +18,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
@@ -447,26 +449,27 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name               string
-		mockEVMClient      func(m *mocks.EVMRPCClient)
+		mockEVMClient      func(m *mocks.EVMClient)
 		mockZetacoreClient func(m *mocks.ZetacoreClient)
 		errMsg             string
 	}{
 		{
 			name: "should observe TSS receive in block",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number and receipt to mock client
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			mockZetacoreClient: func(m *mocks.ZetacoreClient) {
-				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, errors.New("not found"))
+				err := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
 			},
 			errMsg: "",
 		},
 		{
 			name: "should not observe on error getting block",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number to allow construction of observer
 				m.On("BlockNumber", mock.Anything).Unset()
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Unset()
@@ -478,7 +481,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		},
 		{
 			name: "should not observe on error getting receipt",
-			mockEVMClient: func(m *mocks.EVMRPCClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number but RPC error on getting receipt
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
@@ -497,7 +500,6 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			if tt.mockEVMClient != nil {
 				tt.mockEVMClient(ob.evmMock)
 			}
-
 			if tt.mockZetacoreClient != nil {
 				tt.mockZetacoreClient(ob.zetacore)
 			}

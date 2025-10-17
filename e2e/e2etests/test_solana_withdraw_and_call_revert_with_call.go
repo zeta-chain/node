@@ -56,9 +56,9 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 		},
 		Data: []byte("revert"),
 	}

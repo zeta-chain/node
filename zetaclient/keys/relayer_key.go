@@ -48,8 +48,14 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 	}
 
 	// relayer key is optional, so it's okay if the relayer key is not provided
+	if fileName == "" {
+		log.Logger.Warn().Msg("blank relayer key file")
+		return nil, nil
+	}
+
+	// still returns no error if the relayer key that was provided is invalid
 	if !zetaos.FileExists(fileName) {
-		log.Logger.Warn().Msgf("relayer key file not found: %s", fileName)
+		log.Logger.Warn().Str("file_name", fileName).Msg("invalid relayer key file")
 		return nil, nil
 	}
 

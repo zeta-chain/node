@@ -3,32 +3,39 @@ package orchestrator
 import (
 	"context"
 
+	cosmosmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	cometbft "github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
+	observer "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-type Zetacore interface {
+type ZetacoreClient interface {
+	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 	GetBlockHeight(ctx context.Context) (int64, error)
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
 	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
-	GetCrosschainFlags(ctx context.Context) (observertypes.CrosschainFlags, error)
-	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
-	GetTSS(ctx context.Context) (observertypes.TSS, error)
-	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
-	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
+	GetCrosschainFlags(ctx context.Context) (observer.CrosschainFlags, error)
+	GetChainParams(ctx context.Context) ([]*observer.ChainParams, error)
+	GetTSS(ctx context.Context) (observer.TSS, error)
+	GetKeyGen(ctx context.Context) (observer.Keygen, error)
+	GetOperationalFlags(ctx context.Context) (observer.OperationalFlags, error)
+	GetBaseGasPrice(ctx context.Context) (int64, error)
+	GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error)
+	GetZetaHotKeyBalance(context.Context) (cosmosmath.Int, error)
 }
 
 var ErrUpgradeRequired = errors.New("upgrade required")
 
 // UpdateAppContext fetches latest data from Zetacore and updates the AppContext.
 // Also detects if an upgrade is required. If an upgrade is required, it returns ErrUpgradeRequired.
-func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, logger zerolog.Logger) error {
+func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc ZetacoreClient, logger zerolog.Logger) error {
 	bn, err := zc.GetBlockHeight(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get zeta block height")
@@ -63,7 +70,17 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		return errors.Wrap(err, "unable to fetch operational flags")
 	}
 
-	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
+	currentBaseFee, err := zc.GetBaseGasPrice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch base gas price")
+	}
+
+	unconfirmedTxCount, err := zc.GetNumberOfUnconfirmedTxs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch number of unconfirmed txs")
+	}
+
+	freshParams := make(map[int64]*observer.ChainParams, len(chainParams))
 
 	// check and update chain params for each chain
 	// Note that we are EXCLUDING ZetaChain from the chainParams if it's present
@@ -71,7 +88,9 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		cp := chainParams[i]
 
 		if !cp.IsSupported {
-			logger.Warn().Int64("chain.id", cp.ChainId).Msg("Skipping unsupported chain")
+			logger.Warn().
+				Int64(logs.FieldChain, cp.ChainId).
+				Msg("skipping unsupported chain")
 			continue
 		}
 
@@ -80,7 +99,10 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		}
 
 		if err := cp.Validate(); err != nil {
-			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
+			logger.Warn().
+				Err(err).
+				Int64(logs.FieldChain, cp.ChainId).
+				Msg("skipping invalid chain parameters")
 			continue
 		}
 
@@ -93,11 +115,13 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		freshParams,
 		crosschainFlags,
 		operationalFlags,
+		currentBaseFee,
+		unconfirmedTxCount,
 	)
 }
 
 // returns an error if an upgrade is required
-func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc Zetacore) error {
+func checkForZetacoreUpgrade(ctx context.Context, zetaHeight int64, zc ZetacoreClient) error {
 	plan, err := zc.GetUpgradePlan(ctx)
 	switch {
 	case err != nil:

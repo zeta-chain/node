@@ -18,7 +18,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
@@ -199,7 +198,7 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 	require.Equal(t, sdkmath.ZeroInt(), resp)
 }
 
-func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
+func TestZetacore_GetOutboundTrackers(t *testing.T) {
 	ctx := context.Background()
 
 	chain := chains.BscMainnet
@@ -233,11 +232,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 		withAccountRetriever(t, 5, 4),
 	)
 
-	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.OutboundTracker, resp)
-
-	resp, err = client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Descending)
+	resp, err := client.GetOutboundTrackers(ctx, chain.ChainId)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, resp)
 }

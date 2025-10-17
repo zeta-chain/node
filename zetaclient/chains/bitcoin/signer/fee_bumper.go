@@ -38,8 +38,8 @@ type CPFPFeeBumper struct {
 
 	chain chains.Chain
 
-	// rpc is the interface to interact with the Bitcoin chain
-	rpc RPC
+	// bitcoinClient is the interface to interact with the Bitcoin chain
+	bitcoinClient BitcoinClient
 
 	// tx is the stuck transaction to bump
 	tx *btcutil.Tx
@@ -69,7 +69,7 @@ type BumpResult struct {
 // NewCPFPFeeBumper creates a new CPFPFeeBumper
 func NewCPFPFeeBumper(
 	ctx context.Context,
-	rpc RPC,
+	bitcoinClient BitcoinClient,
 	chain chains.Chain,
 	tx *btcutil.Tx,
 	cctxRate uint64,
@@ -77,13 +77,13 @@ func NewCPFPFeeBumper(
 	logger zerolog.Logger,
 ) (*CPFPFeeBumper, error) {
 	fb := &CPFPFeeBumper{
-		ctx:         ctx,
-		chain:       chain,
-		rpc:         rpc,
-		tx:          tx,
-		minRelayFee: minRelayFee,
-		cctxRate:    cctxRate,
-		logger:      logger,
+		ctx:           ctx,
+		chain:         chain,
+		bitcoinClient: bitcoinClient,
+		tx:            tx,
+		minRelayFee:   minRelayFee,
+		cctxRate:      cctxRate,
+		logger:        logger,
 	}
 
 	err := fb.fetchFeeBumpInfo()
@@ -175,7 +175,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
 func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	// query live fee rate
-	liveRate, err := b.rpc.GetEstimatedFeeRate(b.ctx, 1)
+	liveRate, err := b.bitcoinClient.GetEstimatedFeeRate(b.ctx, 1)
 	if err != nil {
 		return errors.Wrap(err, "GetEstimatedFeeRate failed")
 	}
@@ -186,7 +186,7 @@ func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	defer cancel()
 
 	// query total fees and sizes of all pending parent TSS txs
-	txsAndFees, err := b.rpc.GetMempoolTxsAndFees(ctx, b.tx.MsgTx().TxID())
+	txsAndFees, err := b.bitcoinClient.GetMempoolTxsAndFees(ctx, b.tx.MsgTx().TxID())
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}

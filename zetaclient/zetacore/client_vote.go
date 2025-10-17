@@ -7,11 +7,13 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerclient "github.com/zeta-chain/node/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -133,17 +135,15 @@ func (c *Client) PostVoteOutbound(
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
 		return c.Broadcast(ctx, gasLimit, authzMsg, authzSigner)
 	})
-
 	if err != nil {
 		return "", ballotIndex, errors.Wrap(err, "unable to broadcast vote outbound")
 	}
 
 	go func() {
 		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
-		if errMonitor != nil {
-			c.logger.Error().Err(err).Msg("PostVoteOutbound: failed to monitor vote outbound result")
+		err := c.MonitorVoteOutboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		if err != nil {
+			c.logger.Error().Err(err).Msg("failed to monitor vote outbound result")
 		}
 	}()
 
@@ -157,10 +157,18 @@ func (c *Client) PostVoteInbound(
 	ctx context.Context,
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
+	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) (string, string, error) {
-	// zetaclient patch
 	// force use SAFE mode for all inbound votes (both fast and slow votes)
 	msg.ConfirmationMode = types.ConfirmationMode_SAFE
+
+	// adjust gas limit according to previous out of gas failures
+	ballotIndex := msg.Digest()
+	gasLimit, retryGasLimit, retryable := c.getAdjustedGasLimitForInboundVote(ballotIndex, gasLimit, retryGasLimit)
+	if !retryable {
+		c.logger.Info().Str(logs.FieldBallotIndex, ballotIndex).Msg("stop voting due to inbound gas limit")
+		return "", ballotIndex, nil
+	}
 
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
@@ -168,7 +176,6 @@ func (c *Client) PostVoteInbound(
 	}
 
 	// don't post send if has already voted before
-	ballotIndex := msg.Digest()
 	hasVoted, err := c.HasVoted(ctx, ballotIndex, msg.Creator)
 	if err != nil {
 		return "", ballotIndex, errors.Wrapf(err,
@@ -190,13 +197,110 @@ func (c *Client) PostVoteInbound(
 	}
 
 	go func() {
-		ctxForWorker := zctx.Copy(ctx, context.Background())
-
-		errMonitor := c.MonitorVoteInboundResult(ctxForWorker, zetaTxHash, retryGasLimit, msg)
+		// Use the passed context directly instead of creating a new one
+		// This ensures the monitoring goroutine respects the same timeout as the error handler
+		errMonitor := c.MonitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 		if errMonitor != nil {
-			c.logger.Error().Err(err).Msg("PostVoteInbound: failed to monitor vote inbound result")
+			c.logger.Error().Err(errMonitor).Msg("failed to monitor vote inbound result")
+
+			if monitorErrCh != nil {
+				select {
+				case monitorErrCh <- zetaerrors.ErrTxMonitor{
+					Err:        errMonitor,
+					Msg:        *msg,
+					ZetaTxHash: zetaTxHash,
+				}:
+				case <-ctx.Done():
+					c.logger.Error().Msg("context cancelled: timeout")
+				}
+			}
 		}
 	}()
 
 	return zetaTxHash, ballotIndex, nil
+}
+
+// getAdjustedGasLimitForInboundVote gets the adjusted gas limit and retry gas limit by checking previous failed ballots
+// In happy path, if 500K gas limit failed with out of gas, we retry with 7M gas limit for execution.
+// In edge case like mempool congestion, retrying a inbound causes more mempool traffic and make the situation worse. We
+// have to be more careful and avoid meaningless retries.
+//
+// For example, if a 500K vote already failed with out of gas, and the subsequent 7M vote didn't go through due to mempool
+// congestion, we should directly use 7M for future retries instead of following the 500K -> 7M path again.
+//
+// Example:
+// Case 1. vote already failed with 500K gas limit
+//   - input: gasLimit = 500K, retryGasLimit = 7M
+//   - output: gasLimit = 7M, retryGasLimit = 0 (retry with 7M only)
+//
+// Case 2. vote already failed with 7M gas limit
+//   - input: gasLimit = 500K, retryGasLimit = 7M
+//   - output: gasLimit = 0, retryGasLimit = 0 (not retryable, 7M is already the gas limit cap. Inbound is skipped.)
+func (c *Client) getAdjustedGasLimitForInboundVote(
+	ballotIndex string,
+	gasLimit, retryGasLimit uint64,
+) (newGasLimit, newRetryGasLimit uint64, retryable bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	// no adjustment needed if no previous failed ballots
+	lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]
+	if !found {
+		return gasLimit, retryGasLimit, true
+	}
+
+	// in our case, the 'retryGasLimit' passed (e.g. 7M) is higher than 'gasLimit' (e.g. 5M),
+	// but we do NOT assume too much inside this function to make implementation simpler.
+	maxGasLimit := max(gasLimit, retryGasLimit)
+	if lastGasLimit >= maxGasLimit {
+		return 0, 0, false
+	}
+
+	// use max gas limit paired with 0 (indicates that no further retry is needed).
+	c.logger.Info().
+		Str(logs.FieldBallotIndex, ballotIndex).
+		Uint64("gas_limit", gasLimit).
+		Uint64("new_gas_limit", maxGasLimit).
+		Msg("adjusted gas limit")
+	return maxGasLimit, 0, true
+}
+
+// addReadyToExecuteInboundBallot saves the ready-to-execute inbound ballot and the gas limit used in last vote
+func (c *Client) addReadyToExecuteInboundBallot(ballotIndex string, gasWanted int64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// the 'GasWanted' field should never be negative in Cosmos tx response
+	if gasWanted < 0 {
+		c.logger.Error().Int64("gas_wanted", gasWanted).Msg("invalid cosmos gas limit")
+		return
+	}
+	// #nosec G115 checked positive
+	gasLimit := uint64(gasWanted)
+
+	// update only if given gas limit is higher than last failed gasLimit
+	lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]
+	if found && lastGasLimit >= gasLimit {
+		return
+	}
+
+	c.readyToExecuteInboundBallots[ballotIndex] = gasLimit
+	c.logger.Info().
+		Str(logs.FieldBallotIndex, ballotIndex).
+		Uint64("gas_limit", gasLimit).
+		Msg("added ready-to-execute inbound ballot")
+}
+
+// removeReadyToExecuteInboundBallot removes the ready-to-execute inbound ballot from the map
+func (c *Client) removeReadyToExecuteInboundBallot(ballotIndex string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if lastGasLimit, found := c.readyToExecuteInboundBallots[ballotIndex]; found {
+		delete(c.readyToExecuteInboundBallots, ballotIndex)
+		c.logger.Info().
+			Str(logs.FieldBallotIndex, ballotIndex).
+			Uint64("gas_limit", lastGasLimit).
+			Msg("removed ready-to-execute inbound ballot")
+	}
 }

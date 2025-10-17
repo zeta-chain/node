@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gagliardetto/solana-go"
+	sol "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -18,15 +18,14 @@ import (
 // it reports tx to outbound tracker only if it's confirmed by the Solana network.
 func (signer *Signer) reportToOutboundTracker(
 	ctx context.Context,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	chainID int64,
 	nonce uint64,
-	txSig solana.Signature,
+	txSig sol.Signature,
 	logger zerolog.Logger,
 ) {
 	// prepare logger
 	logger = logger.With().
-		Str(logs.FieldMethod, "reportToOutboundTracker").
 		Int64(logs.FieldChain, chainID).
 		Uint64(logs.FieldNonce, nonce).
 		Str(logs.FieldTx, txSig.String()).
@@ -35,7 +34,7 @@ func (signer *Signer) reportToOutboundTracker(
 	// set being reported flag to avoid duplicate reporting
 	alreadySet := signer.Signer.SetBeingReportedFlag(txSig.String())
 	if alreadySet {
-		logger.Info().Msg("Outbound is already reported to tracker")
+		logger.Info().Msg("outbound was already reported to tracker")
 		return
 	}
 
@@ -55,15 +54,16 @@ func (signer *Signer) reportToOutboundTracker(
 
 			// give up if we know the tx is too old and already expired
 			if time.Since(start) > solanaTransactionTimeout {
-				logger.Info().Msg("Outbound is expired")
+				logger.Info().Msg("outbound is expired")
 				return nil
 			}
 
 			// query tx using optimistic commitment level "confirmed"
-			tx, err := signer.client.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
+			tx, err := signer.solanaClient.GetTransaction(ctx, txSig, &rpc.GetTransactionOpts{
 				// commitment "processed" seems to be a better choice but it's not supported
 				// see: https://solana.com/docs/rpc/http/gettransaction
-				Commitment: rpc.CommitmentConfirmed,
+				Commitment:                     rpc.CommitmentConfirmed,
+				MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 			})
 			if err != nil {
 				continue
@@ -71,22 +71,23 @@ func (signer *Signer) reportToOutboundTracker(
 
 			// exit goroutine if tx failed.
 			if tx.Meta.Err != nil {
-				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced by the gateway program.
-				// a failed outbound (e.g. signature err, balance err) will never be able to increment the gateway program nonce.
+				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced
+				// by the gateway program.
+				//
+				// a failed outbound (e.g. signature err, balance err) will never be able to
+				// increment the gateway program nonce.
+				//
 				// a good/valid candidate of outbound tracker hash must come with a successful tx.
-				logger.Warn().Any("tx_error", tx.Meta.Err).Msg("Outbound is failed")
+				logger.Warn().Any("tx_error", tx.Meta.Err).Msg("outbound is failed")
 				return nil
 			}
 
 			// report outbound hash to zetacore
-			zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, chainID, nonce, txSig.String())
-			if err != nil {
-				logger.Err(err).Msg("Error adding outbound to tracker")
-			} else if zetaHash != "" {
-				logger.Info().Str(logs.FieldZetaTx, zetaHash).Msg("Added outbound to tracker")
-			} else {
-				// exit goroutine until the tracker contains the hash (reported by either this or other signers)
-				logger.Info().Msg("Outbound now exists in tracker")
+			zhash, err := zetaRepo.PostOutboundTracker(ctx, logger, nonce, txSig.String())
+			if zhash == "" && err == nil {
+				// exit goroutine only when the tracker contains the hash (reported by either this
+				// or other signers)
+				logger.Info().Msg("outbound now exists in tracker")
 				return nil
 			}
 		}

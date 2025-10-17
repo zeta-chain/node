@@ -68,11 +68,30 @@ func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, int64(0), balance.Int64())
 
+	// create encoded msg
+	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
+
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+		},
+		Data: []byte("revert"),
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
 		withdrawAmount,
 		approvedAmount,
-		[]byte("revert"),
+		msgEncoded,
 		gatewayzevm.RevertOptions{
 			RevertAddress:    revertAddress,
 			OnRevertGasLimit: big.NewInt(0),

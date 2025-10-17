@@ -81,6 +81,27 @@ func DoWithBackoff(cb Callback, bo Backoff) error {
 	}
 }
 
+// DoWithDeadline executes the callback function with the provided backoff config and deadline.
+func DoWithDeadline(cb Callback, bo Backoff, deadline time.Time) error {
+	for {
+		err := cb()
+		if err == nil {
+			return nil
+		}
+
+		if time.Now().After(deadline) {
+			return errors.Wrap(err, "deadline exceeded")
+		}
+
+		sleepFor := bo.NextBackOff()
+		if sleepFor == backoff.Stop {
+			return errors.Wrap(err, "retry limit exceeded")
+		}
+
+		time.Sleep(sleepFor)
+	}
+}
+
 // DoTyped is typed version of Do that returns a value along with an error.
 // It will retry a callback ONLY if error is retryable.
 func DoTyped[T any](cb TypedCallback[T]) (T, error) {

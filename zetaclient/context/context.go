@@ -2,6 +2,7 @@ package context
 
 import (
 	goctx "context"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -35,4 +36,15 @@ func Copy(from, to goctx.Context) goctx.Context {
 	}
 
 	return WithAppContext(to, app)
+}
+
+// CopyWithTimeout copies AppContext from one context to another and adds a timeout.
+// This is useful when you want to run something in another goroutine with a timeout.
+func CopyWithTimeout(from, to goctx.Context, timeout time.Duration) (goctx.Context, goctx.CancelFunc) {
+	app, err := FromContext(from)
+	if err != nil {
+		return goctx.WithTimeout(to, timeout)
+	}
+	ctxWithTimeout, cancel := goctx.WithTimeout(to, timeout)
+	return WithAppContext(ctxWithTimeout, app), cancel
 }

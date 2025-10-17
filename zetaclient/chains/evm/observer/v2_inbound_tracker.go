@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -26,7 +27,9 @@ func (ob *Observer) ProcessInboundTrackerV2(
 ) error {
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
-		ob.Logger().Inbound.Debug().Err(err).Msg("error getting gateway contract for processing inbound tracker")
+		ob.Logger().Inbound.Debug().
+			Err(err).
+			Msg("error getting gateway contract for processing inbound tracker")
 		return ErrGatewayNotSet
 	}
 
@@ -39,6 +42,10 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		)
 	}
 
+	// Check if multiple calls are enabled
+	allowMultipleCalls := zctx.EnableMultipleCallsFeatureFlag(ctx)
+	eventFound := false
+
 	for _, log := range receipt.Logs {
 		if log == nil || log.Address != gatewayAddr {
 			continue
@@ -47,6 +54,8 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		// try parsing deposit
 		eventDeposit, err := gateway.ParseDeposited(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventDeposit.Sender,
@@ -57,13 +66,22 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositInboundVote(eventDeposit)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
+				return err
+			}
 		}
 
 		// try parsing deposit and call
 		eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventDepositAndCall.Sender,
@@ -74,13 +92,22 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
+				return err
+			}
 		}
 
 		// try parsing call
 		eventCall, err := gateway.ParseCalled(*log)
 		if err == nil {
+			eventFound = true
+
 			// check if the event is processable
 			if !ob.isEventProcessable(
 				eventCall.Sender,
@@ -91,9 +118,20 @@ func (ob *Observer) ProcessInboundTrackerV2(
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
 			msg := ob.newCallInboundVote(eventCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
+				return err
+			}
 		}
+	}
+
+	if eventFound {
+		return nil
 	}
 
 	return errors.Wrapf(ErrEventNotFound, "inbound tracker %s", tx.Hash)

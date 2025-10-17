@@ -13,10 +13,11 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -28,22 +29,22 @@ func Test_NewSigner(t *testing.T) {
 	chainParams.GatewayAddress = testutils.GatewayAddresses[chain.ChainId]
 
 	tests := []struct {
-		name        string
-		chain       chains.Chain
-		chainParams observertypes.ChainParams
-		solClient   interfaces.SolanaRPCClient
-		tss         interfaces.TSSSigner
-		relayerKey  *keys.RelayerKey
-		ts          *metrics.TelemetryServer
-		logger      base.Logger
-		errMessage  string
+		name         string
+		chain        chains.Chain
+		chainParams  observertypes.ChainParams
+		solanaClient signer.SolanaClient
+		tssSigner    tssrepo.TSSClient
+		relayerKey   *keys.RelayerKey
+		ts           *metrics.TelemetryServer
+		logger       base.Logger
+		errMessage   string
 	}{
 		{
-			name:        "should create solana signer successfully with relayer key",
-			chain:       chain,
-			chainParams: *chainParams,
-			solClient:   nil,
-			tss:         nil,
+			name:         "should create solana signer successfully with relayer key",
+			chain:        chain,
+			chainParams:  *chainParams,
+			solanaClient: nil,
+			tssSigner:    nil,
 			relayerKey: &keys.RelayerKey{
 				PrivateKey: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ",
 			},
@@ -51,13 +52,13 @@ func Test_NewSigner(t *testing.T) {
 			logger: base.DefaultLogger(),
 		},
 		{
-			name:        "should create solana signer successfully without relayer key",
-			chainParams: *chainParams,
-			solClient:   nil,
-			tss:         nil,
-			relayerKey:  nil,
-			ts:          nil,
-			logger:      base.DefaultLogger(),
+			name:         "should create solana signer successfully without relayer key",
+			chainParams:  *chainParams,
+			solanaClient: nil,
+			tssSigner:    nil,
+			relayerKey:   nil,
+			ts:           nil,
+			logger:       base.DefaultLogger(),
 		},
 		{
 			name: "should fail to create solana signer with invalid gateway address",
@@ -66,31 +67,31 @@ func Test_NewSigner(t *testing.T) {
 				cp.GatewayAddress = "invalid"
 				return cp
 			}(),
-			solClient:  nil,
-			tss:        nil,
-			relayerKey: nil,
-			ts:         nil,
-			logger:     base.DefaultLogger(),
-			errMessage: "cannot parse gateway address",
+			solanaClient: nil,
+			tssSigner:    nil,
+			relayerKey:   nil,
+			ts:           nil,
+			logger:       base.DefaultLogger(),
+			errMessage:   "cannot parse gateway address",
 		},
 		{
-			name:        "should fail to create solana signer with invalid relayer key",
-			chainParams: *chainParams,
-			solClient:   nil,
-			tss:         nil,
+			name:         "should fail to create solana signer with invalid relayer key",
+			chainParams:  *chainParams,
+			solanaClient: nil,
+			tssSigner:    nil,
 			relayerKey: &keys.RelayerKey{
 				PrivateKey: "3EMjCcCJg53fMEGVj13", // too short
 			},
 			ts:         nil,
 			logger:     base.DefaultLogger(),
-			errMessage: "unable to construct solana private key",
+			errMessage: "unable to construct Solana private key",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			baseSigner := base.NewSigner(tt.chain, tt.tss, tt.logger)
-			s, err := signer.New(baseSigner, tt.solClient, tt.chainParams.GatewayAddress, tt.relayerKey)
+			baseSigner := base.NewSigner(tt.chain, tt.tssSigner, tt.logger, mode.StandardMode)
+			s, err := signer.New(baseSigner, tt.solanaClient, tt.chainParams.GatewayAddress, tt.relayerKey)
 			if tt.errMessage != "" {
 				require.ErrorContains(t, err, tt.errMessage)
 				require.Nil(t, s)
@@ -111,7 +112,7 @@ func Test_SetGatewayAddress(t *testing.T) {
 
 	// helper functor to create signer
 	signerCreator := func() *signer.Signer {
-		baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
+		baseSigner := base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 		s, err := signer.New(baseSigner, nil, chainParams.GatewayAddress, nil)
 		require.NoError(t, err)
 
@@ -161,7 +162,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	mckClient := mocks.NewSolanaRPCClient(t)
 	mckClient.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
-	baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
+	baseSigner := base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 
 	// create signer and set relayer balance metrics
 	s, err := signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
@@ -179,7 +180,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	}, nil)
 
 	// create signer and set relayer balance metrics again
-	baseSigner = base.NewSigner(chain, nil, base.DefaultLogger())
+	baseSigner = base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 	s, err = signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)

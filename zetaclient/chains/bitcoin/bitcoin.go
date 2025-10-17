@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/common"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 type Bitcoin struct {
@@ -46,9 +47,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := b.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := b.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -69,17 +70,9 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(b.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !b.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(b.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(b.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(b.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -93,9 +86,10 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
-	register(b.observer.ObserveMempool, "observe_mempool", optMempoolInterval, optGenericSkipper)
-	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(b.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optOutboundSkipper)
+	register(b.observer.ObserveBTCMempool, "observe_btc_mempool", optMempoolInterval, optOutboundSkipper)
+	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
 	register(b.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
@@ -140,9 +134,9 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 	// #nosec G115 positive
 	scheduleInterval := uint64(b.observer.ChainParams().OutboundScheduleInterval)
 
-	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := b.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	// schedule at most one keysign per ticker
@@ -154,8 +148,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		)
 
 		if params.ReceiverChainId != chainID {
-			b.outboundLogger(outboundID).Error().Msg("Schedule CCTX: chain id mismatch")
-
+			b.outboundLogger(outboundID).Error().Msg("schedule CCTX: chain id mismatch")
 			continue
 		}
 
@@ -164,10 +157,12 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 
 		switch {
 		case err != nil:
-			b.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX: VoteOutboundIfConfirmed failed")
+			b.outboundLogger(outboundID).Error().
+				Err(err).
+				Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
 			continue
 		case !continueKeysign:
-			b.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
+			b.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
 			continue
 		case nonce > b.observer.GetPendingNonce():
 			// stop if the nonce being processed is higher than the pending nonce
@@ -176,8 +171,8 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 			// stop if lookahead is reached 2 bitcoin confirmations span is 20 minutes on average.
 			// We look ahead up to 100 pending cctx to target TPM of 5.
 			b.outboundLogger(outboundID).Warn().
-				Uint64("outbound.earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
-				Msg("Schedule CCTX: lookahead reached")
+				Uint64("outbound_earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
+				Msg("schedule CCTX: lookahead reached")
 			return nil
 		case b.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
@@ -217,7 +212,7 @@ func (b *Bitcoin) updateChainParams(ctx context.Context) error {
 }
 
 func (b *Bitcoin) outboundLogger(id string) *zerolog.Logger {
-	l := b.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+	l := b.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, id).Logger()
 
 	return &l
 }

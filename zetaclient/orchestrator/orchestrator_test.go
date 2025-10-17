@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -51,8 +52,8 @@ func TestOrchestratorV2(t *testing.T) {
 
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
-		assert.Contains(t, ts.Log.String(), "Chain list changed at the runtime!")
-		assert.Contains(t, ts.Log.String(), `"chains.new":[1]`)
+		assert.Contains(t, ts.Log.String(), "chain list changed at the runtime")
+		assert.Contains(t, ts.Log.String(), `"chains_new":[1]`)
 
 		// ACT #2
 		// Mimic zetacore update that adds bitcoin chain with chain params
@@ -70,7 +71,7 @@ func TestOrchestratorV2(t *testing.T) {
 
 		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
 
-		assert.Contains(t, ts.Log.String(), `"chains.new":[1,8332],"message":"Chain list changed at the runtime!"`)
+		assert.Contains(t, ts.Log.String(), `"chains_new":[1,8332],"message":"chain list changed at the runtime"`)
 	})
 }
 
@@ -124,18 +125,18 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Services
 	var (
 		schedulerService = scheduler.New(logger.Logger, time.Second)
-		zetacore         = mocks.NewZetacoreClient(t)
+		zetacore         = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
 		tss              = mocks.NewTSS(t)
 	)
 
-	deps := &Dependencies{
-		Zetacore:  zetacore,
-		TSS:       tss,
-		DBPath:    db.SqliteInMemory,
-		Telemetry: metrics.NewTelemetryServer(),
-	}
-
-	v2, err := New(schedulerService, deps, baseLogger)
+	v2, err := New(
+		schedulerService,
+		zetacore,
+		tss,
+		metrics.NewTelemetryServer(),
+		db.SqliteInMemory,
+		baseLogger,
+	)
 	require.NoError(t, err)
 
 	ts := &testSuite{
@@ -162,6 +163,8 @@ func newTestSuite(t *testing.T) *testSuite {
 	on(zetacore, "GetCrosschainFlags", 1).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
 	on(zetacore, "GetOperationalFlags", 1).Return(appCtx.GetOperationalFlags(), nil).Maybe()
 	on(zetacore, "GetZetaHotKeyBalance", 1).Return(math.NewInt(123), nil).Maybe()
+	on(zetacore, "GetBaseGasPrice", 1).Return(int64(1000), nil).Maybe()
+	on(zetacore, "GetNumberOfUnconfirmedTxs", 1).Return(int(1), nil).Maybe()
 
 	// Mock chain-related methods as dynamic getters
 	on(zetacore, "GetSupportedChains", 1).Return(ts.getSupportedChains).Maybe()
@@ -173,7 +176,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Mock CCTX-related calls (stubs for now)
 	on(zetacore, "ListPendingCCTX", 2).Return(nil, uint64(0), nil).Maybe()
 	on(zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
-	on(zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(zetacore, "GetOutboundTrackers", 2).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 
@@ -300,7 +303,7 @@ func newAppContext(
 	ccFlags := sample.CrosschainFlags()
 	opFlags := sample.OperationalFlags()
 
-	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags)
+	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags, 0, 0)
 	require.NoError(t, err, "failed to update app context")
 
 	ctx := zctx.WithAppContext(context.Background(), appContext)

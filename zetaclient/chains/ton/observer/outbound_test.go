@@ -11,7 +11,8 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/repo"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -24,7 +25,8 @@ func TestOutbound(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
 
-		ob, err := New(ts.baseObserver, ts.rpc, gw)
+		tonRepo := repo.NewTONRepo(ts.rpc, gw, ts.baseObserver.Chain())
+		ob, err := New(ts.baseObserver, tonRepo, gw)
 		require.NoError(t, err)
 
 		// Given withdrawal
@@ -47,10 +49,10 @@ func TestOutbound(t *testing.T) {
 			Index:    "index123",
 			ChainId:  ts.chain.ChainId,
 			Nonce:    nonce,
-			HashList: []*cc.TxHash{{TxHash: rpc.TransactionToHashString(withdrawalTX)}},
+			HashList: []*cc.TxHash{{TxHash: encoder.EncodeTx(withdrawalTX)}},
 		}
 
-		ts.OnGetAllOutboundTrackerByChain([]cc.OutboundTracker{tracker})
+		ts.OnGetOutboundTrackers([]cc.OutboundTracker{tracker})
 
 		// Given cctx
 		cctx := sample.CrossChainTx(t, "index456")
@@ -66,8 +68,8 @@ func TestOutbound(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that tx exists in outbounds
-		res, exists := ob.getOutboundByNonce(nonce)
-		assert.True(t, exists)
+		res := ob.getOutbound(nonce)
+		assert.NotNil(t, res)
 
 		assert.Equal(t, nonce, res.nonce)
 		assert.Equal(t, chains.ReceiveStatus_success, res.receiveStatus)

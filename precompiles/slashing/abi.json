@@ -1,0 +1,256 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "validator",
+        "type": "address"
+      }
+    ],
+    "name": "ValidatorUnjailed",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "getParams",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int64",
+            "name": "signedBlocksWindow",
+            "type": "int64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint8",
+                "name": "precision",
+                "type": "uint8"
+              }
+            ],
+            "internalType": "struct Dec",
+            "name": "minSignedPerWindow",
+            "type": "tuple"
+          },
+          {
+            "internalType": "int64",
+            "name": "downtimeJailDuration",
+            "type": "int64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint8",
+                "name": "precision",
+                "type": "uint8"
+              }
+            ],
+            "internalType": "struct Dec",
+            "name": "slashFractionDoubleSign",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint8",
+                "name": "precision",
+                "type": "uint8"
+              }
+            ],
+            "internalType": "struct Dec",
+            "name": "slashFractionDowntime",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct Params",
+        "name": "params",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "consAddress",
+        "type": "address"
+      }
+    ],
+    "name": "getSigningInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "validatorAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "int64",
+            "name": "startHeight",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "indexOffset",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "jailedUntil",
+            "type": "int64"
+          },
+          {
+            "internalType": "bool",
+            "name": "tombstoned",
+            "type": "bool"
+          },
+          {
+            "internalType": "int64",
+            "name": "missedBlocksCounter",
+            "type": "int64"
+          }
+        ],
+        "internalType": "struct SigningInfo",
+        "name": "signingInfo",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "key",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint64",
+            "name": "offset",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "limit",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "countTotal",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "reverse",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct PageRequest",
+        "name": "pagination",
+        "type": "tuple"
+      }
+    ],
+    "name": "getSigningInfos",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "validatorAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "int64",
+            "name": "startHeight",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "indexOffset",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "jailedUntil",
+            "type": "int64"
+          },
+          {
+            "internalType": "bool",
+            "name": "tombstoned",
+            "type": "bool"
+          },
+          {
+            "internalType": "int64",
+            "name": "missedBlocksCounter",
+            "type": "int64"
+          }
+        ],
+        "internalType": "struct SigningInfo[]",
+        "name": "signingInfos",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes",
+            "name": "nextKey",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint64",
+            "name": "total",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct PageResponse",
+        "name": "pageResponse",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "validatorAddress",
+        "type": "address"
+      }
+    ],
+    "name": "unjail",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

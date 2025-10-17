@@ -12,6 +12,13 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
+// remainingAccounts to be used in execute tests
+var remainingAccounts = []*solana.AccountMeta{
+	solana.NewAccountMeta(solana.MustPublicKeyFromBase58("4C2kkMnqXMfPJ8PPK5v6TCg42k5z16f2kzqVocXoSDcq"), false, false),
+	solana.NewAccountMeta(solana.MustPublicKeyFromBase58("3tqcVCVz5Jztwnku1H9zpvjaWshSpHakMuX4xUJQuuuA"), false, false),
+	solana.NewAccountMeta(solana.MustPublicKeyFromBase58("7duGsuv6nB3yr15EuWuHEDD7rWovpAnjuveXJ5ySZuFV"), false, false),
+}
+
 func Test_MsgWithdrawHash(t *testing.T) {
 	t.Run("should calculate expected hash", func(t *testing.T) {
 		// ARRANGE
@@ -42,7 +49,7 @@ func Test_MsgWhitelistHash(t *testing.T) {
 		whitelistCandidate := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		whitelistEntry := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
 
-		wantHash := "04de341bab0307cdcf9f3ff23c38461e17c33f98338163eeb7a5f50e6b12d052"
+		wantHash := "c971ad67a1727edd0c918bf48c0859c0aa43c8bff32d533b7517d4da25aa9c01"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -66,7 +73,7 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		toAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
 		require.NoError(t, err)
 
-		wantHash := "628d9011b2784ed2376fcc1ba57e49c0e9dfc860d10d379c8d228c8972c9cd65"
+		wantHash := "f7cab9856e40b3d6381a69aa4854c90c4c7affe00d86dfba747599359f07126b"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -108,12 +115,12 @@ func Test_MsgExecuteHash(t *testing.T) {
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
 
-		wantHash := "ff0737262c010614dead18a4ed152ca38bd92aae694f08ba611cea307f3d92d9"
+		wantHash := "a930d636213955b4c604199b735433452f5b9ba2a9d2869caca8b1c1af9218f2"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, remainingAccounts, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -134,12 +141,12 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 		require.NoError(t, err)
 		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
 
-		wantHash := "8ed9d12294399703611bf6b4d131aa0cdd9b1c2ca7e2586238c47929766ed0b9"
+		wantHash := "a245ba0c28fd5ca344f4747d3249e94e2fee0a883cd3acb5ac85d041556df9c0"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, remainingAccounts, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -157,12 +164,12 @@ func Test_MsgExecuteRevertHash(t *testing.T) {
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		sender := solana.MustPublicKeyFromBase58("CVoPuE3EMu6QptGHLx7mDGb2ZgASJRQ5BcTvmhZNJd8A")
 
-		wantHash := "8a84b88736c9b677b1d859b212bd07f9808f8ca07682b3585eb1b6c5f2f6f4dd"
+		wantHash := "04ac292b75cda6b32c7b4a5761877d2e7f23cf22e4b97945eb5b959b7e64c0a5"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, remainingAccounts, nil, nil).
 			Hash()
 
 		// ASSERT
@@ -182,12 +189,12 @@ func Test_MsgExecuteSPLRevertHash(t *testing.T) {
 		require.NoError(t, err)
 		sender := solana.MustPublicKeyFromBase58("CVoPuE3EMu6QptGHLx7mDGb2ZgASJRQ5BcTvmhZNJd8A")
 
-		wantHash := "147f471f794e0227653f69c40d9ac0ab278ac8549de41d9229e9b6ca14735c57"
+		wantHash := "bdd0f1218cea32d81bf5626f0031ebccef477e843a648a4c3eb4612a234604ee"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, remainingAccounts, nil, nil).
 			Hash()
 
 		// ASSERT

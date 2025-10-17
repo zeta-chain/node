@@ -7,11 +7,14 @@ import (
 
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	zetatss "github.com/zeta-chain/node/zetaclient/tss"
 )
 
 // initializeConfigOptions is a set of CLI options for `init` command.
 type initializeConfigOptions struct {
+	mode mode.ClientMode
+
 	peer               string
 	publicIP           string
 	publicDNS          string
@@ -25,12 +28,14 @@ type initializeConfigOptions struct {
 	level              int8
 	configUpdateTicker uint64
 
-	p2pDiagnostic       bool
-	p2pDiagnosticTicker uint64
-	TSSPath             string
-	TestTSSKeySign      bool
-	KeyringBackend      string
-	RelayerKeyPath      string
+	p2pDiagnostic              bool
+	p2pDiagnosticTicker        uint64
+	TSSPath                    string
+	TestTSSKeySign             bool
+	KeyringBackend             string
+	RelayerKeyPath             string
+	MaxBaseFee                 int64
+	MempoolCongestionThreshold int64
 }
 
 var initializeConfigOpts initializeConfigOptions
@@ -39,14 +44,18 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
-		usagePeer     = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
-		usageHotKey   = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
-		usageLogLevel = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
-		usageP2PDiag  = "p2p diagnostic ticker (default: 0 means no ticker)"
-		usageTicker   = "config update ticker (default: 0 means no ticker)"
-		usageKeyring  = "keyring backend to use (test, file)"
+		usageMode             = "mode for cross-chain transaction processing (0:standard, 1:dry, 2:chaos)"
+		usagePeer             = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
+		usageHotKey           = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
+		usageLogLevel         = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
+		usageP2PDiag          = "p2p diagnostic ticker (default: 0 means no ticker)"
+		usageTicker           = "config update ticker (default: 0 means no ticker)"
+		usageKeyring          = "keyring backend to use (test, file)"
+		usageMaxBaseFee       = "the maximum base fee in Gwei allowed to send ZetaChain transactions (0 means no limit)"
+		usageMempoolThreshold = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 
+	f.Uint8Var((*uint8)(&cfg.mode), "mode", uint8(mode.StandardMode), usageMode)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
@@ -65,6 +74,13 @@ func setupInitializeConfigOptions() {
 	f.BoolVar(&cfg.TestTSSKeySign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	f.StringVar(&cfg.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), usageKeyring)
 	f.StringVar(&cfg.RelayerKeyPath, "relayer-key-path", "~/.zetacored/relayer-keys", "path to relayer keys")
+	f.Int64Var(&cfg.MaxBaseFee, "max-base-fee", 0, usageMaxBaseFee)
+	f.Int64Var(
+		&cfg.MempoolCongestionThreshold,
+		"mempool-threshold",
+		config.DefaultMempoolCongestionThreshold,
+		usageMempoolThreshold,
+	)
 }
 
 // InitializeConfig creates new config for zetaclientd and saves it to the config file.
@@ -82,6 +98,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	}
 
 	// Populate new struct with cli arguments
+	configData.ClientMode = opts.mode
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
 	configData.PublicDNS = opts.publicDNS
@@ -100,7 +117,10 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)
 	configData.RelayerKeyPath = opts.RelayerKeyPath
+	configData.MaxBaseFee = opts.MaxBaseFee
+	configData.MempoolCongestionThreshold = opts.MempoolCongestionThreshold
 	configData.ComplianceConfig = sample.ComplianceConfig()
+	configData.FeatureFlags = sample.FeatureFlags()
 
 	// Save config file
 	return config.Save(&configData, globalOpts.ZetacoreHome)

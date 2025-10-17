@@ -1,9 +1,7 @@
 package e2etests
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
@@ -23,8 +21,9 @@ func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args
 
 	// deploy a reverter contract in ZEVM
 	// TODO: consider removing repeated deployments of reverter contract
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
+	reverterAddr, txDeploy, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(txDeploy)
 	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
 	// execute the deposit transaction
@@ -65,16 +64,5 @@ func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args
 	// verify that pda of solana connected program balance is not changed
 	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
-	type ConnectedPdaInfo struct {
-		Discriminator     [8]byte
-		LastSender        ethcommon.Address
-		LastMessage       string
-		LastRevertSender  solana.PublicKey
-		LastRevertMessage string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
 	require.Equal(r, connectedPdaInfoBefore.Value.Lamports, connectedPdaInfo.Value.Lamports)
 }
