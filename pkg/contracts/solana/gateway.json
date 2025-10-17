@@ -2318,6 +2318,11 @@
       "code": 6009,
       "name": "InvalidInstructionData",
       "msg": "InvalidInstructionData"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidAtaOwner",
+      "msg": "InvalidAtaOwner"
     }
   ],
   "types": [
