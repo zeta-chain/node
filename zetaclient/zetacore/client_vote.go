@@ -189,10 +189,15 @@ func (c *Client) PostVoteInbound(
 		return "", ballotIndex, nil
 	}
 
+	senderChain := ""
+	chain, ok := chains.GetChainFromChainID(msg.SenderChainId, []chains.Chain{})
+	if ok {
+		senderChain = chain.Name
+	}
 	if gasLimit <= PostVoteInboundGasLimit {
-		metrics.InboundVotesPostedWith500KGasLimitTotal.WithLabelValues(c.Chain().Name).Inc()
+		metrics.InboundVotesPostedWith500KGasLimitTotal.WithLabelValues(senderChain).Inc()
 	} else {
-		metrics.InboundVotesPostedWith7MGasLimitTotal.WithLabelValues(c.Chain().Name).Inc()
+		metrics.InboundVotesPostedWith7MGasLimitTotal.WithLabelValues(senderChain).Inc()
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {
