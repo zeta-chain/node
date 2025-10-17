@@ -17,9 +17,13 @@ import (
 
 // constants for monitoring tx results
 const (
-	defaultMonitorTimeout = 2 * time.Minute
-	monitorInterval       = constant.ZetaBlockTime
-	monitorRetryCount     = 10
+	monitorInterval   = constant.ZetaBlockTime
+	monitorRetryCount = 10
+
+	// defaultInboundVoteMonitorTimeout is the default timeout for monitoring inbound vote tx result.
+	// In our case, the upstream code ALWAYS sets a timeout in the context to override default value,
+	// so this is just to keep the logic complete and avoid accidental missed timeout in the context.
+	defaultInboundVoteMonitorTimeout = 2 * time.Minute
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -119,7 +123,7 @@ func (c *Client) MonitorVoteInboundResult(
 	}
 
 	// extract the deadline (always provided) that is used by error monitor goroutine
-	deadline := time.Now().Add(defaultMonitorTimeout)
+	deadline := time.Now().Add(defaultInboundVoteMonitorTimeout)
 	if ctxDeadline, ok := ctx.Deadline(); ok {
 		deadline = ctxDeadline
 	}
