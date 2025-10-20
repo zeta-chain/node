@@ -183,6 +183,7 @@ const (
 	TestInboundTrackersName = "inbound_trackers"
 	TestPrecompilesName     = "precompiles"
 	TestOpcodesName         = "opcodes"
+	TestRpcName             = "rpc"
 
 	/*
 	 Stress tests
@@ -1478,11 +1479,18 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
-
 		TestOpcodesName,
 		"test opcodes support in ZEVM",
 		[]runner.ArgDefinition{},
 		TestOpcodes,
+	),
+	runner.NewE2ETest(
+		TestRpcName,
+		"test json rpc support in ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "tx hashes", DefaultValue: ""},
+		},
+		TestRpc,
 	),
 	/*
 	 Stress tests
