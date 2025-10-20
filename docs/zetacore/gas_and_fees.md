@@ -44,29 +44,33 @@ ZetaChain EVM currently doesn't support `EIP-7702` for sponsored transactions.
 
 ### EVM
 
+### Bitcoin
+
 ### Solana
 
 ### Sui
 
 ### TON
 
-### Withdraw reverting
+### Reverting Withdraw 
 
-### Withdraw aborting
+### Aborting Withdraw
 
 ## Connected Chains Deposit Fees
 
 ### EVM
 
+### Bitcoin
+
 ### Solana
 
 ### Sui
 
 ### TON
 
-### Deposit reverting
+### Reverting Deposit
 
-### Deposit aborting
+### Aborting Deposit
 
 ## Cosmos Transaction Fees
 
