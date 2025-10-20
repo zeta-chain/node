@@ -7,11 +7,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 )
 
 // TestRpc performs sanity checks on core JSON-RPC methods (eth_getTransactionByHash, eth_getTransactionReceipt,
@@ -65,11 +66,13 @@ func TestRpc(r *runner.E2ERunner, args []string) {
 
 		// this will also fetch txs submitted by this user before upgrade
 		for _, cctx := range cctxsRes.CrossChainTx {
-			if cctx.InboundParams.Sender == r.ZEVMAuth.From.Hex() && cctx.InboundParams.GetSenderChainId() == zetaChainID.Int64() {
+			if cctx.InboundParams.Sender == r.ZEVMAuth.From.Hex() &&
+				cctx.InboundParams.GetSenderChainId() == zetaChainID.Int64() {
 				txHashes = append(txHashes, cctx.InboundParams.ObservedHash)
 			}
 
-			if cctx.InboundParams.Sender == r.EVMAuth.From.Hex() && cctx.InboundParams.GetSenderChainId() == evmChainID.Int64() {
+			if cctx.InboundParams.Sender == r.EVMAuth.From.Hex() &&
+				cctx.InboundParams.GetSenderChainId() == evmChainID.Int64() {
 				txHashes = append(txHashes, cctx.GetCurrentOutboundParam().Hash)
 			}
 		}
@@ -104,6 +107,7 @@ func TestRpc(r *runner.E2ERunner, args []string) {
 		require.NotEmpty(r, blockByNumber.Hash)
 		require.NotEmpty(r, blockByNumber.ParentHash)
 		require.NotEmpty(r, blockByNumber.Timestamp)
+		require.GreaterOrEqual(r, len(blockByNumber.Transactions), 1)
 
 		blockByHash, err := rpcWrapper.EthGetBlockByHash(r.Ctx, common.HexToHash(receipt.BlockHash), false)
 		require.NoError(r, err)
@@ -112,6 +116,7 @@ func TestRpc(r *runner.E2ERunner, args []string) {
 		require.NotEmpty(r, blockByHash.Number)
 		require.NotEmpty(r, blockByHash.ParentHash)
 		require.NotEmpty(r, blockByHash.Timestamp)
+		require.GreaterOrEqual(r, len(blockByNumber.Transactions), 1)
 
 		traceTx, err := rpcWrapper.DebugTraceTransaction(r.Ctx, common.HexToHash(txHash))
 		require.NoError(r, err)
