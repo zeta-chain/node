@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -97,6 +98,41 @@ func TestDo(t *testing.T) {
 
 		assert.Equal(t, 0, counter)
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
+	})
+}
+
+func TestDoWithDeadline(t *testing.T) {
+	t.Parallel()
+
+	t.Run("no error", func(t *testing.T) {
+		deadline := time.Now().Add(1 * time.Second)
+		err := DoWithDeadline(func() error { return nil }, DefaultBackoff(), deadline)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("deadline exceeded", func(t *testing.T) {
+		deadline := time.Now().Add(100 * time.Millisecond)
+
+		err := DoWithDeadline(func() error {
+			// sleep to ensure we hit deadline
+			time.Sleep(20 * time.Millisecond)
+			return errors.New("something went wrong")
+		}, DefaultBackoff(), deadline)
+
+		assert.ErrorContains(t, err, "deadline exceeded")
+	})
+
+	t.Run("retry limit exceeded before deadline", func(t *testing.T) {
+		// use a very short backoff to hit retry limit quickly
+		bo := backoff.WithMaxRetries(backoff.NewConstantBackOff(1*time.Millisecond), 2)
+
+		deadline := time.Now().Add(1 * time.Second)
+		err := DoWithDeadline(func() error {
+			return Retry(errors.New("something went wrong"))
+		}, bo, deadline)
+
+		assert.ErrorContains(t, err, "retry limit exceeded")
 	})
 }
 
