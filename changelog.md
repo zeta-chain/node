@@ -59,6 +59,10 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 * [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
 
+### Documentation
+
+* [4358](https://github.com/zeta-chain/node/pull/4358) - add documentation for ZetaClient execution modes
+
 ## v36.0.0
 
 ### Features
