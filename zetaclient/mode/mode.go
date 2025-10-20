@@ -10,7 +10,7 @@ const (
 	//
 	// An observer-signer in standard mode observes transactions from ZetaChain, signs them, and
 	// relays them to the appropriate connected chains. Symmetrically, it observes transactions from
-	// the connected chains and relay them to ZetaChain.
+	// the connected chains and relays them to ZetaChain.
 	StandardMode ClientMode = iota
 
 	// DryMode represents the read-only execution mode for the zetaclient.

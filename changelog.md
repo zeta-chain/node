@@ -29,7 +29,6 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 "MempoolCongestionThreshold": 3000,
 ```
 
-
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
@@ -37,10 +36,18 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
 * [4313](https://github.com/zeta-chain/node/pull/4313) - add dry-mode to Sui and add client wrappers to Sui and TON
 * [4317](https://github.com/zeta-chain/node/pull/4317) - add dry-mode to Solana
+* [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
+* [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
+* [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
+* [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
 
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
@@ -48,6 +55,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
+* [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
 
 ## v36.0.0
 

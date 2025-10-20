@@ -18,6 +18,7 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -120,6 +121,57 @@ func TestSigner(t *testing.T) {
 		}
 
 		require.Eventually(t, wait, 5*time.Second, 100*time.Millisecond)
+	})
+
+	t.Run("ProcessCCTX dry-mode", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+		ts.ClientMode = mode.DryMode
+
+		const zetaHeight = 1000
+
+		// Given cctx
+		nonce := uint64(123)
+		amount := math.NewUint(100_000)
+		receiver := "0xdecb47015beebed053c19ef48fe4d722fa3870f567133d235ebe3a70da7b0000"
+
+		cctx := sample.CrossChainTxV2(t, "0xABC123")
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.OutboundParams = []*cc.OutboundParams{{
+			Receiver:        receiver,
+			ReceiverChainId: ts.Chain.ChainId,
+			CoinType:        coin.CoinType_Gas,
+			Amount:          amount,
+			TssNonce:        nonce,
+			GasPrice:        "1000",
+			CallOptions: &cc.CallOptions{
+				GasLimit: 42,
+			},
+		}}
+
+		// Given mocked gateway nonce
+		ts.MockGatewayNonce(nonce)
+
+		// Given mocked WithdrawCapID
+		const withdrawCapID = "0xWithdrawCapID"
+		ts.MockWithdrawCapID(withdrawCapID)
+
+		// ACT
+		err := ts.Signer.ProcessCCTX(ts.Ctx, cctx, zetaHeight)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Wait for possible vote posting
+		wait := func() bool {
+			return len(ts.TrackerBag) == 0
+		}
+
+		require.Eventually(t, wait, 5*time.Second, 100*time.Millisecond)
+
+		ts.SuiMock.AssertNotCalled(t, "MoveCall", mock.Anything, mock.Anything)
+		ts.SuiMock.AssertNotCalled(t, "SuiExecuteTransactionBlock", mock.Anything, mock.Anything)
+		ts.SuiMock.AssertNotCalled(t, "SuiGetTransactionBlock", mock.Anything, mock.Anything)
 	})
 
 	t.Run("ProcessCCTX restricted address", func(t *testing.T) {
@@ -343,7 +395,8 @@ func newTestSuite(t *testing.T) *testSuite {
 	require.NoError(t, err)
 
 	baseSigner := base.NewSigner(chain, tss, logger, mode.StandardMode)
-	signer := New(baseSigner, zetacore, suiMock, gw)
+	zetaRepo := zrepo.New(zetacore, chain, mode.StandardMode)
+	signer := New(baseSigner, zetaRepo, suiMock, gw)
 
 	ts := &testSuite{
 		t:        t,

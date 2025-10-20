@@ -10,6 +10,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum"
@@ -46,7 +47,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers := ob.GetInboundInternalTrackers(ctx)
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
 	if len(trackers) > 0 {
 		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
 	}

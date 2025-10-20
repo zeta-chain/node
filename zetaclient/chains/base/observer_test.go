@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -110,7 +110,7 @@ func TestNewObserver(t *testing.T) {
 		chainParams    observertypes.ChainParams
 		appContext     *zctx.AppContext
 		zetacoreClient zrepo.ZetacoreClient
-		tssSigner      interfaces.TSSSigner
+		tssSigner      tssrepo.TSSClient
 		blockCacheSize int
 		fail           bool
 		message        string

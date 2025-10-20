@@ -9,7 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/mode"
@@ -22,7 +22,7 @@ type Signer struct {
 	chain chains.Chain
 
 	// tssSigner is the TSS signer
-	tssSigner interfaces.TSSSigner
+	tssSigner tssrepo.TSSClient
 
 	// logger contains the loggers used by signer
 	logger Logger
@@ -42,7 +42,7 @@ type Signer struct {
 // NewSigner creates a new base signer.
 func NewSigner(
 	chain chains.Chain,
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 	logger Logger,
 	clientMode mode.ClientMode,
 ) *Signer {
@@ -72,7 +72,7 @@ func (s *Signer) Chain() chains.Chain {
 }
 
 // TSS returns the tss signer for the signer.
-func (s *Signer) TSS() interfaces.TSSSigner {
+func (s *Signer) TSS() tssrepo.TSSClient {
 	return s.tssSigner
 }
 

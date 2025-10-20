@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -46,9 +47,10 @@ type EVMClient interface {
 
 	IsTxConfirmed(_ context.Context, txHash string, confirmations uint64) (bool, error)
 
-	SendTransaction(context.Context, *eth.Transaction) error
-
 	Signer() eth.Signer
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SendTransaction(context.Context, *eth.Transaction) error
 }
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
@@ -309,6 +311,11 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	logger = logger.With().Uint64("gas_price", txData.gas.Price.Uint64()).Logger()
+
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
 
 	// sign outbound
 	tx, err := signer.SignOutboundFromCCTX(
