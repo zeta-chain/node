@@ -12,7 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"

@@ -10,7 +10,7 @@ import (
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 )
 
 func TestKeeper_DepositAndCallZeta(t *testing.T) {
