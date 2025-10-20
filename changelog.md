@@ -41,11 +41,14 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
 * [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
 * [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
 * [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
 
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
