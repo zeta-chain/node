@@ -15,13 +15,13 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestRpc performs sanity checks on core JSON-RPC methods (eth_getTransactionByHash, eth_getTransactionReceipt,
+// TestRPC performs sanity checks on core JSON-RPC methods (eth_getTransactionByHash, eth_getTransactionReceipt,
 // eth_getBlockByNumber, eth_getBlockByHash, debug_traceTransaction, debug_traceBlockByNumber).
 //
 // If no transaction hashes are provided via args, it seeds test transactions and discovers existing
 // transactions from this user via CCTX queries (both ZEVM and EVM chains). This enables testing
 // RPC methods against transactions submitted before upgrades to detect any regressions.
-func TestRpc(r *runner.E2ERunner, args []string) {
+func TestRPC(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("starting JSON-RPC tests")
 
 	rpcWrapper := NewZEVMRPC(r.ZEVMClient)
