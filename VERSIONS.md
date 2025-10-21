@@ -3,7 +3,7 @@
 > **Note:** This matrix tracks major versions only. For specific patch versions, refer to individual release notes.
 
 > **Note:** ZetaClient v36-legacy refers to the old versioning scheme where ZetaClient versions matched ZetaCore versions.
-> For details on the new independent versioning workflow, see [Release Lifecycle Documentation](link-to-workflow-docs).
+> For details on the new independent versioning workflow, see [Release Lifecycle Documentation](docs/development/RELEASE_LIFECYCLE.md).
 
 ## Current Versions
 
