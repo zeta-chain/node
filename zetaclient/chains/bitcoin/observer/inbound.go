@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -123,6 +124,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 					}
 				}
 
+				metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 				_, err = ob.ZetaRepo().VoteInbound(ctx,
 					ob.logger.Inbound,
 					msg,
