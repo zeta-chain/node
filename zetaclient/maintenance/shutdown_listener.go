@@ -59,10 +59,12 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 	bg.Work(ctx, o.checkIfSyncing, bg.WithName("shutdown_listener.check_if_syncing"), withLogger, onComplete)
 }
 
+// checkIfSyncing checks if the node is syncing ,
+// if it is syncing it returns nil which completes the bg task and calls onComplete
 func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
 	isSyncing, err := o.client.GetSyncStatus(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get sync status")
+		return errors.Wrap(err, "unable to get sync status initially")
 	}
 	if isSyncing {
 		return nil
