@@ -213,13 +213,13 @@ docs-zetacored:
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored
 
-mocks:
-	@echo "--> Generating mocks"
-	@bash ./scripts/mocks-generate.sh
-.PHONY: mocks
+go-generate:
+	@echo "--> Generating Go files"
+	@bash ./scripts/go-generate.sh
+.PHONY: go-generate
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
+generate: proto-gen openapi specs typescript docs-zetacored go-generate fmt
 .PHONY: generate
 
 
