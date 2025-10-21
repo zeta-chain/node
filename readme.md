@@ -89,6 +89,6 @@ Find below further documentation for development and running your own ZetaChain 
 
 ## Community
 
-[X (formerly Twitter)](https://x.com/zetablockchain) |
+[X (formerly Twitter)](https://x.com/zetachain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)
