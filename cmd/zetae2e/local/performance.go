@@ -416,7 +416,7 @@ func suiWithdrawPerformanceRoutine(
 		r.RequestSuiFromFaucet(conf.RPCs.SuiFaucet, suiSigner.Address())
 
 		// deposit initial SUI tokens to ZEVM, 100 SUI in MIST
-		resp := r.SuiDepositSUI(r.EVMAddress(), math.NewUint(100*sui.MistPerSUI))
+		resp := r.SuiDepositSUI(r.SuiGateway.PackageID(), r.EVMAddress(), math.NewUint(100*sui.MistPerSUI))
 
 		// wait for the cctx to be mined
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)

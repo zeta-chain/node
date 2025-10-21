@@ -220,7 +220,11 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
-	logger := ob.Logger().Outbound.With().Str(logs.FieldTx, msg.ObservedOutboundHash).Logger()
+	logger := ob.Logger().
+		Outbound.With().
+		Uint64(logs.FieldNonce, msg.OutboundTssNonce).
+		Str(logs.FieldTx, msg.ObservedOutboundHash).
+		Logger()
 
 	_, _, err := ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg)
 	return err
