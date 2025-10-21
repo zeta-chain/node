@@ -493,6 +493,30 @@ test-sim-after-import-long
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
+release-snapshot-zetacore:
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-snapshot-zetaclient:
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-zetacore:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate
+
+release-zetaclient:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate
+
+### Legacy release commands
+# TODO: Remove once new separated zetaclientd/zetacored is fully adopted
+# https://github.com/zeta-chain/node/issues/4327
+
 release-snapshot:
 	$(GORELEASER) --clean --skip=validate --skip=publish --snapshot
 
