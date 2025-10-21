@@ -12,7 +12,7 @@ env:
   - CC_darwin_arm64=oa64-clang
   - CXX_darwin_arm64=oa64-clang++
   - CC_darwin_amd64=o64-clang
-  - CXX_darwin_amd64=o64-clang+
+  - CXX_darwin_amd64=o64-clang++
   - CC_linux_arm64=aarch64-linux-gnu-gcc
   - CXX_linux_arm64=aarch64-linux-gnu-g++
   - CC_linux_amd64=x86_64-linux-gnu-gcc
