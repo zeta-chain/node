@@ -14,6 +14,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // PostVoteGasPrice posts a gas price vote. Returns txHash and error.
@@ -186,6 +187,17 @@ func (c *Client) PostVoteInbound(
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
+	}
+
+	senderChain := ""
+	chain, ok := chains.GetChainFromChainID(msg.SenderChainId, []chains.Chain{})
+	if ok {
+		senderChain = chain.Name
+	}
+	if gasLimit <= PostVoteInboundGasLimit {
+		metrics.InboundVotesPostedWith500KGasLimitTotal.WithLabelValues(senderChain).Inc()
+	} else {
+		metrics.InboundVotesPostedWith7MGasLimitTotal.WithLabelValues(senderChain).Inc()
 	}
 
 	zetaTxHash, err := retry.DoTypedWithRetry(func() (string, error) {

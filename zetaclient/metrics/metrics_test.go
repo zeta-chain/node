@@ -87,3 +87,45 @@ func (ms *MetricsSuite) Test_RelayerKeyBalance(c *C) {
 	balance := testutil.ToFloat64(RelayerKeyBalance.WithLabelValues(chains.SolanaDevnet.Name))
 	c.Assert(balance, Equals, 2.1564)
 }
+
+func (ms *MetricsSuite) Test_InboundVotesMetrics(c *C) {
+	InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum").Inc()
+	InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum").Inc()
+
+	InboundVotesPostedWith500KGasLimitTotal.WithLabelValues("bitcoin").Inc()
+	InboundVotesPostedWith7MGasLimitTotal.WithLabelValues("ethereum").Inc()
+
+	SuccessfulInboundVotesTotal.WithLabelValues("ethereum").Inc()
+	SuccessfulInboundVotesTotal.WithLabelValues("bitcoin").Inc()
+	SuccessfulInboundVotesTotal.WithLabelValues("bitcoin").Inc()
+
+	ActiveInternalTrackers.WithLabelValues("ethereum").Set(5.0)
+	TransactionsAddedToInternalTrackerTotal.WithLabelValues("bitcoin").Inc()
+
+	InboundObservationsBlockScanTotal.WithLabelValues("ethereum").Inc()
+	InboundObservationsTrackerTotal.WithLabelValues("bitcoin", "true").Inc()
+
+	outOfGasCount := testutil.ToFloat64(InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum"))
+	c.Assert(outOfGasCount, Equals, 2.0)
+
+	regularGasCount := testutil.ToFloat64(InboundVotesPostedWith500KGasLimitTotal.WithLabelValues("bitcoin"))
+	c.Assert(regularGasCount, Equals, 1.0)
+
+	executionGasCount := testutil.ToFloat64(InboundVotesPostedWith7MGasLimitTotal.WithLabelValues("ethereum"))
+	c.Assert(executionGasCount, Equals, 1.0)
+
+	successfulCount := testutil.ToFloat64(SuccessfulInboundVotesTotal.WithLabelValues("bitcoin"))
+	c.Assert(successfulCount, Equals, 2.0)
+
+	activeTrackers := testutil.ToFloat64(ActiveInternalTrackers.WithLabelValues("ethereum"))
+	c.Assert(activeTrackers, Equals, 5.0)
+
+	trackerTransactions := testutil.ToFloat64(TransactionsAddedToInternalTrackerTotal.WithLabelValues("bitcoin"))
+	c.Assert(trackerTransactions, Equals, 1.0)
+
+	blockScanObs := testutil.ToFloat64(InboundObservationsBlockScanTotal.WithLabelValues("ethereum"))
+	c.Assert(blockScanObs, Equals, 1.0)
+
+	trackerObs := testutil.ToFloat64(InboundObservationsTrackerTotal.WithLabelValues("bitcoin", "true"))
+	c.Assert(trackerObs, Equals, 1.0)
+}
