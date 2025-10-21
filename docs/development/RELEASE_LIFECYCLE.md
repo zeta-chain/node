@@ -123,7 +123,7 @@ This ensures clear visibility of which component versions work together.
 - **ZetaClient releases can happen independently**
 - **Consensus-breaking changes in `develop` don't affect the network until a ZetaCore release is deployed**
 
-## Notes on Consensus Breaking Changes
+## Notes on Consensus-Breaking Changes
 
 A **consensus-breaking change** is any modification that influences the on-chain state transition, potentially leading to inconsistency and consensus failure if nodes run different versions simultaneously. These changes require network-wide coordination through governance proposals, ensuring all validators upgrade to the new version at the same designated upgrade height.
 
