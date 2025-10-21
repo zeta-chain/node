@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -29,6 +30,11 @@ const folder string = "config"
 
 // Save saves ZetaClient config
 func Save(config *Config, path string) error {
+	// validate config
+	if err := Validate(*config); err != nil {
+		return err
+	}
+
 	folderPath := filepath.Join(path, folder)
 	err := os.MkdirAll(folderPath, 0o750)
 	if err != nil {
@@ -76,16 +82,38 @@ func Load(basePath string) (Config, error) {
 	if cfg.KeyringBackend == KeyringBackendUndefined {
 		cfg.KeyringBackend = KeyringBackendTest
 	}
-	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
-		return Config{}, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
-	}
 
 	// fields sanitization
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	cfg.ZetaCoreHome = basePath
 
+	// validate config
+	if err := Validate(cfg); err != nil {
+		return Config{}, err
+	}
+
 	return cfg, nil
+}
+
+// Validate performs basic validation on the config fields
+// TODO: add more validation for other fields
+// https://github.com/zeta-chain/node/issues/4352
+func Validate(cfg Config) error {
+	// go-tss requires a valid IPv4 address
+	if cfg.PublicIP != "" && !govalidator.IsIPv4(cfg.PublicIP) {
+		return fmt.Errorf("invalid public IP %s", cfg.PublicIP)
+	}
+
+	if cfg.PublicDNS != "" && !govalidator.IsDNSName(cfg.PublicDNS) {
+		return fmt.Errorf("invalid public DNS %s", cfg.PublicDNS)
+	}
+
+	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
+		return fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
+	}
+
+	return nil
 }
 
 // SetRestrictedAddressesFromConfig loads compliance data (restricted addresses) from config.
