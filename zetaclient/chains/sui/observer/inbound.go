@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -153,7 +154,10 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	if tx == nil {
-		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txReq := models.SuiGetTransactionBlockRequest{
+			Digest:  event.TxHash,
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		}
 		txFresh, err := ob.suiClient.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
@@ -186,8 +190,11 @@ func (ob *Observer) processInboundEvent(
 // processInboundTracker queries tx with its events by tracker and then votes.
 func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker, isInternal bool) error {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  tracker.TxHash,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+		Digest: tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+			ShowEvents:  true,
+		},
 	}
 
 	tx, err := ob.suiClient.SuiGetTransactionBlock(ctx, req)
@@ -236,10 +243,18 @@ func (ob *Observer) constructInboundVote(
 		return nil, errCompliance
 	}
 
-	// Sui uses checkpoint seq num instead of block height
+	// a valid inbound should be successful
+	// in theory, Sui protocol should erase emitted events if tx failed, just in case
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return nil, errors.Errorf("inbound is failed: %s", tx.Effects.Status.Error)
+	}
+
+	// Sui uses checkpoint seq num instead of block height.
+	// If checkpoint is invalid (e.g. 0), the tx status remains unclear (e.g. maybe pending).
+	// In this case, we should signal the caller to stop scanning further by returning errTxNotFound.
 	checkpointSeqNum, err := uint64FromStr(tx.Checkpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse checkpoint")
+	if err != nil || checkpointSeqNum == 0 {
+		return nil, errors.Wrap(errTxNotFound, fmt.Sprintf("invalid checkpoint: %s", tx.Checkpoint))
 	}
 
 	return cctypes.NewMsgVoteInbound(

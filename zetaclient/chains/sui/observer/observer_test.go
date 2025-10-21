@@ -114,8 +114,8 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
 		// Given 2 transaction blocks
-		ts.OnGetTx("TX_1_ok", "10000", false, nil)
-		ts.OnGetTx("TX_3_ok", "20000", false, nil)
+		ts.OnGetTx("TX_1_ok", "10000", true, false, nil)
+		ts.OnGetTx("TX_3_ok", "20000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -201,7 +201,7 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
 		// Given transaction block
-		ts.OnGetTx("TX_restricted", "10000", false, nil)
+		ts.OnGetTx("TX_restricted", "10000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -238,7 +238,7 @@ func TestObserver(t *testing.T) {
 		// Given underlying tx with event
 		evmAlice := sample.EthAddress()
 
-		ts.OnGetTx("TX_TRACKER_1", "15000", true, []models.SuiEventResponse{
+		ts.OnGetTx("TX_TRACKER_1", "15000", true, true, []models.SuiEventResponse{
 			ts.SampleEvent("TX_TRACKER_1", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
@@ -595,14 +595,20 @@ func (ts *testSuite) SampleEvent(txHash, event string, kv map[string]any) models
 	}
 }
 
-func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events []models.SuiEventResponse) {
+func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents bool, events []models.SuiEventResponse) {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  digest,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: showEvents},
+		Digest: digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: showEffects,
+			ShowEvents:  showEvents,
+		},
 	}
 
 	res := models.SuiTransactionBlockResponse{
-		Digest:     digest,
+		Digest: digest,
+		Effects: models.SuiEffects{
+			Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
+		},
 		Events:     events,
 		Checkpoint: checkpoint,
 	}

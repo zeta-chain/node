@@ -29,6 +29,9 @@ var (
 	// ErrObjectOwnership is the error returned when a wrong object ownership is used in withdraw_and_call
 	ErrObjectOwnership = errors.New("wrong object ownership")
 
+	// ErrInvalidPayload is the error returned when a invalid payload format is used in withdraw_and_call
+	ErrInvalidPayload = errors.New("invalid payload")
+
 	// retryableOutboundErrCodes are the outbound execution (if failed) error codes that are retryable.
 	// The list is used to determine if a withdraw_and_call should fallback if rejected by the network.
 	// Note: keep this list in sync with the actual implementation in `gateway.move`
@@ -110,45 +113,6 @@ func IsRetryableExecutionError(errorMsg string) (bool, error) {
 		// command 2: 'set_message_context' error
 		// command 3: 'on_call' error
 		// command 4: 'reset_message_context' error
-		return false, nil
-	default: // never happen
-		return false, errors.Errorf("invalid command index: %d", cmdIndex)
-	}
-}
-
-// TODO: https://github.com/zeta-chain/node/issues/4066
-// remove this legacy error checker after re-enabling authenticated call
-// IsRetryableExecutionErrorLegacy checks if the error message is a retryable error.
-// Sui withdraw and withdrawAndCall may fail with unknown execution errors, zetaclient
-// retries the outbound on known errors and cancels the outbound on any unknown errors.
-// This function is used for legacy sui gateway.
-func IsRetryableExecutionErrorLegacy(errorMsg string) (bool, error) {
-	// cmdIndex is optional in Sui error message
-	cmdIndex, err := extractCommandIndex(errorMsg)
-
-	switch {
-	case err != nil:
-		// command index not found, it's fine
-		// cancel this tx with unknown command index
-		return false, nil
-	case cmdIndex == 0:
-		// 'withdraw_impl' error
-		// The gateway 'withdraw_impl' may fail with three types of known MoveAbort errors.
-		// If it does, the scheduler should retry the outbound until it succeeds:
-		// 	- MoveAbort (ErrCodeNotWhitelisted)
-		// 	- MoveAbort (ErrCodeNonceMismatch)
-		// 	- MoveAbort (ErrCodeInactiveWithdrawCap)
-		if strings.HasPrefix(errorMsg, "MoveAbort") {
-			moveAbort, err := NewMoveAbortFromExecutionError(errorMsg)
-			if err != nil {
-				return false, errors.Wrap(err, "unable to create MoveAbort from execution error")
-			}
-			return moveAbort.IsRetryable(), nil
-		}
-		return false, nil
-	case cmdIndex == 1 || cmdIndex == 2:
-		// 1: gas budget transfer error: cancel tx
-		// 2: 'on_call' error: cancel tx
 		return false, nil
 	default: // never happen
 		return false, errors.Errorf("invalid command index: %d", cmdIndex)

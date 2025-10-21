@@ -34,6 +34,11 @@ type Signer struct {
 type SuiClient interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 
+	SuiXGetDynamicFieldObject(
+		_ context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
+	) (models.SuiObjectResponse, error)
+
 	GetOwnedObjectID(_ context.Context,
 		ownerAddress string,
 		structType string,
