@@ -24,6 +24,10 @@ type suiClient interface {
 	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
+	SuiXGetDynamicFieldObject(
+		ctx context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
+	) (models.SuiObjectResponse, error)
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)

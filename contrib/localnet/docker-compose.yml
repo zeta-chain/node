@@ -136,7 +136,11 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6062
     restart: always
+    ports:
+      - "6062:6062" # pprof
+      - "8887:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -157,6 +161,10 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6063
+    ports:
+      - "6063:6063" # pprof
+      - "8888:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -177,6 +185,10 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6064
+    ports:
+      - "6064:6064" # pprof
+      - "8889:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -212,6 +224,10 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6065
+    ports:
+      - "6065:6065" # pprof
+      - "8890:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams

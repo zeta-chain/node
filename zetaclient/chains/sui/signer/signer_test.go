@@ -59,11 +59,9 @@ func TestSigner(t *testing.T) {
 		const withdrawCapID = "0xWithdrawCapID"
 		ts.MockWithdrawCapID(withdrawCapID)
 
-		// TODO: https://github.com/zeta-chain/node/issues/4066
-		// bring back MessageContextID
 		// Given mocked MessageContextID
-		// const messageContextID = "0xMessageContextID"
-		// ts.MockMessageContextID(messageContextID)
+		const messageContextID = "0xMessageContextID"
+		ts.MockMessageContextID(messageContextID)
 
 		// Given expected MoveCall
 		txBytes := base64.StdEncoding.EncodeToString([]byte("raw_tx_bytes"))
@@ -225,6 +223,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
@@ -314,6 +313,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
@@ -375,7 +375,18 @@ type testSuite struct {
 	TrackerBag []testTracker
 }
 
-func newTestSuite(t *testing.T) *testSuite {
+type testSuiteConfig struct {
+	withdrawCapID     string
+	previousPackageID string
+	originalPackageID string
+}
+
+func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
+	var cfg testSuiteConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	var (
 		ctx = context.Background()
 
@@ -388,6 +399,11 @@ func newTestSuite(t *testing.T) *testSuite {
 		testLogger = testlog.New(t)
 		logger     = base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 	)
+
+	// append withdraw cap ID, previous package ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
+	}
 
 	suiMock := mocks.NewSuiClient(t)
 
@@ -431,8 +447,15 @@ func (ts *testSuite) MockWithdrawCapID(id string) {
 }
 
 func (ts *testSuite) MockMessageContextID(id string) {
-	tss, structType := ts.TSS.PubKey().AddressSui(), ts.Gateway.MessageContextType()
-	ts.SuiMock.On("GetOwnedObjectID", mock.Anything, tss, structType).Return(id, nil)
+	ts.SuiMock.On("SuiXGetDynamicFieldObject", mock.Anything, mock.Anything).Maybe().Return(models.SuiObjectResponse{
+		Data: &models.SuiObjectData{
+			Content: &models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"value": id},
+				},
+			},
+		},
+	}, nil)
 }
 
 func (ts *testSuite) MockMoveCall(assert func(req models.MoveCallRequest), txBytesBase64 string) {

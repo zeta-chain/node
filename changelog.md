@@ -48,7 +48,10 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
 * [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
 * [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
+* [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
+* [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
+* [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
 
 ### Tests
 
