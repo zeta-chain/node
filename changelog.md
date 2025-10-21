@@ -40,6 +40,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
 * [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
 * [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
 
 ### Tests
 

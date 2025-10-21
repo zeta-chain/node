@@ -82,7 +82,7 @@ func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
 				return nil
 			}
 		case <-ctx.Done():
-			o.logger.Info().Msg("checkIfCatchup (shutdown listener) stopped")
+			o.logger.Info().Msg("checkIfSyncing (shutdown listener) stopped")
 			return nil
 		}
 	}
