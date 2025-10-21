@@ -11,9 +11,12 @@ import (
 	"sync"
 
 	"github.com/asaskevich/govalidator"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // restrictedAddressBook is a map of restricted addresses
@@ -90,15 +93,13 @@ func Load(basePath string) (Config, error) {
 
 	// validate config
 	if err := Validate(cfg); err != nil {
-		return Config{}, err
+		return Config{}, errors.Wrapf(err, "config file validation failed")
 	}
 
 	return cfg, nil
 }
 
 // Validate performs basic validation on the config fields
-// TODO: add more validation for other fields
-// https://github.com/zeta-chain/node/issues/4352
 func Validate(cfg Config) error {
 	// go-tss requires a valid IPv4 address
 	if cfg.PublicIP != "" && !govalidator.IsIPv4(cfg.PublicIP) {
@@ -109,8 +110,44 @@ func Validate(cfg Config) error {
 		return fmt.Errorf("invalid public DNS %s", cfg.PublicDNS)
 	}
 
+	if _, err := chains.ZetaChainFromCosmosChainID(cfg.ChainID); err != nil {
+		return errors.Wrapf(err, "invalid chain id %s", cfg.ChainID)
+	}
+
+	// ZetaCoreURL can be either an IP address or a hostname (e.g., Docker service name)
+	if cfg.ZetaCoreURL != "" && !govalidator.IsIP(cfg.ZetaCoreURL) && !govalidator.IsDNSName(cfg.ZetaCoreURL) {
+		return fmt.Errorf("invalid zetacore URL %s", cfg.ZetaCoreURL)
+	}
+
+	// validate granter address - should be a valid bech32 address
+	if _, err := sdktypes.AccAddressFromBech32(cfg.AuthzGranter); err != nil {
+		return errors.Wrapf(err, "invalid bech32 granter address %s", cfg.AuthzGranter)
+	}
+
+	// validate grantee name - should not be empty
+	if strings.TrimSpace(cfg.AuthzHotkey) == "" {
+		return fmt.Errorf("grantee name cannot be empty")
+	}
+
+	// acceptable log levels are: 0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic
+	if cfg.LogLevel < 0 || cfg.LogLevel > 5 {
+		return fmt.Errorf("log level must be between 0 and 5")
+	}
+
+	if cfg.ConfigUpdateTicker == 0 {
+		return fmt.Errorf("config update ticker cannot be 0")
+	}
+
 	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
 		return fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
+	}
+
+	if cfg.MaxBaseFee < 0 {
+		return fmt.Errorf("max base fee cannot be negative")
+	}
+
+	if cfg.MempoolCongestionThreshold < 0 {
+		return fmt.Errorf("mempool congestion threshold cannot be negative")
 	}
 
 	return nil
