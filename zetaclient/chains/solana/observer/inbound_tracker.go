@@ -68,7 +68,7 @@ func (ob *Observer) observeInboundTrackers(
 		}
 
 		// vote inbound events
-		if err := ob.VoteInboundEvents(ctx, events); err != nil {
+		if err := ob.VoteInboundEvents(ctx, events, true, isInternal); err != nil {
 			// return error to retry this transaction
 			return errors.Wrapf(err, "error VoteInboundEvents for chain %d sig %s", chainID, signature)
 		}
