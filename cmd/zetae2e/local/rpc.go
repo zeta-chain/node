@@ -26,7 +26,7 @@ func rpcTestRoutine(
 			conf,
 			deployerRunner,
 			account,
-			runner.NewLogger(verbose, color.BgHiMagenta, "rpc"),
+			runner.NewLogger(verbose, color.FgMagenta, "rpc"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {

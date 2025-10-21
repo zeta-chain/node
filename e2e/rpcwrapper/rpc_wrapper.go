@@ -1,4 +1,4 @@
-package e2etests
+package rpcwrapper
 
 import (
 	"context"
@@ -66,7 +66,11 @@ func (z *ZEVMRPC) EthGetTransactionReceipt(ctx context.Context, txHash common.Ha
 
 func (z *ZEVMRPC) EthGetBlockByNumber(ctx context.Context, blockNumber *big.Int, fullTx bool) (*Block, error) {
 	var raw json.RawMessage
-	if err := z.Call(ctx, &raw, "eth_getBlockByNumber", hexutil.EncodeBig(blockNumber), fullTx); err != nil {
+	blockParam := "latest"
+	if blockNumber != nil {
+		blockParam = hexutil.EncodeBig(blockNumber)
+	}
+	if err := z.Call(ctx, &raw, "eth_getBlockByNumber", blockParam, fullTx); err != nil {
 		return nil, err
 	}
 
@@ -126,7 +130,11 @@ func (z *ZEVMRPC) DebugTraceTransaction(ctx context.Context, txHash common.Hash)
 
 func (z *ZEVMRPC) DebugTraceBlockByNumber(ctx context.Context, blockNumber *big.Int) (TraceBlock, error) {
 	var raw json.RawMessage
-	if err := z.Call(ctx, &raw, "debug_traceBlockByNumber", hexutil.EncodeBig(blockNumber), map[string]any{"tracer": "callTracer"}); err != nil {
+	blockParam := "latest"
+	if blockNumber != nil {
+		blockParam = hexutil.EncodeBig(blockNumber)
+	}
+	if err := z.Call(ctx, &raw, "debug_traceBlockByNumber", blockParam, map[string]any{"tracer": "callTracer"}); err != nil {
 		return nil, err
 	}
 
@@ -160,35 +168,35 @@ type TraceBlock []struct {
 }
 
 type TxByHash struct {
-	BlockHash            string `json:"blockHash"`
-	BlockNumber          string `json:"blockNumber"`
-	From                 string `json:"from"`
-	Gas                  string `json:"gas"`
-	GasPrice             string `json:"gasPrice"`
-	MaxFeePerGas         string `json:"maxFeePerGas"`
-	MaxPriorityFeePerGas string `json:"maxPriorityFeePerGas"`
-	Hash                 string `json:"hash"`
-	Input                string `json:"input"`
-	Nonce                string `json:"nonce"`
-	To                   string `json:"to"`
-	TransactionIndex     string `json:"transactionIndex"`
-	Value                string `json:"value"`
-	Type                 string `json:"type"`
-	AccessList           []any  `json:"accessList"`
-	ChainID              string `json:"chainId"`
-	V                    string `json:"v"`
-	R                    string `json:"r"`
-	S                    string `json:"s"`
+	BlockHash            string  `json:"blockHash"`
+	BlockNumber          string  `json:"blockNumber"`
+	From                 string  `json:"from"`
+	Gas                  string  `json:"gas"`
+	GasPrice             *string `json:"gasPrice"`             // nullable for EIP-1559
+	MaxFeePerGas         *string `json:"maxFeePerGas"`         // nullable for legacy
+	MaxPriorityFeePerGas *string `json:"maxPriorityFeePerGas"` // nullable for legacy
+	Hash                 string  `json:"hash"`
+	Input                string  `json:"input"`
+	Nonce                string  `json:"nonce"`
+	To                   *string `json:"to"` // nullable for contract creation
+	TransactionIndex     string  `json:"transactionIndex"`
+	Value                string  `json:"value"`
+	Type                 string  `json:"type"`
+	AccessList           []any   `json:"accessList"`
+	ChainID              *string `json:"chainId"` // nullable for pre-EIP-155 transactions
+	V                    string  `json:"v"`
+	R                    string  `json:"r"`
+	S                    string  `json:"s"`
 }
 
 type TxReceipt struct {
-	BlockHash         string `json:"blockHash"`
-	BlockNumber       string `json:"blockNumber"`
-	ContractAddress   any    `json:"contractAddress"`
-	CumulativeGasUsed string `json:"cumulativeGasUsed"`
-	EffectiveGasPrice string `json:"effectiveGasPrice"`
-	From              string `json:"from"`
-	GasUsed           string `json:"gasUsed"`
+	BlockHash         string  `json:"blockHash"`
+	BlockNumber       string  `json:"blockNumber"`
+	ContractAddress   *string `json:"contractAddress"` // nullable for non-contract txs
+	CumulativeGasUsed string  `json:"cumulativeGasUsed"`
+	EffectiveGasPrice *string `json:"effectiveGasPrice"` // nullable for legacy/EIP-1559
+	From              string  `json:"from"`
+	GasUsed           string  `json:"gasUsed"`
 	Logs              []struct {
 		Address          string   `json:"address"`
 		Topics           []string `json:"topics"`
@@ -200,34 +208,36 @@ type TxReceipt struct {
 		LogIndex         string   `json:"logIndex"`
 		Removed          bool     `json:"removed"`
 	} `json:"logs"`
-	LogsBloom        string `json:"logsBloom"`
-	Status           string `json:"status"`
-	To               string `json:"to"`
-	TransactionHash  string `json:"transactionHash"`
-	TransactionIndex string `json:"transactionIndex"`
-	Type             string `json:"type"`
+	LogsBloom        string  `json:"logsBloom"`
+	Status           string  `json:"status"`
+	To               *string `json:"to"` // nullable for contract creation
+	TransactionHash  string  `json:"transactionHash"`
+	TransactionIndex string  `json:"transactionIndex"`
+	Type             string  `json:"type"`
 }
 
 type Block struct {
-	BaseFeePerGas    string   `json:"baseFeePerGas"`
-	Difficulty       string   `json:"difficulty"`
-	ExtraData        string   `json:"extraData"`
-	GasLimit         string   `json:"gasLimit"`
-	GasUsed          string   `json:"gasUsed"`
-	Hash             string   `json:"hash"`
-	LogsBloom        string   `json:"logsBloom"`
-	Miner            string   `json:"miner"`
-	MixHash          string   `json:"mixHash"`
-	Nonce            string   `json:"nonce"`
-	Number           string   `json:"number"`
-	ParentHash       string   `json:"parentHash"`
-	ReceiptsRoot     string   `json:"receiptsRoot"`
-	Sha3Uncles       string   `json:"sha3Uncles"`
-	Size             string   `json:"size"`
-	StateRoot        string   `json:"stateRoot"`
-	Timestamp        string   `json:"timestamp"`
-	TotalDifficulty  string   `json:"totalDifficulty"`
-	Transactions     []string `json:"transactions"`
-	TransactionsRoot string   `json:"transactionsRoot"`
-	Uncles           []any    `json:"uncles"`
+	BaseFeePerGas   string `json:"baseFeePerGas"`
+	Difficulty      string `json:"difficulty"`
+	ExtraData       string `json:"extraData"`
+	GasLimit        string `json:"gasLimit"`
+	GasUsed         string `json:"gasUsed"`
+	Hash            string `json:"hash"`
+	LogsBloom       string `json:"logsBloom"`
+	Miner           string `json:"miner"`
+	MixHash         string `json:"mixHash"`
+	Nonce           string `json:"nonce"`
+	Number          string `json:"number"`
+	ParentHash      string `json:"parentHash"`
+	ReceiptsRoot    string `json:"receiptsRoot"`
+	Sha3Uncles      string `json:"sha3Uncles"`
+	Size            string `json:"size"`
+	StateRoot       string `json:"stateRoot"`
+	Timestamp       string `json:"timestamp"`
+	TotalDifficulty string `json:"totalDifficulty"`
+	// Can be either []tx-hash (fullTx=false) or []tx-object (fullTx=true).
+	// Using RawMessage preserves both formats without lossy coercion.
+	Transactions     []json.RawMessage `json:"transactions"`
+	TransactionsRoot string            `json:"transactionsRoot"`
+	Uncles           []any             `json:"uncles"`
 }

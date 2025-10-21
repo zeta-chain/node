@@ -10,72 +10,38 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/rpcwrapper"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestRPC performs sanity checks on core JSON-RPC methods (eth_getTransactionByHash, eth_getTransactionReceipt,
-// eth_getBlockByNumber, eth_getBlockByHash, debug_traceTransaction, debug_traceBlockByNumber).
+// eth_getBlockByNumber, eth_getBlockByHash, debug_traceTransaction, debug_traceBlockByNumber) to ensure
+// ZEVM RPC compatibility and detect regressions after upgrades.
 //
-// If no transaction hashes are provided via args, it seeds test transactions and discovers existing
-// transactions from this user via CCTX queries (both ZEVM and EVM chains). This enables testing
-// RPC methods against transactions submitted before upgrades to detect any regressions.
+// Usage modes:
+//  1. With tx hashes: Provide comma-separated transaction hashes as args to test specific transactions
+//     (useful for testing pre/post-upgrade transactions on live networks)
+//  2. Without args: Seeds test transactions and discovers existing transactions from this user via CCTX queries
+//     (both ZEVM and EVM chains) to test RPC methods against historical transactions
+//
+// This enables regression testing by validating RPC methods work correctly against transactions
+// submitted before upgrades, ensuring no breaking changes in the RPC layer.
 func TestRPC(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("starting JSON-RPC tests")
 
-	rpcWrapper := NewZEVMRPC(r.ZEVMClient)
+	rpcWrapper := rpcwrapper.NewZEVMRPC(r.ZEVMClient)
 
 	txHashes := []string{}
 	if len(args) == 1 && args[0] != "" {
+		// Parse comma-separated transaction hashes for testing specific transactions
+		// Example: "0x123...,0x456..." for testing pre/post-upgrade transactions
 		txHashes = strings.Split(args[0], ",")
 	}
 
 	if len(txHashes) == 0 {
-		r.Logger.Info("seeding example transactions")
-		amount := utils.ParseBigInt(r, "10000000000000000")
-
-		// perform the deposit
-		tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
-
-		// wait for the cctx to be mined
-		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-		r.Logger.CCTX(*cctx, "deposit")
-		require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-
-		amount = utils.ParseBigInt(r, "9000000000000000")
-
-		r.ApproveETHZRC20(r.GatewayZEVMAddr)
-
-		// perform the withdraw
-		tx = r.ETHWithdraw(r.EVMAddress(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
-
-		// wait for the cctx to be mined
-		cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-		r.Logger.CCTX(*cctx2, "withdraw")
-		require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-
-		cctxsRes, err := r.CctxClient.CctxAll(r.Ctx, &crosschaintypes.QueryAllCctxRequest{})
-		require.NoError(r, err)
-
-		zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
-		require.NoError(r, err)
-
-		evmChainID, err := r.EVMClient.ChainID(r.Ctx)
-		require.NoError(r, err)
-
-		// this will also fetch txs submitted by this user before upgrade
-		for _, cctx := range cctxsRes.CrossChainTx {
-			if cctx.InboundParams.Sender == r.ZEVMAuth.From.Hex() &&
-				cctx.InboundParams.GetSenderChainId() == zetaChainID.Int64() {
-				txHashes = append(txHashes, cctx.InboundParams.ObservedHash)
-			}
-
-			if cctx.InboundParams.Sender == r.EVMAuth.From.Hex() &&
-				cctx.InboundParams.GetSenderChainId() == evmChainID.Int64() {
-				txHashes = append(txHashes, cctx.GetCurrentOutboundParam().Hash)
-			}
-		}
+		txHashes = seedAndDiscoverUserTestTxs(r)
 	}
 
 	// testing just most important rpc methods, if there are some errors in rpc layer probably most will fail
@@ -116,7 +82,7 @@ func TestRPC(r *runner.E2ERunner, args []string) {
 		require.NotEmpty(r, blockByHash.Number)
 		require.NotEmpty(r, blockByHash.ParentHash)
 		require.NotEmpty(r, blockByHash.Timestamp)
-		require.GreaterOrEqual(r, len(blockByNumber.Transactions), 1)
+		require.GreaterOrEqual(r, len(blockByHash.Transactions), 1)
 
 		traceTx, err := rpcWrapper.DebugTraceTransaction(r.Ctx, common.HexToHash(txHash))
 		require.NoError(r, err)
@@ -135,4 +101,56 @@ func TestRPC(r *runner.E2ERunner, args []string) {
 	}
 
 	r.Logger.Info("JSON-RPC tests completed successfully!")
+}
+
+// seedAndDiscoverUserTestTxs creates test transactions and discovers existing transactions
+// from this user via CCTX queries to enable testing RPC methods against historical transactions.
+func seedAndDiscoverUserTestTxs(r *runner.E2ERunner) []string {
+	r.Logger.Info("seeding example transactions")
+	amount := utils.ParseBigInt(r, "10000000000000000")
+
+	// perform the deposit
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	amount = utils.ParseBigInt(r, "9000000000000000")
+
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
+
+	// perform the withdraw
+	tx = r.ETHWithdraw(r.EVMAddress(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+
+	// wait for the cctx to be mined
+	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx2, "withdraw")
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx2.CctxStatus.Status)
+
+	cctxsRes, err := r.CctxClient.CctxAll(r.Ctx, &crosschaintypes.QueryAllCctxRequest{})
+	require.NoError(r, err)
+
+	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	txHashes := []string{}
+	// this will also fetch txs submitted by this user before upgrade
+	for _, cctx := range cctxsRes.CrossChainTx {
+		if cctx.InboundParams.Sender == r.ZEVMAuth.From.Hex() &&
+			cctx.InboundParams.GetSenderChainId() == zetaChainID.Int64() {
+			txHashes = append(txHashes, cctx.InboundParams.ObservedHash)
+		}
+
+		if cctx.InboundParams.Sender == r.EVMAuth.From.Hex() &&
+			cctx.InboundParams.GetSenderChainId() == evmChainID.Int64() {
+			txHashes = append(txHashes, cctx.GetCurrentOutboundParam().Hash)
+		}
+	}
+
+	return txHashes
 }

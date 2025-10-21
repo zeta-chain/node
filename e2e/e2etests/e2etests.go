@@ -1488,7 +1488,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestRPCName,
 		"test json rpc support in ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "tx hashes", DefaultValue: ""},
+			{Description: "comma-separated tx hashes for testing specific transactions (optional)", DefaultValue: ""},
 		},
 		TestRPC,
 	),
