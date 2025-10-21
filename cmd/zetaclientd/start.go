@@ -225,6 +225,7 @@ func startTelemetry(ctx context.Context, cfg config.Config) (*metrics.TelemetryS
 	// 3. Init telemetry server
 	telemetry := metrics.NewTelemetryServer()
 	telemetry.SetIPAddress(cfg.PublicIP)
+	telemetry.SetDNSName(cfg.PublicDNS)
 
 	// 4. Add services to the process
 	graceful.AddStarter(ctx, pprofServer)
