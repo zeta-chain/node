@@ -54,8 +54,6 @@ type ZetacoreReaderClient interface {
 	GetBallotByID(context.Context, string) (*observer.QueryBallotByIdentifierResponse, error)
 
 	GetBTCTSSAddress(context.Context, ChainID) (string, error)
-
-	GetSyncStatus(context.Context) (bool, error)
 }
 
 // ZetacoreReaderClient contains the zetacore client functions used by ZetaRepo that do mutate
