@@ -487,22 +487,35 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawRevertWithCallName,
+			//e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
-			// TODO: https://github.com/zeta-chain/node/issues/4066
-			// remove legacy tests and enable new ones after re-enabling authenticated call
 			//e2etests.TestSuiWithdrawAndCallName,
+			//e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
 			//e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			//e2etests.TestSuiTokenWithdrawAndCallName,
 			//e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
-			e2etests.TestSuiWithdrawAndCallLegacyName,
-			e2etests.TestSuiWithdrawAndCallRevertWithCallLegacyName,
-			e2etests.TestSuiTokenWithdrawAndCallLegacyName,
-			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
 			e2etests.TestSuiDepositRestrictedName,
-			e2etests.TestSuiWithdrawRestrictedName,
+			//e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
+
+		// TODO: https://github.com/zeta-chain/node/issues/4139
+		// the upgrade test is now based on old sui gateway package
+		// 1. does not have MessageContext object, we have to skip all WaC tests
+		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
+		suiBreakingTestsV35Upgrade := []string{
+			e2etests.TestSuiWithdrawRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiWithdrawRestrictedName,
+		}
+		if !deployerRunner.IsRunningUpgrade() {
+			suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
+		}
+
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 

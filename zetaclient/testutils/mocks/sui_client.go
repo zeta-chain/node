@@ -342,6 +342,34 @@ func (_m *SuiClient) SuiMultiGetObjects(ctx context.Context, req models.SuiMulti
 	return r0, r1
 }
 
+// SuiXGetDynamicFieldObject provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiXGetDynamicFieldObject(ctx context.Context, req models.SuiXGetDynamicFieldObjectRequest) (models.SuiObjectResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiXGetDynamicFieldObject")
+	}
+
+	var r0 models.SuiObjectResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetDynamicFieldObjectRequest) (models.SuiObjectResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetDynamicFieldObjectRequest) models.SuiObjectResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(models.SuiObjectResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiXGetDynamicFieldObjectRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SuiXGetLatestSuiSystemState provides a mock function with given fields: ctx
 func (_m *SuiClient) SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error) {
 	ret := _m.Called(ctx)
