@@ -15,7 +15,7 @@
             }
         ]
     },
-    "description": "A Grafana dashboard for monitoring inbound vote metrics in ZetaChain zetaclient3",
+    "description": "A Grafana dashboard for monitoring inbound vote metrics for localnet zetaclient3 instance",
     "editable": true,
     "fiscalYearStartMonth": 0,
     "gnetId": null,
@@ -341,7 +341,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "Total Transactions Added to Tracker",
+            "title": "Total Transactions Added to Internal Tracker",
             "type": "stat"
         },
         {
@@ -469,7 +469,7 @@
             "fillGradient": 0,
             "gridPos": {
                 "h": 8,
-                "w": 8,
+                "w": 6,
                 "x": 0,
                 "y": 6
             },
@@ -569,8 +569,8 @@
             "fillGradient": 0,
             "gridPos": {
                 "h": 8,
-                "w": 8,
-                "x": 8,
+                "w": 6,
+                "x": 6,
                 "y": 6
             },
             "hiddenSeries": false,
@@ -669,8 +669,8 @@
             "fillGradient": 0,
             "gridPos": {
                 "h": 8,
-                "w": 8,
-                "x": 16,
+                "w": 6,
+                "x": 12,
                 "y": 6
             },
             "hiddenSeries": false,
@@ -721,6 +721,106 @@
             "thresholds": [],
             "timeRegions": [],
             "title": "Inbound Observations by Chain Zetacore Trackers",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "decimals": 0,
+                    "format": "locale",
+                    "label": "",
+                    "logBase": 1,
+                    "min": "0",
+                    "show": true
+                },
+                {
+                    "format": "none",
+                    "logBase": 1,
+                    "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "links": []
+                },
+                "overrides": []
+            },
+            "fill": 3,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 18,
+                "y": 6
+            },
+            "hiddenSeries": false,
+            "hideTimeOverride": false,
+            "id": 22,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "sideWidth": 350,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "10.2.2",
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "prometheus"
+                    },
+                    "expr": "zetaclient_inbound_votes_successful_total{instance=\"172.20.0.24:8886\"}",
+                    "format": "time_series",
+                    "instant": false,
+                    "interval": "",
+                    "intervalFactor": 1,
+                    "legendFormat": "{{chain}} - Successful Votes",
+                    "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Successful Votes by Chain",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -837,7 +937,7 @@
                     "datasource": {
                         "uid": "prometheus"
                     },
-                    "expr": "(\n  (\n    zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} + \n    on(instance) group_left() (zetaclient_transactions_added_to_internal_tracker_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} or absent(zetaclient_transactions_added_to_internal_tracker_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"}) * 0) - \n    on(instance) group_left() (zetaclient_internal_trackers_active{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} or absent(zetaclient_internal_trackers_active{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"}) * 0)\n  ) / \n  zetaclient_inbound_votes_block_scan_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"}\n) * 100",
+                    "expr": "(\n  zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} + \n  (zetaclient_transactions_added_to_internal_tracker_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} * 0) - \n  (zetaclient_internal_trackers_active{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} * 0)\n) / \nzetaclient_inbound_votes_block_scan_total{chain=\"goerli_localnet\", instance=\"172.20.0.24:8886\"} * 100",
                     "format": "time_series",
                     "instant": false,
                     "interval": "30s",
@@ -979,7 +1079,7 @@
                     "datasource": {
                         "uid": "prometheus"
                     },
-                    "expr": "(\n  (\n    zetaclient_inbound_votes_successful_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} + \n    on(instance) group_left() absent(zetaclient_transactions_added_to_internal_tracker_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"}) * 0 - \n    on(instance) group_left() absent(zetaclient_internal_trackers_active{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"}) * 0\n  ) / \n  zetaclient_inbound_votes_block_scan_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"}\n) * 100",
+                    "expr": "(\n  zetaclient_inbound_votes_successful_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} + \n  (zetaclient_transactions_added_to_internal_tracker_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} * 0) - \n  (zetaclient_internal_trackers_active{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} * 0)\n) / \nzetaclient_inbound_votes_block_scan_total{chain=\"sui_localnet\", instance=\"172.20.0.24:8886\"} * 100",
                     "format": "time_series",
                     "instant": false,
                     "interval": "30s",
@@ -1050,7 +1150,7 @@
                     "datasource": {
                         "uid": "prometheus"
                     },
-                    "expr": "(\n  (\n    zetaclient_inbound_votes_successful_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} + \n    on(instance) group_left() absent(zetaclient_transactions_added_to_internal_tracker_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"}) * 0 - \n    on(instance) group_left() absent(zetaclient_internal_trackers_active{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"}) * 0\n  ) / \n  zetaclient_inbound_votes_block_scan_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"}\n) * 100",
+                    "expr": "(\n  zetaclient_inbound_votes_successful_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} + \n  (zetaclient_transactions_added_to_internal_tracker_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} * 0) - \n  (zetaclient_internal_trackers_active{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} or zetaclient_inbound_votes_successful_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} * 0)\n) / \nzetaclient_inbound_votes_block_scan_total{chain=\"solana_localnet\", instance=\"172.20.0.24:8886\"} * 100",
                     "format": "time_series",
                     "instant": false,
                     "interval": "30s",

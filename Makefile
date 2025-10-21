@@ -276,7 +276,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE)  --profile monitoring up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
@@ -315,7 +315,7 @@ start-stress-test-solana: e2e-images solana
 start-stress-test-sui: e2e-images
 	@echo "--> Starting stress test for sui"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile stress --profile monitoring up -d
 
 start-e2e-import-mainnet-test: e2e-images
 	@echo "--> Starting e2e import-data test"
