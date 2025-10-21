@@ -30,6 +30,7 @@ type TelemetryServer struct {
 	lastStartTimestamp     time.Time
 	status                 types.Status
 	ipAddress              string
+	dnsName                string
 	HotKeyBurnRate         *BurnRate
 	connectedPeers         []peer.AddrInfo
 	rtt                    map[peer.ID]int64
@@ -107,6 +108,20 @@ func (t *TelemetryServer) GetIPAddress() string {
 	return t.ipAddress
 }
 
+// SetDNSName sets p2p dns name
+func (t *TelemetryServer) SetDNSName(dns string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.dnsName = dns
+}
+
+// GetDNSName gets p2p dns name
+func (t *TelemetryServer) GetDNSName() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.dnsName
+}
+
 // GetLastStartTimestamp returns last start timestamp
 func (t *TelemetryServer) GetLastStartTimestamp() time.Time {
 	t.mu.Lock()
@@ -180,6 +195,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
+	router.Handle("/dns", http.HandlerFunc(t.dnsHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
 	router.Handle("/connectedpeers", http.HandlerFunc(t.connectedPeersHandler)).Methods(http.MethodGet)
 	router.Handle("/pingrtt", http.HandlerFunc(t.pingRTTHandler)).Methods(http.MethodGet)
@@ -230,6 +246,12 @@ func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	fmt.Fprintf(w, "%s", t.GetIPAddress())
+}
+
+// dnsHandler returns the dns name
+func (t *TelemetryServer) dnsHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", t.GetDNSName())
 }
 
 func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
