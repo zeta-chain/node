@@ -52,17 +52,12 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
 - Follows independent release cycle
 - Can iterate rapidly without network upgrades
 
-### Compatibility Matrix
-
-- One ZetaCore version is compatible with multiple ZetaClient versions
-- ZetaClient releases maintain backward compatibility with current ZetaCore version
-
 ## Release Process
 
 ### ZetaClient-Only Release
 
 1. Create `release/zetaclient/vY` from `develop`
-2. Run ZetaClient release Github action
+2. Run [ZetaClient release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetaclient.yml)
 3. No ZetaCore release required
 4. Coordinate deployment of the release
 
@@ -71,8 +66,8 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
 1. Merge `develop` → `main`
 2. Create `release/zetacore/vX` from `main`
 3. Create `release/zetaclient/vY` from `main` (coordinated release)
-4. Run ZetaClient release Github action
-5. Run ZetaCore release Github action
+4. Run [ZetaClient release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetaclient.yml)
+5. Run [ZetaCore release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetacore.yml)
 6. Submit an upgrade governance proposal
 
 ### Key Principle
@@ -100,6 +95,8 @@ Protocol contracts repositories are tightly coupled with ZetaClient versions, as
 - Each ZetaClient release corresponds to a specific set of protocol contracts
 - Protocol contract changes often require ZetaClient updates to handle new interfaces
 - Contract deployments must be coordinated with ZetaClient releases
+
+Compatibility matrix can be found in the `VERSIONS.md` file at the root of the repository.
 
 ## Release Workflow
 
