@@ -3,6 +3,9 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -14,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -47,7 +51,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, event, nil)
+		err := ob.processInboundEvent(ctx, event, nil, false, false)
 
 		switch {
 		case errors.Is(err, errTxNotFound):
@@ -89,7 +93,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers := ob.GetInboundInternalTrackers(ctx)
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
 	if len(trackers) > 0 {
 		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
 	}
@@ -109,7 +113,7 @@ func (ob *Observer) observeInboundTrackers(
 	}
 
 	for _, tracker := range trackers {
-		if err := ob.processInboundTracker(ctx, tracker); err != nil {
+		if err := ob.processInboundTracker(ctx, tracker, isInternal); err != nil {
 			ob.Logger().Inbound.
 				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
@@ -132,6 +136,8 @@ func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
@@ -148,7 +154,10 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	if tx == nil {
-		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txReq := models.SuiGetTransactionBlockRequest{
+			Digest:  event.TxHash,
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		}
 		txFresh, err := ob.suiClient.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
@@ -163,6 +172,12 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	logger := ob.Logger().Inbound
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+	} else {
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+	}
 	_, err = ob.ZetaRepo().
 		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
@@ -173,10 +188,13 @@ func (ob *Observer) processInboundEvent(
 }
 
 // processInboundTracker queries tx with its events by tracker and then votes.
-func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
+func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker, isInternal bool) error {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  tracker.TxHash,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+		Digest: tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+			ShowEvents:  true,
+		},
 	}
 
 	tx, err := ob.suiClient.SuiGetTransactionBlock(ctx, req)
@@ -185,7 +203,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 	}
 
 	for _, event := range tx.Events {
-		if err := ob.processInboundEvent(ctx, event, &tx); err != nil {
+		if err := ob.processInboundEvent(ctx, event, &tx, true, isInternal); err != nil {
 			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
 		}
 	}
@@ -225,10 +243,18 @@ func (ob *Observer) constructInboundVote(
 		return nil, errCompliance
 	}
 
-	// Sui uses checkpoint seq num instead of block height
+	// a valid inbound should be successful
+	// in theory, Sui protocol should erase emitted events if tx failed, just in case
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return nil, errors.Errorf("inbound is failed: %s", tx.Effects.Status.Error)
+	}
+
+	// Sui uses checkpoint seq num instead of block height.
+	// If checkpoint is invalid (e.g. 0), the tx status remains unclear (e.g. maybe pending).
+	// In this case, we should signal the caller to stop scanning further by returning errTxNotFound.
 	checkpointSeqNum, err := uint64FromStr(tx.Checkpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse checkpoint")
+	if err != nil || checkpointSeqNum == 0 {
+		return nil, errors.Wrap(errTxNotFound, fmt.Sprintf("invalid checkpoint: %s", tx.Checkpoint))
 	}
 
 	return cctypes.NewMsgVoteInbound(

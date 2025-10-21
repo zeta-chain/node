@@ -7,6 +7,9 @@ import (
 	"sync"
 
 	"github.com/showa-93/go-mask"
+
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -27,8 +30,11 @@ const (
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 
-	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore mempool to consider it congested
-	DefaultMempoolCongestionThreshold = 3000
+	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore
+	// mempool to consider it congested.
+	// Leave 30% of mempool space to allow txs get processed, otherwise the congestion may get
+	// even worse.
+	DefaultMempoolCongestionThreshold = constant.DefaultAppMempoolSize * 7 / 10
 )
 
 // ClientConfiguration is a subset of zetaclient config that is used by zetacore client
@@ -90,8 +96,11 @@ type FeatureFlags struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
+	ClientMode mode.ClientMode `json:"ClientMode"`
+
 	Peer                    string         `json:"Peer"`
 	PublicIP                string         `json:"PublicIP"`
+	PublicDNS               string         `json:"PublicDNS"`
 	LogFormat               string         `json:"LogFormat"`
 	LogLevel                int8           `json:"LogLevel"`
 	LogSampler              bool           `json:"LogSampler"`
@@ -113,8 +122,11 @@ type Config struct {
 	// MaxBaseFee is the maximum base fee allowed for zetaclient to send ZetaChain transactions
 	MaxBaseFee int64 `json:"MaxBaseFee"`
 
-	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore mempool to consider it congested
-	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this threshold.
+	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore
+	// mempool to consider it congested
+	//
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this
+	// threshold.
 	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
 
 	// chain configs
@@ -244,7 +256,8 @@ func (c Config) GetMaxBaseFee() int64 {
 	return c.MaxBaseFee
 }
 
-// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to consider it congested
+// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to
+// consider it congested
 func (c Config) GetMempoolCongestionThreshold() int64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()

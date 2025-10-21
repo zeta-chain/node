@@ -112,7 +112,11 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
       num=$(echo $HOSTNAME | tr -dc '0-9')
       node="zetacore$num"
   fi
-  zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
+  
+  # use alternative DNS name (instead of IP) for other zetaclients (DNS should work as well)
+  zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 \
+      --operator "$operatorAddress" --log-format=text --public-dns "$HOSTNAME.com" \
+      --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
   # import relayer private key for zetaclient{$num}
   import_relayer_key "${num}"

@@ -144,20 +144,21 @@ func Start(_ *cobra.Command, _ []string) error {
 	// This is the high level object used for CCTX interactions
 	// It also handles background configuration updates from zetacore
 	taskScheduler := scheduler.New(logger.Std, 0)
-	maestroDeps := &orchestrator.Dependencies{
-		Zetacore:  zetacoreClient,
-		TSS:       tss,
-		DBPath:    dbPath,
-		Telemetry: telemetry,
-	}
 
-	maestro, err := orchestrator.New(taskScheduler, maestroDeps, logger)
+	orchestrator, err := orchestrator.New(
+		taskScheduler,
+		zetacoreClient,
+		tss,
+		telemetry,
+		dbPath,
+		logger,
+	)
 	if err != nil {
 		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
 	// Start orchestrator with all observers and signers
-	graceful.AddService(ctx, maestro)
+	graceful.AddService(ctx, orchestrator)
 
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()
@@ -224,6 +225,7 @@ func startTelemetry(ctx context.Context, cfg config.Config) (*metrics.TelemetryS
 	// 3. Init telemetry server
 	telemetry := metrics.NewTelemetryServer()
 	telemetry.SetIPAddress(cfg.PublicIP)
+	telemetry.SetDNSName(cfg.PublicDNS)
 
 	// 4. Add services to the process
 	graceful.AddStarter(ctx, pprofServer)

@@ -22,8 +22,8 @@ import (
 type Signer struct {
 	*base.Signer
 
-	zetacoreClient zrepo.ZetacoreClient
-	suiClient      SuiClient
+	zetaRepo  *zrepo.ZetaRepo
+	suiClient SuiClient
 
 	gateway        *sui.Gateway
 	withdrawCap    *tssOwnedObject
@@ -33,6 +33,11 @@ type Signer struct {
 // SuiClient represents the Sui RPC client.
 type SuiClient interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
+
+	SuiXGetDynamicFieldObject(
+		_ context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
+	) (models.SuiObjectResponse, error)
 
 	GetOwnedObjectID(_ context.Context,
 		ownerAddress string,
@@ -71,13 +76,13 @@ type SuiClient interface {
 
 // New Signer constructor.
 func New(baseSigner *base.Signer,
-	zetacoreClient zrepo.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	suiClient SuiClient,
 	gateway *sui.Gateway,
 ) *Signer {
 	return &Signer{
 		Signer:         baseSigner,
-		zetacoreClient: zetacoreClient,
+		zetaRepo:       zetaRepo,
 		suiClient:      suiClient,
 		gateway:        gateway,
 		withdrawCap:    &tssOwnedObject{},

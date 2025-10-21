@@ -7,13 +7,17 @@ import (
 
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	zetatss "github.com/zeta-chain/node/zetaclient/tss"
 )
 
 // initializeConfigOptions is a set of CLI options for `init` command.
 type initializeConfigOptions struct {
+	mode mode.ClientMode
+
 	peer               string
 	publicIP           string
+	publicDNS          string
 	logFormat          string
 	logSampler         bool
 	preParamsPath      string
@@ -40,6 +44,7 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
+		usageMode             = "mode for cross-chain transaction processing (0:standard, 1:dry, 2:chaos)"
 		usagePeer             = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
 		usageHotKey           = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
 		usageLogLevel         = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
@@ -50,12 +55,14 @@ func setupInitializeConfigOptions() {
 		usageMempoolThreshold = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 
+	f.Uint8Var((*uint8)(&cfg.mode), "mode", uint8(mode.StandardMode), usageMode)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
+	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
 	f.StringVar(&cfg.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
-	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
+	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization, this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
 	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
@@ -91,8 +98,10 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	}
 
 	// Populate new struct with cli arguments
+	configData.ClientMode = opts.mode
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
+	configData.PublicDNS = opts.publicDNS
 	configData.PreParamsPath = opts.preParamsPath
 	configData.ChainID = opts.chainID
 	configData.ZetaCoreURL = opts.zetacoreURL

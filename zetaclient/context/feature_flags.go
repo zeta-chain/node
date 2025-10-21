@@ -17,7 +17,7 @@ func EnableMultipleCallsFeatureFlag(ctx context.Context) bool {
 	return app.Config().FeatureFlags.EnableMultipleCalls
 }
 
-// EnableSolanaAddressLookupTable returns true if EnableSolanaAddressLookupTable feature flag is enabled
+// EnableSolanaAddressLookupTableFeatureFlag returns true if EnableSolanaAddressLookupTable feature flag is enabled
 func EnableSolanaAddressLookupTableFeatureFlag(ctx context.Context) bool {
 	app, err := FromContext(ctx)
 	if err != nil {

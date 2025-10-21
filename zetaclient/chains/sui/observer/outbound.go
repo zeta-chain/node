@@ -44,28 +44,22 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 		logger := ob.Logger().Outbound.With().Uint64(logs.FieldNonce, nonce).Logger()
 
-		// should not happen
-		if len(tracker.HashList) == 0 {
-			// we don't want to block other cctxs, so let's error and continue
-			logger.Error().Str("tracker_id", tracker.Index).Msg("tracker hash list is empty")
-			continue
-		}
+		for _, txHash := range tracker.HashList {
+			digest := txHash.TxHash
 
-		digest := tracker.HashList[0].TxHash
+			cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
+			if err != nil {
+				logger.Error().Err(err).Str(logs.FieldTx, digest).Send()
+				continue // does not block other CCTXs from being processed
+			}
 
-		cctx, err := ob.ZetaRepo().GetCCTX(ctx, tracker.Nonce)
-		if err != nil {
-			err = errors.Wrapf(err, "Sui digest %q", digest)
-			logger.Error().Err(err).Send()
-			continue // does not block other CCTXs from being processed
-		}
-
-		if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {
-			// we don't want to block other cctxs, so let's log the error and continue
-			logger.Error().
-				Err(err).
-				Str(logs.FieldTx, digest).
-				Msg("unable to load outbound transaction")
+			if err := ob.loadOutboundTx(ctx, cctx, digest); err != nil {
+				// we don't want to block other cctxs, so let's log the error and continue
+				logger.Error().
+					Err(err).
+					Str(logs.FieldTx, digest).
+					Msg("unable to load outbound transaction")
+			}
 		}
 	}
 
@@ -89,7 +83,10 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 	// used checkpoint instead of block height
 	checkpoint, err := strconv.ParseUint(tx.Checkpoint, 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse checkpoint")
+		return errors.Wrapf(err, "invalid checkpoint: %s", tx.Checkpoint)
+	}
+	if checkpoint == 0 {
+		return errors.New("checkpoint is zero")
 	}
 
 	// parse outbound event

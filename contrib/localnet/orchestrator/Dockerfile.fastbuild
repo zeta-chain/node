@@ -14,11 +14,8 @@ COPY contrib/localnet/orchestrator/proposals_e2e_start/ /work/proposals_e2e_star
 COPY contrib/localnet/orchestrator/proposals_e2e_end/ /work/proposals_e2e_end/
 COPY contrib/localnet/scripts/wait-for-ton.sh /work/
 COPY contrib/localnet/sui/sui_client.yaml /root/.sui/sui_config/client.yaml
-COPY e2e/contracts/sui/example /work/sui/example
-# TODO: https://github.com/zeta-chain/node/issues/4066
-# use 'protocol-contracts-sui-upgrade' after re-enabling authenticated call
-# remove the whole 'protocol-contracts-sui-upgrade-legacy' dir after re-enabling authenticated call
-COPY e2e/contracts/sui/protocol-contracts-sui-upgrade-legacy /work/protocol-contracts-sui-upgrade
+COPY e2e/contracts/sui/example /work/example
+COPY e2e/contracts/sui/protocol-contracts-sui-upgrade /work/protocol-contracts-sui-upgrade
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
 
 RUN chmod +x /work/*.sh

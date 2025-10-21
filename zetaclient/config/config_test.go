@@ -13,6 +13,63 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
+func TestValidate(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      config.Config
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid config with default fields",
+			config: func() config.Config {
+				cfg := config.New(false)
+				cfg.KeyringBackend = "test"
+				return cfg
+			}(),
+		},
+		{
+			name: "invalid public IP address",
+			config: func() config.Config {
+				cfg := config.New(false)
+				cfg.PublicIP = "192.168.1"
+				return cfg
+			}(),
+			errorMsg: "invalid public IP 192.168.1",
+		},
+		{
+			name: "invalid DNS name",
+			config: func() config.Config {
+				cfg := config.New(false)
+				cfg.PublicDNS = "invalid..dns"
+				return cfg
+			}(),
+			errorMsg: "invalid public DNS invalid..dns",
+		},
+		{
+			name: "invalid keyring backend",
+			config: func() config.Config {
+				cfg := config.New(false)
+				cfg.KeyringBackend = "invalid"
+				return cfg
+			}(),
+			errorMsg: "invalid keyring backend invalid",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := config.Validate(tt.config)
+
+			if tt.errorMsg != "" {
+				require.ErrorContains(t, err, tt.errorMsg)
+				return
+			}
+			require.NoError(t, err, "expected no error, got %v", err)
+		})
+	}
+}
+
 func Test_LoadRestrictedAddressesConfig(t *testing.T) {
 	// Create test addresses
 	testAddresses := []string{

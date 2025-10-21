@@ -29,6 +29,11 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 "MempoolCongestionThreshold": 3000,
 ```
 
+* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
+```
+"PublicIP": "",
+"PublicDNS": "my.zetaclient.com",
+```
 
 ### Features
 
@@ -40,11 +45,19 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
 * [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
 * [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
+* [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
+* [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
+* [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
+* [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
 * [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
 
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
@@ -52,6 +65,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
+* [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
 
 ## v36.0.0
 

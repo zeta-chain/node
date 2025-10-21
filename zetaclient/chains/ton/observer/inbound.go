@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+	"time"
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -17,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -77,7 +80,7 @@ func (ob *Observer) ObserveInbounds(ctx context.Context) error {
 				return errors.Wrapf(err, "%s: %s", msg, tx.Hash().Hex())
 			}
 		case tx.IsInbound():
-			err := ob.voteInbound(ctx, tx)
+			err := ob.voteInbound(ctx, tx, false, false)
 			if err != nil {
 				msg := "unable to vote for inbound transaction"
 				txLogger.Error().Err(err).Msg(msg)
@@ -175,7 +178,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers := ob.GetInboundInternalTrackers(ctx)
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
 	if len(trackers) > 0 {
 		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
 	}
@@ -232,7 +235,7 @@ func (ob *Observer) observeInboundTrackers(
 			continue
 		}
 
-		err = ob.voteInbound(ctx, tx)
+		err = ob.voteInbound(ctx, tx, true, isInternal)
 		if err != nil {
 			logSkippedTracker(encodedHash, "vote failed", err)
 			continue
@@ -272,7 +275,11 @@ func (ob *Observer) parseTransaction(raw ton.Transaction) (*toncontracts.Transac
 
 // voteInbound sends a VoteInbound message to zetacore.
 // It handles donations and non-compliant inbounds.
-func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) error {
+func (ob *Observer) voteInbound(ctx context.Context,
+	tx *toncontracts.Transaction,
+	fromTracker bool,
+	isInternalTracker bool,
+) error {
 	logger := ob.Logger().Inbound.With().Fields(txLogFields(tx)).Logger()
 
 	// Skip donations.
@@ -307,6 +314,12 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 
 	logger = ob.Logger().Inbound
 	msg := inbound.intoVoteMessage(operatorAddress, senderChain, zetaChain)
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+	} else {
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+	}
 	_, err = ob.ZetaRepo().
 		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {

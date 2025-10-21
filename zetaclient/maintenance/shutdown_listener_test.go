@@ -71,10 +71,10 @@ func TestShutdownListener(t *testing.T) {
 		// GetBlockHeight is not mocked because we want the test to panic if it's called
 		// NewBlockSubscriber is not mocked because we want the test to panic if it's called
 		complete := make(chan interface{})
+		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 		listener.Listen(ctx, func() {
 			close(complete)
 		})
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 
 		require.Eventually(t, func() bool {
 			return len(client.Calls) == 2
@@ -89,11 +89,11 @@ func TestShutdownListener(t *testing.T) {
 		listener := NewShutdownListener(client, logger)
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
+		client.Mock.On("GetSyncStatus", ctx).Return(true, nil)
 		complete := make(chan interface{})
 		listener.Listen(ctx, func() {
 			close(complete)
 		})
-		client.Mock.On("GetSyncStatus", ctx).Return(true, nil)
 
 		require.Eventually(t, func() bool {
 			return len(client.Calls) == 2

@@ -2,6 +2,7 @@ package sui
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -50,6 +51,11 @@ const (
 )
 
 const GatewayModule = "gateway"
+
+// ActiveMessageContextDynamicFieldName returns the dynamic field name of the active message context
+func ActiveMessageContextDynamicFieldName() (json.RawMessage, error) {
+	return dynamicFieldNameToJSONArray("active_message_context")
+}
 
 // NewGatewayFromPairID creates a new Sui Gateway
 // from pair of `$packageID,$gatewayObjectID`
@@ -284,6 +290,23 @@ func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (eve
 	return event, w, err
 }
 
+// ParseDynamicFieldValueStr parses the dynamic field's value from object data as string
+func ParseDynamicFieldValueStr(data models.SuiParsedData) (string, error) {
+	// dynamic field object contains 3 fields: id, name, value
+	// the 'value' is what the dynamic field stores
+	rawValue, ok := data.Fields["value"]
+	if !ok {
+		return "", errors.New("missing value field")
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		return "", errors.Errorf("want string, got %T for dynamic field value", rawValue)
+	}
+
+	return value, nil
+}
+
 // ParseGatewayNonce parses gateway nonce from event.
 func ParseGatewayNonce(data models.SuiParsedData) (uint64, error) {
 	fields := data.Fields
@@ -398,4 +421,35 @@ func parsePair(pair string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+// dynamicFieldNameToJSONArray converts a string dynamic field name to a JSON array of integer values
+//
+// This conversion is necessary when interacting with Sui Move functions that expect vector<u8> parameters.
+// In Sui's JSON-RPC API, byte arrays (vector<u8>) must be passed as JSON arrays of integers representing each byte's numeric value.
+//
+// For example:
+//   - Input string: "active_message_context"
+//   - Output JSON: [97,99,116,105,118,101,95,109,101,115,115,97,103,101,95,99,111,110,116,101,120,116]
+//
+// But Go's json.Marshal([]byte) produces base64 strings, not integer arrays, which is not accepted by Sui JSON-RPC API
+// For example:
+//   - Input string: "active_message_context"
+//   - Output JSON: "YWN0aXZlX21lc3NhZ2VfY29udGV4dA=="
+func dynamicFieldNameToJSONArray(name string) (json.RawMessage, error) {
+	bytes := []byte(name)
+
+	// convert byte slice to int array
+	intArray := make([]int, len(bytes))
+	for i, b := range bytes {
+		intArray[i] = int(b)
+	}
+
+	// marshal the int array to JSON
+	jsonBytes, err := json.Marshal(intArray)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.RawMessage(jsonBytes), nil
 }

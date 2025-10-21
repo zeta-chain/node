@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
@@ -24,7 +25,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ProcessInternalTrackers processes internal inbound trackers
 func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
-	trackers := ob.GetInboundInternalTrackers(ctx)
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
 	if len(trackers) > 0 {
 		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal inbound trackers")
 	}
@@ -67,7 +68,7 @@ func (ob *Observer) observeInboundTrackers(
 		}
 
 		// vote inbound events
-		if err := ob.VoteInboundEvents(ctx, events); err != nil {
+		if err := ob.VoteInboundEvents(ctx, events, true, isInternal); err != nil {
 			// return error to retry this transaction
 			return errors.Wrapf(err, "error VoteInboundEvents for chain %d sig %s", chainID, signature)
 		}
