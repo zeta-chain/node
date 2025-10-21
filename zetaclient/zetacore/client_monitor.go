@@ -20,6 +20,11 @@ import (
 const (
 	monitorInterval   = constant.ZetaBlockTime
 	monitorRetryCount = 10
+
+	// defaultInboundVoteMonitorTimeout is the default timeout for monitoring inbound vote tx result.
+	// In our case, the upstream code ALWAYS sets a timeout in the context to override default value,
+	// so this is just to keep the logic complete and avoid accidental missed timeout in the context.
+	defaultInboundVoteMonitorTimeout = 2 * time.Minute
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -115,19 +120,27 @@ func (c *Client) MonitorVoteInboundResult(
 	}()
 
 	call := func() error {
-		err := c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
-
-		// force retry on err
-		return retry.Retry(err)
+		return c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 	}
 
-	//                               10 attempts,    4 seconds,     8 seconds max
-	// This will retry for a maximum of ~80 seconds with exponential backoff,
-	// However, this call is recursive for up to 1 layer and so the maxim time this can take is ~160 seconds
-	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
+	// extract the deadline (always provided) that is used by error monitor goroutine
+	deadline := time.Now().Add(defaultInboundVoteMonitorTimeout)
+	if ctxDeadline, ok := ctx.Deadline(); ok {
+		deadline = ctxDeadline
+	}
+
+	// query tx result with the same deadline used by the upstream error monitor goroutine
+	start := time.Now()
+	bo := backoff.NewConstantBackOff(monitorInterval)
+	err := retry.DoWithDeadline(call, bo, deadline)
 	if err != nil {
-		// All errors are forced to be retryable, we only return an error if the tx result cannot be queried
-		logger.Error().Err(err).Str(logs.FieldZetaTx, zetaTxHash).Msg("unable to query tx result")
+		// we only return an error if the tx result cannot be queried
+		logger.Error().
+			Err(err).
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldBallotIndex, msg.Digest()).
+			Stringer("timeout", deadline.Sub(start)).
+			Msg("tx result query timed out")
 		return err
 	}
 

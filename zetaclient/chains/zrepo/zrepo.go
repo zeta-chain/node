@@ -26,9 +26,15 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits
-// for an error from the monitorVote channel.
-const monitoringErrHandlerRoutineTimeout = 5 * time.Minute
+const (
+	// inboundVoteTimeout is the timeout for a single inbound vote.
+	inboundVoteTimeout = 10 * time.Minute
+
+	// monitoringErrWatcherTimeout is the timeout for the monitoring error watcher routine that waits
+	// for an error from the monitorVote channel. It is slightly longer than the inbound vote timeout
+	// to be able to catch the vote tx errors, including the timeout error.
+	monitoringErrWatcherTimeout = inboundVoteTimeout + 30*time.Second
+)
 
 // MonitoringErrorWatcher is the function type for watching inbound vote monitoring errors.
 type MonitoringErrorWatcher func(_ context.Context, _ <-chan zetaerrors.ErrTxMonitor, zhash string)
@@ -224,13 +230,18 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 		return "", nil
 	}
 
-	// ctxWithTimeout is a context with timeout used for monitoring the vote transaction
-	// Note: the canceller is not used because we want to allow the goroutines to run until they time out
-	ctxWithTimeout, _ := zctx.CopyWithTimeout(ctx, context.Background(), monitoringErrHandlerRoutineTimeout)
+	// ctxInboundVote is a context with timeout used for the inbound vote.
+	// If this is a finalizing vote, the timeout is total time allowed for 500K vote and 7M vote.
+	// The canceller is ignored as we want to allow the goroutine to run until it times out.
+	ctxInboundVote, _ := zctx.CopyWithTimeout(ctx, context.Background(), inboundVoteTimeout)
+
+	// ctxMonitorErrWatcher is a context with timeout used for monitor error watcher routine.
+	// The canceller is ignored as we want to allow the goroutine to run until it times out.
+	ctxMonitorErrWatcher, _ := zctx.CopyWithTimeout(ctx, context.Background(), monitoringErrWatcherTimeout)
 
 	// Post vote to zetacore.
 	monitorErrCh := make(chan zetaerrors.ErrTxMonitor, 1)
-	zhash, ballot, err := repo.client.PostVoteInbound(ctxWithTimeout,
+	zhash, ballot, err := repo.client.PostVoteInbound(ctxInboundVote,
 		zetacore.PostVoteInboundGasLimit,
 		retryGasLimit,
 		msg,
@@ -251,7 +262,7 @@ func (repo *ZetaRepo) VoteInbound(ctx context.Context, logger zerolog.Logger,
 		// Watch for monitoring errors for this vote.
 		if monitorErrWatcher != nil {
 			go func() {
-				monitorErrWatcher(ctxWithTimeout, monitorErrCh, zhash)
+				monitorErrWatcher(ctxMonitorErrWatcher, monitorErrCh, zhash)
 			}()
 		}
 	}

@@ -1,4 +1,6 @@
-// Package orchestrator is responsible for (de)provisioning, running, and monitoring various observer-signer instances.
+// Package orchestrator is responsible for (de)provisioning, running, and monitoring various
+// observer-signer instances.
+//
 // It also updates app context with data from zetacore (eg chain parameters).
 package orchestrator
 

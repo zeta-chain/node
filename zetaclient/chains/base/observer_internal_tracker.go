@@ -169,7 +169,7 @@ func (ob *Observer) WatchMonitoringError(
 			ob.AddInternalInboundTracker(ctx, &monitorErr.Msg)
 		}
 	case <-ctx.Done():
-		logger.Debug().
+		logger.Info().
 			Str(logs.FieldZetaTx, zetaHash).
 			Msg("no monitoring error received, the inbound vote likely succeeded")
 		metrics.SuccessfulInboundVotesTotal.WithLabelValues(ob.chain.Name).Inc()
