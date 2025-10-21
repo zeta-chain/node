@@ -40,5 +40,4 @@ func (c *Clients) GetSyncing(ctx context.Context) (bool, error) {
 		return false, errors.Wrap(err, "failed to get syncing status")
 	}
 	return res.Syncing, nil
-
 }
