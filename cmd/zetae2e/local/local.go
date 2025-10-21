@@ -500,7 +500,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		// TODO: https://github.com/zeta-chain/node/issues/4139
-		// the v35 upgrade test is now based on v32 sui gateway
+		// the upgrade test is now based on old sui gateway package
 		// 1. does not have MessageContext object, we have to skip all WaC tests
 		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
 		suiBreakingTestsV35Upgrade := []string{
