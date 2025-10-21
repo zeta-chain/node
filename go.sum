@@ -719,6 +719,8 @@ github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmV
 github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
+github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
+github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
@@ -1961,8 +1963,8 @@ github.com/zeta-chain/evm v0.0.0-20250821154530-f0addce1e5ac h1:OQYitaQxJqWzyGvX
 github.com/zeta-chain/evm v0.0.0-20250821154530-f0addce1e5ac/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
-github.com/zeta-chain/go-tss v0.6.3 h1:c/zSEvI0h7MJ+xxu42M58uBdEWrlzfD3NI1kP/FlWBE=
-github.com/zeta-chain/go-tss v0.6.3/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
+github.com/zeta-chain/go-tss v0.6.4 h1:GuzpCyCrxKqjCQCeUH/+MDGc5MJukJ64i/YrS49lx5s=
+github.com/zeta-chain/go-tss v0.6.4/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
 github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870 h1:G0l52EwS5U7f5eOcQR0kD2tNE2BJtUsKlk9hFtYW7nc=
 github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46 h1:xbgrVDXWkZaWhMAuD3Q5A13jmRKYQbjZMPBaCkv3cns=

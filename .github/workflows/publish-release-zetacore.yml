@@ -1,0 +1,39 @@
+name: Publish ZetaCore Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for ZetaCore Release (e.g., v36.0.0)'
+        required: true
+      skip_checks:
+        type: boolean
+        required: false
+        default: false
+        description: 'Skip pre-release checks'
+      skip_release:
+        type: boolean
+        required: false
+        default: false
+        description: 'Only run pre-release checks'
+
+concurrency:
+  group: publish-release-zetacore
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-template.yml
+    with:
+      version: ${{ inputs.version }}
+      skip_checks: ${{ inputs.skip_checks }}
+      skip_release: ${{ inputs.skip_release }}
+      component: 'zetacore'
+      branch_prefix: 'release/zetacore/'
+      make_snapshot_target: 'release-snapshot-zetacore'
+      make_release_target: 'release-zetacore'
+      attestation_paths: |
+        dist/zetacored_**/*
+        dist/checksums.txt
+      include_typescript: true
+    secrets: inherit

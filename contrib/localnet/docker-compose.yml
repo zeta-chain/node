@@ -106,6 +106,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
+    extra_hosts:
+      - "zetaclient0.com:172.20.0.21"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -127,12 +129,18 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
+    extra_hosts:
+      - "zetaclient1.com:172.20.0.22"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6062
     restart: always
+    ports:
+      - "6062:6062" # pprof
+      - "8887:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -147,10 +155,16 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
+    extra_hosts:
+      - "zetaclient2.com:172.20.0.23"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6063
+    ports:
+      - "6063:6063" # pprof
+      - "8888:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -165,10 +179,16 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
+    extra_hosts:
+      - "zetaclient3.com:172.20.0.24"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6064
+    ports:
+      - "6064:6064" # pprof
+      - "8889:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
@@ -204,6 +224,10 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6065
+    ports:
+      - "6065:6065" # pprof
+      - "8890:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams

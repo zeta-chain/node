@@ -17,6 +17,7 @@ type initializeConfigOptions struct {
 
 	peer               string
 	publicIP           string
+	publicDNS          string
 	logFormat          string
 	logSampler         bool
 	preParamsPath      string
@@ -57,10 +58,11 @@ func setupInitializeConfigOptions() {
 	f.Uint8Var((*uint8)(&cfg.mode), "mode", uint8(mode.StandardMode), usageMode)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
+	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
 	f.StringVar(&cfg.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
-	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
+	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization, this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
 	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
@@ -99,6 +101,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.ClientMode = opts.mode
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
+	configData.PublicDNS = opts.publicDNS
 	configData.PreParamsPath = opts.preParamsPath
 	configData.ChainID = opts.chainID
 	configData.ZetaCoreURL = opts.zetacoreURL

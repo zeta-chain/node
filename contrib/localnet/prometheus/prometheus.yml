@@ -30,7 +30,11 @@ scrape_configs:
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
     static_configs:
-      - targets: ["172.20.0.21:8886"]
+      - targets: 
+          - "172.20.0.21:8886"  # zetaclient0
+          - "172.20.0.22:8886"  # zetaclient1
+          - "172.20.0.23:8886"  # zetaclient2
+          - "172.20.0.24:8886"  # zetaclient3
 
   - job_name: "zetachain-exporter"
     # metrics_path defaults to '/metrics'

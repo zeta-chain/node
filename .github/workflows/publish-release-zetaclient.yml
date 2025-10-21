@@ -1,0 +1,40 @@
+name: Publish ZetaClient Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for ZetaClient Release (e.g., v2.5.0)'
+        required: true
+      skip_checks:
+        type: boolean
+        required: false
+        default: false
+        description: 'Skip pre-release checks'
+      skip_release:
+        type: boolean
+        required: false
+        default: false
+        description: 'Only run pre-release checks'
+
+concurrency:
+  group: publish-release-zetaclient
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-template.yml
+    with:
+      version: ${{ inputs.version }}
+      skip_checks: ${{ inputs.skip_checks }}
+      skip_release: ${{ inputs.skip_release }}
+      component: 'zetaclient'
+      branch_prefix: 'release/zetaclient/'
+      make_snapshot_target: 'release-snapshot-zetaclient'
+      make_release_target: 'release-zetaclient'
+      attestation_paths: |
+        dist/zetaclientd_**/*
+        dist/zetae2e_**/*
+        dist/checksums.txt
+      include_typescript: false
+    secrets: inherit

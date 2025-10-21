@@ -2,8 +2,9 @@ package sui
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // Payload sample extracted from https://github.com/zeta-chain/example-contracts/pull/250
@@ -40,13 +41,17 @@ func TestCallPayload_UnpackABI(t *testing.T) {
 		require.EqualValues(t, expectedMessage, cp.Message)
 	})
 
-	t.Run("invalid payload", func(t *testing.T) {
+	t.Run("unable to unpack ABI encoded payload", func(t *testing.T) {
 		payload, err := hex.DecodeString("deadbeef")
 		require.NoError(t, err)
 
+		// ACT
 		var cp CallPayload
+		err = cp.UnpackABI(payload)
 
-		require.Error(t, cp.UnpackABI(payload))
+		// ASSERT
+		require.ErrorIs(t, err, ErrInvalidPayload)
+		require.ErrorContains(t, err, "unable to unpack ABI encoded payload (deadbeef):")
 	})
 }
 
