@@ -58,6 +58,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+* [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
 
 ### Fixes
 
