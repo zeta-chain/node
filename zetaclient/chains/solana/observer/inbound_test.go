@@ -96,7 +96,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
 
-		err = ob.VoteInboundEvents(context.TODO(), events)
+		err = ob.VoteInboundEvents(context.TODO(), events, false, false)
 		require.NoError(t, err)
 	})
 }
