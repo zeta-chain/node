@@ -40,6 +40,8 @@ func (c *Client) GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error) {
 	return resp.Count, nil
 }
 
+// GetSyncStatus returns whether the zeta core node is syncing or not
+// returns true if syncing, false otherwise
 func (c *Client) GetSyncStatus(ctx context.Context) (bool, error) {
 	syncing, err := c.Clients.GetSyncing(ctx)
 	if err != nil {
