@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -16,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -70,7 +72,7 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, event, nil)
+		err := ob.processInboundEvent(ctx, event, nil, false, false)
 
 		switch {
 		case errors.Is(err, errTxNotFound):
@@ -132,7 +134,7 @@ func (ob *Observer) observeInboundTrackers(
 	}
 
 	for _, tracker := range trackers {
-		if err := ob.processInboundTracker(ctx, tracker); err != nil {
+		if err := ob.processInboundTracker(ctx, tracker, isInternal); err != nil {
 			ob.Logger().Inbound.
 				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
@@ -155,6 +157,8 @@ func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
@@ -189,6 +193,12 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	logger := ob.Logger().Inbound
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+	} else {
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+	}
 	_, err = ob.ZetaRepo().
 		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
@@ -199,7 +209,7 @@ func (ob *Observer) processInboundEvent(
 }
 
 // processInboundTracker queries tx with its events by tracker and then votes.
-func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
+func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker, isInternal bool) error {
 	req := models.SuiGetTransactionBlockRequest{
 		Digest: tracker.TxHash,
 		Options: models.SuiTransactionBlockOptions{
@@ -214,7 +224,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 	}
 
 	for _, event := range tx.Events {
-		if err := ob.processInboundEvent(ctx, event, &tx); err != nil {
+		if err := ob.processInboundEvent(ctx, event, &tx, true, isInternal); err != nil {
 			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
 		}
 	}

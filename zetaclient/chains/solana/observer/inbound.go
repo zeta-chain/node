@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"strconv"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -90,7 +92,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				}
 
 				// vote on the events
-				if err := ob.VoteInboundEvents(ctx, events); err != nil {
+				if err := ob.VoteInboundEvents(ctx, events, false, false); err != nil {
 					// return error to retry this transaction
 					return errors.Wrapf(err, "error voting on events for transaction %s, will retry", sigString)
 				}
@@ -120,10 +122,21 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 }
 
 // VoteInboundEvents posts votes for inbound events to zetacore.
-func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes.InboundEvent) error {
+func (ob *Observer) VoteInboundEvents(
+	ctx context.Context,
+	events []*clienttypes.InboundEvent,
+	fromTracker bool,
+	isInternalTracker bool,
+) error {
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
+			if fromTracker {
+				metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+					Inc()
+			} else {
+				metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+			}
 			_, err := ob.ZetaRepo().VoteInbound(ctx,
 				ob.Logger().Inbound,
 				msg,

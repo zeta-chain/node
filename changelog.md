@@ -44,6 +44,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
 * [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
 * [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
+* [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
 
 ### Tests
 
