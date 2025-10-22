@@ -64,7 +64,7 @@ func (r *E2ERunner) SuiWithdraw(
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
@@ -92,7 +92,7 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	payloadBytes, err := payload.PackABI()
 	require.NoError(r, err)
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,

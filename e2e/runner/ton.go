@@ -319,7 +319,7 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 	r.ApproveTONZRC20(r.GatewayZEVMAddr)
 
 	// Perform the withdrawal
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		[]byte(to.ToRaw()),
 		amount,

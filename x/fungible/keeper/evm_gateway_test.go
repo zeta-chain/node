@@ -15,6 +15,11 @@ import (
 
 func TestKeeper_DepositAndCallZeta(t *testing.T) {
 	t.Run("DepositAndCallZeta successfully", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+		
 		// Arrange
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		chainID := chains.Ethereum.ChainId
