@@ -14,7 +14,17 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
+var sampleTestConfig = config.Config{
+	KeyringBackend:     "test",
+	ChainID:            "athens_7001-1",
+	ZetaCoreURL:        "127.0.0.1",
+	AuthzGranter:       "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+	AuthzHotkey:        "hotkey",
+	ConfigUpdateTicker: 6,
+}
+
 func TestValidate(t *testing.T) {
+	// set SDK config to use "zeta" address prefix
 	sdkconfig.SetDefault(false)
 
 	tests := []struct {
@@ -25,12 +35,12 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			name:   "valid config",
-			config: sampleTestConfig(),
+			config: sampleTestConfig,
 		},
 		{
 			name: "invalid public IP address",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.PublicIP = "192.168.1"
 				return cfg
 			}(),
@@ -39,7 +49,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid public DNS name",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.PublicDNS = "invalid..dns"
 				return cfg
 			}(),
@@ -48,7 +58,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid chain ID",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.ChainID = "zeta1nvalid"
 				return cfg
 			}(),
@@ -57,7 +67,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid zetacore URL",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.ZetaCoreURL = "     "
 				return cfg
 			}(),
@@ -66,7 +76,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid granter address",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.AuthzGranter = "cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs" // not ZetaChain address
 				return cfg
 			}(),
@@ -75,7 +85,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "empty AuthzHotkey (grantee) name",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.AuthzHotkey = ""
 				return cfg
 			}(),
@@ -84,7 +94,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid log level",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.LogLevel = 6
 				return cfg
 			}(),
@@ -93,7 +103,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid config update ticker",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.ConfigUpdateTicker = 0
 				return cfg
 			}(),
@@ -102,7 +112,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid keyring backend",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.KeyringBackend = "invalid"
 				return cfg
 			}(),
@@ -111,7 +121,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid max base fee",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.MaxBaseFee = -1
 				return cfg
 			}(),
@@ -120,7 +130,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "invalid mempool congestion threshold",
 			config: func() config.Config {
-				cfg := sampleTestConfig()
+				cfg := sampleTestConfig
 				cfg.MempoolCongestionThreshold = -1
 				return cfg
 			}(),
@@ -170,18 +180,6 @@ func Test_LoadRestrictedAddressesConfig(t *testing.T) {
 			require.True(t, slices.Contains(addresses, strings.ToLower(addr)))
 		}
 	})
-}
-
-func sampleTestConfig() config.Config {
-	cfg := config.New(false)
-	cfg.KeyringBackend = "test"
-	cfg.ChainID = "athens_7001-1"
-	cfg.ZetaCoreURL = "zetacore0"
-	cfg.AuthzGranter = "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs"
-	cfg.AuthzHotkey = "hotkey"
-	cfg.ConfigUpdateTicker = 6
-
-	return cfg
 }
 
 // createRestrictedAddressesConfig creates a restricted addresses config file
