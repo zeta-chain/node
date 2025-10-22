@@ -89,9 +89,6 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
 	// ACT
-	payloadBytes, err := payload.PackABI()
-	require.NoError(r, err)
-
 	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiverBytes,
