@@ -19,7 +19,7 @@ This is the most updated status for the cctx. This can be one of the following v
 - `PendingOutbound` : This means that the inbound has been finalized, and the outbound is pending
 - `OutboundMined` : The outbound has been successfully mined. This is a terminal status
 - `Aborted` : The cctx has been aborted. This is a terminal status
-- `PendingRevert` : The the cctx failed at some step and is pending for the revert to be finalized
+- `PendingRevert` : The cctx failed at some step and is pending for the revert to be finalized
 - `Reverted` : The cctx has been successfully reverted. This is a terminal status
 
 ### StatusMessage
