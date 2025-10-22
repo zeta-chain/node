@@ -57,12 +57,18 @@ func suiTestRoutine(
 			return fmt.Errorf("sui tests failed: %v", err)
 		}
 
+		// update Sui gateway package information after upgrade
+		// because the old gateway package ID is deprecated after upgrade
+		if suiRunner.IsRunningUpgrade() {
+			suiRunner.SuiUpdateGatewayInfo()
+		}
+
 		if err := suiRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("sui tests failed: %v", err)
 		}
 
 		// check gateway SUI balance against ZRC20 total supply
-		// TODO: https://github.com/zeta-chain/node/issues/4066 remove after v33
+		// TODO: https://github.com/zeta-chain/node/issues/4139 remove after v35
 		// skip if its running upgrade as gas limit improvement is not on release/v32
 		if !suiRunner.IsRunningUpgrade() {
 			suiRunner.CheckSUITSSBalance()

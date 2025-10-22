@@ -43,7 +43,7 @@ func GetCCTXByInboundHash(
 	ctx context.Context,
 	client crosschaintypes.QueryClient,
 	inboundHash string,
-) *crosschaintypes.CrossChainTx {
+) []crosschaintypes.CrossChainTx {
 	t := TestingFromContext(ctx)
 
 	// query cctx by inbound hash
@@ -51,9 +51,8 @@ func GetCCTXByInboundHash(
 	res, err := client.InTxHashToCctxData(ctx, in)
 
 	require.NoError(t, err)
-	require.Len(t, res.CrossChainTxs, 1)
 
-	return &res.CrossChainTxs[0]
+	return res.CrossChainTxs
 }
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)

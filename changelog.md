@@ -29,6 +29,12 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 "MempoolCongestionThreshold": 3000,
 ```
 
+* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
+```
+"PublicIP": "",
+"PublicDNS": "my.zetaclient.com",
+```
+
 ### Features
 
 * [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
@@ -42,6 +48,10 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
 * [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
 * [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
+* [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
+* [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
+* [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
+* [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
 
 ### Tests
 
@@ -57,6 +67,10 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
 * [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 * [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
+
+### Documentation
+
+* [4358](https://github.com/zeta-chain/node/pull/4358) - add documentation for ZetaClient execution modes
 
 ## v36.0.0
 

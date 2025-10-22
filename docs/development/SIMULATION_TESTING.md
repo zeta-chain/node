@@ -1,4 +1,5 @@
-# Zetachain simulation testing
+# ZetaChain simulation testing
+
 ## Overview
 The blockchain simulation tests how the blockchain application would behave under real life circumstances by generating 
 and sending randomized messages.The goal of this is to detect and debug failures that could halt a live chain by 

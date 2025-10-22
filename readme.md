@@ -37,6 +37,10 @@ In addition to the blockchain codebase, ZetaChain’s architecture includes a se
 
 These repositories contain the necessary code and tools to deploy, interact with, and extend the functionality of ZetaChain’s cross-chain protocol on each respective blockchain network.
 
+### Versions
+
+For a complete compatibility matrix showing which protocol contract versions are compatible with specific ZetaCore and ZetaClient versions, see [VERSIONS.md](VERSIONS.md).
+
 ## Building the `zetacored`/`zetaclientd` binaries
 
 Clone this repository, checkout the latest release tag, and type the following command to build the binaries:
@@ -89,6 +93,6 @@ Find below further documentation for development and running your own ZetaChain 
 
 ## Community
 
-[X (formerly Twitter)](https://x.com/zetablockchain) |
+[X (formerly Twitter)](https://x.com/zetachain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)

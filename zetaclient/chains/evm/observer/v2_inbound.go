@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -59,6 +60,8 @@ func (ob *Observer) isEventProcessable(
 
 // observeGatewayDeposit queries the gateway contract for deposit events
 // returns the last block successfully scanned
+//
+//	This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDeposit(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -104,6 +107,7 @@ func (ob *Observer) observeGatewayDeposit(
 			}
 		}
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,
@@ -221,6 +225,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 // TODO: there are lot of similarities between this function and ObserveGatewayDeposit
 // logic should be factorized using interfaces and generics
 // https://github.com/zeta-chain/node/issues/2493
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -252,6 +257,7 @@ func (ob *Observer) observeGatewayCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (Call)")
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,
@@ -354,6 +360,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 
 // observeGatewayDepositAndCall queries the gateway contract for deposit and call events
 // returns the last block successfully scanned
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDepositAndCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -389,6 +396,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (DepositAndCall)")
 
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		_, err = ob.ZetaRepo().VoteInbound(ctx,
 			ob.Logger().Inbound,
 			&msg,

@@ -230,7 +230,9 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
 	}
 
-	// note that gw address should be in format of `$packageID,$gatewayObjectID`
+	// note that gateway address should be in either of the following formats:
+	//   - `$packageID,$gatewayObjectID`
+	//   - `$packageID,$gatewayObjectID,$withdrawCapID,$previousPackageID,$originalPackageID`
 	gateway, err := suigateway.NewGatewayFromPairID(chain.Params().GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create gateway")
@@ -248,6 +250,14 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 	}
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
+
+	// migrate inbound cursor to adopt authenticated call upgrade.
+	// after upgrade, we might have to deal with multiple packages,
+	// so any auxiliary data should be managed under different package IDs.
+	// TODO: https://github.com/zeta-chain/node/issues/4164
+	if err = observer.MigrateCursorForAuthenticatedCallUpgrade(); err != nil {
+		return nil, errors.Wrap(err, "unable to migrate inbound cursor")
+	}
 
 	baseSigner := oc.newBaseSigner(chain, clientMode)
 	signer := suisigner.New(baseSigner, baseObserver.ZetaRepo(), suiClient, gateway)

@@ -70,6 +70,8 @@ go.sum: go.mod
 
 test: clean-test-dir run-test
 
+test-clean : clean-test-dir clean-testcache run-test
+
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
@@ -89,6 +91,9 @@ clean-test-dir:
 	@rm -rf x/crosschain/client/integrationtests/.zetacored
 	@rm -rf x/crosschain/client/querytests/.zetacored
 	@rm -rf x/observer/client/querytests/.zetacored
+
+clean-testcache:
+	@go clean -testcache
 
 ###############################################################################
 ###                          Install commands                               ###
@@ -208,13 +213,13 @@ docs-zetacored:
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored
 
-mocks:
-	@echo "--> Generating mocks"
-	@bash ./scripts/mocks-generate.sh
-.PHONY: mocks
+go-generate:
+	@echo "--> Generating Go files"
+	@bash ./scripts/go-generate.sh
+.PHONY: go-generate
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
+generate: proto-gen openapi specs typescript docs-zetacored go-generate fmt
 .PHONY: generate
 
 
@@ -487,6 +492,30 @@ test-sim-after-import-long
 ###############################################################################
 ###                                GoReleaser  		                        ###
 ###############################################################################
+
+release-snapshot-zetacore:
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-snapshot-zetaclient:
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-zetacore:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate
+
+release-zetaclient:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate
+
+### Legacy release commands
+# TODO: Remove once new separated zetaclientd/zetacored is fully adopted
+# https://github.com/zeta-chain/node/issues/4327
 
 release-snapshot:
 	$(GORELEASER) --clean --skip=validate --skip=publish --snapshot
