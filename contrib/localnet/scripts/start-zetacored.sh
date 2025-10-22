@@ -250,7 +250,6 @@ then
     .app_state.mint.params.mint_denom = "azeta" |
     .app_state.evm.params.evm_denom = "azeta" |
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
-    .app_state.fungible.systemContract.gateway_gas_limit = "4000000" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
     .app_state.feemarket.params.base_fee_change_denominator = "300" |
