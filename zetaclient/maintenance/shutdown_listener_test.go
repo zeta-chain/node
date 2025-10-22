@@ -115,6 +115,49 @@ func TestShutdownListener(t *testing.T) {
 		<-complete
 	})
 
+	t.Run("shutdown cancelled if zetacore stops syncing before timeout", func(t *testing.T) {
+		testCtx, testCancel := context.WithCancel(context.Background())
+		defer testCancel()
+
+		client := mocks.NewZetacoreClient(t)
+		testRestartListenerTicker := 200 * time.Millisecond
+		testWaitForSyncing := 1 * time.Second
+		listener := &ShutdownListener{
+			client:                client,
+			logger:                logger,
+			getVersion:            getVersionDefault,
+			restartListenerTicker: testRestartListenerTicker,
+			waitForSyncing:        testWaitForSyncing,
+		}
+
+		client.Mock.On("GetOperationalFlags", testCtx).Return(observertypes.OperationalFlags{
+			RestartHeight: 2,
+		}, nil).Maybe()
+		client.Mock.On("GetBlockHeight", testCtx).Return(int64(3), nil).Maybe()
+		client.Mock.On("GetSyncStatus", testCtx).Return(true, nil).Once()
+		client.Mock.On("GetSyncStatus", testCtx).Return(false, nil).Times(3)
+
+		complete := make(chan interface{})
+		var once sync.Once
+		listener.Listen(testCtx, func() {
+			once.Do(func() {
+				close(complete)
+			})
+		})
+
+		require.Eventually(t, func() bool {
+			syncStatusCalls := 0
+			for _, call := range client.Calls {
+				if call.Method == "GetSyncStatus" {
+					syncStatusCalls++
+				}
+			}
+			return syncStatusCalls == 4
+		}, 3*time.Second, 100*time.Millisecond)
+
+		assertChannelNotClosed(t, complete)
+	})
+
 	t.Run("shutdown height missed", func(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
 

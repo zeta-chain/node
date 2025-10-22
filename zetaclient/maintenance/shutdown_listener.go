@@ -15,8 +15,12 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// restartListenerTicker is the duration between checks used by the shutdown listener
+// this is currently used in both waitForUpdate and waitUntilSyncing
 const restartListenerTicker = 10 * time.Second
-const waitForSyncing = 10 * time.Second
+
+// waitForSyncing is the duration to allow the zetacorednode to sync up before signaling the shutdown of zetaclient
+const waitForSyncing = 10 * time.Minute
 
 // ShutdownListener is a struct that listens for scheduled shutdown notices via the observer
 // operational flags
@@ -86,10 +90,10 @@ func (o *ShutdownListener) waitUntilSyncing(ctx context.Context) error {
 				if !syncDetected {
 					syncDetectedAt = time.Now()
 					syncDetected = true
-					o.logger.Info().Msgf("Node syncing detected, waiting %d  before shutdown", o.waitForSyncing)
+					o.logger.Info().Msgf("Node syncing detected, waiting %s before shutdown", o.waitForSyncing.String())
 				} else {
 					if time.Since(syncDetectedAt) >= o.waitForSyncing {
-						o.logger.Info().Msgf("Node still syncing after %d, proceeding with shutdown", o.waitForSyncing)
+						o.logger.Info().Msgf("Node still syncing after %s proceeding with shutdown", o.waitForSyncing.String())
 						return nil
 					}
 				}
