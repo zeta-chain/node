@@ -8,8 +8,8 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -66,7 +66,14 @@ func TestObserver(t *testing.T) {
 
 	t.Run("ObserveInbound", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t)
+		previousPackageID := sample.SuiAddress(t)
+		originalPackageID := previousPackageID
+		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.withdrawCapID = sample.SuiAddress(t)
+			cfg.previousPackageID = previousPackageID
+			cfg.originalPackageID = originalPackageID
+		})
+		packageID := ts.gateway.PackageID()
 
 		evmBob := sample.EthAddress()
 		evmAlice := sample.EthAddress()
@@ -75,7 +82,7 @@ func TestObserver(t *testing.T) {
 
 		// Given list of gateway events...
 		expectedQuery := client.EventQuery{
-			PackageID: ts.gateway.PackageID(),
+			PackageID: originalPackageID,
 			Module:    sui.GatewayModule,
 			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
@@ -83,19 +90,19 @@ func TestObserver(t *testing.T) {
 
 		// ...two of which are valid (1 & 3)
 		events := []models.SuiEventResponse{
-			ts.SampleEvent("TX_1_ok", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(packageID, "TX_1_ok", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent("TX_2_unrelated_event", "something", map[string]any{
+			ts.SampleEvent(packageID, "TX_2_unrelated_event", "something", map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent("TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
+			ts.SampleEvent(previousPackageID, "TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
 				// USDC
 				"coin_type": usdc,
 				"amount":    "300",
@@ -103,7 +110,7 @@ func TestObserver(t *testing.T) {
 				"receiver":  evmAlice.String(),
 				"payload":   preparePayload([]byte{1, 2, 3}),
 			}),
-			ts.SampleEvent("TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(previousPackageID, "TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "hello",
 				"sender":    "SUI_BOB",
@@ -114,8 +121,8 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
 		// Given 2 transaction blocks
-		ts.OnGetTx("TX_1_ok", "10000", false, nil)
-		ts.OnGetTx("TX_3_ok", "20000", false, nil)
+		ts.OnGetTx("TX_1_ok", "10000", true, false, nil)
+		ts.OnGetTx("TX_3_ok", "20000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -130,37 +137,37 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is on INVALID event, that's expected
-		assert.Equal(t, "TX_4_invalid_data,0", ts.LastTxScanned())
+		require.Equal(t, "TX_4_invalid_data,0", ts.GetAuxString(originalPackageID))
 
 		// Check for transactions
 		require.Equal(t, 2, len(ts.inboundVotesBag))
 
 		vote1 := ts.inboundVotesBag[0]
-		assert.Equal(t, "TX_1_ok", vote1.InboundHash)
-		assert.Equal(t, uint64(10_000), vote1.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
-		assert.Equal(t, false, vote1.IsCrossChainCall)
-		assert.Equal(t, math.NewUint(200), vote1.Amount)
-		assert.Equal(t, "", vote1.Asset)
-		assert.Equal(t, evmBob.String(), vote1.Receiver)
+		require.Equal(t, "TX_1_ok", vote1.InboundHash)
+		require.Equal(t, uint64(10_000), vote1.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_Gas, vote1.CoinType)
+		require.Equal(t, false, vote1.IsCrossChainCall)
+		require.Equal(t, math.NewUint(200), vote1.Amount)
+		require.Equal(t, "", vote1.Asset)
+		require.Equal(t, evmBob.String(), vote1.Receiver)
 
 		vote3 := ts.inboundVotesBag[1]
-		assert.Equal(t, "TX_3_ok", vote3.InboundHash)
-		assert.Equal(t, uint64(20_000), vote3.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
-		assert.Equal(t, true, vote3.IsCrossChainCall)
-		assert.Equal(t, usdc, vote3.Asset)
-		assert.Equal(t, math.NewUint(300), vote3.Amount)
-		assert.Equal(t, evmAlice.String(), vote3.Receiver)
-		assert.Equal(t, "010203", vote3.Message)
+		require.Equal(t, "TX_3_ok", vote3.InboundHash)
+		require.Equal(t, uint64(20_000), vote3.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
+		require.Equal(t, true, vote3.IsCrossChainCall)
+		require.Equal(t, usdc, vote3.Asset)
+		require.Equal(t, math.NewUint(300), vote3.Amount)
+		require.Equal(t, evmAlice.String(), vote3.Receiver)
+		require.Equal(t, "010203", vote3.Message)
 
 		// Check that other 2 txs are skipped
-		assert.Contains(
+		require.Contains(
 			t,
 			ts.log.String(),
 			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
-		assert.Contains(
+		require.Contains(
 			t,
 			ts.log.String(),
 			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
@@ -182,15 +189,16 @@ func TestObserver(t *testing.T) {
 		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// Given a deposit containing restricted address
+		packageID := ts.gateway.PackageID()
 		expectedQuery := client.EventQuery{
-			PackageID: ts.gateway.PackageID(),
+			PackageID: packageID,
 			Module:    sui.GatewayModule,
 			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
 		}
 
 		events := []models.SuiEventResponse{
-			ts.SampleEvent("TX_restricted", string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(packageID, "TX_restricted", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
@@ -201,7 +209,7 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
 		// Given transaction block
-		ts.OnGetTx("TX_restricted", "10000", false, nil)
+		ts.OnGetTx("TX_restricted", "10000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -213,7 +221,7 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is expected on restricted tx
-		assert.Equal(t, "TX_restricted,0", ts.LastTxScanned())
+		require.Equal(t, "TX_restricted,0", ts.GetAuxString(packageID))
 
 		// No inbound votes should be created
 		require.Empty(t, ts.inboundVotesBag)
@@ -221,25 +229,32 @@ func TestObserver(t *testing.T) {
 
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t)
+		originalPackageID := sample.SuiAddress(t)
+		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.withdrawCapID = sample.SuiAddress(t)
+			cfg.previousPackageID = ""
+			cfg.originalPackageID = originalPackageID
+		})
+		packageID := ts.gateway.PackageID()
 
 		// Given inbound tracker
 		chainID := ts.Chain().ChainId
-		ts.zetaMock.
-			On("GetInboundTrackersForChain", mock.Anything, chainID).
-			Return([]cctypes.InboundTracker{
-				{
-					ChainId:  chainID,
-					TxHash:   "TX_TRACKER_1",
-					CoinType: coin.CoinType_Gas,
-				},
-			}, nil)
+		txHash := "TX_TRACKER_1"
+		trackers := []cctypes.InboundTracker{
+			{
+				ChainId:  chainID,
+				TxHash:   txHash,
+				CoinType: coin.CoinType_Gas,
+			},
+		}
+
+		ts.zetaMock.On("GetInboundTrackersForChain", mock.Anything, chainID).Return(trackers, nil)
 
 		// Given underlying tx with event
 		evmAlice := sample.EthAddress()
 
-		ts.OnGetTx("TX_TRACKER_1", "15000", true, []models.SuiEventResponse{
-			ts.SampleEvent("TX_TRACKER_1", string(sui.DepositEvent), map[string]any{
+		ts.OnGetTx(txHash, "15000", true, true, []models.SuiEventResponse{
+			ts.SampleEvent(packageID, txHash, string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
 				"sender":    "SUI_ALICE",
@@ -258,17 +273,16 @@ func TestObserver(t *testing.T) {
 
 		// ASSERT
 		require.NoError(t, err)
-
 		require.Equal(t, 1, len(ts.inboundVotesBag))
 
 		vote := ts.inboundVotesBag[0]
 
-		assert.Equal(t, "TX_TRACKER_1", vote.InboundHash)
-		assert.Equal(t, uint64(15_000), vote.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, false, vote.IsCrossChainCall)
-		assert.Equal(t, math.NewUint(1000), vote.Amount)
-		assert.Equal(t, evmAlice.String(), vote.Receiver)
+		require.Equal(t, txHash, vote.InboundHash)
+		require.Equal(t, uint64(15_000), vote.InboundBlockHeight)
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, false, vote.IsCrossChainCall)
+		require.Equal(t, math.NewUint(1000), vote.Amount)
+		require.Equal(t, evmAlice.String(), vote.Receiver)
 	})
 
 	t.Run("ProcessOutboundTrackers", func(t *testing.T) {
@@ -351,8 +365,8 @@ func TestObserver(t *testing.T) {
 
 		// ASSERT
 		require.NoError(t, err)
-		assert.True(t, ts.OutboundCreated(nonce))
-		assert.False(t, ts.OutboundCreated(nonce+1))
+		require.True(t, ts.OutboundCreated(nonce))
+		require.False(t, ts.OutboundCreated(nonce+1))
 	})
 
 	t.Run("VoteOutbound successful withdrawal", func(t *testing.T) {
@@ -417,23 +431,23 @@ func TestObserver(t *testing.T) {
 		vote := ts.outboundVotesBag[0]
 
 		// common
-		assert.Equal(t, chains.ReceiveStatus_success, vote.Status) // success
-		assert.Equal(t, cctx.Index, vote.CctxHash)
-		assert.Equal(t, uint64(nonce), vote.OutboundTssNonce)
-		assert.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
+		require.Equal(t, chains.ReceiveStatus_success, vote.Status) // success
+		require.Equal(t, cctx.Index, vote.CctxHash)
+		require.Equal(t, uint64(nonce), vote.OutboundTssNonce)
+		require.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
 
 		// digest + checkpoint
-		assert.Equal(t, digest, vote.ObservedOutboundHash)
-		assert.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
+		require.Equal(t, digest, vote.ObservedOutboundHash)
+		require.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
 
 		// amount
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
-		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
-		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
+		require.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
+		require.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
+		require.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
 
 	t.Run("VoteOutbound failed withdrawal", func(t *testing.T) {
@@ -496,24 +510,110 @@ func TestObserver(t *testing.T) {
 		vote := ts.outboundVotesBag[0]
 
 		// common
-		assert.Equal(t, chains.ReceiveStatus_failed, vote.Status) // failure
-		assert.Equal(t, cctx.Index, vote.CctxHash)
-		assert.Equal(t, uint64(nonce), vote.OutboundTssNonce)
-		assert.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
+		require.Equal(t, chains.ReceiveStatus_failed, vote.Status) // failure
+		require.Equal(t, cctx.Index, vote.CctxHash)
+		require.Equal(t, uint64(nonce), vote.OutboundTssNonce)
+		require.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
 
 		// digest + checkpoint
-		assert.Equal(t, digest, vote.ObservedOutboundHash)
-		assert.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
+		require.Equal(t, digest, vote.ObservedOutboundHash)
+		require.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
 
 		// amount
-		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
-		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
+		require.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		require.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
-		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
-		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
+		require.Equal(t, uint64(0), vote.ObservedOutboundEffectiveGasLimit)
+		require.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
+		require.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
+}
+
+func Test_MigrateCursorForAuthenticatedCallUpgrade(t *testing.T) {
+	withdrawCapID := sample.SuiAddress(t)
+	previousPackageID := sample.SuiAddress(t)
+	originalPackageID := previousPackageID
+
+	tests := []struct {
+		name              string
+		cursor            string
+		originalPackageID string
+		wantKey           string
+	}{
+		{
+			name:              "migration with empty original package ID",
+			cursor:            "HBgprKGko6Kk1q7cjZpg1KHVUqFXE7PFhT2M9DaPAezi,0",
+			originalPackageID: "",
+		},
+		{
+			name:              "migration with non-empty original package ID",
+			cursor:            "DVmb9QoJKRvSZfw6SkL8Zp1vRESxS7RuHy6XEYGT7WWn,0",
+			originalPackageID: originalPackageID,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+				cfg.withdrawCapID = withdrawCapID
+				cfg.previousPackageID = previousPackageID
+				cfg.originalPackageID = tt.originalPackageID
+			})
+			packageID := ts.Gateway().PackageID()
+			originalPackageID := ts.Gateway().Original().PackageID()
+
+			// write a pre-v35 old cursor to the DB
+			err := ts.WriteLastTxScannedToDB(tt.cursor)
+			require.NoError(t, err)
+			ts.WithLastTxScanned(tt.cursor)
+
+			// ensure the old cursor is set
+			oldCursor, err := ts.ReadLastTxScannedFromDB()
+			require.NoError(t, err)
+			require.Equal(t, tt.cursor, oldCursor)
+			require.Equal(t, tt.cursor, ts.LastTxScanned())
+
+			// ACT-1
+			err = ts.MigrateCursorForAuthenticatedCallUpgrade()
+
+			// ASSERT
+			require.NoError(t, err)
+
+			// ensure the new cursor is stored under original package ID
+			newCursor, err := ts.ReadAuxStringFromDB(originalPackageID)
+			require.NoError(t, err)
+			require.Equal(t, tt.cursor, newCursor)
+			require.Equal(t, tt.cursor, ts.GetAuxString(originalPackageID))
+
+			// ensure nothing is stored under new package ID
+			if packageID != originalPackageID {
+				cursor, err := ts.ReadAuxStringFromDB(packageID)
+				require.ErrorContains(t, err, "record not found")
+				require.Empty(t, cursor)
+				require.Empty(t, ts.GetAuxString(packageID))
+			}
+
+			// ensure the old cursor is set to empty
+			oldCursor, err = ts.ReadLastTxScannedFromDB()
+			require.NoError(t, err)
+			require.Empty(t, oldCursor)
+			require.Empty(t, ts.LastTxScanned())
+
+			// ACT-2, migrate again
+			err = ts.MigrateCursorForAuthenticatedCallUpgrade()
+
+			// ASSERT
+			require.NoError(t, err)
+
+			// ensure the new cursor stay untouched
+			cursor, err := ts.ReadAuxStringFromDB(originalPackageID)
+			require.NoError(t, err)
+			require.Equal(t, tt.cursor, cursor)
+			require.Equal(t, tt.cursor, ts.GetAuxString(originalPackageID))
+		})
+	}
 }
 
 type testSuite struct {
@@ -531,12 +631,28 @@ type testSuite struct {
 	*Observer
 }
 
-func newTestSuite(t *testing.T) *testSuite {
+type testSuiteConfig struct {
+	withdrawCapID     string
+	previousPackageID string
+	originalPackageID string
+}
+
+func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	ctx := context.Background()
+
+	var cfg testSuiteConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 
 	chain := chains.SuiMainnet
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 	require.NotEmpty(t, chainParams.GatewayAddress)
+
+	// append withdraw cap ID, previous package ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
+	}
 
 	zetacore := mocks.NewZetacoreClient(t).
 		WithZetaChain().
@@ -579,15 +695,15 @@ func newTestSuite(t *testing.T) *testSuite {
 	}
 }
 
-func (ts *testSuite) SampleEvent(txHash, event string, kv map[string]any) models.SuiEventResponse {
-	eventType := fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), sui.GatewayModule, event)
+func (ts *testSuite) SampleEvent(packageID, txHash, event string, kv map[string]any) models.SuiEventResponse {
+	eventType := fmt.Sprintf("%s::%s::%s", packageID, sui.GatewayModule, event)
 
 	return models.SuiEventResponse{
 		Id: models.EventId{
 			TxDigest: txHash,
 			EventSeq: "0",
 		},
-		PackageId:         ts.gateway.PackageID(),
+		PackageId:         packageID,
 		TransactionModule: "gateway",
 		Sender:            "SENDER_ABC",
 		Type:              eventType,
@@ -595,14 +711,20 @@ func (ts *testSuite) SampleEvent(txHash, event string, kv map[string]any) models
 	}
 }
 
-func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events []models.SuiEventResponse) {
+func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents bool, events []models.SuiEventResponse) {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  digest,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: showEvents},
+		Digest: digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: showEffects,
+			ShowEvents:  showEvents,
+		},
 	}
 
 	res := models.SuiTransactionBlockResponse{
-		Digest:     digest,
+		Digest: digest,
+		Effects: models.SuiEffects{
+			Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
+		},
 		Events:     events,
 		Checkpoint: checkpoint,
 	}
