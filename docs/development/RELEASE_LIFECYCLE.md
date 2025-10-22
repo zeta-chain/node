@@ -8,7 +8,8 @@ https://github.com/zeta-chain/node
 
 ZetaChain uses a dual-branch workflow inspired by GitFlow but adapted for our unique blockchain context. This workflow supports independent release cycles for ZetaCore (consensus-breaking changes) and ZetaClient (non-consensus-breaking features), enabling frequent ZetaClient updates without requiring network-wide consensus upgrades.
 
-Unlike traditional GitFlow where all features eventually merge to a single integration branch, our workflow uses `develop` as the primary integration branch for all changes, while `main` represents the production-ready state for consensus-breaking releases.
+Unlike traditional GitFlow where all features eventually merge to a single integration branch, our workflow uses `develop` as the primary integration branch for all changes. `develop` represents the production-ready state for ZetaClient releases, while `main` represents the production-ready state for consensus-breaking ZetaCore releases.
+
 ### Core Branches
 
 **`develop`** - Primary integration branch
@@ -16,7 +17,7 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
 - All changes merge here: both consensus-breaking and non-consensus-breaking
 - Base branch for ZetaClient releases
 - Consensus-breaking changes can safely be merged here since they only affect the network when a ZetaCore release is deployed
-- Examples: Protocol upgrades, consensus rule changes, ZetaClient features, client-side optimizations
+- **Exception**: If a consensus-breaking change requires synchronized updates between ZetaCore and ZetaClient (e.g., interface changes that break compatibility), it must be merged directly to `main` to ensure ZetaClient releases from `develop` remain compatible with the current network state
 
 **`main`** - Production-ready consensus state
 
@@ -49,8 +50,8 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
 
 ### Overview
 
-Protocol contracts repositories are related to ZetaClient versions, as ZetaClient interacts with deployed smart contracts across different chains. Each protocol contracts repository maintains its own independent versioning.
-
+Protocol contracts repositories are related to both ZetaCore and ZetaClient versions, as both components interact with deployed smart contracts across different chains.
+Each protocol contracts repository maintains its own independent versioning.
 ### Versioning Relationship
 
 **Independent Versioning**
@@ -63,20 +64,21 @@ Protocol contracts repositories are related to ZetaClient versions, as ZetaClien
 
 ### Independent Semantic Versioning
 
-**ZetaCore**: `v36.0.0`
+**ZetaCore**
 
 - Major version bumps for consensus-breaking changes
 - Requires network-wide coordination and governance
 
-**ZetaClient**: `v2.5.1`
+**ZetaClient**
 
 - Follows independent release cycle
 - Can iterate rapidly without network upgrades
 
-**Protocol Contracts**: `v1.2.3`
+**Protocol Contracts**
 
 - Each protocol contracts repository (EVM, Solana, TON, Sui) follows its own independent semantic versioning
 
+Example versions: ZetaCore v36.0.0, ZetaClient v2.5.1, EVM Gateway v1.2.3
 
 ## Release Process
 
