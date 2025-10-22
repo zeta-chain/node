@@ -16,6 +16,7 @@ import (
 )
 
 const restartListenerTicker = 10 * time.Second
+const waitForSyncing = 10 * time.Second
 
 // ShutdownListener is a struct that listens for scheduled shutdown notices via the observer
 // operational flags
@@ -26,15 +27,20 @@ type ShutdownListener struct {
 	lastRestartHeightMissed int64
 	// get the current version of zetaclient
 	getVersion func() string
+
+	restartListenerTicker time.Duration
+	waitForSyncing        time.Duration
 }
 
 // NewShutdownListener creates a new ShutdownListener.
 func NewShutdownListener(client ZetacoreClient, logger zerolog.Logger) *ShutdownListener {
 	log := logger.With().Str("module", "shutdown_listener").Logger()
 	return &ShutdownListener{
-		client:     client,
-		logger:     log,
-		getVersion: getVersionDefault,
+		client:                client,
+		logger:                log,
+		getVersion:            getVersionDefault,
+		restartListenerTicker: restartListenerTicker,
+		waitForSyncing:        waitForSyncing,
 	}
 }
 
@@ -55,22 +61,18 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 	)
 
 	bg.Work(ctx, o.waitForUpdate, bg.WithName("shutdown_listener.wait_for_update"), withLogger, onComplete)
-	bg.Work(ctx, o.checkIfSyncing, bg.WithName("shutdown_listener.check_if_syncing"), withLogger, onComplete)
+	bg.Work(ctx, o.waitUntilSyncing, bg.WithName("shutdown_listener.wait_until_syncing"), withLogger, onComplete)
 }
 
-// checkIfSyncing checks if the node is syncing ,
+// waiUntilSyncing checks if the node is syncing
 // if it is syncing it returns nil which completes the bg task and calls onComplete
-func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
-	isSyncing, err := o.client.GetSyncStatus(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get sync status initially")
-	}
-	if isSyncing {
-		return nil
-	}
+func (o *ShutdownListener) waitUntilSyncing(ctx context.Context) error {
+	ticker := time.NewTicker(o.restartListenerTicker)
 
-	ticker := time.NewTicker(restartListenerTicker)
 	defer ticker.Stop()
+
+	var syncDetectedAt time.Time
+	syncDetected := false
 
 	for {
 		select {
@@ -79,11 +81,25 @@ func (o *ShutdownListener) checkIfSyncing(ctx context.Context) error {
 			if err != nil {
 				return errors.Wrap(err, "unable to get sync status")
 			}
+
 			if isSyncing {
-				return nil
+				if !syncDetected {
+					syncDetectedAt = time.Now()
+					syncDetected = true
+					o.logger.Info().Msgf("Node syncing detected, waiting %d  before shutdown", o.waitForSyncing)
+				} else {
+					if time.Since(syncDetectedAt) >= o.waitForSyncing {
+						o.logger.Info().Msgf("Node still syncing after %d, proceeding with shutdown", o.waitForSyncing)
+						return nil
+					}
+				}
+			} else {
+				if syncDetected {
+					syncDetected = false
+				}
 			}
 		case <-ctx.Done():
-			o.logger.Info().Msg("checkIfSyncing (shutdown listener) stopped")
+			o.logger.Info().Msg("waitUntilSyncing (shutdown listener) stopped")
 			return nil
 		}
 	}
@@ -98,7 +114,7 @@ func (o *ShutdownListener) waitForUpdate(ctx context.Context) error {
 		return nil
 	}
 
-	ticker := time.NewTicker(restartListenerTicker)
+	ticker := time.NewTicker(o.restartListenerTicker)
 	defer ticker.Stop()
 
 	for {

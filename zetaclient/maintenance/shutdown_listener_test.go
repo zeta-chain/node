@@ -2,6 +2,7 @@ package maintenance
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -46,7 +47,6 @@ func TestShutdownListener(t *testing.T) {
 		client.Mock.On("GetBlockHeight", ctx).Return(int64(8), nil)
 		blockChan := make(chan cometbfttypes.EventDataNewBlock)
 		client.Mock.On("NewBlockSubscriber", ctx).Return(blockChan, nil)
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 
 		complete := make(chan interface{})
 		listener.Listen(ctx, func() {
@@ -71,13 +71,15 @@ func TestShutdownListener(t *testing.T) {
 		// GetBlockHeight is not mocked because we want the test to panic if it's called
 		// NewBlockSubscriber is not mocked because we want the test to panic if it's called
 		complete := make(chan interface{})
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
-			return len(client.Calls) == 2
+			return len(client.Calls) == 1
 		}, time.Second, time.Millisecond)
 
 		assertChannelNotClosed(t, complete)
@@ -85,19 +87,30 @@ func TestShutdownListener(t *testing.T) {
 
 	t.Run("shutdown if zetacore is syncing", func(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
-
-		listener := NewShutdownListener(client, logger)
+		testRestartListenerTicker := 1 * time.Second
+		testWaitForSyncing := 2 * time.Second
+		listener := &ShutdownListener{
+			client:                client,
+			logger:                logger,
+			getVersion:            getVersionDefault,
+			restartListenerTicker: testRestartListenerTicker,
+			waitForSyncing:        testWaitForSyncing,
+		}
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
 		client.Mock.On("GetSyncStatus", ctx).Return(true, nil)
+
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
-			return len(client.Calls) == 2
-		}, time.Second, time.Millisecond)
+			return len(client.Calls) == 3
+		}, testWaitForSyncing+1*time.Second, testRestartListenerTicker)
 
 		<-complete
 	})
@@ -111,16 +124,19 @@ func TestShutdownListener(t *testing.T) {
 			RestartHeight: 10,
 		}, nil)
 		client.Mock.On("GetBlockHeight", ctx).Return(int64(11), nil)
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
-			return len(client.Calls) == 3
+			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
+
 		assertChannelNotClosed(t, complete)
 	})
 
@@ -135,7 +151,6 @@ func TestShutdownListener(t *testing.T) {
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
 			MinimumVersion: "v1.1.1",
 		}, nil)
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 
 		// pre start checks passed
 		err := listener.RunPreStartCheck(ctx)
@@ -143,12 +158,15 @@ func TestShutdownListener(t *testing.T) {
 
 		// listener also does not shutdown
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
-			return len(client.Calls) == 3
+			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
 		assertChannelNotClosed(t, complete)
 	})
@@ -164,7 +182,6 @@ func TestShutdownListener(t *testing.T) {
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
 			MinimumVersion: "v1.1.2",
 		}, nil)
-		client.Mock.On("GetSyncStatus", ctx).Return(false, nil)
 
 		// pre start checks would return error
 		err := listener.RunPreStartCheck(ctx)
@@ -172,12 +189,15 @@ func TestShutdownListener(t *testing.T) {
 
 		// listener would also shutdown
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
-			return len(client.Calls) == 3
+			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
 		<-complete
 	})
