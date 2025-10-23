@@ -169,9 +169,6 @@ jobs:
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
               core.setOutput('DEFAULT_TESTS', true);
-              core.setOutput('UPGRADE_TESTS', true);
-              core.setOutput('UPGRADE_TEST_ZETACLIENT', true);
-
               // conditional tests based on PR labels
               const commit_message = context.payload.merge_group.head_commit.message;
               const pr_match = commit_message.split('\n')[0].match(/\(#(\d+)\)$/);
@@ -254,9 +251,6 @@ jobs:
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
           - make-target: "start-upgrade-test-zetaclient"
-            runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT == 'true' }}
-          - make-target: "start-upgrade-test-zetaclient-light"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT == 'true' }}
           - make-target: "start-upgrade-test-light"

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"runtime"
 	"strings"
@@ -67,7 +66,6 @@ func newZetaclientdSupervisor(
 	zetaCoreURL string,
 	logger zerolog.Logger,
 	enableAutoDownload bool,
-	fileTriggerPath string,
 ) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
@@ -327,23 +325,5 @@ func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, t
 		panic(fmt.Sprintf("rename binary into place: %v", err))
 	}
 
-	return nil
-}
-
-func (s *zetaclientdSupervisor) killZetaclientdProcess() error {
-	// Use killall to kill all zetaclientd processes
-	cmd := exec.Command("killall", "zetaclientd")
-	err := cmd.Run()
-	if err != nil {
-		// If killall fails, try to find and kill the process by PID
-		cmd = exec.Command("pkill", "-f", "zetaclientd")
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("failed to kill zetaclientd process: %w", err)
-		}
-	}
-
-	// Wait a moment for the process to terminate
-	time.Sleep(time.Second)
 	return nil
 }
