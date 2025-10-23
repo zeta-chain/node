@@ -40,11 +40,89 @@ ZetaChain currently uses Go-Ethereum `v1.15.11` and supports both legacy and EIP
 
 ZetaChain EVM currently doesn't support `EIP-7702` for sponsored transactions.
 
+The base fee parameter can be queried using the ETH JSON-RPC:
+
+```shell
+curl -X POST https://zetachain-evm.blockpi.network/v1/rpc/public \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "eth_getBlockByNumber",
+    "params": ["latest", false],
+    "id": 1
+  }'
+```
+
+Or using the Cast CLI:
+
+```shell
+cast block latest --rpc-url https://zetachain-evm.blockpi.network/v1/rpc/public
+```
+
 ## Connected Chains Withdraw Fees
+
+Users create outgoing cross-chain transactions to connected chains using the withdraw interface of the ZetaChain gateway:
+- `withdraw`
+- `withdrawAndCall`
+- `call`
+
+As functions called on the ZetaChain EVM, the standard EVM transaction fee mechanism applies for executing these functions on ZetaChain.
+
+In addition to the EVM transaction fees, users must also pay additional fees to cover the cost of executing the transaction on the connected chain.
+
+The additional withdraw fees can be queried on the ZRC20 asset contract with the following functions:
+```solidity
+// for simple withdraws, default gas limit set per zrc20
+function withdrawGasFee() external view returns (address, uint256);
+
+// for withdraws that include a call on the connected chain
+function withdrawGasFeeWithGasLimit(uint256 gasLimit) external view returns (address, uint256);
+```
+
+Users must approve the gateway contract to spend the required fee amount in addition to the withdraw amount using the ERC20 standard.
+
+For each connected chain, the ZetaChain observer set votes on and maintains an updated "gas price".
+The gas price and gas limit are two parameters used to calculate the withdraw fees on connected chains.
+We use this terminology for all chains for simplicity and consistency, although not all connected chains use the same concepts, as we support non-EVM chains.
+The meaning of gas price and gas limit depends on the connected chain.
+
+These differences are summarized below.
 
 ### EVM
 
+For EVM-compatible chains, ZetaChain relies on the standard Ethereum gas mechanism.
+More information about Ethereum gas can be found in the [Ethereum Gas Documentation](https://ethereum.org/developers/docs/gas/).
+
+The withdraw fee for EVM chains is calculated using the gas price and gas limit parameters:
+```
+Withdraw Fee = Gas Price × Gas Limit
+```
+
+The gas price represents the cost per unit of gas on the connected EVM chain,
+while the gas limit represents the maximum amount of gas allocated for executing the transaction on that chain.
+
+**Important Consideration**: The gas limit is fully consumed regardless of whether the cross-chain call uses all the allocated gas.
+In the current architecture, any remaining unused gas is sent to a gas stability pool.
+This pool is used to increase the gas price for transactions during periods of gas price surges,
+helping to ensure transaction execution during network congestion.
+
 ### Bitcoin
+
+For Bitcoin transactions, ZetaChain uses a simplified fee model adapted to Bitcoin's UTXO architecture.
+More information about Bitcoin transaction fees can be found in the [Bitcoin Fee Documentation](https://developer.bitcoin.org/devguide/transactions.html).
+
+Cross-chain calls are not supported for Bitcoin. All Bitcoin withdraw transactions use a simple transfer mechanism.
+
+A fixed "gas limit" value of **254** is used for all Bitcoin transactions.
+The gas price represents the fee rate (satoshis per byte) on the Bitcoin network.
+
+The withdraw fee for Bitcoin is calculated as:
+```
+Withdraw Fee = Fee Rate × 254
+```
+
+ZetaChain supports Replace-By-Fee (RBF) to increase the fee of a transaction in case of a surge in network fees.
+However, the gas stability pool must be manually funded to enable fee increases during periods of high congestion.
 
 ### Solana
 
