@@ -279,13 +279,8 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 			panic("empty download URL in trigger file")
 		}
 
-		tempDir := os.TempDir()
-		err = s.downloadZetaclientdToPath(ctx, tempDir, binURL)
+		err = s.downloadZetaclientdToPath(ctx, binURL)
 		if err != nil {
-			errRemove := os.Remove(tempDir)
-			if errRemove != nil {
-				s.logger.Error().Err(errRemove).Msg("remove temp dir after failed download")
-			}
 			panic(fmt.Sprintf("download zetaclientd: %v", err))
 		}
 
@@ -300,8 +295,8 @@ func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
 }
 
 // downloadZetaclientdToPath downloads the zetaclientd binary to the specified path
-func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, targetPath string, binURL string) error {
-	s.logger.Info().Msgf("downloading zetaclientd to %s from %s", targetPath, binURL)
+func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, binURL string) error {
+	s.logger.Info().Msgf("downloading zetaclientd from %s", binURL)
 	tempPath := s.zetaclientdBinaryPath + ".tmp"
 	defer os.Remove(tempPath)
 
@@ -317,13 +312,12 @@ func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, t
 	newMode := info.Mode().Perm() | 0o111
 	err = os.Chmod(tempPath, newMode)
 	if err != nil {
-		return fmt.Errorf("chmod %s: %w", targetPath, err)
+		return fmt.Errorf("chmod %s: %w", tempPath, err)
 	}
 
 	err = os.Rename(tempPath, s.zetaclientdBinaryPath)
 	if err != nil {
-		panic(fmt.Sprintf("rename binary into place: %v", err))
+		return fmt.Errorf("rename binary into place: %v", err)
 	}
-
 	return nil
 }
