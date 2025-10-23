@@ -110,7 +110,7 @@ func TestShutdownListener(t *testing.T) {
 
 		require.Eventually(t, func() bool {
 			return len(client.Calls) == 3
-		}, testWaitForSyncing+1*time.Second, testRestartListenerTicker)
+		}, 5*time.Second, 100*time.Millisecond)
 
 		<-complete
 	})
