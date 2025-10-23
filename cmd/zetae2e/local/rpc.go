@@ -36,10 +36,6 @@ func rpcTestRoutine(
 		rpcTestRunner.Logger.Print("🏃 starting RPC tests")
 		startTime := time.Now()
 
-		if len(testNames) == 0 {
-			rpcTestRunner.Logger.Print("🍾 RPC tests completed in %s", time.Since(startTime).String())
-			return nil
-		}
 		// run RPC test
 		testsToRun, err := rpcTestRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,

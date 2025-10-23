@@ -30,13 +30,8 @@ func (z *ZEVMRPC) EthGetTransactionByHash(ctx context.Context, txHash common.Has
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var txByHash TxByHash
-	err = json.Unmarshal(m, &txByHash)
+	err := json.Unmarshal(raw, &txByHash)
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +45,8 @@ func (z *ZEVMRPC) EthGetTransactionReceipt(ctx context.Context, txHash common.Ha
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var txReceipt TxReceipt
-	err = json.Unmarshal(m, &txReceipt)
+	err := json.Unmarshal(raw, &txReceipt)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +64,8 @@ func (z *ZEVMRPC) EthGetBlockByNumber(ctx context.Context, blockNumber *big.Int,
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var block Block
-	err = json.Unmarshal(m, &block)
+	err := json.Unmarshal(raw, &block)
 	if err != nil {
 		return nil, err
 	}
@@ -94,13 +79,8 @@ func (z *ZEVMRPC) EthGetBlockByHash(ctx context.Context, blockHash common.Hash, 
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var block Block
-	err = json.Unmarshal(m, &block)
+	err := json.Unmarshal(raw, &block)
 	if err != nil {
 		return nil, err
 	}
@@ -114,13 +94,8 @@ func (z *ZEVMRPC) DebugTraceTransaction(ctx context.Context, txHash common.Hash)
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var traceTx TraceTx
-	err = json.Unmarshal(m, &traceTx)
+	err := json.Unmarshal(raw, &traceTx)
 	if err != nil {
 		return nil, err
 	}
@@ -138,13 +113,8 @@ func (z *ZEVMRPC) DebugTraceBlockByNumber(ctx context.Context, blockNumber *big.
 		return nil, err
 	}
 
-	m, err := raw.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
 	var traceBlock TraceBlock
-	err = json.Unmarshal(m, &traceBlock)
+	err := json.Unmarshal(raw, &traceBlock)
 	if err != nil {
 		return nil, err
 	}

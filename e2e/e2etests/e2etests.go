@@ -174,7 +174,7 @@ const (
 	TestInboundTrackersName = "inbound_trackers"
 	TestPrecompilesName     = "precompiles"
 	TestOpcodesName         = "opcodes"
-	TestRPCName             = "rpc"
+	TestZEVMRPCName         = "zevm_rpc"
 
 	/*
 	 Stress tests
@@ -1442,12 +1442,12 @@ var AllE2ETests = []runner.E2ETest{
 		TestOpcodes,
 	),
 	runner.NewE2ETest(
-		TestRPCName,
+		TestZEVMRPCName,
 		"test json rpc support in ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "comma-separated tx hashes for testing specific transactions (optional)", DefaultValue: ""},
 		},
-		TestRPC,
+		TestZEVMRPC,
 	),
 	/*
 	 Stress tests
