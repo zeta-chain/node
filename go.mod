@@ -307,7 +307,7 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.4
-	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251023155545-212d6617bd0e
+	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251023185345-a920f13ebc3f
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 	go.uber.org/mock v0.5.2
 )
