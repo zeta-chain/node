@@ -111,6 +111,7 @@ jobs:
     outputs:
       DEFAULT_TESTS: ${{ steps.matrix-conditionals.outputs.DEFAULT_TESTS }}
       UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_TESTS }}
+      UPGRADE_TEST_ZETACLIENT: ${{ steps.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT }}
       CONSENSUS_TESTS: ${{ steps.matrix-conditionals.outputs.CONSENSUS_TESTS }}
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS }}
@@ -148,6 +149,7 @@ jobs:
               const labels = await getPrLabels(context.payload.pull_request.number);
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', labels.includes('UPGRADE_TESTS'));
+              core.setOutput('UPGRADE_TEST_ZETACLIENT', labels.includes('UPGRADE_TEST_ZETACLIENT'));
               core.setOutput('CONSENSUS_TESTS', labels.includes('CONSENSUS_TESTS'));
               core.setOutput('UPGRADE_LIGHT_TESTS', labels.includes('UPGRADE_LIGHT_TESTS'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'));
@@ -167,6 +169,8 @@ jobs:
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
               core.setOutput('DEFAULT_TESTS', true);
+              core.setOutput('UPGRADE_TESTS', true);
+              core.setOutput('UPGRADE_TEST_ZETACLIENT', true);
 
               // conditional tests based on PR labels
               const commit_message = context.payload.merge_group.head_commit.message;
@@ -183,6 +187,7 @@ jobs:
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
+              core.setOutput('UPGRADE_TEST_ZETACLIENT', true);
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('ADMIN_UPGRADE_TESTS', true);
@@ -197,6 +202,7 @@ jobs:
               core.setOutput('UPGRADE_TESTS', true);
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
+              core.setOutput('UPGRADE_TEST_ZETACLIENT', true);
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('ADMIN_UPGRADE_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS_1K', true);
@@ -213,6 +219,7 @@ jobs:
               core.setOutput('UPGRADE_TESTS', makeTargets.includes('upgrade-test'));
               core.setOutput('UPGRADE_LIGHT_TESTS', makeTargets.includes('upgrade-test-light'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', makeTargets.includes('upgrade-import-mainnet-test'));
+              core.setOutput('UPGRADE_TEST_ZETACLIENT', makeTargets.includes('upgrade-test-zetaclient'));
               core.setOutput('ADMIN_TESTS', makeTargets.includes('admin-test'));
               core.setOutput('ADMIN_UPGRADE_TESTS', makeTargets.includes('admin-upgrade-test'));
               core.setOutput('PERFORMANCE_TESTS', makeTargets.includes('performance-test'));
@@ -246,6 +253,12 @@ jobs:
           - make-target: "start-upgrade-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
+          - make-target: "start-upgrade-test-zetaclient"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT == 'true' }}
+          - make-target: "start-upgrade-test-zetaclient-light"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT == 'true' }}
           - make-target: "start-upgrade-test-light"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS == 'true' }}

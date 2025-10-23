@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"runtime"
+	"strings"
 	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -23,7 +25,15 @@ import (
 
 const zetaclientdBinaryName = "zetaclientd"
 
-var defaultUpgradesDir = os.ExpandEnv("$HOME/.zetaclientd/upgrades")
+var (
+	zetaclientDirectory = os.ExpandEnv("$HOME/.zetaclientd")
+	defaultUpgradesDir  = path.Join(zetaclientDirectory, "upgrades")
+	// defaultZetaclientdBinaryPath is the path where the zetaclientd binary is expected to be found,this is the path used for localnet e2e tests
+	defaultZetaclientdBinaryPath = "/usr/local/bin/zetaclientd"
+	// zetaclientUpgradeTriggerFile is a file watched by the supervisor to trigger a binary upgrade.This should be used when upgrading zetaclient only.
+	// This is primarily used for testing on localnet e2e tests.
+	zetaclientUpgradeTriggerFile = path.Join(zetaclientDirectory, "zetaclientd-upgrade-trigger")
+)
 
 func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 	var logger zerolog.Logger
@@ -44,18 +54,20 @@ func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 }
 
 type zetaclientdSupervisor struct {
-	zetacoredConn      *grpc.ClientConn
-	reloadSignals      chan bool
-	logger             zerolog.Logger
-	upgradesDir        string
-	upgradePlanName    string
-	enableAutoDownload bool
+	zetacoredConn         *grpc.ClientConn
+	reloadSignals         chan bool
+	logger                zerolog.Logger
+	upgradesDir           string
+	upgradePlanName       string
+	enableAutoDownload    bool
+	zetaclientdBinaryPath string
 }
 
 func newZetaclientdSupervisor(
 	zetaCoreURL string,
 	logger zerolog.Logger,
 	enableAutoDownload bool,
+	fileTriggerPath string,
 ) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
@@ -66,17 +78,19 @@ func newZetaclientdSupervisor(
 		return nil, fmt.Errorf("grpc dial: %w", err)
 	}
 	return &zetaclientdSupervisor{
-		zetacoredConn:      conn,
-		logger:             logger,
-		reloadSignals:      make(chan bool, 1),
-		upgradesDir:        defaultUpgradesDir,
-		enableAutoDownload: enableAutoDownload,
+		zetacoredConn:         conn,
+		logger:                logger,
+		reloadSignals:         make(chan bool, 1),
+		upgradesDir:           defaultUpgradesDir,
+		enableAutoDownload:    enableAutoDownload,
+		zetaclientdBinaryPath: defaultZetaclientdBinaryPath,
 	}, nil
 }
 
 func (s *zetaclientdSupervisor) Start(ctx context.Context) {
 	go s.watchForVersionChanges(ctx)
 	go s.handleCoreUpgradePlan(ctx)
+	go s.handleFileBasedUpgrade(ctx)
 }
 
 func (s *zetaclientdSupervisor) WaitForReloadSignal(ctx context.Context) {
@@ -237,5 +251,99 @@ func (s *zetaclientdSupervisor) downloadZetaclientd(ctx context.Context, plan *u
 	if err != nil {
 		return fmt.Errorf("chmod %s: %w", upgradePath, err)
 	}
+	return nil
+}
+
+// handleFileBasedUpgrade watches for the trigger file to be created
+// Once created the function updates the zetaclient binary using the URL in the file and triggers a restart
+// This is currently only used for local testing and the trigger file is created by the start-zetae2e.sh script
+func (s *zetaclientdSupervisor) handleFileBasedUpgrade(ctx context.Context) {
+	for {
+		select {
+		case <-time.After(time.Second):
+		case <-ctx.Done():
+			return
+		}
+
+		if _, err := os.Stat(zetaclientUpgradeTriggerFile); err != nil {
+			continue
+		}
+
+		s.logger.Info().Msg("detected file-based upgrade trigger")
+
+		//#nosec G304 used for testing only
+		binURLBytes, err := os.ReadFile(zetaclientUpgradeTriggerFile)
+		if err != nil {
+			panic(fmt.Sprintf("read trigger file: %v", err))
+		}
+		binURL := strings.TrimSpace(string(binURLBytes))
+		if binURL == "" {
+			panic("empty download URL in trigger file")
+		}
+
+		tempDir := os.TempDir()
+		err = s.downloadZetaclientdToPath(ctx, tempDir, binURL)
+		if err != nil {
+			errRemove := os.Remove(tempDir)
+			if errRemove != nil {
+				s.logger.Error().Err(errRemove).Msg("remove temp dir after failed download")
+			}
+			panic(fmt.Sprintf("download zetaclientd: %v", err))
+		}
+
+		err = os.Remove(zetaclientUpgradeTriggerFile)
+		if err != nil {
+			panic(fmt.Sprintf("remove trigger file: %v", err))
+		}
+
+		s.reloadSignals <- true
+		s.logger.Info().Msg("zetaclientd binary updated and restart triggered")
+	}
+}
+
+// downloadZetaclientdToPath downloads the zetaclientd binary to the specified path
+func (s *zetaclientdSupervisor) downloadZetaclientdToPath(ctx context.Context, targetPath string, binURL string) error {
+	s.logger.Info().Msgf("downloading zetaclientd to %s from %s", targetPath, binURL)
+	tempPath := s.zetaclientdBinaryPath + ".tmp"
+	defer os.Remove(tempPath)
+
+	err := getter.GetFile(tempPath, binURL, getter.WithContext(ctx), getter.WithUmask(0o750))
+	if err != nil {
+		return fmt.Errorf("get file %s: %w", binURL, err)
+	}
+
+	info, err := os.Stat(tempPath)
+	if err != nil {
+		return fmt.Errorf("stat binary: %w", err)
+	}
+	newMode := info.Mode().Perm() | 0o111
+	err = os.Chmod(tempPath, newMode)
+	if err != nil {
+		return fmt.Errorf("chmod %s: %w", targetPath, err)
+	}
+
+	err = os.Rename(tempPath, s.zetaclientdBinaryPath)
+	if err != nil {
+		panic(fmt.Sprintf("rename binary into place: %v", err))
+	}
+
+	return nil
+}
+
+func (s *zetaclientdSupervisor) killZetaclientdProcess() error {
+	// Use killall to kill all zetaclientd processes
+	cmd := exec.Command("killall", "zetaclientd")
+	err := cmd.Run()
+	if err != nil {
+		// If killall fails, try to find and kill the process by PID
+		cmd = exec.Command("pkill", "-f", "zetaclientd")
+		err = cmd.Run()
+		if err != nil {
+			return fmt.Errorf("failed to kill zetaclientd process: %w", err)
+		}
+	}
+
+	// Wait a moment for the process to terminate
+	time.Sleep(time.Second)
 	return nil
 }

@@ -49,7 +49,8 @@ func main() {
 	}
 
 	_, enableAutoDownload := os.LookupEnv("ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD")
-	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload)
+	fileTriggerPath := "/root/.zetaclientd/zetaclientd-upgrade-trigger"
+	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload, fileTriggerPath)
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get supervisor")
 		os.Exit(1)
