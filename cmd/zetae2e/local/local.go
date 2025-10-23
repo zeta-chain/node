@@ -552,6 +552,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
+	eg.Go(rpcTestRoutine(
+		conf,
+		deployerRunner,
+		verbose,
+		e2etests.TestZEVMRPCName,
+	))
+
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
