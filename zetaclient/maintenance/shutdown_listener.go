@@ -68,7 +68,7 @@ func (o *ShutdownListener) Listen(ctx context.Context, action func()) {
 	bg.Work(ctx, o.waitUntilSyncing, bg.WithName("shutdown_listener.wait_until_syncing"), withLogger, onComplete)
 }
 
-// waiUntilSyncing checks if the node is syncing
+// waitUntilSyncing checks if the node is syncing
 // if it is syncing it returns nil which completes the bg task and calls onComplete
 func (o *ShutdownListener) waitUntilSyncing(ctx context.Context) error {
 	ticker := time.NewTicker(o.restartListenerTicker)
