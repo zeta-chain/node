@@ -8,21 +8,22 @@ https://github.com/zeta-chain/node
 
 ZetaChain uses a dual-branch workflow inspired by GitFlow but adapted for our unique blockchain context. This workflow supports independent release cycles for ZetaCore (consensus-breaking changes) and ZetaClient (non-consensus-breaking features), enabling frequent ZetaClient updates without requiring network-wide consensus upgrades.
 
-Unlike traditional GitFlow where all features eventually merge to a single integration branch, our workflow maintains separate tracks for consensus-breaking changes that require network coordination versus ZetaClient features that can be deployed independently.
+Unlike traditional GitFlow where all features eventually merge to a single integration branch, our workflow uses `develop` as the primary integration branch for all changes. `develop` represents the production-ready state for ZetaClient releases, while `main` represents the production-ready state for consensus-breaking ZetaCore releases.
 
 ### Core Branches
 
-**`main`** - Consensus-breaking changes only
+**`develop`** - Primary integration branch
 
-- All changes that affect network consensus
-- Base branch for ZetaCore releases
-- Examples: Protocol upgrades, consensus rule changes, state machine modifications
+- All changes merge here: both consensus-breaking and non-consensus-breaking
+- Base branch for ZetaClient releases
+- Consensus-breaking changes can safely be merged here since they only affect the network when a ZetaCore release is deployed
+- **Exception**: If a consensus-breaking change requires synchronized updates between ZetaCore and ZetaClient (e.g., interface changes that break compatibility), it must be merged directly to `main` to ensure ZetaClient releases from `develop` remain compatible with the current network state
 
-**`develop`** - Non-consensus-breaking changes
+**`main`** - Production-ready consensus state
 
-- ZetaClient features and improvements
-- Base branch for ZetaClient-only releases
-- Examples: Client-side optimizations, new features for connected chains that doesn’t require core protocol changes
+- Only updated when preparing a ZetaCore release
+- Represents the current consensus-breaking version running on the network
+- Created by merging `develop` → `main` when ready for a consensus upgrade
 
 ### Release Branches
 
@@ -38,102 +39,110 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
     - From `develop`: Independent ZetaClient release
     - From `main`: Coordinated release with ZetaCore
 
-## Versioning Strategy
+## Protocol Contracts Integration
 
-### Independent Semantic Versioning
-
-**ZetaCore**: `v36.0.0`
-
-- Major version bumps for consensus-breaking changes
-- Requires network-wide coordination and governance
-
-**ZetaClient**: `v2.5.1`
-
-- Follows independent release cycle
-- Can iterate rapidly without network upgrades
-
-### Compatibility Matrix
-
-- One ZetaCore version is compatible with multiple ZetaClient versions
-- ZetaClient releases maintain backward compatibility with current ZetaCore version
-
-## Release Process
-
-### ZetaClient-Only Release
-
-1. Create `release/zetaclient/vY` from `develop`
-2. Run ZetaClient release Github action
-3. No ZetaCore release required
-4. Coordinate deployment of the release
-
-### Consensus-Breaking Release
-
-1. Merge `develop` → `main`
-2. Create `release/zetacore/vX` from `main`
-3. Create `release/zetaclient/vY` from `main` (coordinated release)
-4. Run ZetaClient release Github action
-5. Run ZetaCore release Github action
-6. Submit an upgrade governance proposal
-
-### Key Principle
-
-- **Every ZetaCore release includes a ZetaClient release**
-- **ZetaClient releases can happen independently**
-
-# Protocol Contracts Integration
-
-## Repositories
+### Repositories
 
 - https://github.com/zeta-chain/protocol-contracts-evm
 - https://github.com/zeta-chain/protocol-contracts-solana
 - https://github.com/zeta-chain/protocol-contracts-ton
 - https://github.com/zeta-chain/protocol-contracts-sui
 
-## Overview
+### Overview
 
-Protocol contracts repositories are tightly coupled with ZetaClient versions, as ZetaClient interacts directly with deployed smart contracts across different chains.
+Protocol contracts repositories are related to both ZetaCore and ZetaClient versions, as both components interact with deployed smart contracts across different chains.
+Each protocol contracts repository maintains its own independent versioning.
+### Versioning Relationship
 
-## Versioning Relationship
+**Independent Versioning**
 
-**ZetaClient ↔ Protocol Contracts Coupling**
+- Protocol contracts follow their own semantic versioning independent from ZetaCore and ZetaClient
+- Each repository (EVM, Solana, TON, Sui) has its own version lifecycle
+- Contract changes may correspond with ZetaClient updates to handle new interfaces
 
-- Each ZetaClient release corresponds to a specific set of protocol contracts
-- Protocol contract changes often require ZetaClient updates to handle new interfaces
-- Contract deployments must be coordinated with ZetaClient releases
+## Versioning Strategy
 
-## Release Workflow
+### Independent Semantic Versioning
+
+**ZetaCore**
+
+- Major version bumps for consensus-breaking changes
+- Requires network-wide coordination and governance
+
+**ZetaClient**
+
+- Follows independent release cycle
+- Can iterate rapidly without network upgrades
+
+**Protocol Contracts**
+
+- Each protocol contracts repository (EVM, Solana, TON, Sui) follows its own independent semantic versioning
+
+Example versions: ZetaCore v36.0.0, ZetaClient v2.5.1, EVM Gateway v1.2.3
+
+## Release Process
+
+### ZetaClient-Only Release
+
+1. Create `release/zetaclient/vY` from `develop`
+2. Run [ZetaClient release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetaclient.yml)
+3. No ZetaCore release required
+4. Coordinate deployment of the release
+
+### Consensus-Breaking Release
+
+1. Merge `develop` → `main` (bringing all accumulated changes including consensus-breaking ones)
+2. Create `release/zetacore/vX` from `main`
+3. Create `release/zetaclient/vY` from `main` (coordinated release)
+4. Run [ZetaClient release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetaclient.yml)
+5. Run [ZetaCore release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetacore.yml)
+6. Submit an upgrade governance proposal
 
 ### Protocol Contracts Release Process
 
 When a new protocol contracts release is required:
 
-1. **Branch Creation**: Create `release/zetaclient/vY` in the protocol contracts repository
-    - Branch name matches the corresponding ZetaClient release version
-    - Example: ZetaClient v2.5.0 → protocol contracts `release/zetaclient/v2.5`
+1. **Branch Creation**: Create `release/vX` in the protocol contracts repository
+    - Uses the protocol contracts' own versioning scheme
+    - Example: `release/v1` for protocol contracts v1.0.0
+    - Any subsequent patches or minor updates use the same branch (e.g., v1.0.1, v1.1.0)
 2. **Release**: Create a new release for the protocol contracts
     - Protocol contracts follow their own semantic versioning (e.g., v1.2.3, v1.3.0)
-    - Release version is independent from ZetaClient version numbering
-    - Example: ZetaClient v2.5.0 might correspond to protocol contracts v1.3.0
-3. **Deployment**: Deploy contracts from the release branch to respective networks
+    - Version is independent from ZetaCore and ZetaClient versions
 
-# Notes on Consensus Breaking Changes
+### Compatibility Tracking
+
+The `VERSIONS.md` file in the node repository maintains the compatibility matrix between:
+- ZetaCore versions
+- ZetaClient versions
+- Protocol contract versions (EVM, Solana, TON, Sui)
+
+This ensures clear visibility of which component versions work together.
+
+### Key Principle
+
+- **Every ZetaCore release includes a ZetaClient release**
+- **ZetaClient releases can happen independently**
+- **Consensus-breaking changes in `develop` don't affect the network until a ZetaCore release is deployed**
+
+## Notes on Consensus-Breaking Changes
 
 A **consensus-breaking change** is any modification that influences the on-chain state transition, potentially leading to inconsistency and consensus failure if nodes run different versions simultaneously. These changes require network-wide coordination through governance proposals, ensuring all validators upgrade to the new version at the same designated upgrade height.
 
-## **Some Classification Guidelines**
+### **Some Classification Guidelines**
 
-### **Always Consensus-Breaking: `/x/**` directory**
+#### **Always Consensus-Breaking: `/x/**` directory**
 
 - For security and safety, we treat **all changes in the `/x/` directory as consensus-breaking**
 - This conservative approach prevents accidental consensus failures
 - Note: In practice, some `/x/` changes may not affect consensus
 
-### **Never Consensus-Breaking: ZetaClient & E2E**
+#### **Never Consensus-Breaking: ZetaClient & E2E**
 
 - **`/zetaclient/**`**: Client-side logic that doesn't affect chain state
 - **`/e2e/**`**: Testing infrastructure independent of consensus rules
 
-### **Case-by-Case: `/pkg/**` directory**
+#### **Case-by-Case: `/pkg/**` directory**
 
 - **Requires verification**: Changes in `/pkg/` may or may not be consensus-breaking
 - **Assessment needed**: Determine where the modified package is used

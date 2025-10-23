@@ -28,10 +28,26 @@ var (
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
+	// always query inbound events from original gateway package
+	// querying events from upgraded packageID will get nothing
+	packageID := ob.gateway.Original().PackageID()
+	if err := ob.observeGatewayInbound(ctx, packageID); err != nil {
+		return errors.Wrap(err, "unable to observe gateway inbound")
+	}
+
+	return nil
+}
+
+// observeGatewayInbound observes inbound deposits for the given gateway packageID
+// The last processed event will be used as the next cursor
+func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string) error {
+	cursor := ob.getCursor(packageID)
 	query := client.EventQuery{
-		PackageID: ob.gateway.PackageID(),
+		// PackageID argument is used by Sui to determine the event type and where to query the events.
+		// It is NOT the package ID that was called (by users) at the moment the events were triggered.
+		PackageID: packageID,
 		Module:    sui.GatewayModule,
-		Cursor:    ob.getCursor(),
+		Cursor:    cursor,
 		Limit:     client.DefaultEventsLimit,
 	}
 
@@ -46,7 +62,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return nil
 	}
 
-	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("processing inbound events")
+	ob.Logger().
+		Inbound.Info().
+		Str("package", packageID).
+		Str("cursor", cursor).
+		Int("events", len(events)).
+		Msg("processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
@@ -73,7 +94,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// update the cursor
-		if err := ob.setCursor(event.Id); err != nil {
+		if err := ob.setCursor(packageID, event.Id); err != nil {
 			return errors.Wrapf(err, "unable to set cursor %+v", event.Id)
 		}
 	}

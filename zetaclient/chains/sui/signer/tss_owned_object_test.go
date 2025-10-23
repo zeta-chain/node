@@ -7,7 +7,29 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/testutil/sample"
 )
+
+func Test_withdrawCapID(t *testing.T) {
+	// ARRANGE
+	withdrawCapID := sample.SuiAddress(t)
+	previousPackageID := sample.SuiAddress(t)
+	originalPackageID := sample.SuiAddress(t)
+
+	// create test suite and specify withdraw cap ID
+	ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+		cfg.withdrawCapID = withdrawCapID
+		cfg.previousPackageID = previousPackageID
+		cfg.originalPackageID = originalPackageID
+	})
+
+	// ACT
+	got, err := ts.withdrawCapID(ts.Ctx)
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Equal(t, withdrawCapID, got)
+}
 
 func Test_getMessageContextID(t *testing.T) {
 	tests := []struct {
