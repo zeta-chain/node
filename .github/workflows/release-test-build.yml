@@ -2,6 +2,9 @@ name: Release to Test Binaries
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - ci-test-binaries # temp trigger
 
 jobs:
   build-and-upload:
