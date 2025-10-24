@@ -15,8 +15,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 )
 
 func Test_IsOutboundProcessed(t *testing.T) {

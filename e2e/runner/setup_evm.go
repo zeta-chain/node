@@ -8,9 +8,9 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
