@@ -1965,8 +1965,8 @@ github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
 github.com/zeta-chain/go-tss v0.6.4 h1:GuzpCyCrxKqjCQCeUH/+MDGc5MJukJ64i/YrS49lx5s=
 github.com/zeta-chain/go-tss v0.6.4/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
-github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251023185345-a920f13ebc3f h1:BRtMG18L4o/BHDgpxn5B9/+fBUbeq0U1xqZ5YlXOUcM=
-github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251023185345-a920f13ebc3f/go.mod h1:Oo+FfnBNGa3bqOg9GXW+ieGAcnRf9ckdXTlA6lBvlgo=
+github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251024131414-98b6687542f8 h1:29u4ScMsT/o5Cr9VwO1MDm6AJ2ZhvN1Jnb2f090q9Kc=
+github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251024131414-98b6687542f8/go.mod h1:Oo+FfnBNGa3bqOg9GXW+ieGAcnRf9ckdXTlA6lBvlgo=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46 h1:xbgrVDXWkZaWhMAuD3Q5A13jmRKYQbjZMPBaCkv3cns=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
 github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762 h1:KaubBEpJe4qE51FlacXuC0GMuEjopTnW3ttzUikvw54=
