@@ -347,6 +347,7 @@ services:
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
       - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
+      - UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
@@ -357,6 +358,7 @@ services:
     hostname: upgrade-host
     profiles:
       - upgrade
+      - upgrade-zetaclient
       - all
     entrypoint: ["/root/start-upgrade-host.sh"]
     networks:
