@@ -5,7 +5,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 )
 
-type EVMClient interface { //nolint:revive -- Simplifies code generation
+type EVMClient interface { //nolint:revive
 	observer.EVMClient
 	signer.EVMClient
 }

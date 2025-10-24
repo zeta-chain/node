@@ -3,6 +3,7 @@ package chaos
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -11,22 +12,14 @@ import (
 	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
-const (
-	seed            int64       = 12345
-	perm            os.FileMode = 0600
-	percentagesPath             = "percentages.json"
-)
+const seed = int64(12345)
 
 func TestNewSource(t *testing.T) {
-	err := os.WriteFile(percentagesPath, []byte(`{"interface": {"method": 92}}`), perm)
-	require.NoError(t, err)
-	defer func() {
-		err := os.Remove(percentagesPath)
-		require.NoError(t, err)
-	}()
+	path := createFile(t, `{"interface": {"method": 92}}`)
+	defer func() { require.NoError(t, os.Remove(path)) }()
 
 	t.Run("ok (with seed)", func(t *testing.T) {
-		log, source, err := newSource(mode.ChaosMode, seed, percentagesPath)
+		log, source, err := newSource(mode.ChaosMode, seed, path)
 		require.NoError(t, err)
 		require.NotNil(t, source)
 		require.Empty(t, log)
@@ -40,7 +33,7 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("ok (with no seed)", func(t *testing.T) {
-		log, source, err := newSource(mode.ChaosMode, 0, percentagesPath)
+		log, source, err := newSource(mode.ChaosMode, 0, path)
 		require.NoError(t, err)
 		require.NotNil(t, source)
 		require.Contains(t, log.String(), "using a random chaos seed")
@@ -54,7 +47,7 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("invalid mode", func(t *testing.T) {
-		log, source, err := newSource(mode.StandardMode, seed, percentagesPath)
+		log, source, err := newSource(mode.StandardMode, seed, path)
 		require.Error(t, err)
 		require.Nil(t, source)
 		require.Empty(t, log)
@@ -72,15 +65,10 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		percentagesPath := "bad_percentages.json"
-		err := os.WriteFile(percentagesPath, []byte("invalid"), perm)
-		require.NoError(t, err)
-		defer func() {
-			err := os.Remove(percentagesPath)
-			require.NoError(t, err)
-		}()
+		path := createFile(t, "invalid")
+		defer func() { require.NoError(t, os.Remove(path)) }()
 
-		log, source, err := newSource(mode.ChaosMode, seed, percentagesPath)
+		log, source, err := newSource(mode.ChaosMode, seed, path)
 		require.Error(t, err)
 		require.Nil(t, source)
 		require.Empty(t, log)
@@ -89,15 +77,10 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("invalid percentages", func(t *testing.T) {
-		percentagesPath := "invalid_percentages.json"
-		err := os.WriteFile(percentagesPath, []byte(`{"interface": {"method": 1992}}`), perm)
-		require.NoError(t, err)
-		defer func() {
-			err := os.Remove(percentagesPath)
-			require.NoError(t, err)
-		}()
+		path := createFile(t, `{"interface": {"method": 1992}}`)
+		defer func() { require.NoError(t, os.Remove(path)) }()
 
-		log, source, err := newSource(mode.ChaosMode, seed, percentagesPath)
+		log, source, err := newSource(mode.ChaosMode, seed, path)
 		require.Error(t, err)
 		require.Nil(t, source)
 		require.Empty(t, log)
@@ -109,7 +92,7 @@ func TestNewSource(t *testing.T) {
 }
 
 func TestShouldFail(t *testing.T) {
-	err := os.WriteFile(percentagesPath, []byte(`{
+	path := createFile(t, `{
 		"A": {
 			"X": 100
 		},
@@ -118,14 +101,10 @@ func TestShouldFail(t *testing.T) {
 			"Y": 0,
 			"Z": 50
 		}
-	}`), perm)
-	require.NoError(t, err)
-	defer func() {
-		err := os.Remove(percentagesPath)
-		require.NoError(t, err)
-	}()
+	}`)
+	defer func() { require.NoError(t, os.Remove(path)) }()
 
-	_, source, err := newSource(mode.ChaosMode, 0, percentagesPath)
+	_, source, err := newSource(mode.ChaosMode, 0, path)
 	require.NoError(t, err)
 	require.NotNil(t, source)
 
@@ -156,6 +135,20 @@ func TestShouldFail(t *testing.T) {
 }
 
 // ------------------------------------------------------------------------------------------------
+
+func createFile(t *testing.T, s string) (path string) {
+	file, err := os.CreateTemp("", "*")
+	require.NoError(t, err)
+	defer file.Close()
+
+	path, err = filepath.Abs(file.Name())
+	require.NoError(t, err)
+
+	_, err = file.WriteString(s)
+	require.NoError(t, err)
+
+	return path
+}
 
 func newSource(mode mode.ClientMode, seed int64, path string) (*bytes.Buffer, *Source, error) {
 	log := new(bytes.Buffer)
