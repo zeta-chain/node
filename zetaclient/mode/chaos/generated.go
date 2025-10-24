@@ -3,6 +3,7 @@ package chaos
 
 import (
 	m2 "context"
+	"fmt"
 	m27 "github.com/block-vision/sui-go-sdk/models"
 	m12 "github.com/btcsuite/btcd/btcjson"
 	m16 "github.com/btcsuite/btcd/btcutil"
@@ -71,7 +72,7 @@ func (self *chaosZetacoreClient) GetBTCTSSAddress(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetBTCTSSAddress") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetBTCTSSAddress)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBTCTSSAddress(in0, in1)
 	}
@@ -86,7 +87,7 @@ func (self *chaosZetacoreClient) GetBallotByID(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetBallotByID") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetBallotByID)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBallotByID(in0, in1)
 	}
@@ -101,7 +102,7 @@ func (self *chaosZetacoreClient) GetCctxByHash(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetCctxByHash") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetCctxByHash)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetCctxByHash(in0, in1)
 	}
@@ -117,7 +118,7 @@ func (self *chaosZetacoreClient) GetCctxByNonce(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetCctxByNonce") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetCctxByNonce)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetCctxByNonce(in0, in1, in2)
 	}
@@ -133,7 +134,7 @@ func (self *chaosZetacoreClient) GetForeignCoinsFromAsset(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetForeignCoinsFromAsset") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetForeignCoinsFromAsset)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetForeignCoinsFromAsset(in0, in1, in2)
 	}
@@ -148,7 +149,7 @@ func (self *chaosZetacoreClient) GetInboundTrackersForChain(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetInboundTrackersForChain") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetInboundTrackersForChain)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetInboundTrackersForChain(in0, in1)
 	}
@@ -171,7 +172,7 @@ func (self *chaosZetacoreClient) GetOutboundTracker(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetOutboundTracker") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetOutboundTracker)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetOutboundTracker(in0, in1, in2)
 	}
@@ -186,7 +187,7 @@ func (self *chaosZetacoreClient) GetOutboundTrackers(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetOutboundTrackers") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetOutboundTrackers)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetOutboundTrackers(in0, in1)
 	}
@@ -201,7 +202,7 @@ func (self *chaosZetacoreClient) GetPendingNoncesByChain(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "GetPendingNoncesByChain") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.GetPendingNoncesByChain)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetPendingNoncesByChain(in0, in1)
 	}
@@ -217,7 +218,7 @@ func (self *chaosZetacoreClient) HasVoted(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "HasVoted") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.HasVoted)", ErrChaos)
 	} else {
 		out0, out1 = self.client.HasVoted(in0, in1, in2)
 	}
@@ -233,7 +234,7 @@ func (self *chaosZetacoreClient) ListPendingCCTX(
 	out2 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "ListPendingCCTX") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (ZetacoreClient.ListPendingCCTX)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.ListPendingCCTX(in0, in1)
 	}
@@ -247,7 +248,7 @@ func (self *chaosZetacoreClient) NewBlockSubscriber(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "NewBlockSubscriber") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.NewBlockSubscriber)", ErrChaos)
 	} else {
 		out0, out1 = self.client.NewBlockSubscriber(in0)
 	}
@@ -264,7 +265,7 @@ func (self *chaosZetacoreClient) PostOutboundTracker(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostOutboundTracker") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.PostOutboundTracker)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PostOutboundTracker(in0, in1, in2, in3)
 	}
@@ -281,7 +282,7 @@ func (self *chaosZetacoreClient) PostVoteBlameData(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostVoteBlameData") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.PostVoteBlameData)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PostVoteBlameData(in0, in1, in2, in3)
 	}
@@ -299,7 +300,7 @@ func (self *chaosZetacoreClient) PostVoteGasPrice(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostVoteGasPrice") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.PostVoteGasPrice)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PostVoteGasPrice(in0, in1, in2, in3, in4)
 	}
@@ -318,7 +319,7 @@ func (self *chaosZetacoreClient) PostVoteInbound(
 	out2 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostVoteInbound") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (ZetacoreClient.PostVoteInbound)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.PostVoteInbound(in0, in1, in2, in3, in4)
 	}
@@ -336,7 +337,7 @@ func (self *chaosZetacoreClient) PostVoteOutbound(
 	out2 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostVoteOutbound") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (ZetacoreClient.PostVoteOutbound)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.PostVoteOutbound(in0, in1, in2, in3)
 	}
@@ -353,7 +354,7 @@ func (self *chaosZetacoreClient) PostVoteTSS(
 	out1 error,
 ) {
 	if self.shouldFail("ZetacoreClient", "PostVoteTSS") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (ZetacoreClient.PostVoteTSS)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PostVoteTSS(in0, in1, in2, in3)
 	}
@@ -385,7 +386,7 @@ func (self *chaosBitcoinClient) EstimateSmartFee(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "EstimateSmartFee") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.EstimateSmartFee)", ErrChaos)
 	} else {
 		out0, out1 = self.client.EstimateSmartFee(in0, in1, in2)
 	}
@@ -399,7 +400,7 @@ func (self *chaosBitcoinClient) GetBlockCount(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetBlockCount") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetBlockCount)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockCount(in0)
 	}
@@ -414,7 +415,7 @@ func (self *chaosBitcoinClient) GetBlockHash(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetBlockHash") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetBlockHash)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockHash(in0, in1)
 	}
@@ -429,7 +430,7 @@ func (self *chaosBitcoinClient) GetBlockHeader(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetBlockHeader") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetBlockHeader)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockHeader(in0, in1)
 	}
@@ -444,7 +445,7 @@ func (self *chaosBitcoinClient) GetBlockHeightByStr(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetBlockHeightByStr") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetBlockHeightByStr)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockHeightByStr(in0, in1)
 	}
@@ -459,7 +460,7 @@ func (self *chaosBitcoinClient) GetBlockVerbose(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetBlockVerbose") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetBlockVerbose)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockVerbose(in0, in1)
 	}
@@ -474,7 +475,7 @@ func (self *chaosBitcoinClient) GetEstimatedFeeRate(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetEstimatedFeeRate") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetEstimatedFeeRate)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetEstimatedFeeRate(in0, in1)
 	}
@@ -489,7 +490,7 @@ func (self *chaosBitcoinClient) GetMempoolEntry(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetMempoolEntry") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetMempoolEntry)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetMempoolEntry(in0, in1)
 	}
@@ -504,7 +505,7 @@ func (self *chaosBitcoinClient) GetMempoolTxsAndFees(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetMempoolTxsAndFees") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetMempoolTxsAndFees)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetMempoolTxsAndFees(in0, in1)
 	}
@@ -518,7 +519,7 @@ func (self *chaosBitcoinClient) GetNetworkInfo(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetNetworkInfo") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetNetworkInfo)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetNetworkInfo(in0)
 	}
@@ -533,7 +534,7 @@ func (self *chaosBitcoinClient) GetRawTransaction(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetRawTransaction") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetRawTransaction)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetRawTransaction(in0, in1)
 	}
@@ -548,7 +549,7 @@ func (self *chaosBitcoinClient) GetRawTransactionByStr(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetRawTransactionByStr") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetRawTransactionByStr)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetRawTransactionByStr(in0, in1)
 	}
@@ -564,7 +565,7 @@ func (self *chaosBitcoinClient) GetRawTransactionResult(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetRawTransactionResult") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetRawTransactionResult)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetRawTransactionResult(in0, in1, in2)
 	}
@@ -579,7 +580,7 @@ func (self *chaosBitcoinClient) GetRawTransactionVerbose(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetRawTransactionVerbose") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetRawTransactionVerbose)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetRawTransactionVerbose(in0, in1)
 	}
@@ -595,7 +596,7 @@ func (self *chaosBitcoinClient) GetTransactionByStr(
 	out2 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetTransactionByStr") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (BitcoinClient.GetTransactionByStr)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.GetTransactionByStr(in0, in1)
 	}
@@ -611,7 +612,7 @@ func (self *chaosBitcoinClient) GetTransactionFeeAndRate(
 	out2 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetTransactionFeeAndRate") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (BitcoinClient.GetTransactionFeeAndRate)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.GetTransactionFeeAndRate(in0, in1)
 	}
@@ -626,7 +627,7 @@ func (self *chaosBitcoinClient) GetTransactionInitiator(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetTransactionInitiator") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetTransactionInitiator)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransactionInitiator(in0, in1)
 	}
@@ -642,7 +643,7 @@ func (self *chaosBitcoinClient) GetTransactionInputSpender(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "GetTransactionInputSpender") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.GetTransactionInputSpender)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransactionInputSpender(in0, in1, in2)
 	}
@@ -656,7 +657,7 @@ func (self *chaosBitcoinClient) Healthcheck(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "Healthcheck") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.Healthcheck)", ErrChaos)
 	} else {
 		out0, out1 = self.client.Healthcheck(in0)
 	}
@@ -673,7 +674,7 @@ func (self *chaosBitcoinClient) IsTxStuckInMempool(
 	out2 error,
 ) {
 	if self.shouldFail("BitcoinClient", "IsTxStuckInMempool") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (BitcoinClient.IsTxStuckInMempool)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.IsTxStuckInMempool(in0, in1, in2)
 	}
@@ -690,7 +691,7 @@ func (self *chaosBitcoinClient) ListUnspentMinMaxAddresses(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "ListUnspentMinMaxAddresses") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.ListUnspentMinMaxAddresses)", ErrChaos)
 	} else {
 		out0, out1 = self.client.ListUnspentMinMaxAddresses(in0, in1, in2, in3)
 	}
@@ -706,7 +707,7 @@ func (self *chaosBitcoinClient) SendRawTransaction(
 	out1 error,
 ) {
 	if self.shouldFail("BitcoinClient", "SendRawTransaction") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (BitcoinClient.SendRawTransaction)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SendRawTransaction(in0, in1, in2)
 	}
@@ -737,7 +738,7 @@ func (self *chaosEVMClient) BlockByNumberCustom(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "BlockByNumberCustom") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.BlockByNumberCustom)", ErrChaos)
 	} else {
 		out0, out1 = self.client.BlockByNumberCustom(in0, in1)
 	}
@@ -751,7 +752,7 @@ func (self *chaosEVMClient) BlockNumber(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "BlockNumber") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.BlockNumber)", ErrChaos)
 	} else {
 		out0, out1 = self.client.BlockNumber(in0)
 	}
@@ -767,7 +768,7 @@ func (self *chaosEVMClient) CallContract(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "CallContract") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.CallContract)", ErrChaos)
 	} else {
 		out0, out1 = self.client.CallContract(in0, in1, in2)
 	}
@@ -783,7 +784,7 @@ func (self *chaosEVMClient) CodeAt(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "CodeAt") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.CodeAt)", ErrChaos)
 	} else {
 		out0, out1 = self.client.CodeAt(in0, in1, in2)
 	}
@@ -798,7 +799,7 @@ func (self *chaosEVMClient) EstimateGas(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "EstimateGas") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.EstimateGas)", ErrChaos)
 	} else {
 		out0, out1 = self.client.EstimateGas(in0, in1)
 	}
@@ -813,7 +814,7 @@ func (self *chaosEVMClient) FilterLogs(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "FilterLogs") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.FilterLogs)", ErrChaos)
 	} else {
 		out0, out1 = self.client.FilterLogs(in0, in1)
 	}
@@ -828,7 +829,7 @@ func (self *chaosEVMClient) HeaderByNumber(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "HeaderByNumber") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.HeaderByNumber)", ErrChaos)
 	} else {
 		out0, out1 = self.client.HeaderByNumber(in0, in1)
 	}
@@ -842,7 +843,7 @@ func (self *chaosEVMClient) HealthCheck(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "HealthCheck") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.HealthCheck)", ErrChaos)
 	} else {
 		out0, out1 = self.client.HealthCheck(in0)
 	}
@@ -858,7 +859,7 @@ func (self *chaosEVMClient) IsTxConfirmed(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "IsTxConfirmed") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.IsTxConfirmed)", ErrChaos)
 	} else {
 		out0, out1 = self.client.IsTxConfirmed(in0, in1, in2)
 	}
@@ -874,7 +875,7 @@ func (self *chaosEVMClient) NonceAt(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "NonceAt") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.NonceAt)", ErrChaos)
 	} else {
 		out0, out1 = self.client.NonceAt(in0, in1, in2)
 	}
@@ -889,7 +890,7 @@ func (self *chaosEVMClient) PendingCodeAt(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "PendingCodeAt") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.PendingCodeAt)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PendingCodeAt(in0, in1)
 	}
@@ -904,7 +905,7 @@ func (self *chaosEVMClient) PendingNonceAt(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "PendingNonceAt") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.PendingNonceAt)", ErrChaos)
 	} else {
 		out0, out1 = self.client.PendingNonceAt(in0, in1)
 	}
@@ -918,7 +919,7 @@ func (self *chaosEVMClient) SendTransaction(
 	out0 error,
 ) {
 	if self.shouldFail("EVMClient", "SendTransaction") {
-		out0 = ErrChaos
+		out0 = fmt.Errorf("%w (EVMClient.SendTransaction)", ErrChaos)
 	} else {
 		out0 = self.client.SendTransaction(in0, in1)
 	}
@@ -941,7 +942,7 @@ func (self *chaosEVMClient) SubscribeFilterLogs(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "SubscribeFilterLogs") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.SubscribeFilterLogs)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SubscribeFilterLogs(in0, in1, in2)
 	}
@@ -955,7 +956,7 @@ func (self *chaosEVMClient) SuggestGasPrice(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "SuggestGasPrice") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.SuggestGasPrice)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuggestGasPrice(in0)
 	}
@@ -969,7 +970,7 @@ func (self *chaosEVMClient) SuggestGasTipCap(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "SuggestGasTipCap") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.SuggestGasTipCap)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuggestGasTipCap(in0)
 	}
@@ -985,7 +986,7 @@ func (self *chaosEVMClient) TransactionByHash(
 	out2 error,
 ) {
 	if self.shouldFail("EVMClient", "TransactionByHash") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (EVMClient.TransactionByHash)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.TransactionByHash(in0, in1)
 	}
@@ -1000,7 +1001,7 @@ func (self *chaosEVMClient) TransactionByHashCustom(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "TransactionByHashCustom") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.TransactionByHashCustom)", ErrChaos)
 	} else {
 		out0, out1 = self.client.TransactionByHashCustom(in0, in1)
 	}
@@ -1015,7 +1016,7 @@ func (self *chaosEVMClient) TransactionReceipt(
 	out1 error,
 ) {
 	if self.shouldFail("EVMClient", "TransactionReceipt") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (EVMClient.TransactionReceipt)", ErrChaos)
 	} else {
 		out0, out1 = self.client.TransactionReceipt(in0, in1)
 	}
@@ -1046,7 +1047,7 @@ func (self *chaosSolanaClient) GetAccountInfo(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetAccountInfo") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetAccountInfo)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetAccountInfo(in0, in1)
 	}
@@ -1062,7 +1063,7 @@ func (self *chaosSolanaClient) GetAccountInfoWithOpts(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetAccountInfoWithOpts") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetAccountInfoWithOpts)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetAccountInfoWithOpts(in0, in1, in2)
 	}
@@ -1078,7 +1079,7 @@ func (self *chaosSolanaClient) GetBalance(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetBalance") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetBalance)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBalance(in0, in1, in2)
 	}
@@ -1093,7 +1094,7 @@ func (self *chaosSolanaClient) GetBlockTime(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetBlockTime") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetBlockTime)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockTime(in0, in1)
 	}
@@ -1109,7 +1110,7 @@ func (self *chaosSolanaClient) GetConfirmedTransactionWithOpts(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetConfirmedTransactionWithOpts") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetConfirmedTransactionWithOpts)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetConfirmedTransactionWithOpts(in0, in1, in2)
 	}
@@ -1123,7 +1124,7 @@ func (self *chaosSolanaClient) GetHealth(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetHealth") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetHealth)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetHealth(in0)
 	}
@@ -1138,7 +1139,7 @@ func (self *chaosSolanaClient) GetLatestBlockhash(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetLatestBlockhash") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetLatestBlockhash)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetLatestBlockhash(in0, in1)
 	}
@@ -1153,7 +1154,7 @@ func (self *chaosSolanaClient) GetRecentPrioritizationFees(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetRecentPrioritizationFees") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetRecentPrioritizationFees)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetRecentPrioritizationFees(in0, in1)
 	}
@@ -1169,7 +1170,7 @@ func (self *chaosSolanaClient) GetSignaturesForAddressWithOpts(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetSignaturesForAddressWithOpts") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetSignaturesForAddressWithOpts)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetSignaturesForAddressWithOpts(in0, in1, in2)
 	}
@@ -1184,7 +1185,7 @@ func (self *chaosSolanaClient) GetSlot(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetSlot") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetSlot)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetSlot(in0, in1)
 	}
@@ -1200,7 +1201,7 @@ func (self *chaosSolanaClient) GetTransaction(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetTransaction") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetTransaction)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransaction(in0, in1, in2)
 	}
@@ -1214,7 +1215,7 @@ func (self *chaosSolanaClient) GetVersion(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "GetVersion") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.GetVersion)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetVersion(in0)
 	}
@@ -1230,7 +1231,7 @@ func (self *chaosSolanaClient) SendTransactionWithOpts(
 	out1 error,
 ) {
 	if self.shouldFail("SolanaClient", "SendTransactionWithOpts") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SolanaClient.SendTransactionWithOpts)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SendTransactionWithOpts(in0, in1, in2)
 	}
@@ -1260,7 +1261,7 @@ func (self *chaosSuiClient) GetLatestCheckpoint(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "GetLatestCheckpoint") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.GetLatestCheckpoint)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetLatestCheckpoint(in0)
 	}
@@ -1275,7 +1276,7 @@ func (self *chaosSuiClient) GetObjectParsedData(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "GetObjectParsedData") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.GetObjectParsedData)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetObjectParsedData(in0, in1)
 	}
@@ -1291,7 +1292,7 @@ func (self *chaosSuiClient) GetOwnedObjectID(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "GetOwnedObjectID") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.GetOwnedObjectID)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetOwnedObjectID(in0, in1, in2)
 	}
@@ -1307,7 +1308,7 @@ func (self *chaosSuiClient) GetSuiCoinObjectRefs(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "GetSuiCoinObjectRefs") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.GetSuiCoinObjectRefs)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetSuiCoinObjectRefs(in0, in1, in2)
 	}
@@ -1321,7 +1322,7 @@ func (self *chaosSuiClient) HealthCheck(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "HealthCheck") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.HealthCheck)", ErrChaos)
 	} else {
 		out0, out1 = self.client.HealthCheck(in0)
 	}
@@ -1336,7 +1337,7 @@ func (self *chaosSuiClient) InspectTransactionBlock(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "InspectTransactionBlock") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.InspectTransactionBlock)", ErrChaos)
 	} else {
 		out0, out1 = self.client.InspectTransactionBlock(in0, in1)
 	}
@@ -1351,7 +1352,7 @@ func (self *chaosSuiClient) MoveCall(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "MoveCall") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.MoveCall)", ErrChaos)
 	} else {
 		out0, out1 = self.client.MoveCall(in0, in1)
 	}
@@ -1367,7 +1368,7 @@ func (self *chaosSuiClient) QueryModuleEvents(
 	out2 error,
 ) {
 	if self.shouldFail("SuiClient", "QueryModuleEvents") {
-		out2 = ErrChaos
+		out2 = fmt.Errorf("%w (SuiClient.QueryModuleEvents)", ErrChaos)
 	} else {
 		out0, out1, out2 = self.client.QueryModuleEvents(in0, in1)
 	}
@@ -1382,7 +1383,7 @@ func (self *chaosSuiClient) SuiExecuteTransactionBlock(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiExecuteTransactionBlock") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiExecuteTransactionBlock)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiExecuteTransactionBlock(in0, in1)
 	}
@@ -1397,7 +1398,7 @@ func (self *chaosSuiClient) SuiGetTransactionBlock(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiGetTransactionBlock") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiGetTransactionBlock)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiGetTransactionBlock(in0, in1)
 	}
@@ -1412,7 +1413,7 @@ func (self *chaosSuiClient) SuiMultiGetObjects(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiMultiGetObjects") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiMultiGetObjects)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiMultiGetObjects(in0, in1)
 	}
@@ -1427,7 +1428,7 @@ func (self *chaosSuiClient) SuiXGetDynamicFieldObject(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiXGetDynamicFieldObject") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiXGetDynamicFieldObject)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiXGetDynamicFieldObject(in0, in1)
 	}
@@ -1441,7 +1442,7 @@ func (self *chaosSuiClient) SuiXGetLatestSuiSystemState(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiXGetLatestSuiSystemState") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiXGetLatestSuiSystemState)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiXGetLatestSuiSystemState(in0)
 	}
@@ -1455,7 +1456,7 @@ func (self *chaosSuiClient) SuiXGetReferenceGasPrice(
 	out1 error,
 ) {
 	if self.shouldFail("SuiClient", "SuiXGetReferenceGasPrice") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (SuiClient.SuiXGetReferenceGasPrice)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SuiXGetReferenceGasPrice(in0)
 	}
@@ -1486,7 +1487,7 @@ func (self *chaosTONClient) GetAccountState(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetAccountState") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetAccountState)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetAccountState(in0, in1)
 	}
@@ -1501,7 +1502,7 @@ func (self *chaosTONClient) GetBlockHeader(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetBlockHeader") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetBlockHeader)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetBlockHeader(in0, in1)
 	}
@@ -1516,7 +1517,7 @@ func (self *chaosTONClient) GetConfigParam(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetConfigParam") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetConfigParam)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetConfigParam(in0, in1)
 	}
@@ -1530,7 +1531,7 @@ func (self *chaosTONClient) GetMasterchainInfo(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetMasterchainInfo") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetMasterchainInfo)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetMasterchainInfo(in0)
 	}
@@ -1547,7 +1548,7 @@ func (self *chaosTONClient) GetTransaction(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetTransaction") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetTransaction)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransaction(in0, in1, in2, in3)
 	}
@@ -1565,7 +1566,7 @@ func (self *chaosTONClient) GetTransactions(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetTransactions") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetTransactions)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransactions(in0, in1, in2, in3, in4)
 	}
@@ -1582,7 +1583,7 @@ func (self *chaosTONClient) GetTransactionsSince(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "GetTransactionsSince") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.GetTransactionsSince)", ErrChaos)
 	} else {
 		out0, out1 = self.client.GetTransactionsSince(in0, in1, in2, in3)
 	}
@@ -1596,7 +1597,7 @@ func (self *chaosTONClient) HealthCheck(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "HealthCheck") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.HealthCheck)", ErrChaos)
 	} else {
 		out0, out1 = self.client.HealthCheck(in0)
 	}
@@ -1611,7 +1612,7 @@ func (self *chaosTONClient) SendMessage(
 	out1 error,
 ) {
 	if self.shouldFail("TONClient", "SendMessage") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TONClient.SendMessage)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SendMessage(in0, in1)
 	}
@@ -1652,7 +1653,7 @@ func (self *chaosTSSClient) Sign(
 	out1 error,
 ) {
 	if self.shouldFail("TSSClient", "Sign") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TSSClient.Sign)", ErrChaos)
 	} else {
 		out0, out1 = self.client.Sign(in0, in1, in2, in3, in4)
 	}
@@ -1670,7 +1671,7 @@ func (self *chaosTSSClient) SignBatch(
 	out1 error,
 ) {
 	if self.shouldFail("TSSClient", "SignBatch") {
-		out1 = ErrChaos
+		out1 = fmt.Errorf("%w (TSSClient.SignBatch)", ErrChaos)
 	} else {
 		out0, out1 = self.client.SignBatch(in0, in1, in2, in3, in4)
 	}

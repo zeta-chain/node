@@ -5,8 +5,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 )
 
-//nolint:revive
-type SuiClient interface {
+type SuiClient interface { //nolint:revive -- Simplifies code generation
 	signer.SuiClient
 	observer.SuiClient
 }

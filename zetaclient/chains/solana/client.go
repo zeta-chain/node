@@ -8,9 +8,7 @@ import (
 
 // TODO: Replace this interface for a repository interface.
 // See: https://github.com/zeta-chain/node/issues/4224
-//
-//nolint:revive
-type SolanaClient interface {
+type SolanaClient interface { //nolint:revive -- Simplifies code generation
 	observer.SolanaClient
 	signer.SolanaClient
 	repo.SolanaClient

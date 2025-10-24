@@ -27,9 +27,10 @@ var (
 	// ErrChaos is the error that gets returned by the wrapped methods when they fail.
 	ErrChaos = errors.New("chaos error")
 
-	ErrNotChaosMode     = errors.New("not in chaos mode")
-	ErrReadPercentages  = errors.New("failed to read chaos percentages")
-	ErrParsePercentages = errors.New("failed to parse chaos percentages")
+	ErrNotChaosMode      = errors.New("not in chaos mode")
+	ErrReadPercentages   = errors.New("failed to read chaos percentages")
+	ErrParsePercentages  = errors.New("failed to parse chaos percentages")
+	ErrInvalidPercentage = errors.New("invalid percentage")
 )
 
 // Source is the base chaos object from which all chaos interface implementations inherit.
@@ -67,10 +68,23 @@ func NewSource(logger zerolog.Logger, config config.Config) (*Source, error) {
 		return nil, fmt.Errorf("%w: %w", ErrParsePercentages, err)
 	}
 
+	// Validate percentages.
+	for itfc, mthds := range percentages {
+		for mthd, percentage := range mthds {
+			if percentage < 0 || percentage > 100 {
+				return nil, fmt.Errorf("%w for method %q in %q", ErrInvalidPercentage, mthd, itfc)
+			}
+		}
+	}
+
 	return &Source{percentages: percentages, rand: rand}, nil
 }
 
-// shouldFail returns true if and only if a given method from a given interface should fail.
+// shouldFail determines whether a method should fail based on its failure percentage.
+//
+// It generates a random integer in the range [0, 100). If the generated number is less than the
+// method's fail percentage (stored in the percentages map), shouldFail returns true; otherwise, it
+// returns false.
 func (source *Source) shouldFail(itfc, mthd string) bool {
 	source.mu.Lock()
 	defer source.mu.Unlock()

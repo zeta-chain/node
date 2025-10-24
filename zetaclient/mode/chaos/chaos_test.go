@@ -18,7 +18,7 @@ const (
 )
 
 func TestNewSource(t *testing.T) {
-	err := os.WriteFile(percentagesPath, []byte(`{"some": {"year": 1984}}`), perm)
+	err := os.WriteFile(percentagesPath, []byte(`{"interface": {"method": 92}}`), perm)
 	require.NoError(t, err)
 	defer func() {
 		err := os.Remove(percentagesPath)
@@ -34,9 +34,9 @@ func TestNewSource(t *testing.T) {
 		require.NotNil(t, source.percentages)
 		require.NotNil(t, source.rand)
 
-		require.Equal(t, 1984, source.percentages["some"]["year"])
+		require.Equal(t, 92, source.percentages["interface"]["method"])
 		require.Len(t, source.percentages, 1)
-		require.Len(t, source.percentages["some"], 1)
+		require.Len(t, source.percentages["interface"], 1)
 	})
 
 	t.Run("ok (with no seed)", func(t *testing.T) {
@@ -48,9 +48,9 @@ func TestNewSource(t *testing.T) {
 		require.NotNil(t, source.percentages)
 		require.NotNil(t, source.rand)
 
-		require.Equal(t, 1984, source.percentages["some"]["year"])
+		require.Equal(t, 92, source.percentages["interface"]["method"])
 		require.Len(t, source.percentages, 1)
-		require.Len(t, source.percentages["some"], 1)
+		require.Len(t, source.percentages["interface"], 1)
 	})
 
 	t.Run("invalid mode", func(t *testing.T) {
@@ -86,6 +86,25 @@ func TestNewSource(t *testing.T) {
 		require.Empty(t, log)
 
 		require.ErrorIs(t, err, ErrParsePercentages)
+	})
+
+	t.Run("invalid percentages", func(t *testing.T) {
+		percentagesPath := "invalid_percentages.json"
+		err := os.WriteFile(percentagesPath, []byte(`{"interface": {"method": 1992}}`), perm)
+		require.NoError(t, err)
+		defer func() {
+			err := os.Remove(percentagesPath)
+			require.NoError(t, err)
+		}()
+
+		log, source, err := newSource(mode.ChaosMode, seed, percentagesPath)
+		require.Error(t, err)
+		require.Nil(t, source)
+		require.Empty(t, log)
+
+		require.ErrorIs(t, err, ErrInvalidPercentage)
+		require.ErrorContains(t, err, "interface")
+		require.ErrorContains(t, err, "method")
 	})
 }
 

@@ -4,6 +4,7 @@
 package chaos
 
 import (
+    "fmt"
 {{- range $path, $name := .Imports}}
     {{$name}} "{{$path}}"
 {{- end}}
@@ -74,7 +75,7 @@ func (self *chaos{{$itfc.Name}}) {{$mthd.Name}}
             {{- range $i, $out := $mthd.Outs -}}
                 {{- if $out.IsError -}}
                     {{- newline -}} {{- tab -}} {{- tab -}}
-                    {{$out.First}} = ErrChaos
+                    {{$out.First}} = fmt.Errorf("%w ({{$itfc.Name}}.{{$mthd.Name}})", ErrChaos)
                 {{- end -}}
             {{- end -}}
 
