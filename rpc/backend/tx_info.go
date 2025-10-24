@@ -9,7 +9,7 @@ import (
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/evm/types"
+	servertypes "github.com/cosmos/evm/server/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -156,7 +156,7 @@ func (b *Backend) GetTransactionByHashPending(txHash common.Hash) (*rpctypes.RPC
 }
 
 // GetGasUsed returns gasUsed from transaction
-func (b *Backend) GetGasUsed(res *types.TxResult, price *big.Int, gas uint64) uint64 {
+func (b *Backend) GetGasUsed(res *servertypes.TxResult, price *big.Int, gas uint64) uint64 {
 	// patch gasUsed if tx is reverted and happened before height on which fixed was introduced
 	// to return real gas charged
 	// more info at https://github.com/evmos/ethermint/pull/1557
@@ -429,7 +429,7 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(
 // GetTxByEthHash uses `/tx_query` to find transaction by ethereum tx hash
 // TODO: Don't need to convert once hashing is fixed on Tendermint
 // https://github.com/cometbft/cometbft/issues/6539
-func (b *Backend) GetTxByEthHash(hash common.Hash) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+func (b *Backend) GetTxByEthHash(hash common.Hash) (*servertypes.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	if b.Indexer != nil {
 		txRes, err := b.Indexer.GetByTxHash(hash)
 		if err != nil {
@@ -453,7 +453,7 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*types.TxResult, *rpctypes.T
 func (b *Backend) GetTxByTxIndex(
 	height int64,
 	index uint,
-) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+) (*servertypes.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	int32Index := int32(index) //#nosec G115 -- checked for int overflow already
 	if b.Indexer != nil {
 		// #nosec G115 always in range
@@ -481,7 +481,7 @@ func (b *Backend) GetTxByTxIndex(
 func (b *Backend) QueryTendermintTxIndexer(
 	query string,
 	txGetter func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx,
-) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+) (*servertypes.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	resTxs, err := b.ClientCtx.Client.TxSearch(b.Ctx, query, false, nil, nil, "")
 	if err != nil {
 		return nil, nil, err

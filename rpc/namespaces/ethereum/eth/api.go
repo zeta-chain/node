@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -334,7 +333,7 @@ func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
 // ProtocolVersion returns the supported Ethereum protocol version.
 func (e *PublicAPI) ProtocolVersion() hexutil.Uint {
 	e.logger.Debug("eth_protocolVersion")
-	return hexutil.Uint(types.ProtocolVersion)
+	return hexutil.Uint(rpctypes.ProtocolVersion)
 }
 
 // GasPrice returns the current gas price based on Cosmos EVM's gas price oracle.

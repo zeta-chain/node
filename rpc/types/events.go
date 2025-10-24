@@ -11,7 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/evm/types"
+	servertypes "github.com/cosmos/evm/server/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -198,7 +198,7 @@ func ParseTxIndexerResult(
 	txResult *tmrpctypes.ResultTx,
 	tx sdk.Tx,
 	getter func(*ParsedTxs) *ParsedTx,
-) (*types.TxResult, *TxResultAdditionalFields, error) {
+) (*servertypes.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
@@ -218,7 +218,7 @@ func ParseTxIndexerResult(
 		)
 	}
 	if parsedTx.Type == CosmosEVMTxType {
-		return &types.TxResult{
+		return &servertypes.TxResult{
 				Height:  txResult.Height,
 				TxIndex: txResult.Index,
 				// #nosec G115 always in range
@@ -240,7 +240,7 @@ func ParseTxIndexerResult(
 				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
-	return &types.TxResult{
+	return &servertypes.TxResult{
 		Height:  txResult.Height,
 		TxIndex: txResult.Index,
 		// #nosec G115 always in range
@@ -258,7 +258,7 @@ func ParseTxBlockResult(
 	tx sdk.Tx,
 	txIndex int,
 	height int64,
-) (*types.TxResult, *TxResultAdditionalFields, error) {
+) (*servertypes.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(txResult, tx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", height, txIndex, err)
@@ -270,7 +270,7 @@ func ParseTxBlockResult(
 	// TODO: check why when there are multiple synthetic txs events are in reversed order
 	parsedTx := txs.Txs[len(txs.Txs)-1]
 	if parsedTx.Type == CosmosEVMTxType {
-		return &types.TxResult{
+		return &servertypes.TxResult{
 				Height: height,
 				// #nosec G115 always in range
 				TxIndex: uint32(txIndex),
@@ -293,7 +293,7 @@ func ParseTxBlockResult(
 				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
-	return &types.TxResult{
+	return &servertypes.TxResult{
 		Height: height,
 		// #nosec G115 always in range
 		TxIndex: uint32(txIndex),

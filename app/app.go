@@ -81,7 +81,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmosencoding "github.com/cosmos/evm/encoding"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	"github.com/cosmos/evm/utils"
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/cosmos/evm/x/feemarket"
@@ -140,7 +140,7 @@ const Name = "zetacore"
 
 func init() {
 	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
-	sdk.DefaultPowerReduction = cosmosevmtypes.AttoPowerReduction
+	sdk.DefaultPowerReduction = utils.AttoPowerReduction
 	// modify fee market parameter defaults through global
 	//feemarkettypes.DefaultMinGasPrice = v5.MainnetMinGasPrices
 	//feemarkettypes.DefaultMinGasMultiplier = v5.MainnetMinGasMultiplier

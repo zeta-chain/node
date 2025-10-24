@@ -15,7 +15,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/evm/indexer"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	servertypes "github.com/cosmos/evm/server/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
@@ -651,7 +651,7 @@ func (s *TestSuite) TestGetTransactionByTxIndex() {
 		registerMock func()
 		height       int64
 		index        uint
-		expTxResult  *cosmosevmtypes.TxResult
+		expTxResult  *servertypes.TxResult
 		expPass      bool
 	}{
 		{
@@ -663,7 +663,7 @@ func (s *TestSuite) TestGetTransactionByTxIndex() {
 			},
 			0,
 			0,
-			&cosmosevmtypes.TxResult{},
+			&servertypes.TxResult{},
 			false,
 		},
 	}
@@ -691,7 +691,7 @@ func (s *TestSuite) TestQueryTendermintTxIndexer() {
 		registerMock func()
 		txGetter     func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx
 		query        string
-		expTxResult  *cosmosevmtypes.TxResult
+		expTxResult  *servertypes.TxResult
 		expPass      bool
 	}{
 		{
@@ -704,7 +704,7 @@ func (s *TestSuite) TestQueryTendermintTxIndexer() {
 				return &rpctypes.ParsedTx{}
 			},
 			"",
-			&cosmosevmtypes.TxResult{},
+			&servertypes.TxResult{},
 			false,
 		},
 	}
@@ -888,7 +888,7 @@ func (s *TestSuite) TestGetGasUsed() {
 	testCases := []struct {
 		name                     string
 		fixRevertGasRefundHeight int64
-		txResult                 *cosmosevmtypes.TxResult
+		txResult                 *servertypes.TxResult
 		price                    *big.Int
 		gas                      uint64
 		exp                      uint64
@@ -896,7 +896,7 @@ func (s *TestSuite) TestGetGasUsed() {
 		{
 			"success txResult",
 			1,
-			&cosmosevmtypes.TxResult{
+			&servertypes.TxResult{
 				Height:  1,
 				Failed:  false,
 				GasUsed: 53026,
@@ -908,7 +908,7 @@ func (s *TestSuite) TestGetGasUsed() {
 		{
 			"fail txResult before cap",
 			2,
-			&cosmosevmtypes.TxResult{
+			&servertypes.TxResult{
 				Height:  1,
 				Failed:  true,
 				GasUsed: 53026,
@@ -920,7 +920,7 @@ func (s *TestSuite) TestGetGasUsed() {
 		{
 			"fail txResult after cap",
 			2,
-			&cosmosevmtypes.TxResult{
+			&servertypes.TxResult{
 				Height:  3,
 				Failed:  true,
 				GasUsed: 53026,

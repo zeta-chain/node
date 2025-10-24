@@ -13,7 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	cosmosante "github.com/cosmos/evm/ante/cosmos"
 	evmante "github.com/cosmos/evm/ante/evm"
-	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
@@ -193,5 +192,5 @@ func SetGasMeter(_ bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	//
 	//return ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 
-	return ctx.WithGasMeter(cosmosevmtypes.NewInfiniteGasMeterWithLimit(gasLimit))
+	return ctx.WithGasMeter(evmtypes.NewInfiniteGasMeterWithLimit(gasLimit))
 }

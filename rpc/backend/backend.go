@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/evm/server/config"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	servertypes "github.com/cosmos/evm/server/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -118,8 +118,8 @@ type EVMBackend interface {
 
 	// Tx Info
 	GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransaction, error)
-	GetTxByEthHash(txHash common.Hash) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
-	GetTxByTxIndex(height int64, txIndex uint) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
+	GetTxByEthHash(txHash common.Hash) (*servertypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
+	GetTxByTxIndex(height int64, txIndex uint) (*servertypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
 	GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
 	GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error)
@@ -190,7 +190,7 @@ type Backend struct {
 	EvmChainID          *big.Int
 	Cfg                 config.Config
 	AllowUnprotectedTxs bool
-	Indexer             cosmosevmtypes.EVMTxIndexer
+	Indexer             servertypes.EVMTxIndexer
 	ProcessBlocker      ProcessBlocker
 }
 
@@ -204,7 +204,7 @@ func NewBackend(
 	logger log.Logger,
 	clientCtx client.Context,
 	allowUnprotectedTxs bool,
-	indexer cosmosevmtypes.EVMTxIndexer,
+	indexer servertypes.EVMTxIndexer,
 ) *Backend {
 	appConf, err := config.GetConfig(ctx.Viper)
 	if err != nil {

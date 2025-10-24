@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/evm/crypto/hd"
-	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,7 +23,7 @@ import (
 type PrivateAccountAPI struct {
 	backend    backend.EVMBackend
 	logger     log.Logger
-	hdPathIter types.HDPathIterator
+	hdPathIter hd.PathIterator
 }
 
 // NewAPI creates an instance of the public Personal Eth API.
@@ -35,7 +34,7 @@ func NewAPI(
 	cfg := sdk.GetConfig()
 	basePath := cfg.GetFullBIP44Path()
 
-	iterator, err := types.NewHDPathIterator(basePath, true)
+	iterator, err := hd.NewHDPathIterator(basePath, true)
 	if err != nil {
 		panic(err)
 	}
