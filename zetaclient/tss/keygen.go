@@ -122,16 +122,26 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 	case k.blockThrottled(zetaHeight):
 		return true, nil
 	case zetaHeight < keygenHeight:
+		connectedPeers := len(k.tss.GetP2PHost().Network().Conns())
+		totalPeers := len(keygenTask.GranteePubkeys)
+
 		k.logger.Info().
 			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Msg("waiting for keygen block to arrive or new keygen block to be set")
+			Int("connected_peers", connectedPeers).
+			Int("total_peers", totalPeers).
+			Msgf("waiting for keygen block to arrive (%d/%d peers connected)", connectedPeers+1, totalPeers)
 		return true, nil
 	case zetaHeight > keygenHeight:
+		connectedPeers := len(k.tss.GetP2PHost().Network().Conns())
+		totalPeers := len(keygenTask.GranteePubkeys)
+
 		k.logger.Info().
 			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Msg("waiting for keygen finalization")
+			Int("connected_peers", connectedPeers).
+			Int("total_peers", totalPeers).
+			Msgf("waiting for keygen finalization (%d/%d peers connected)", connectedPeers+1, totalPeers)
 		return true, nil
 	}
 
