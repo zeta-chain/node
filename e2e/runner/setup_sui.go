@@ -12,7 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
@@ -521,7 +521,7 @@ func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 		ConfirmationCount: 1, // still need to be provided for now
 	}
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
-		return errors.Wrap(err, "unable to broadcast solana chain params tx")
+		return errors.Wrap(err, "unable to broadcast sui chain params tx")
 	}
 
 	if resetNonces {

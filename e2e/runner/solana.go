@@ -16,7 +16,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -672,7 +672,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.GatewayZEVM.Withdraw0(
+	tx, err = r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		[]byte(to.String()),
 		amount,
@@ -706,7 +706,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.GatewayZEVM.WithdrawAndCall(
+	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(receiver),
 		amount,
@@ -818,7 +818,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.GatewayZEVM.WithdrawAndCall(
+	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(receiver),
 		amount,
