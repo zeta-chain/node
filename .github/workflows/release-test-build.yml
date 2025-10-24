@@ -1,0 +1,76 @@
+name: Release to Test Binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-upload:
+    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate release identifier
+        id: release_id
+        run: |
+          DATE=$(date +%Y%m%d)
+          SHORT_HASH=${GITHUB_SHA:0:7}
+          RELEASE_ID="${DATE}-${SHORT_HASH}"
+          echo "release_id=${RELEASE_ID}" >> $GITHUB_OUTPUT
+          echo "Release identifier: ${RELEASE_ID}"
+
+      - name: Build release artifacts
+        run: make release-build-only
+
+      - name: Configure AWS CLI for Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
+          aws configure set default.region auto
+
+      - name: Upload to Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+        run: |
+          echo "Uploading artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/"
+          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --no-progress
+          echo "✓ Upload complete"
+
+      - name: List uploaded files
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+        run: |
+          echo "Files uploaded to ${R2_BUCKET_NAME}/${RELEASE_ID}/:"
+          aws s3 ls "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --recursive \
+            --human-readable
+
+      - name: Output summary
+        env:
+          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: |
+          echo "## Release Upload Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release ID**: \`${RELEASE_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Bucket**: \`${R2_BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Path**: \`${RELEASE_ID}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All artifacts from \`dist/\` have been uploaded to Cloudflare R2." >> $GITHUB_STEP_SUMMARY
+
+      - name: Clean up workspace
+        if: always()
+        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
