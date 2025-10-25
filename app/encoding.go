@@ -4,7 +4,6 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -32,7 +31,7 @@ import (
 )
 
 // MakeEncodingConfig creates an EncodingConfig
-func MakeEncodingConfig(chainID uint64) testutil.TestEncodingConfig {
+func MakeEncodingConfig(chainID uint64) evmosencoding.Config {
 	encodingConfig := evmosencoding.MakeConfig(chainID)
 	registry := encodingConfig.InterfaceRegistry
 	// TODO test if we need to register these interfaces again as MakeConfig already registers them

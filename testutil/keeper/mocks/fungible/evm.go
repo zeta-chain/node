@@ -164,6 +164,24 @@ func (_m *FungibleEVMKeeper) GetLogSizeTransient(ctx types.Context) uint64 {
 	return r0
 }
 
+// IsContract provides a mock function with given fields: ctx, addr
+func (_m *FungibleEVMKeeper) IsContract(ctx types.Context, addr common.Address) bool {
+	ret := _m.Called(ctx, addr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsContract")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address) bool); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // SetAccount provides a mock function with given fields: ctx, addr, account
 func (_m *FungibleEVMKeeper) SetAccount(ctx types.Context, addr common.Address, account statedb.Account) error {
 	ret := _m.Called(ctx, addr, account)

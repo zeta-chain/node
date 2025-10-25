@@ -23,7 +23,6 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -40,6 +39,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
+	evmosencoding "github.com/cosmos/evm/encoding"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -166,12 +166,9 @@ func NewRootCmd() *cobra.Command {
 // InitAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
-	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
-
 	configurator := evmtypes.NewEVMConfigurator()
 	err := configurator.
 		WithExtendedEips(zetacoredconfig.CosmosEVMActivators).
-		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
 			Denom:         denom,
 			ExtendedDenom: denom,
@@ -233,10 +230,8 @@ func initTmConfig() *tmcfg.Config {
 	return cfg
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingConfig) {
-	ac := appCreator{
-		encCfg: encodingConfig,
-	}
+func initRootCmd(rootCmd *cobra.Command, encodingConfig evmosencoding.Config) {
+	ac := appCreator{}
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
@@ -342,9 +337,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-type appCreator struct {
-	encCfg testutil.TestEncodingConfig
-}
+type appCreator struct{}
 
 func (ac appCreator) newApp(
 	logger log.Logger,

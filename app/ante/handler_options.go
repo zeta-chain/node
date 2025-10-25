@@ -35,7 +35,9 @@ type HandlerOptions struct {
 	ObserverKeeper         *observerkeeper.Keeper
 }
 
-func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
+func NewLegacyCosmosAnteHandlerEip712(ctx sdk.Context, options HandlerOptions) sdk.AnteHandler {
+	feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
+
 	return sdk.ChainAnteDecorators(
 		cosmosante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
@@ -43,7 +45,7 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSetUpContextDecorator(),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
-		cosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+		cosmosante.NewMinGasPriceDecorator(&feemarketParams),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		ante.NewDeductFeeDecorator(
@@ -62,11 +64,13 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		// TODO: enable back IBC
 		// check if this ante handler is needed in non legacy cosmos ante handlers
 		// ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper, &feemarketParams),
 	)
 }
 
-func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
+func newCosmosAnteHandler(ctx sdk.Context, options HandlerOptions) sdk.AnteHandler {
+	feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
+
 	return sdk.ChainAnteDecorators(
 		cosmosante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
@@ -75,7 +79,7 @@ func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
-		cosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+		cosmosante.NewMinGasPriceDecorator(&feemarketParams),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		ante.NewDeductFeeDecorator(
@@ -90,12 +94,14 @@ func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper, &feemarketParams),
 	)
 }
 
 // this applies to special cosmos tx that calls EVM, in which case the EVM overrides the gas limit
-func newCosmosAnteHandlerForSystemTx(options HandlerOptions) sdk.AnteHandler {
+func newCosmosAnteHandlerForSystemTx(ctx sdk.Context, options HandlerOptions) sdk.AnteHandler {
+	feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
+
 	return sdk.ChainAnteDecorators(
 		cosmosante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
@@ -121,7 +127,7 @@ func newCosmosAnteHandlerForSystemTx(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper, &feemarketParams),
 	)
 }
 

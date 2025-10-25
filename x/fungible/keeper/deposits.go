@@ -65,7 +65,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	// if it is, then the hook onCrossChainCall() will be called
 	// if not, the zrc20 are simply transferred to the receiver
 	acc := k.evmKeeper.GetAccount(ctx, to)
-	if acc != nil && acc.IsContract() {
+	if acc != nil && k.evmKeeper.IsContract(ctx, to) {
 		context := systemcontract.ZContext{
 			Origin:  from,
 			Sender:  ethcommon.Address{},

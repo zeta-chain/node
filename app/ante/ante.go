@@ -55,6 +55,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 		defer Recover(ctx.Logger(), &err)
 
+		evmParams := options.EvmKeeper.GetParams(ctx)
+		feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
 		txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx)
 		if ok {
 			opts := txWithExtensions.GetExtensionOptions()
@@ -67,13 +69,15 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 							options.FeeMarketKeeper,
 							options.EvmKeeper,
 							options.MaxTxGasWanted,
+							&evmParams,
+							&feemarketParams,
 						))
 				case "/cosmos.evm.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
-					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
+					anteHandler = NewLegacyCosmosAnteHandlerEip712(ctx, options)
 				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
-					anteHandler = newCosmosAnteHandler(options)
+					anteHandler = newCosmosAnteHandler(ctx, options)
 				default:
 					return ctx, errorsmod.Wrapf(
 						errortypes.ErrUnknownExtensionOptions,
@@ -89,7 +93,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		switch tx.(type) {
 		case sdk.Tx:
 			// default: handle as normal Cosmos SDK tx
-			anteHandler = newCosmosAnteHandler(options)
+			anteHandler = newCosmosAnteHandler(ctx, options)
 
 			// if tx is a system tx, and singer is authorized, use system tx handler
 
@@ -98,14 +102,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			}
 
 			if IsSystemTx(tx, isAuthorized) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+				anteHandler = newCosmosAnteHandlerForSystemTx(ctx, options)
 			}
 
 			// if tx is MsgCreatorValidator, use the newCosmosAnteHandlerForSystemTx handler to
 			// exempt gas fee requirement in genesis because it's not possible to pay gas fee in genesis
 			if len(tx.GetMsgs()) == 1 {
 				if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
-					anteHandler = newCosmosAnteHandlerForSystemTx(options)
+					anteHandler = newCosmosAnteHandlerForSystemTx(ctx, options)
 				}
 			}
 

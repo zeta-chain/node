@@ -41,6 +41,5 @@ type EVMKeeper interface {
 type FeeMarketKeeper interface {
 	GetParams(ctx sdk.Context) (params feemarkettypes.Params)
 	AddTransientGasWanted(ctx sdk.Context, gasWanted uint64) (uint64, error)
-	GetBaseFeeEnabled(ctx sdk.Context) bool
 	GetBaseFee(ctx sdk.Context) math.LegacyDec
 }

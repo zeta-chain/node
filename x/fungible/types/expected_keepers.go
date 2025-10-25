@@ -61,6 +61,7 @@ type EVMKeeper interface {
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
+	IsContract(ctx sdk.Context, addr ethcommon.Address) bool
 }
 
 type AuthorityKeeper interface {

@@ -23,7 +23,7 @@ func (k Keeper) LegacyZETADepositAndCallContract(ctx sdk.Context,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, to)
 
-	if acc == nil || !acc.IsContract() {
+	if acc == nil || !k.evmKeeper.IsContract(ctx, to) {
 		err := k.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {
 			return nil, errors.Wrap(
@@ -56,7 +56,7 @@ func (k Keeper) ZETARevertAndCallContract(ctx sdk.Context,
 	data []byte,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, sender)
-	if acc == nil || !acc.IsContract() {
+	if acc == nil || !k.evmKeeper.IsContract(ctx, sender) {
 		err := k.DepositCoinZeta(ctx, sender, remainingAmount)
 		if err != nil {
 			return nil, err

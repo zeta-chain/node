@@ -884,7 +884,7 @@ func (k Keeper) CallEVMWithData(
 					attrs...,
 				),
 				sdk.NewEvent(
-					evmtypes.EventTypeTxLog,
+					"tx_log", // TODO: this seems to be removed, check if needed
 					txLogAttrs...,
 				),
 				sdk.NewEvent(

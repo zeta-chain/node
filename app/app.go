@@ -532,6 +532,7 @@ func New(
 		app.FeeMarketKeeper,
 		app.ConsensusParamsKeeper,
 		&app.Erc20Keeper,
+		evmChainID,
 		tracer,
 	)
 
@@ -712,7 +713,7 @@ func New(
 		//transfer.NewAppModule(app.TransferKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
-		vm.NewAppModule(app.EvmKeeper, app.AccountKeeper, app.AccountKeeper.AddressCodec()),
+		vm.NewAppModule(app.EvmKeeper, app.AccountKeeper, app.BankKeeper, app.AccountKeeper.AddressCodec()),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
