@@ -2,9 +2,6 @@ name: Release Test Binaries to Cloudflare R2
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - ci-test-binaries # temp trigger
 
 jobs:
   build-and-upload:
@@ -16,15 +13,28 @@ jobs:
 
       - name: Generate release identifier
         id: release_id
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           DATE=$(date +%Y%m%d)
           SHORT_HASH=${GITHUB_SHA:0:7}
-          RELEASE_ID="${DATE}-${SHORT_HASH}"
+          LATEST_TAG=$(gh release view --json tagName --jq '.tagName' 2>/dev/null || echo "v0.0.0")
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+          RELEASE_ID="${LATEST_TAG}-${DATE}-${SHORT_HASH}"
           echo "release_id=${RELEASE_ID}" >> $GITHUB_OUTPUT
           echo "Release identifier: ${RELEASE_ID}"
+          echo "Latest release tag: ${LATEST_TAG}"
 
       - name: Build release artifacts
-        run: make release-snapshot
+        run: |
+          mkdir -p upload/zetacore
+          mkdir -p upload/zetaclient
+          make release-snapshot-zetacore
+          cp -r dist/* upload/zetacore/
+          make release-snapshot-zetaclient
+          cp -r dist/* upload/zetaclient/
 
       - name: Configure AWS CLI for Cloudflare R2
         env:
@@ -36,6 +46,21 @@ jobs:
           aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
           aws configure set default.region auto
 
+      - name: Check if release already exists in R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+        run: |
+          echo "Checking if ${RELEASE_ID}/ already exists in R2..."
+          if aws s3 ls "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" > /dev/null 2>&1; then
+            echo "Error: Release ${RELEASE_ID} already exists in R2"
+            echo "Path: ${R2_BUCKET_NAME}/${RELEASE_ID}/"
+            exit 1
+          fi
+          echo "Release ID is unique, proceeding with upload"
+
       - name: Upload to Cloudflare R2
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
@@ -43,7 +68,7 @@ jobs:
           RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
         run: |
           echo "Uploading artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/"
-          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+          aws s3 sync upload/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
             --no-progress
           echo "✓ Upload complete"
@@ -73,6 +98,26 @@ jobs:
           echo "**Commit**: \`${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All artifacts from \`dist/\` have been uploaded to Cloudflare R2." >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.27.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "Test binaries uploaded to R2: `${{ steps.release_id.outputs.release_id }}`",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Test binaries have been uploaded to Cloudflare R2*\n*Release ID:* `${{ steps.release_id.outputs.release_id }}`\n*Path:* `${{ secrets.R2_BUCKET_NAME }}/${{ steps.release_id.outputs.release_id }}/`\n*Commit:* `${{ github.sha }}`\n*Repository:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
 
       - name: Clean up workspace
         if: always()
