@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"sync"
 	"time"
 
@@ -24,16 +25,16 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
-	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	erc20custodyv2 "github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/wzeta.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.eth.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectornative.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaeth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
@@ -59,7 +60,8 @@ type E2ERunnerOption func(*E2ERunner)
 
 // Important ENV
 const (
-	EnvKeyLocalnetMode = "LOCALNET_MODE"
+	EnvKeyLocalnetMode          = "LOCALNET_MODE"
+	EnvKeyUpgradeZetaclientOnly = "UPGRADE_ZETACLIENT_ONLY"
 
 	LocalnetModeUpgrade      = "upgrade"
 	LocalNetModeTSSMigration = "tss-migration"
@@ -498,6 +500,15 @@ func (r *E2ERunner) IsRunningUpgrade() bool {
 
 func (r *E2ERunner) IsRunningTssMigration() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningZetaclientOnlyUpgrade() bool {
+	value := os.Getenv(EnvKeyUpgradeZetaclientOnly)
+	enabled, err := strconv.ParseBool(value)
+	if err != nil {
+		return false
+	}
+	return enabled
 }
 
 func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {
