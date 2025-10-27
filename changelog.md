@@ -52,6 +52,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
 * [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
+* [4384](https://github.com/zeta-chain/node/pull/4384) - disable TSS service in dry mode
+
 
 ### Tests
 
