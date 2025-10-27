@@ -8,13 +8,17 @@ import (
 	"strconv"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	servertypes "github.com/cosmos/evm/server/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	"github.com/cosmos/evm/server/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	servertypes "github.com/cosmos/evm/server/types"
 )
 
 // EventFormat is the format version of the events.
@@ -194,28 +198,15 @@ func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
-func ParseTxIndexerResult(
-	txResult *tmrpctypes.ResultTx,
-	tx sdk.Tx,
-	getter func(*ParsedTxs) *ParsedTx,
-) (*servertypes.TxResult, *TxResultAdditionalFields, error) {
+func ParseTxIndexerResult(txResult *cmtrpctypes.ResultTx, tx sdk.Tx, getter func(*ParsedTxs) *ParsedTx) (*types.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
-		return nil, nil, fmt.Errorf(
-			"failed to parse tx events: block %d, index %d, %v",
-			txResult.Height,
-			txResult.Index,
-			err,
-		)
+		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", txResult.Height, txResult.Index, err)
 	}
 
 	parsedTx := getter(txs)
 	if parsedTx == nil {
-		return nil, nil, fmt.Errorf(
-			"ethereum tx not found in msgs: block %d, index %d",
-			txResult.Height,
-			txResult.Index,
-		)
+		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
 	}
 	if parsedTx.Type == CosmosEVMTxType {
 		return &servertypes.TxResult{
@@ -240,11 +231,11 @@ func ParseTxIndexerResult(
 				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
+	index := uint32(parsedTx.MsgIndex) // #nosec G115
 	return &servertypes.TxResult{
-		Height:  txResult.Height,
-		TxIndex: txResult.Index,
-		// #nosec G115 always in range
-		MsgIndex:          uint32(parsedTx.MsgIndex),
+		Height:            txResult.Height,
+		TxIndex:           txResult.Index,
+		MsgIndex:          index,
 		EthTxIndex:        parsedTx.EthTxIndex,
 		Failed:            parsedTx.Failed,
 		GasUsed:           parsedTx.GasUsed,

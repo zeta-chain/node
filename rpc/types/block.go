@@ -9,21 +9,25 @@ import (
 	"math/big"
 	"strings"
 
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/evm/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cast"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/cosmos/evm/utils"
+
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // BlockNumber represents decoding hex string to block values
 type BlockNumber int64
 
 const (
-	EthPendingBlockNumber  = BlockNumber(-2)
-	EthLatestBlockNumber   = BlockNumber(-1)
-	EthEarliestBlockNumber = BlockNumber(0)
+	EthEarliestBlockNumber  = BlockNumber(-5)
+	EthSafeBlockNumber      = BlockNumber(-4)
+	EthFinalizedBlockNumber = BlockNumber(-3)
+	EthLatestBlockNumber    = BlockNumber(-2)
+	EthPendingBlockNumber   = BlockNumber(-1)
 )
 
 const (
@@ -52,11 +56,7 @@ func ContextWithHeight(height int64) context.Context {
 		return context.Background()
 	}
 
-	return metadata.AppendToOutgoingContext(
-		context.Background(),
-		grpctypes.GRPCBlockHeightHeader,
-		fmt.Sprintf("%d", height),
-	)
+	return metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, fmt.Sprintf("%d", height))
 }
 
 // UnmarshalJSON parses the given JSON fragment into a BlockNumber. It supports:
@@ -109,10 +109,10 @@ func (bn BlockNumber) Int64() int64 {
 	return int64(bn)
 }
 
-// TmHeight is a util function used for the Tendermint RPC client. It returns
+// CmtHeight is a util function used for the CometBFT RPC client. It returns
 // nil if the block number is "latest". Otherwise, it returns the pointer of the
 // int64 value of the height.
-func (bn BlockNumber) TmHeight() *int64 {
+func (bn BlockNumber) CmtHeight() *int64 {
 	if bn < 0 {
 		return nil
 	}

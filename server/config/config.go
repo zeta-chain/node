@@ -66,6 +66,9 @@ const (
 	// DefaultGasCap is the default cap on gas that can be used in eth_call/estimateGas
 	DefaultGasCap uint64 = 25000000
 
+	// DefaultWSOrigins is the default origin for WebSocket connections
+	DefaultWSOrigins = "127.0.0.1"
+
 	// DefaultJSONRPCAllowInsecureUnlock is true
 	DefaultJSONRPCAllowInsecureUnlock bool = true
 
@@ -168,6 +171,8 @@ type JSONRPCConfig struct {
 	EnableIndexer bool `mapstructure:"enable-indexer"`
 	// MetricsAddress defines the metrics server to listen on
 	MetricsAddress string `mapstructure:"metrics-address"`
+	// WSOrigins defines the allowed origins for WebSocket connections
+	WSOrigins []string `mapstructure:"ws-origins"`
 	// FixRevertGasRefundHeight defines the upgrade height for fix of revert gas refund logic when transaction reverted
 	FixRevertGasRefundHeight int64 `mapstructure:"fix-revert-gas-refund-height"`
 }
@@ -209,6 +214,11 @@ func GetAPINamespaces() []string {
 	return []string{"web3", "eth", "personal", "net", "txpool", "debug", "miner"}
 }
 
+// GetDefaultWSOrigins returns the default WebSocket origins.
+func GetDefaultWSOrigins() []string {
+	return []string{DefaultWSOrigins, "localhost"}
+}
+
 // DefaultJSONRPCConfig returns an EVM config with the JSON-RPC API enabled by default
 func DefaultJSONRPCConfig() *JSONRPCConfig {
 	return &JSONRPCConfig{
@@ -230,6 +240,7 @@ func DefaultJSONRPCConfig() *JSONRPCConfig {
 		MaxOpenConnections:       DefaultMaxOpenConnections,
 		EnableIndexer:            false,
 		MetricsAddress:           DefaultJSONRPCMetricsAddress,
+		WSOrigins:                GetDefaultWSOrigins(),
 		FixRevertGasRefundHeight: DefaultFixRevertGasRefundHeight,
 	}
 }

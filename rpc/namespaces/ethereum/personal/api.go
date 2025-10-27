@@ -6,17 +6,19 @@ import (
 	"os"
 	"time"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/evm/crypto/hd"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/cosmos/evm/crypto/hd"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PrivateAccountAPI is the personal_ prefixed set of APIs in the Web3 JSON-RPC spec.
@@ -91,11 +93,7 @@ func (api *PrivateAccountAPI) NewAccount(password string) (common.Address, error
 	}
 	addr := common.BytesToAddress(pubKey.Address().Bytes())
 	api.logger.Info("Your new key was generated", "address", addr.String())
-	api.logger.Info(
-		"Please backup your key file!",
-		"path",
-		os.Getenv("HOME")+"/.zetacored/"+name,
-	) // TODO: pass the correct binary
+	api.logger.Info("Please backup your key file!", "path", os.Getenv("HOME")+"/.zetacored/"+name) // TODO: pass the correct binary
 	api.logger.Info("Please remember your password!")
 	return addr, nil
 }
@@ -112,11 +110,7 @@ func (api *PrivateAccountAPI) UnlockAccount(_ context.Context, addr common.Addre
 // SendTransaction will create a transaction from the given arguments and
 // tries to sign it with the key associated with args.To. If the given password isn't
 // able to decrypt the key it fails.
-func (api *PrivateAccountAPI) SendTransaction(
-	_ context.Context,
-	args evmtypes.TransactionArgs,
-	_ string,
-) (common.Hash, error) {
+func (api *PrivateAccountAPI) SendTransaction(_ context.Context, args evmtypes.TransactionArgs, _ string) (common.Hash, error) {
 	api.logger.Debug("personal_sendTransaction", "address", args.To.String())
 	return api.backend.SendTransaction(args)
 }
@@ -130,12 +124,7 @@ func (api *PrivateAccountAPI) SendTransaction(
 // The key used to calculate the signature is decrypted with the given password.
 //
 // https://github.com/ethereum/go-ethereum/wiki/Management-APIs#personal_sign
-func (api *PrivateAccountAPI) Sign(
-	_ context.Context,
-	data hexutil.Bytes,
-	addr common.Address,
-	_ string,
-) (hexutil.Bytes, error) {
+func (api *PrivateAccountAPI) Sign(_ context.Context, data hexutil.Bytes, addr common.Address, _ string) (hexutil.Bytes, error) {
 	api.logger.Debug("personal_sign", "data", data, "address", addr.String())
 	return api.backend.Sign(addr, data)
 }

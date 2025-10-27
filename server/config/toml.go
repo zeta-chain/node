@@ -86,6 +86,10 @@ enable-indexer = {{ .JSONRPC.EnableIndexer }}
 # Prometheus metrics path: /debug/metrics/prometheus
 metrics-address = "{{ .JSONRPC.MetricsAddress }}"
 
+# WSOrigins defines the allowed origins for WebSocket connections.
+# Example: ["localhost", "127.0.0.1", "myapp.example.com"]
+ws-origins = [{{range $index, $elmt := .JSONRPC.WSOrigins}}{{if $index}}, {{end}}"{{$elmt}}"{{end}}]
+
 # Upgrade height for fix of revert gas refund logic when transaction reverted.
 fix-revert-gas-refund-height = {{ .JSONRPC.FixRevertGasRefundHeight }}
 

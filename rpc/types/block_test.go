@@ -21,11 +21,7 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"JSON input with block hash",
 			[]byte("{\"blockHash\": \"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\"}"),
 			func() {
-				require.Equal(
-					t,
-					*bnh.BlockHash,
-					common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"),
-				)
+				require.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
 				require.Nil(t, bnh.BlockNumber)
 			},
 			true,
@@ -50,9 +46,7 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 		},
 		{
 			"JSON input with both block hash and block number",
-			[]byte(
-				"{\"blockHash\": \"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\", \"blockNumber\": \"0x35\"}",
-			),
+			[]byte("{\"blockHash\": \"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\", \"blockNumber\": \"0x35\"}"),
 			func() {
 			},
 			false,
@@ -61,11 +55,7 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"String input with block hash",
 			[]byte("\"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\""),
 			func() {
-				require.Equal(
-					t,
-					*bnh.BlockHash,
-					common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"),
-				)
+				require.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
 				require.Nil(t, bnh.BlockNumber)
 			},
 			true,

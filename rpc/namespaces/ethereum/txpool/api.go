@@ -1,12 +1,13 @@
 package txpool
 
 import (
-	"cosmossdk.io/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
 )
 
 // PublicAPI offers and API for the transaction pool. It only operates on data that is non-confidential.
@@ -31,9 +32,7 @@ func (api *PublicAPI) Content() (map[string]map[string]map[string]*types.RPCTran
 }
 
 // ContentFrom returns the transactions contained within the transaction pool
-func (api *PublicAPI) ContentFrom(
-	address common.Address,
-) (map[string]map[string]map[string]*types.RPCTransaction, error) {
+func (api *PublicAPI) ContentFrom(address common.Address) (map[string]map[string]*types.RPCTransaction, error) {
 	api.logger.Debug("txpool_contentFrom")
 	return api.backend.ContentFrom(address)
 }
