@@ -122,26 +122,28 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 	case k.blockThrottled(zetaHeight):
 		return true, nil
 	case zetaHeight < keygenHeight:
+		// connected peers only includes the connections established to other peers
 		connectedPeers := len(k.tss.GetP2PHost().Network().Conns())
 		totalPeers := len(keygenTask.GranteePubkeys)
 
 		k.logger.Info().
 			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Int("connected_peers", connectedPeers).
+			Int("connections_established_to_peers", connectedPeers).
 			Int("total_peers", totalPeers).
-			Msgf("waiting for keygen block to arrive (%d/%d peers connected to this node)", connectedPeers, totalPeers)
+			Msgf("waiting for keygen block to arrive (%d/%d peers active)", connectedPeers+1, totalPeers) // Adding 1 to connectedPeers to include self
 		return true, nil
 	case zetaHeight > keygenHeight:
+		// connected peers only includes the connections established to other peers
 		connectedPeers := len(k.tss.GetP2PHost().Network().Conns())
 		totalPeers := len(keygenTask.GranteePubkeys)
 
 		k.logger.Info().
 			Int64("keygen_height", keygenHeight).
 			Int64("zeta_height", zetaHeight).
-			Int("connected_peers", connectedPeers).
+			Int("connections_established_to_peers", connectedPeers).
 			Int("total_peers", totalPeers).
-			Msgf("waiting for keygen finalization (%d/%d peers connected to this node)", connectedPeers, totalPeers)
+			Msgf("waiting for keygen block to arrive (%d/%d peers active)", connectedPeers+1, totalPeers) // Adding 1 to connectedPeers to include self
 		return true, nil
 	}
 
