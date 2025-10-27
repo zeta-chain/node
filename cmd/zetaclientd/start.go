@@ -170,6 +170,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		tssClient,
 		telemetry,
 		dbPath,
+		cfg,
 		logger,
 	)
 	if err != nil {

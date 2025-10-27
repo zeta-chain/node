@@ -98,6 +98,9 @@ type FeatureFlags struct {
 type Config struct {
 	ClientMode mode.ClientMode `json:"ClientMode"`
 
+	ChaosSeed            int64  `json:"ChaosSeed"`
+	ChaosPercentagesPath string `json:"ChaosPercentagesPath"`
+
 	Peer                    string         `json:"Peer"`
 	PublicIP                string         `json:"PublicIP"`
 	PublicDNS               string         `json:"PublicDNS"`
