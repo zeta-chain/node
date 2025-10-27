@@ -12,6 +12,9 @@ before:
     - go mod download
     - go mod tidy
 
+monorepo:
+  tag_prefix: zetaclient/
+
 builds:
   - id: "zetaclientd"
     main: ./cmd/zetaclientd
