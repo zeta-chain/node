@@ -349,17 +349,15 @@ func (oc *Orchestrator) newBaseObserver(
 	}
 
 	zetacoreClient := oc.zetacoreClient.(zrepo.ZetacoreClient)
-	tssClient := oc.tssClient
 	if clientMode.IsDryMode() {
 		zetacoreClient = dry.WrapZetacoreClient(zetacoreClient)
-		tssClient = dry.WrapTSSClient(tssClient)
 	}
 
 	return base.NewObserver(
 		*rawChain,
 		*rawChainParams,
 		zrepo.New(zetacoreClient, *rawChain, clientMode),
-		tssClient,
+		oc.tssClient,
 		blocksCacheSize,
 		oc.telemetry,
 		database,
@@ -368,11 +366,7 @@ func (oc *Orchestrator) newBaseObserver(
 }
 
 func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
-	tssClient := oc.tssClient
-	if clientMode.IsDryMode() {
-		tssClient = dry.WrapTSSClient(tssClient)
-	}
-	return base.NewSigner(*chain.RawChain(), tssClient, oc.logger.base, clientMode)
+	return base.NewSigner(*chain.RawChain(), oc.tssClient, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {
