@@ -126,9 +126,50 @@ However, the gas stability pool must be manually funded to enable fee increases 
 
 ### Solana
 
+### Solana
+
+For Solana transactions, ZetaChain uses Solana's compute unit model for fee calculation.
+More information about Solana fees can be found in the [Solana Fee Documentation](https://solana.com/docs/core/fees).
+
+In Solana, fees are represented using compute units, which measure the computational resources required to execute a transaction.
+
+In ZetaChain's implementation, there is no gas price parameter for Solana.
+The ZetaChain observer set does not vote on gas prices for Solana chains. Instead, only the gas limit is used, which specifies the number of compute units allocated for the transaction.
+
+The withdraw fee for Solana is determined solely by the gas limit (compute units) specified for the transaction.
+
 ### Sui
 
+For Sui transactions, ZetaChain adapts to Sui's unique gas model.
+More information about Sui gas can be found in the [Sui Gas Documentation](https://docs.sui.io/concepts/tokenomics/gas-pricing).
+
+ZetaChain maintains a gas price parameter for Sui that represents the computation price on the Sui network.
+
+**Important**: Unlike other chains, the gas limit parameter for Sui does not represent a gas limit in computation units.
+Instead, the gas limit represents the overall gas fees denominated in MIST (Sui's smallest unit, where 1 SUI = 1,000,000,000 MIST).
+
+The withdraw fee for Sui is therefore directly specified by the gas limit value:
+```
+Withdraw Fee = Gas Limit (in MIST)
+```
+
 ### TON
+
+For TON transactions, ZetaChain uses a simplified fee model adapted to TON's architecture.
+More information about TON fees can be found in the [TON Fee Documentation](https://docs.ton.org/v3/documentation/smart-contracts/transaction-fees/fees).
+
+The gas price for TON is fixed at **400** as part of the base chain configuration.
+
+TON's native fee structure includes multiple components that influence the total transaction cost, such as storage fees,
+compute fees, and action fees.
+However, for a simpler model—and because ZetaChain currently only supports asset transfers on TON where fees are relatively inexpensive—a capped gas unit value is used.
+
+The gas limit is set to **21,000** to ensure sufficient coverage for all transaction fees. In practice, the withdraw fee is hardcoded.
+
+The withdraw fee for TON is calculated as:
+```
+Withdraw Fee = Gas Price × Gas Limit = 400 × 21,000 = 8,400,000
+```
 
 ### Reverting Withdraw 
 
