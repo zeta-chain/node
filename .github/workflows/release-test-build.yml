@@ -1,10 +1,10 @@
-name: Release to Test Binaries
+name: Release Test Binaries to Cloudflare R2
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - ci-test-binaries # temp trigger
+  # push:
+  #   branches:
+  #     - ci-test-binaries # temp trigger
 
 jobs:
   build-and-upload:
@@ -24,7 +24,7 @@ jobs:
           echo "Release identifier: ${RELEASE_ID}"
 
       - name: Build release artifacts
-        run: make release-build-only
+        run: make release-snapshot
 
       - name: Configure AWS CLI for Cloudflare R2
         env:
