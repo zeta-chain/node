@@ -6,9 +6,9 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -126,14 +126,16 @@ func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) 
 // AddPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
 // Note This is handler is not related to the cosmos-sdk upgrade handler in any way
 func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()) {
-	version := r.GetZetacoredVersion()
-	versionMajorIsZero := semver.Major(version) == "v0"
-	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+	if !r.IsRunningZetaclientOnlyUpgrade() {
+		version := r.GetZetacoredVersion()
+		versionMajorIsZero := semver.Major(version) == "v0"
+		oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
 
-	// Run the handler only if this is the second run of the upgrade tests
-	if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
-		checkVersion(upgradeFrom, oldVersion) {
-		return
+		// Run the handler only if this is the second run of the upgrade tests
+		if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
+			checkVersion(upgradeFrom, oldVersion) {
+			return
+		}
 	}
 
 	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)

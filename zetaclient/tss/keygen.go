@@ -130,7 +130,7 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 			Int64("zeta_height", zetaHeight).
 			Int("connected_peers", connectedPeers).
 			Int("total_peers", totalPeers).
-			Msgf("waiting for keygen block to arrive (%d/%d peers connected)", connectedPeers+1, totalPeers)
+			Msgf("waiting for keygen block to arrive (%d/%d peers connected to this node)", connectedPeers, totalPeers)
 		return true, nil
 	case zetaHeight > keygenHeight:
 		connectedPeers := len(k.tss.GetP2PHost().Network().Conns())
@@ -141,7 +141,7 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 			Int64("zeta_height", zetaHeight).
 			Int("connected_peers", connectedPeers).
 			Int("total_peers", totalPeers).
-			Msgf("waiting for keygen finalization (%d/%d peers connected)", connectedPeers+1, totalPeers)
+			Msgf("waiting for keygen finalization (%d/%d peers connected to this node)", connectedPeers, totalPeers)
 		return true, nil
 	}
 

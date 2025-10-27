@@ -1,10 +1,12 @@
-// Package dry provides dry-client wrappers for the TSS signer, for the zetacore client, and for
-// the standard clients of the connected chains.
+// Package dry provides a dry client for TSS, and dry-wrappers for the zetacore client and for the
+// standard clients of the connected chains.
 //
-// A dry-client wrapper overrides mutating functions from the underlying client.
-// These overridden functions panic with MsgUnreacheable when called.
+// A dry client implements all of the functions of the standard client, while a dry-client wrapper
+// simply overrides mutating functions from the underlying client.
+// The non-mutating functions behave as its counterparts from a standard client.
+// The mutating functions panic with MsgUnreacheable when called.
 //
-// Dry-client wrappers are redundant.
+// Dry-clients are redundant.
 // They serve as an additional safeguard layer that guarantees that dry-mode zetaclient nodes never
 // participate in signing, never mutate ZetaChain state, and never mutate the state of the
 // connected chains.
@@ -12,6 +14,7 @@ package dry
 
 import (
 	"context"
+	"fmt"
 
 	suimodel "github.com/block-vision/sui-go-sdk/models"
 	btcchainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -29,7 +32,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
@@ -88,19 +90,21 @@ func (*ZetacoreClient) PostOutboundTracker(context.Context, int64, uint64, strin
 // TSS
 // ------------------------------------------------------------------------------------------------
 
-// TSSClient is a dry-wrapper for TSS clients.
+// TSSClient is a dry TSS client.
 type TSSClient struct {
-	// client is deliberately not embedded so the compiler can ensure that all mutating
-	// methods are explicitly overridden.
-	client tssrepo.TSSClient
+	pubKey tss.PubKey
 }
 
-func WrapTSSClient(client tssrepo.TSSClient) *TSSClient {
-	return &TSSClient{client}
+func NewTSSClient(tssAddress string) (*TSSClient, error) {
+	pubKey, err := tss.NewPubKeyFromBech32(tssAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid TSS pub key: %w", err)
+	}
+	return &TSSClient{pubKey}, nil
 }
 
-func (signer *TSSClient) PubKey() tss.PubKey {
-	return signer.client.PubKey()
+func (client *TSSClient) PubKey() tss.PubKey {
+	return client.pubKey
 }
 
 func (*TSSClient) Sign(context.Context, []byte, uint64, uint64, int64) ([65]byte, error) {
