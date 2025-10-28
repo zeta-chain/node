@@ -44,7 +44,7 @@ func TestValidate(t *testing.T) {
 				cfg.PublicIP = "192.168.1"
 				return cfg
 			}(),
-			errorMsg: "invalid public IP 192.168.1",
+			errorMsg: "reason: invalid public IP, got: 192.168.1",
 		},
 		{
 			name: "invalid public DNS name",
@@ -53,7 +53,7 @@ func TestValidate(t *testing.T) {
 				cfg.PublicDNS = "invalid..dns"
 				return cfg
 			}(),
-			errorMsg: "invalid public DNS invalid..dns",
+			errorMsg: "reason: invalid public DNS, got: invalid..dns",
 		},
 		{
 			name: "invalid chain ID",
@@ -62,7 +62,7 @@ func TestValidate(t *testing.T) {
 				cfg.ChainID = "zeta1nvalid"
 				return cfg
 			}(),
-			errorMsg: "invalid chain id zeta1nvalid",
+			errorMsg: "reason: invalid chain id, got: zeta1nvalid",
 		},
 		{
 			name: "invalid zetacore URL",
@@ -71,7 +71,7 @@ func TestValidate(t *testing.T) {
 				cfg.ZetaCoreURL = "     "
 				return cfg
 			}(),
-			errorMsg: "invalid zetacore URL",
+			errorMsg: "reason: invalid zetacore URL, got:     ",
 		},
 		{
 			name: "invalid granter address",
@@ -80,7 +80,7 @@ func TestValidate(t *testing.T) {
 				cfg.AuthzGranter = "cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs" // not ZetaChain address
 				return cfg
 			}(),
-			errorMsg: "invalid bech32 granter address",
+			errorMsg: "reason: invalid bech32 granter address, got: cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
 		},
 		{
 			name: "empty AuthzHotkey (grantee) name",
@@ -89,7 +89,7 @@ func TestValidate(t *testing.T) {
 				cfg.AuthzHotkey = ""
 				return cfg
 			}(),
-			errorMsg: "grantee name cannot be empty",
+			errorMsg: "reason: grantee name is empty",
 		},
 		{
 			name: "invalid log level",
@@ -98,7 +98,7 @@ func TestValidate(t *testing.T) {
 				cfg.LogLevel = 6
 				return cfg
 			}(),
-			errorMsg: "log level must be between 0 and 5",
+			errorMsg: "reason: log level must be between 0 and 5, got: 6",
 		},
 		{
 			name: "invalid config update ticker",
@@ -107,7 +107,7 @@ func TestValidate(t *testing.T) {
 				cfg.ConfigUpdateTicker = 0
 				return cfg
 			}(),
-			errorMsg: "config update ticker cannot be 0",
+			errorMsg: "reason: config update ticker is 0",
 		},
 		{
 			name: "invalid keyring backend",
@@ -116,7 +116,7 @@ func TestValidate(t *testing.T) {
 				cfg.KeyringBackend = "invalid"
 				return cfg
 			}(),
-			errorMsg: "invalid keyring backend invalid",
+			errorMsg: "reason: invalid keyring backend, got: invalid",
 		},
 		{
 			name: "invalid max base fee",
@@ -125,7 +125,7 @@ func TestValidate(t *testing.T) {
 				cfg.MaxBaseFee = -1
 				return cfg
 			}(),
-			errorMsg: "max base fee cannot be negative",
+			errorMsg: "reason: max base fee cannot be negative, got: -1",
 		},
 		{
 			name: "invalid mempool congestion threshold",
@@ -134,7 +134,7 @@ func TestValidate(t *testing.T) {
 				cfg.MempoolCongestionThreshold = -1
 				return cfg
 			}(),
-			errorMsg: "mempool congestion threshold cannot be negative",
+			errorMsg: "reason: mempool congestion threshold cannot be negative, got: -1",
 		},
 	}
 
