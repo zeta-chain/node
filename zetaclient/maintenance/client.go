@@ -16,4 +16,5 @@ type ZetacoreClient interface {
 	GetTSSHistory(context.Context) ([]observer.TSS, error)
 	GetBlockHeight(context.Context) (int64, error)
 	GetOperationalFlags(context.Context) (observer.OperationalFlags, error)
+	GetSyncStatus(context.Context) (bool, error)
 }
