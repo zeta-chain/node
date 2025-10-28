@@ -25,6 +25,7 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode/chaos"
 )
 
 // Orchestrator chain orchestrator.
@@ -40,6 +41,8 @@ type Orchestrator struct {
 	mu     sync.RWMutex
 
 	operatorBalance sdkmath.Int
+
+	chaosSource *chaos.Source
 
 	logger loggers
 }
@@ -70,6 +73,7 @@ func New(
 	tssClient tssrepo.TSSClient,
 	telemetry *metrics.TelemetryServer,
 	dbPath string,
+	config config.Config,
 	logger base.Logger,
 ) (*Orchestrator, error) {
 	switch {
@@ -85,6 +89,15 @@ func New(
 		return nil, errors.New("invalid database path")
 	}
 
+	var chaosSource *chaos.Source
+	if config.ClientMode.IsChaosMode() {
+		source, err := chaos.NewSource(logger.Std, config)
+		if err != nil {
+			return nil, err
+		}
+		chaosSource = source
+	}
+
 	return &Orchestrator{
 		scheduler:      scheduler,
 		zetacoreClient: zetacoreClient,
@@ -92,6 +105,7 @@ func New(
 		telemetry:      telemetry,
 		dbPath:         dbPath,
 		chains:         make(map[int64]ObserverSigner),
+		chaosSource:    chaosSource,
 		logger:         newLoggers(logger),
 	}, nil
 }

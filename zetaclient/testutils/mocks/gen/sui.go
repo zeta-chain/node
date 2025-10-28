@@ -10,10 +10,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
-// client represents interface version of Client.
-// It's unexported on purpose ONLY for mock generation.
-//
 //go:generate mockery --name suiClient --structname SuiClient --filename sui_client.go --output ../
+
+// suiClient represents interface version of Client.
+//
+// The interface is unexported on purpose, since we ONLY use it for mock generation.
+//
 //nolint:unused // used for code gen
 type suiClient interface {
 	HealthCheck(ctx context.Context) (time.Time, error)

@@ -53,7 +53,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
 * [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
 * [4384](https://github.com/zeta-chain/node/pull/4384) - disable TSS service in dry mode
-
+* [4359](https://github.com/zeta-chain/node/pull/4359) - add chaos mode for ZetaClient
 
 ### Tests
 
@@ -71,6 +71,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
 * [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 * [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
+* [4386](https://github.com/zeta-chain/node/pull/4386) - filter out nil address to prevent error logs
 
 ### Documentation
 

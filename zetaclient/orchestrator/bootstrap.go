@@ -67,7 +67,10 @@ func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create RPC client")
 	}
-	var bitcoinClient bitcoin.Client = standardBitcoinClient
+	var bitcoinClient bitcoin.BitcoinClient = standardBitcoinClient
+	if clientMode.IsChaosMode() {
+		bitcoinClient = oc.chaosSource.WrapBitcoinClient(bitcoinClient)
+	}
 	if clientMode.IsDryMode() {
 		bitcoinClient = dry.WrapBitcoinClient(bitcoinClient)
 	}
@@ -116,7 +119,10 @@ func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*ev
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", evmConfig.Endpoint)
 	}
-	var evmClient evm.Client = standardEvmClient
+	var evmClient evm.EVMClient = standardEvmClient
+	if clientMode.IsChaosMode() {
+		evmClient = oc.chaosSource.WrapEVMClient(evmClient)
+	}
 	if clientMode.IsDryMode() {
 		evmClient = dry.WrapEVMClient(evmClient)
 	}
@@ -182,7 +188,10 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 	if standardSolanaClient == nil {
 		return nil, errors.New("unable to create RPC client")
 	}
-	var solanaClient solana.Client = standardSolanaClient
+	var solanaClient solana.SolanaClient = standardSolanaClient
+	if clientMode.IsChaosMode() {
+		solanaClient = oc.chaosSource.WrapSolanaClient(solanaClient)
+	}
 	if clientMode.IsDryMode() {
 		solanaClient = dry.WrapSolanaClient(solanaClient)
 	}
@@ -239,7 +248,10 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 	}
 
 	standardSuiClient := suiclient.New(suiConfig.Endpoint)
-	var suiClient sui.Client = standardSuiClient
+	var suiClient sui.SuiClient = standardSuiClient
+	if clientMode.IsChaosMode() {
+		suiClient = oc.chaosSource.WrapSuiClient(suiClient)
+	}
 	if clientMode.IsDryMode() {
 		suiClient = dry.WrapSuiClient(suiClient)
 	}
@@ -306,7 +318,10 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 	}
 
 	standardTONClient := tonclient.New(tonConfig.Endpoint, chain.ID(), tonclient.WithHTTPClient(rpcClient))
-	var tonClient ton.Client = standardTONClient
+	var tonClient ton.TONClient = standardTONClient
+	if clientMode.IsChaosMode() {
+		tonClient = oc.chaosSource.WrapTONClient(tonClient)
+	}
 	if clientMode.IsDryMode() {
 		tonClient = dry.WrapTONClient(tonClient)
 	}
@@ -349,15 +364,17 @@ func (oc *Orchestrator) newBaseObserver(
 	}
 
 	zetacoreClient := oc.zetacoreClient.(zrepo.ZetacoreClient)
-	if clientMode.IsDryMode() {
-		zetacoreClient = dry.WrapZetacoreClient(zetacoreClient)
+	tssClient := oc.tssClient
+	if clientMode.IsChaosMode() {
+		zetacoreClient = oc.chaosSource.WrapZetacoreClient(zetacoreClient)
+		tssClient = oc.chaosSource.WrapTSSClient(tssClient)
 	}
 
 	return base.NewObserver(
 		*rawChain,
 		*rawChainParams,
 		zrepo.New(zetacoreClient, *rawChain, clientMode),
-		oc.tssClient,
+		tssClient,
 		blocksCacheSize,
 		oc.telemetry,
 		database,
@@ -366,7 +383,11 @@ func (oc *Orchestrator) newBaseObserver(
 }
 
 func (oc *Orchestrator) newBaseSigner(chain zctx.Chain, clientMode mode.ClientMode) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.tssClient, oc.logger.base, clientMode)
+	tssClient := oc.tssClient
+	if clientMode.IsChaosMode() {
+		tssClient = oc.chaosSource.WrapTSSClient(tssClient)
+	}
+	return base.NewSigner(*chain.RawChain(), tssClient, oc.logger.base, clientMode)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {
