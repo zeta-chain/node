@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 )
 
 // restrictedAddressBook is a map of restricted addresses

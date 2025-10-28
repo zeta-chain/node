@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/config"
 )
@@ -23,6 +24,9 @@ var sampleTestConfig = config.Config{
 }
 
 func TestValidate(t *testing.T) {
+	// set SDK config to use "zeta" address prefix
+	sdkconfig.SetDefault(false)
+
 	tests := []struct {
 		name        string
 		config      config.Config
