@@ -89,6 +89,10 @@ Example versions: ZetaCore v36.0.0, ZetaClient v2.5.1, EVM Gateway v1.2.3
 3. No ZetaCore release required
 4. Coordinate deployment of the release
 
+> **Note:** Currently, pass the version in semver format (e.g., `v37.0.0`).
+> After release creation, manually rename the tag and GitHub release to use the `zetaclient_` prefix (e.g., `zetaclient_v37.0.0`) to differentiate from ZetaCore releases.
+> This will be automated in the future (see [#4389](https://github.com/zeta-chain/node/issues/4389)).
+
 ### Consensus-Breaking Release
 
 1. Merge `develop` → `main` (bringing all accumulated changes including consensus-breaking ones)
