@@ -60,10 +60,10 @@ type Clients struct {
 	// EvmFeeMarket is a github.com/zeta-chain/evm/x/feemarket/types QueryClient
 	EvmFeeMarket feemarkettypes.QueryClient
 
-	// Tendermint specific clients
+	// CometBFT specific clients
 
-	// Tendermint is a github.com/cosmos/cosmos-sdk/client/grpc/cmtservice QueryClient
-	Tendermint cmtservice.ServiceClient
+	// Comet is a CometBFT serviceClient github.com/cosmos/cosmos-sdk/client/grpc/cmtservice
+	Comet cmtservice.ServiceClient
 }
 
 func newClients(ctx client.Context) (Clients, error) {
@@ -83,8 +83,8 @@ func newClients(ctx client.Context) (Clients, error) {
 		Emissions:   emissionstypes.NewQueryClient(ctx),
 		// Evm specific clients
 		EvmFeeMarket: feemarkettypes.NewQueryClient(ctx),
-		// Tendermint specific clients
-		Tendermint: cmtservice.NewServiceClient(ctx),
+		// CometBFT specific clients
+		Comet: cmtservice.NewServiceClient(ctx),
 	}, nil
 }
 
