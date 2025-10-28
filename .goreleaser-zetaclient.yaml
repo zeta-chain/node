@@ -1,3 +1,5 @@
+version: 2
+
 env:
   - CGO_ENABLED=1
   - CC_linux_arm64=aarch64-linux-gnu-gcc

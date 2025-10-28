@@ -13,7 +13,7 @@ GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 
 # common goreaser command definition
-GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
+GOLANG_CROSS_VERSION ?= v2.5.0
 GORELEASER := $(DOCKER) run \
 	--rm \
 	--privileged \
