@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -319,7 +319,7 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 	r.ApproveTONZRC20(r.GatewayZEVMAddr)
 
 	// Perform the withdrawal
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		[]byte(to.ToRaw()),
 		amount,

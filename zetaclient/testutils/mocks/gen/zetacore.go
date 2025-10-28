@@ -7,11 +7,14 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// Every module in the project that uses the zetacore client specifies its own ZetacoreClient
-// interface. The zetacoreClient interface here is used to generate a mock that works for those
-// modules.
-//
 //go:generate mockery --name zetacoreClient --structname ZetacoreClient --filename zetacore.go --output ../
+
+// Every module in the project that uses the zetacore client specifies its own ZetacoreClient
+// interface. The zetacoreClient interface defined here is used to generate a mock that works for
+// all those modules.
+//
+// The interface is unexported on purpose, since we ONLY use it for mock generation.
+//
 //nolint:unused // used for code gen
 type zetacoreClient interface {
 	zrepo.ZetacoreClient

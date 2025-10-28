@@ -570,6 +570,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
+	eg.Go(rpcTestRoutine(
+		conf,
+		deployerRunner,
+		verbose,
+		e2etests.TestZEVMRPCName,
+	))
+
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
@@ -617,16 +624,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
 	})
-	// https://github.com/zeta-chain/node/issues/4038
 	// TODO : enable sui gateway upgrade tests to be run multiple times
+	// https://github.com/zeta-chain/node/issues/4038
+	// https://github.com/zeta-chain/node/issues/4315
 	runSuiGatewayUpgradeTests := func() bool {
-		// do not if we are running and upgrade and this is the second run
-		if deployerRunner.IsRunningUpgrade() || testTSSMigration {
+		if deployerRunner.IsRunningZetaclientOnlyUpgrade() {
 			return false
 		}
 		return testSui
 	}
-
 	// Run gateway upgrade tests for external chains
 	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
 		TestSolana: testSolana,

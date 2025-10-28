@@ -9,8 +9,8 @@ import (
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	errorspkg "github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"

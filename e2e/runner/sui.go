@@ -13,7 +13,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
@@ -64,7 +64,7 @@ func (r *E2ERunner) SuiWithdraw(
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
@@ -88,7 +88,8 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	// ACT
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
