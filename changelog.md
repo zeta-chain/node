@@ -70,7 +70,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
 * [4356](https://github.com/zeta-chain/node/pull/4356) - rename protocol contract imports to `protocol-contracts-evm`
 * [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
-
+* [4391](https://github.com/zeta-chain/node/pull/4391) - change client mode config
 
 ### Fixes
 

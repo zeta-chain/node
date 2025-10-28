@@ -1,43 +1,70 @@
 // Package mode lists the execution modes for the zetaclient.
 package mode
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type ClientMode uint8
 
 const (
-	// StandardMode represents the standard execution mode for the zetaclient.
+	// StandardMode represents the standard mode of execution for the ZetaClient.
 	//
-	// An observer-signer in standard mode observes transactions from ZetaChain, signs them, and
-	// relays them to the appropriate connected chains. Symmetrically, it observes transactions from
-	// the connected chains and relays them to ZetaChain.
+	// A standard observer-signer observes transactions from ZetaChain, participates in the TSS
+	// signing rounds, and relays signed transactions to the appropriate connected chains.
+	// Symmetrically, it observes transactions from the connected chains and broadcasts observation
+	// votes to ZetaChain.
 	StandardMode ClientMode = iota
 
-	// DryMode represents the read-only execution mode for the zetaclient.
+	// DryMode represents the read-only execution mode for the ZetaClient.
 	//
-	// An observer-signer in dry-mode only observes the transactions from ZetaChain and the
-	// connected chains, without signing them or otherwise mutating the state of the ZetaChain or
-	// the state of the connected chains.
+	// A dry observer-signer observes transactions from ZetaChain and the connected chains, but it
+	// skips participating in TSS signing rounds and broadcasting transactions and observation
+	// votes. In other words, it never mutates the state of the ZetaChain or the state of the
+	// connected chains.
 	DryMode
 
-	// ChaosMode represents the chaos-testing execution mode for the zetaclient.
+	// ChaosMode represents the chaos-testing execution mode for the ZetaClient.
 	//
-	// An observer-signer in chaos-mode works as if in standard mode, but function calls that
-	// interact with outside resources (mainly ZetaChain, connected chains, and other nodes) may
+	// A observer-signer in chaos mode works as if in standard mode, but function calls that
+	// interact with outside resources (e.g. ZetaChain, connected chains, TSS, and other nodes) may
 	// intentionally fail.
 	//
-	// We use ChaosMode to replicate unstable environments for testing.
+	// We use chaos mode to replicate unstable environments for testing.
 	ChaosMode
 )
+
+var ErrInvalidModeString = errors.New("invalid client mode string")
+
+const (
+	stringStandard = "standard"
+	stringDry      = "dry"
+	stringChaos    = "chaos"
+)
+
+// New returns a new ClientMode given its string representation.
+func New(s string) (ClientMode, error) {
+	switch s {
+	case stringStandard:
+		return StandardMode, nil
+	case stringDry:
+		return DryMode, nil
+	case stringChaos:
+		return ChaosMode, nil
+	default:
+		return 0, ErrInvalidModeString
+	}
+}
 
 func (mode ClientMode) String() string {
 	switch mode {
 	case StandardMode:
-		return "standard-mode"
+		return stringStandard
 	case DryMode:
-		return "dry-mode"
+		return stringDry
 	case ChaosMode:
-		return "chaos-mode"
+		return stringChaos
 	default:
 		return fmt.Sprintf("invalid mode: %d", mode)
 	}
