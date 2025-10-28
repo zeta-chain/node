@@ -65,17 +65,32 @@ jobs:
           fi
           echo "Release ID is unique, proceeding with upload"
 
-  build-zetacore:
+  build:
     needs: prepare-release
     runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
     timeout-minutes: 60
+    strategy:
+      matrix:
+        include:
+          - target: release-snapshot-zetacore
+            component: zetacore
+            upload_path: zetacored
+          - target: release-snapshot-zetaclient
+            component: zetaclient
+            upload_path: zetaclientd
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build zetacore artifacts
+      - name: Build ${{ matrix.component }} artifacts
         run: |
-          make release-snapshot-zetacore
+          make ${{ matrix.target }}
+          if [ ! -d "dist/" ] || [ -z "$(ls -A dist/)" ]; then
+            echo "Error: dist/ directory is empty or missing after build"
+            exit 1
+          else
+            echo "Build artifacts present: $(ls -1 dist/ | wc -l) files"
+          fi
 
       - name: Configure AWS CLI for Cloudflare R2
         env:
@@ -87,69 +102,31 @@ jobs:
           aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
           aws configure set default.region auto
 
-      - name: Upload zetacore to Cloudflare R2
+      - name: Upload ${{ matrix.component }} to Cloudflare R2
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           RELEASE_ID: ${{ needs.prepare-release.outputs.release_id }}
         run: |
-          echo "Uploading zetacore artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/zetacored/"
-          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/zetacored/" \
+          echo "Uploading ${{ matrix.component }} artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/${{ matrix.upload_path }}/"
+          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/${{ matrix.upload_path }}/" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
             --no-progress
-          echo "✓ Zetacore upload complete"
+          echo "✓ ${{ matrix.component }} upload complete"
 
       - name: Clean up workspace
         if: always()
-        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
-
-  build-zetaclient:
-    needs: prepare-release
-    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
-    timeout-minutes: 60
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build zetaclient artifacts
-        run: |
-          make release-snapshot-zetaclient
-
-      - name: Configure AWS CLI for Cloudflare R2
-        env:
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: |
-          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
-          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
-          aws configure set default.region auto
-
-      - name: Upload zetaclient to Cloudflare R2
-        env:
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
-          RELEASE_ID: ${{ needs.prepare-release.outputs.release_id }}
-        run: |
-          echo "Uploading zetaclient artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/zetaclientd/"
-          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/zetaclientd/" \
-            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
-            --no-progress
-          echo "✓ Zetaclient upload complete"
-
-      - name: Clean up workspace
-        if: always()
-        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
+        run: rm -rf dist/ || echo "Failed to cleanup workspace"
 
   notify:
-    needs: [prepare-release, build-zetacore, build-zetaclient]
+    needs: [prepare-release, build]
     runs-on: ubuntu-22.04
     if: always()
     steps:
       - name: Check job status
         id: check_status
         run: |
-          if [ "${{ needs.build-zetacore.result }}" == "success" ] && [ "${{ needs.build-zetaclient.result }}" == "success" ]; then
+          if [ "${{ needs.build.result }}" == "success" ]; then
             echo "status=success" >> $GITHUB_OUTPUT
           else
             echo "status=failure" >> $GITHUB_OUTPUT
