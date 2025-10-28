@@ -9,9 +9,10 @@ on:
         type: string
 
 jobs:
-  build-and-upload:
-    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
-    timeout-minutes: 60
+  prepare-release:
+    runs-on: ubuntu-22.04
+    outputs:
+      release_id: ${{ steps.release_id.outputs.release_id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,46 +65,115 @@ jobs:
           fi
           echo "Release ID is unique, proceeding with upload"
 
-      - name: Build release artifacts
-        run: |
-          mkdir -p upload/zetacore
-          mkdir -p upload/zetaclient
-          make release-snapshot-zetacore
-          cp -r dist/* upload/zetacore/
-          make release-snapshot-zetaclient
-          cp -r dist/* upload/zetaclient/
+  build-zetacore:
+    needs: prepare-release
+    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Upload to Cloudflare R2
+      - name: Build zetacore artifacts
+        run: |
+          make release-snapshot-zetacore
+
+      - name: Configure AWS CLI for Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
+          aws configure set default.region auto
+
+      - name: Upload zetacore to Cloudflare R2
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
-          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+          RELEASE_ID: ${{ needs.prepare-release.outputs.release_id }}
         run: |
-          echo "Uploading artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/"
-          aws s3 sync upload/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+          echo "Uploading zetacore artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/zetacored/"
+          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/zetacored/" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
             --no-progress
-          echo "✓ Upload complete"
+          echo "✓ Zetacore upload complete"
 
-      - name: List uploaded files
+      - name: Clean up workspace
+        if: always()
+        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
+
+  build-zetaclient:
+    needs: prepare-release
+    runs-on: ${{ vars.RELEASE_RUNNER || 'ubuntu-22.04' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build zetaclient artifacts
+        run: |
+          make release-snapshot-zetaclient
+
+      - name: Configure AWS CLI for Cloudflare R2
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
+          aws configure set default.region auto
+
+      - name: Upload zetaclient to Cloudflare R2
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
-          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+          RELEASE_ID: ${{ needs.prepare-release.outputs.release_id }}
         run: |
-          echo "Files uploaded to ${R2_BUCKET_NAME}/${RELEASE_ID}/:"
-          aws s3 ls "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
+          echo "Uploading zetaclient artifacts to R2 bucket: ${R2_BUCKET_NAME}/${RELEASE_ID}/zetaclientd/"
+          aws s3 sync dist/ "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/zetaclientd/" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
-            --recursive \
-            --human-readable
+            --no-progress
+          echo "✓ Zetaclient upload complete"
+
+      - name: Clean up workspace
+        if: always()
+        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
+
+  notify:
+    needs: [prepare-release, build-zetacore, build-zetaclient]
+    runs-on: ubuntu-22.04
+    if: always()
+    steps:
+      - name: Check job status
+        id: check_status
+        run: |
+          if [ "${{ needs.build-zetacore.result }}" == "success" ] && [ "${{ needs.build-zetaclient.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS CLI for Cloudflare R2
+        if: steps.check_status.outputs.status == 'success'
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id "$R2_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$R2_SECRET_ACCESS_KEY"
+          aws configure set default.region auto
 
       - name: Output summary
+        if: steps.check_status.outputs.status == 'success'
         env:
-          RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
+          RELEASE_ID: ${{ needs.prepare-release.outputs.release_id }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
-          R2_URL="https://dash.cloudflare.com/${R2_ACCOUNT_ID}/r2/default/buckets/${R2_BUCKET_NAME}/objects/${RELEASE_ID}"
+          R2_URL="https://dash.cloudflare.com/${R2_ACCOUNT_ID}/r2/default/buckets/${R2_BUCKET_NAME}?prefix=${RELEASE_ID}/"
           echo "## Release Upload Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release ID**: \`${RELEASE_ID}\`" >> $GITHUB_STEP_SUMMARY
@@ -111,23 +181,20 @@ jobs:
           echo "**Path**: \`${RELEASE_ID}/\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All artifacts from \`dist/\` have been uploaded to Cloudflare R2." >> $GITHUB_STEP_SUMMARY
+          echo "All artifacts have been uploaded to Cloudflare R2." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[View in Cloudflare R2 Dashboard](${R2_URL})" >> $GITHUB_STEP_SUMMARY
 
-      - name: Notify Slack
+      - name: Notify Slack on Success
+        if: steps.check_status.outputs.status == 'success'
         uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
           webhook-type: incoming-webhook
           payload: |
-            text: "Test binaries uploaded to R2: `${{ steps.release_id.outputs.release_id }}`"
+            text: "Test binaries uploaded to R2: `${{ needs.prepare-release.outputs.release_id }}`"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Test binaries have been uploaded to Cloudflare R2*\n*Release ID:* `${{ steps.release_id.outputs.release_id }}`\n*Path:* `${{ secrets.R2_BUCKET_NAME }}/${{ steps.release_id.outputs.release_id }}/`\n*Commit:* `${{ github.sha }}`\n*Repository:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}\n\n<https://dash.cloudflare.com/${{ secrets.R2_ACCOUNT_ID }}/r2/default/buckets/${{ secrets.R2_BUCKET_NAME }}/objects/${{ steps.release_id.outputs.release_id }}|View in Cloudflare R2 Dashboard>"
-
-      - name: Clean up workspace
-        if: always()
-        run: sudo rm -rf dist/ || echo "Failed to cleanup workspace"
+                  text: "*Test binaries have been uploaded to Cloudflare R2*\n*Release ID:* `${{ needs.prepare-release.outputs.release_id }}`\n*Path:* `${{ secrets.R2_BUCKET_NAME }}/${{ needs.prepare-release.outputs.release_id }}/`\n*Commit:* `${{ github.sha }}`\n*Repository:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}\n\n<https://dash.cloudflare.com/${{ secrets.R2_ACCOUNT_ID }}/r2/default/buckets/${{ secrets.R2_BUCKET_NAME }}?prefix=${{ needs.prepare-release.outputs.release_id }}/|View in Cloudflare R2 Dashboard>"
