@@ -90,11 +90,14 @@ jobs:
       - name: Set Version
         env:
           VERSION_INPUT: ${{ inputs.version }}
-        run: echo "GITHUB_TAG_VERSION=${VERSION_INPUT}" >> ${GITHUB_ENV}
+          COMPONENT: ${{ inputs.component }}
+        run: |
+          echo "GITHUB_TAG_VERSION=${COMPONENT}-${VERSION_INPUT}" >> ${GITHUB_ENV}
+          echo "CLEAN_VERSION=${VERSION_INPUT}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         env:
-          TAG_VERSION: ${{ inputs.version }}
+          TAG_VERSION: ${{ env.GITHUB_TAG_VERSION }}
         shell: bash
         run: |
           if git rev-parse "${TAG_VERSION}" >/dev/null 2>&1; then
@@ -119,7 +122,7 @@ jobs:
       - name: Publish Release Files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_VERSION }}
+          GORELEASER_CURRENT_TAG: ${{ env.CLEAN_VERSION }}
           MAKE_RELEASE_TARGET: ${{ inputs.make_release_target }}
         run: |
           touch .release-env
