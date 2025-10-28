@@ -6,13 +6,6 @@ import (
 	"math/big"
 	"sync"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
-	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -20,7 +13,17 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
+	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ChainID is the EIP-155 replay-protection chain id for the current ethereum chain config.
@@ -155,13 +158,6 @@ func (b *Backend) FeeHistory(
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
-	if userBlockCount > 100 {
-		return nil, fmt.Errorf("max userBlockCount is 100")
-	}
-	if len(rewardPercentiles) > 100 {
-		return nil, fmt.Errorf("max len of rewardPercentiles is 100")
-	}
-
 	for i, p := range rewardPercentiles {
 		if p < 0 || p > 100 {
 			return nil, fmt.Errorf("%w: %f", errInvalidPercentile, p)
@@ -214,6 +210,8 @@ func (b *Backend) FeeHistory(
 
 	thisBaseFee := make([]*hexutil.Big, blocks+1)
 	thisGasUsedRatio := make([]float64, blocks)
+	thisBlobBaseFee := make([]*hexutil.Big, blocks+1)
+	thisBlobGasUsedRatio := make([]float64, blocks)
 
 	// rewards should only be calculated if reward percentiles were included
 	calculateRewards := rewardCount != 0
@@ -241,10 +239,10 @@ func (b *Backend) FeeHistory(
 					wg.Done()
 				}()
 				// fetch block
-				// tendermint block
+				// CometBFT block
 				blockNum := rpctypes.BlockNumber(blockStart + int64(index))
-				tendermintblock, err := b.TendermintBlockByNumber(blockNum)
-				if tendermintblock == nil {
+				cometBlock, err := b.CometBlockByNumber(blockNum)
+				if cometBlock == nil {
 					chanErr <- err
 					return
 				}
@@ -256,28 +254,16 @@ func (b *Backend) FeeHistory(
 					return
 				}
 
-				// tendermint block result
-				tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
-				if tendermintBlockResult == nil {
-					b.Logger.Debug(
-						"block result not found",
-						"height",
-						tendermintblock.Block.Height,
-						"error",
-						err.Error(),
-					)
+				// CometBFT block result
+				cometBlockResult, err := b.CometBlockResultByNumber(&cometBlock.Block.Height)
+				if cometBlockResult == nil {
+					b.Logger.Debug("block result not found", "height", cometBlock.Block.Height, "error", err.Error())
 					chanErr <- err
 					return
 				}
 
 				oneFeeHistory := rpctypes.OneFeeHistory{}
-				err = b.ProcessBlocker(
-					tendermintblock,
-					&ethBlock,
-					rewardPercentiles,
-					tendermintBlockResult,
-					&oneFeeHistory,
-				)
+				err = b.ProcessBlocker(cometBlock, &ethBlock, rewardPercentiles, cometBlockResult, &oneFeeHistory)
 				if err != nil {
 					chanErr <- err
 					return
@@ -290,6 +276,11 @@ func (b *Backend) FeeHistory(
 					thisBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBaseFee)
 				}
 				thisGasUsedRatio[index] = oneFeeHistory.GasUsedRatio
+				thisBlobBaseFee[index] = (*hexutil.Big)(oneFeeHistory.BlobBaseFee)
+				if int(index) == len(thisBlobBaseFee)-2 {
+					thisBlobBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBlobBaseFee)
+				}
+				thisBlobGasUsedRatio[index] = oneFeeHistory.BlobGasUsedRatio
 				if calculateRewards {
 					for j := 0; j < rewardCount; j++ {
 						reward[index][j] = (*hexutil.Big)(oneFeeHistory.Reward[j])
@@ -312,9 +303,11 @@ func (b *Backend) FeeHistory(
 	}
 
 	feeHistory := rpctypes.FeeHistoryResult{
-		OldestBlock:  oldestBlock,
-		BaseFee:      thisBaseFee,
-		GasUsedRatio: thisGasUsedRatio,
+		OldestBlock:      oldestBlock,
+		BaseFee:          thisBaseFee,
+		GasUsedRatio:     thisGasUsedRatio,
+		BlobBaseFee:      thisBlobBaseFee,
+		BlobGasUsedRatio: thisBlobGasUsedRatio,
 	}
 
 	if calculateRewards {
@@ -347,9 +340,7 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 	// MaxDelta = BaseFee * (GasLimit - GasLimit / ElasticityMultiplier) / (GasLimit / ElasticityMultiplier) / Denominator
 	//          = BaseFee * (ElasticityMultiplier - 1) / Denominator
 	// ```t
-	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(
-		params.Params.BaseFeeChangeDenominator,
-	) // #nosec G115
+	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(params.Params.BaseFeeChangeDenominator) // #nosec G115
 	if maxDelta < 0 {
 		// impossible if the parameter validation passed.
 		maxDelta = 0
