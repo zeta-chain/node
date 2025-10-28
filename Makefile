@@ -18,7 +18,6 @@ GORELEASER := $(DOCKER) run \
 	--rm \
 	--privileged \
 	-e CGO_ENABLED=1 \
-	-e GORELEASER_CURRENT_TAG \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v `pwd`:/go/src/$(PACKAGE_NAME) \
 	-w /go/src/$(PACKAGE_NAME) \

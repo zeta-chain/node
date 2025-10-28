@@ -90,9 +90,7 @@ jobs:
       - name: Set Version
         env:
           VERSION_INPUT: ${{ inputs.version }}
-          COMPONENT: ${{ inputs.component }}
-        run: |
-          echo "GITHUB_TAG_VERSION=${COMPONENT}_${VERSION_INPUT}" >> ${GITHUB_ENV}
+        run: echo "GITHUB_TAG_VERSION=${VERSION_INPUT}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         env:
