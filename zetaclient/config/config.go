@@ -14,9 +14,9 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 )
 
 // restrictedAddressBook is a map of restricted addresses
