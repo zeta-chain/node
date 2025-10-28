@@ -98,16 +98,19 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		),
 	)
 
-	eg.Go(
-		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
-			e2etests.TestZetaDepositName,
-			e2etests.TestZetaDepositAndCallName,
-			e2etests.TestZetaDepositAndCallRevertName,
-			e2etests.TestZetaDepositRevertAndAbortName,
-			e2etests.TestZetaDepositAndCallRevertWithCallName,
-			e2etests.TestZetaDepositAndCallNoMessageName,
-		),
-	)
+	// ZETA v2 not enabled
+	// TODO: enable back
+	// https://github.com/zeta-chain/node/issues/4373
+	//eg.Go(
+	//	evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
+	//		e2etests.TestZetaDepositName,
+	//		e2etests.TestZetaDepositAndCallName,
+	//		e2etests.TestZetaDepositAndCallRevertName,
+	//		e2etests.TestZetaDepositRevertAndAbortName,
+	//		e2etests.TestZetaDepositAndCallRevertWithCallName,
+	//		e2etests.TestZetaDepositAndCallNoMessageName,
+	//	),
+	//)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests

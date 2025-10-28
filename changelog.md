@@ -52,22 +52,28 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
 * [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
+* [4384](https://github.com/zeta-chain/node/pull/4384) - disable TSS service in dry mode
+* [4359](https://github.com/zeta-chain/node/pull/4359) - add chaos mode for ZetaClient
 
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
 * [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+* [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
 
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+* [4356](https://github.com/zeta-chain/node/pull/4356) - rename protocol contract imports to `protocol-contracts-evm`
 * [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
+
 
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
 * [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 * [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
+* [4386](https://github.com/zeta-chain/node/pull/4386) - filter out nil address to prevent error logs
 
 ### Documentation
 

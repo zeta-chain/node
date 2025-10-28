@@ -7,8 +7,8 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/fatih/color"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )

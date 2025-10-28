@@ -528,6 +528,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("can deposit ZETA token using V2", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// setup gas coin
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -661,6 +666,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process no-call deposit for coinType ZETA", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -799,6 +809,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process deposit and call for coinType Zeta", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -834,6 +849,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process deposit for coinType Zeta", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -1019,6 +1039,11 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 	})
 
 	t.Run("successfully process abort for ZETA token", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)

@@ -11,7 +11,8 @@ import (
 )
 
 //go:generate mockery --name tonRPC --structname TONRPC --filename ton_rpc.go --output ../
-//nolint:unused // used for code gen
+
+//nolint:unused
 type tonRPC interface {
 	GetAccountState(ctx context.Context, acc ton.AccountID) (rpc.Account, error)
 	GetBlockHeader(ctx context.Context, blockID rpc.BlockIDExt) (rpc.BlockHeader, error)
@@ -34,5 +35,3 @@ type tonRPC interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	SendMessage(ctx context.Context, payload []byte) (uint32, error)
 }
-
-var _ tonRPC = &rpc.Client{}

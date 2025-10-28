@@ -46,3 +46,7 @@ func (mode ClientMode) String() string {
 func (mode ClientMode) IsDryMode() bool {
 	return mode == DryMode
 }
+
+func (mode ClientMode) IsChaosMode() bool {
+	return mode == ChaosMode
+}

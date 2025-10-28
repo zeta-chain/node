@@ -5,7 +5,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 )
 
-type Client interface {
+type TONClient interface { //nolint:revive
 	repo.TONClient
 	signer.TONClient
 }

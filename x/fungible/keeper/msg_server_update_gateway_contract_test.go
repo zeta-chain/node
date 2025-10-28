@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"

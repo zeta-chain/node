@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/runner"

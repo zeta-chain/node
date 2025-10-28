@@ -11,8 +11,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -89,7 +90,7 @@ func (r *E2ERunner) ETHWithdraw(
 	amount *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -108,7 +109,7 @@ func (r *E2ERunner) ETHWithdrawAndArbitraryCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -130,7 +131,7 @@ func (r *E2ERunner) ETHWithdrawAndCall(
 	revertOptions gatewayzevm.RevertOptions,
 	gasLimit *big.Int,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -179,7 +180,7 @@ func (r *E2ERunner) ERC20Withdraw(
 	amount *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Withdraw0(
+	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -206,7 +207,7 @@ func (r *E2ERunner) ERC20WithdrawAndArbitraryCall(
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -236,7 +237,7 @@ func (r *E2ERunner) ERC20WithdrawAndCall(
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall(
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -471,4 +472,21 @@ func (r *E2ERunner) AddInboundTracker(coinType coin.CoinType, txHash string) {
 	)
 	_, err = r.ZetaTxServer.BroadcastTx(utils.EmergencyPolicyName, msg)
 	require.NoError(r, err)
+}
+
+// UpdateGatewayGasLimit updates the gateway gas limit used by the fungible module for ZEVM calls
+func (r *E2ERunner) UpdateGatewayGasLimit(newGasLimit uint64) {
+	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		newGasLimit,
+	)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
+	require.NoError(r, err)
+
+	r.WaitForBlocks(1)
+
+	// Verify that the gas limit has been updated
+	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	require.NoError(r, err)
+	require.Equal(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 }
