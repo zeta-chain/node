@@ -14,6 +14,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 
 	"github.com/zeta-chain/node/pkg/chains"
 )
@@ -21,9 +22,6 @@ import (
 // restrictedAddressBook is a map of restricted addresses
 var restrictedAddressBook = map[string]bool{}
 var restrictedAddressBookLock sync.RWMutex
-
-// errInvalidConfig is the error returned when a invalid config is used
-var errInvalidConfig = errors.New("invalid config")
 
 const restrictedAddressesPath string = "zetaclient_restricted_addresses.json"
 
@@ -37,7 +35,7 @@ const folder string = "config"
 func Save(config *Config, path string) error {
 	// validate config
 	if err := Validate(*config); err != nil {
-		return err
+		return errors.Wrapf(err, "config file validation failed")
 	}
 
 	folderPath := filepath.Join(path, folder)
@@ -105,52 +103,51 @@ func Load(basePath string) (Config, error) {
 func Validate(cfg Config) error {
 	// go-tss requires a valid IPv4 address
 	if cfg.PublicIP != "" && !govalidator.IsIPv4(cfg.PublicIP) {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid public IP, got: %s", cfg.PublicIP)
+		return errors.Errorf("reason: invalid public IP, got: %s", cfg.PublicIP)
 	}
 
 	if cfg.PublicDNS != "" && !govalidator.IsDNSName(cfg.PublicDNS) {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid public DNS, got: %s", cfg.PublicDNS)
+		return errors.Errorf("reason: invalid public DNS, got: %s", cfg.PublicDNS)
 	}
 
 	if _, err := chains.ZetaChainFromCosmosChainID(cfg.ChainID); err != nil {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid chain id, got: %s", cfg.ChainID)
+		return errors.Errorf("reason: invalid chain id, got: %s", cfg.ChainID)
 	}
 
 	// ZetaCoreURL can be either an IP address or a hostname (e.g., Docker service name)
 	if cfg.ZetaCoreURL != "" && !govalidator.IsIP(cfg.ZetaCoreURL) && !govalidator.IsDNSName(cfg.ZetaCoreURL) {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid zetacore URL, got: %s", cfg.ZetaCoreURL)
+		return errors.Errorf("reason: invalid zetacore URL, got: %s", cfg.ZetaCoreURL)
 	}
 
 	// validate granter address - should be a valid bech32 address
 	if _, err := sdktypes.AccAddressFromBech32(cfg.AuthzGranter); err != nil {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid bech32 granter address, got: %s", cfg.AuthzGranter)
+		return errors.Errorf("reason: invalid bech32 granter address, got: %s", cfg.AuthzGranter)
 	}
 
 	// validate grantee name - should not be empty
 	if strings.TrimSpace(cfg.AuthzHotkey) == "" {
-		return errors.Wrapf(errInvalidConfig, "reason: grantee name is empty")
+		return errors.Errorf("reason: grantee name is empty")
 	}
 
 	// acceptable log levels are: 0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic
 	if cfg.LogLevel < 0 || cfg.LogLevel > 5 {
-		return errors.Wrapf(errInvalidConfig, "reason: log level must be between 0 and 5, got: %d", cfg.LogLevel)
+		return errors.Errorf("reason: log level must be between 0 and 5, got: %d", cfg.LogLevel)
 	}
 
 	if cfg.ConfigUpdateTicker == 0 {
-		return errors.Wrapf(errInvalidConfig, "reason: config update ticker is 0")
+		return errors.Errorf("reason: config update ticker is 0")
 	}
 
 	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
-		return errors.Wrapf(errInvalidConfig, "reason: invalid keyring backend, got: %s", cfg.KeyringBackend)
+		return errors.Errorf("reason: invalid keyring backend, got: %s", cfg.KeyringBackend)
 	}
 
 	if cfg.MaxBaseFee < 0 {
-		return errors.Wrapf(errInvalidConfig, "reason: max base fee cannot be negative, got: %d", cfg.MaxBaseFee)
+		return errors.Errorf("reason: max base fee cannot be negative, got: %d", cfg.MaxBaseFee)
 	}
 
 	if cfg.MempoolCongestionThreshold < 0 {
-		return errors.Wrapf(
-			errInvalidConfig,
+		return errors.Errorf(
 			"reason: mempool congestion threshold cannot be negative, got: %d",
 			cfg.MempoolCongestionThreshold,
 		)
