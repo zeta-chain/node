@@ -41,8 +41,8 @@ type EthereumAPI interface {
 	GetTransactionByHash(hash common.Hash) (*rpctypes.RPCTransaction, error)
 	GetTransactionCount(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Uint64, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
-	GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
-	GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
+	// GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
+	// GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 	// eth_getBlockReceipts
 
 	// Writing Transactions
@@ -94,7 +94,7 @@ type EthereumAPI interface {
 	SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
 	FillTransaction(args evmtypes.TransactionArgs) (*rpctypes.SignTransactionResult, error)
 	Resend(ctx context.Context, args evmtypes.TransactionArgs, gasPrice *hexutil.Big, gasLimit *hexutil.Uint64) (common.Hash, error)
-	CreateAccessList(args evmtypes.TransactionArgs, blockNrOrHash rpctypes.BlockNumberOrHash, overrides *json.RawMessage) (*rpctypes.AccessListResult, error)
+	// CreateAccessList(args evmtypes.TransactionArgs, blockNrOrHash rpctypes.BlockNumberOrHash, overrides *json.RawMessage) (*rpctypes.AccessListResult, error)
 
 	// eth_signTransaction (on Ethereum.org)
 	// eth_getCompilers (on Ethereum.org)
@@ -167,10 +167,10 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 }
 
 // GetBlockReceipts returns the block receipts for the given block hash or number or tag.
-func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
-	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
-	return e.backend.GetBlockReceipts(blockNrOrHash)
-}
+// func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
+// 	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
+// 	return e.backend.GetBlockReceipts(blockNrOrHash)
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Read Txs					                            ///
@@ -212,16 +212,16 @@ func (e *PublicAPI) GetBlockTransactionCountByNumber(blockNum rpctypes.BlockNumb
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction identified by hash and index.
-func (e *PublicAPI) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
-	e.logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
-	return e.backend.GetTransactionByBlockHashAndIndex(hash, idx)
-}
+// func (e *PublicAPI) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+// 	e.logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
+// 	return e.backend.GetTransactionByBlockHashAndIndex(hash, idx)
+// }
 
-// GetTransactionByBlockNumberAndIndex returns the transaction identified by number and index.
-func (e *PublicAPI) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
-	e.logger.Debug("eth_getTransactionByBlockNumberAndIndex", "number", blockNum, "index", idx)
-	return e.backend.GetTransactionByBlockNumberAndIndex(blockNum, idx)
-}
+// // GetTransactionByBlockNumberAndIndex returns the transaction identified by number and index.
+// func (e *PublicAPI) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+// 	e.logger.Debug("eth_getTransactionByBlockNumberAndIndex", "number", blockNum, "index", idx)
+// 	return e.backend.GetTransactionByBlockNumberAndIndex(blockNum, idx)
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Write Txs					                            ///
@@ -452,14 +452,14 @@ func (e *PublicAPI) Resend(_ context.Context,
 
 // CreateAccessList returns the list of addresses and storage keys used by the transaction (except for the
 // sender account and precompiles), plus the estimated gas if the access list were added to the transaction.
-func (e *PublicAPI) CreateAccessList(
-	args evmtypes.TransactionArgs,
-	blockNrOrHash rpctypes.BlockNumberOrHash,
-	overrides *json.RawMessage,
-) (*rpctypes.AccessListResult, error) {
-	res, err := e.backend.CreateAccessList(args, blockNrOrHash, overrides)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
+// func (e *PublicAPI) CreateAccessList(
+// 	args evmtypes.TransactionArgs,
+// 	blockNrOrHash rpctypes.BlockNumberOrHash,
+// 	overrides *json.RawMessage,
+// ) (*rpctypes.AccessListResult, error) {
+// 	res, err := e.backend.CreateAccessList(args, blockNrOrHash, overrides)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return res, nil
+// }

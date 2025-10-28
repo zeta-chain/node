@@ -81,7 +81,7 @@ type EVMBackend interface {
 	RPCBlockFromCometBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults, fullTx bool) (map[string]interface{}, error)
 	EthBlockByNumber(blockNum types.BlockNumber) (*ethtypes.Block, error)
 	EthBlockFromCometBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) (*ethtypes.Block, error)
-	GetBlockReceipts(blockNrOrHash types.BlockNumberOrHash) ([]map[string]interface{}, error)
+	// GetBlockReceipts(blockNrOrHash types.BlockNumberOrHash) ([]map[string]interface{}, error)
 
 	// Account Info
 	GetCode(address common.Address, blockNrOrHash types.BlockNumberOrHash) (hexutil.Bytes, error)
@@ -105,12 +105,12 @@ type EVMBackend interface {
 	GetTransactionByHash(txHash common.Hash) (*types.RPCTransaction, error)
 	GetTxByEthHash(txHash common.Hash) (*servertypes.TxResult, *types.TxResultAdditionalFields, error)
 	GetTxByTxIndex(height int64, txIndex uint) (*servertypes.TxResult, *types.TxResultAdditionalFields, error)
-	GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*types.RPCTransaction, error)
+	// GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*types.RPCTransaction, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
 	GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error)
-	GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*types.RPCTransaction, error)
-	GetTransactionByBlockNumberAndIndex(blockNum types.BlockNumber, idx hexutil.Uint) (*types.RPCTransaction, error)
-	CreateAccessList(args evmtypes.TransactionArgs, blockNrOrHash types.BlockNumberOrHash, overrides *json.RawMessage) (*types.AccessListResult, error)
+	// GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*types.RPCTransaction, error)
+	// GetTransactionByBlockNumberAndIndex(blockNum types.BlockNumber, idx hexutil.Uint) (*types.RPCTransaction, error)
+	// CreateAccessList(args evmtypes.TransactionArgs, blockNrOrHash types.BlockNumberOrHash, overrides *json.RawMessage) (*types.AccessListResult, error)
 
 	// Send Transaction
 	Resend(args evmtypes.TransactionArgs, gasPrice *hexutil.Big, gasLimit *hexutil.Uint64) (common.Hash, error)

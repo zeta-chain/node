@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/pkg/errors"
 
@@ -186,88 +187,88 @@ func (b *Backend) MinerFromCometBlock(
 	return common.BytesToAddress(validatorAccAddr), nil
 }
 
-// func (b *Backend) ReceiptsFromCometBlock(
-// 	resBlock *cmtrpctypes.ResultBlock,
-// 	blockRes *cmtrpctypes.ResultBlockResults,
-// 	msgs []*evmtypes.MsgEthereumTx,
-// ) ([]*ethtypes.Receipt, error) {
-// 	baseFee, err := b.BaseFee(blockRes)
-// 	if err != nil {
-// 		// handle the error for pruned node.
-// 		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", resBlock.Block.Height, "error", err)
-// 	}
+func (b *Backend) ReceiptsFromCometBlock(
+	resBlock *cmtrpctypes.ResultBlock,
+	blockRes *cmtrpctypes.ResultBlockResults,
+	msgs []*evmtypes.MsgEthereumTx,
+) ([]*ethtypes.Receipt, error) {
+	baseFee, err := b.BaseFee(blockRes)
+	if err != nil {
+		// handle the error for pruned node.
+		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", resBlock.Block.Height, "error", err)
+	}
 
-// 	blockHash := common.BytesToHash(resBlock.BlockID.Hash)
-// 	receipts := make([]*ethtypes.Receipt, len(msgs))
-// 	cumulatedGasUsed := uint64(0)
-// 	for i, ethMsg := range msgs {
-// 		txResult, err := b.GetTxByEthHash(ethMsg.Hash())
-// 		if err != nil {
-// 			return nil, fmt.Errorf("tx not found: hash=%s, error=%s", ethMsg.Hash(), err.Error())
-// 		}
+	blockHash := common.BytesToHash(resBlock.BlockID.Hash)
+	receipts := make([]*ethtypes.Receipt, len(msgs))
+	cumulatedGasUsed := uint64(0)
+	for i, ethMsg := range msgs {
+		txResult, _, err := b.GetTxByEthHash(ethMsg.Hash()) // TODO evm
+		if err != nil {
+			return nil, fmt.Errorf("tx not found: hash=%s, error=%s", ethMsg.Hash(), err.Error())
+		}
 
-// 		cumulatedGasUsed += txResult.GasUsed
+		cumulatedGasUsed += txResult.GasUsed
 
-// 		var effectiveGasPrice *big.Int
-// 		if baseFee != nil {
-// 			effectiveGasPrice = rpctypes.EffectiveGasPrice(ethMsg.Raw.Transaction, baseFee)
-// 		} else {
-// 			effectiveGasPrice = ethMsg.Raw.GasFeeCap()
-// 		}
+		var effectiveGasPrice *big.Int
+		if baseFee != nil {
+			effectiveGasPrice = rpctypes.EffectiveGasPrice(ethMsg.Raw.Transaction, baseFee)
+		} else {
+			effectiveGasPrice = ethMsg.Raw.GasFeeCap()
+		}
 
-// 		var status uint64
-// 		if txResult.Failed {
-// 			status = ethtypes.ReceiptStatusFailed
-// 		} else {
-// 			status = ethtypes.ReceiptStatusSuccessful
-// 		}
+		var status uint64
+		if txResult.Failed {
+			status = ethtypes.ReceiptStatusFailed
+		} else {
+			status = ethtypes.ReceiptStatusSuccessful
+		}
 
-// 		contractAddress := common.Address{}
-// 		if ethMsg.Raw.To() == nil {
-// 			contractAddress = crypto.CreateAddress(ethMsg.GetSender(), ethMsg.Raw.Nonce())
-// 		}
+		contractAddress := common.Address{}
+		if ethMsg.Raw.To() == nil {
+			contractAddress = crypto.CreateAddress(ethMsg.GetSender(), ethMsg.Raw.Nonce())
+		}
 
-// 		msgIndex := int(txResult.MsgIndex) // #nosec G115 -- checked for int overflow already
-// 		logs, err := evmtypes.DecodeMsgLogs(
-// 			blockRes.TxsResults[txResult.TxIndex].Data,
-// 			msgIndex,
-// 			uint64(resBlock.Block.Height), // #nosec G115 -- checked for int overflow already
-// 		)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed to convert tx result to eth receipt: %w", err)
-// 		}
+		msgIndex := int(txResult.MsgIndex) // #nosec G115 -- checked for int overflow already
+		logs, err := evmtypes.DecodeMsgLogs(
+			blockRes.TxsResults[txResult.TxIndex].Data,
+			msgIndex,
+			uint64(resBlock.Block.Height), // #nosec G115 -- checked for int overflow already
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert tx result to eth receipt: %w", err)
+		}
 
-// 		bloom := ethtypes.CreateBloom(&ethtypes.Receipt{Logs: logs})
+		bloom := ethtypes.CreateBloom(&ethtypes.Receipt{Logs: logs})
 
-// 		receipt := &ethtypes.Receipt{
-// 			// Consensus fields: These fields are defined by the Yellow Paper
-// 			Type:              ethMsg.Raw.Type(),
-// 			PostState:         nil,
-// 			Status:            status, // convert to 1=success, 0=failure
-// 			CumulativeGasUsed: cumulatedGasUsed,
-// 			Bloom:             bloom,
-// 			Logs:              logs,
+		receipt := &ethtypes.Receipt{
+			// Consensus fields: These fields are defined by the Yellow Paper
+			Type:              ethMsg.Raw.Type(),
+			PostState:         nil,
+			Status:            status, // convert to 1=success, 0=failure
+			CumulativeGasUsed: cumulatedGasUsed,
+			Bloom:             bloom,
+			Logs:              logs,
 
-// 			// Implementation fields: These fields are added by geth when processing a transaction.
-// 			TxHash:            ethMsg.Hash(),
-// 			ContractAddress:   contractAddress,
-// 			GasUsed:           txResult.GasUsed,
-// 			EffectiveGasPrice: effectiveGasPrice,
-// 			BlobGasUsed:       uint64(0),     // TODO: fill this field
-// 			BlobGasPrice:      big.NewInt(0), // TODO: fill this field
+			// Implementation fields: These fields are added by geth when processing a transaction.
+			TxHash:            ethMsg.Hash(),
+			ContractAddress:   contractAddress,
+			GasUsed:           txResult.GasUsed,
+			EffectiveGasPrice: effectiveGasPrice,
+			BlobGasUsed:       uint64(0),     // TODO: fill this field
+			BlobGasPrice:      big.NewInt(0), // TODO: fill this field
 
-// 			// Inclusion information: These fields provide information about the inclusion of the
-// 			// transaction corresponding to this receipt.
-// 			BlockHash:        blockHash,
-// 			BlockNumber:      big.NewInt(resBlock.Block.Height),
-// 			TransactionIndex: uint(txResult.EthTxIndex), // #nosec G115 -- checked for int overflow already
-// 		}
+			// Inclusion information: These fields provide information about the inclusion of the
+			// transaction corresponding to this receipt.
+			BlockHash:        blockHash,
+			BlockNumber:      big.NewInt(resBlock.Block.Height),
+			TransactionIndex: uint(txResult.EthTxIndex), // #nosec G115 -- checked for int overflow already
+		}
 
-// 		receipts[i] = receipt
-// 	}
+		receipts[i] = receipt
+	}
 
-// 	return receipts, nil
-// }
+	return receipts, nil
+}
 
 // EthMsgsFromCometBlock returns all real and synthetic MsgEthereumTxs from a
 // Coment block. It also ensures consistency over the correct txs indexes
