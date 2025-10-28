@@ -2,6 +2,11 @@ name: Release Test Binaries to Cloudflare R2
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Custom release version (optional, e.g., v1.0.0-test). If not provided, will auto-generate from latest tag, date, and commit hash.'
+        required: false
+        type: string
 
 jobs:
   build-and-upload:
@@ -15,26 +20,24 @@ jobs:
         id: release_id
         env:
           GH_TOKEN: ${{ github.token }}
+          CUSTOM_VERSION: ${{ inputs.version }}
         run: |
-          DATE=$(date +%Y%m%d)
-          SHORT_HASH=${GITHUB_SHA:0:7}
-          LATEST_TAG=$(gh release view --json tagName --jq '.tagName' 2>/dev/null || echo "v0.0.0")
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0"
+          if [ -n "$CUSTOM_VERSION" ]; then
+            RELEASE_ID="$CUSTOM_VERSION"
+            echo "Using custom version: ${RELEASE_ID}"
+          else
+            DATE=$(date +%Y%m%d)
+            SHORT_HASH=${GITHUB_SHA:0:7}
+            LATEST_TAG=$(gh release view --json tagName --jq '.tagName' 2>/dev/null || echo "v0.0.0")
+            if [ -z "$LATEST_TAG" ]; then
+              LATEST_TAG="v0.0.0"
+            fi
+            RELEASE_ID="${LATEST_TAG}-${DATE}-${SHORT_HASH}"
+            echo "Auto-generated release identifier: ${RELEASE_ID}"
+            echo "Latest release tag: ${LATEST_TAG}"
           fi
-          RELEASE_ID="${LATEST_TAG}-${DATE}-${SHORT_HASH}"
           echo "release_id=${RELEASE_ID}" >> $GITHUB_OUTPUT
           echo "Release identifier: ${RELEASE_ID}"
-          echo "Latest release tag: ${LATEST_TAG}"
-
-      - name: Build release artifacts
-        run: |
-          mkdir -p upload/zetacore
-          mkdir -p upload/zetaclient
-          make release-snapshot-zetacore
-          cp -r dist/* upload/zetacore/
-          make release-snapshot-zetaclient
-          cp -r dist/* upload/zetaclient/
 
       - name: Configure AWS CLI for Cloudflare R2
         env:
@@ -60,6 +63,15 @@ jobs:
             exit 1
           fi
           echo "Release ID is unique, proceeding with upload"
+
+      - name: Build release artifacts
+        run: |
+          mkdir -p upload/zetacore
+          mkdir -p upload/zetaclient
+          make release-snapshot-zetacore
+          cp -r dist/* upload/zetacore/
+          make release-snapshot-zetaclient
+          cp -r dist/* upload/zetaclient/
 
       - name: Upload to Cloudflare R2
         env:
@@ -89,7 +101,9 @@ jobs:
         env:
           RELEASE_ID: ${{ steps.release_id.outputs.release_id }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
+          R2_URL="https://dash.cloudflare.com/${R2_ACCOUNT_ID}/r2/default/buckets/${R2_BUCKET_NAME}/objects/${RELEASE_ID}"
           echo "## Release Upload Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release ID**: \`${RELEASE_ID}\`" >> $GITHUB_STEP_SUMMARY
@@ -98,26 +112,21 @@ jobs:
           echo "**Commit**: \`${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All artifacts from \`dist/\` have been uploaded to Cloudflare R2." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View in Cloudflare R2 Dashboard](${R2_URL})" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify Slack
-        uses: slackapi/slack-github-action@v1.27.0
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "text": "Test binaries uploaded to R2: `${{ steps.release_id.outputs.release_id }}`",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Test binaries have been uploaded to Cloudflare R2*\n*Release ID:* `${{ steps.release_id.outputs.release_id }}`\n*Path:* `${{ secrets.R2_BUCKET_NAME }}/${{ steps.release_id.outputs.release_id }}/`\n*Commit:* `${{ github.sha }}`\n*Repository:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}"
-                  }
-                }
-              ]
-            }
+            text: "Test binaries uploaded to R2: `${{ steps.release_id.outputs.release_id }}`"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Test binaries have been uploaded to Cloudflare R2*\n*Release ID:* `${{ steps.release_id.outputs.release_id }}`\n*Path:* `${{ secrets.R2_BUCKET_NAME }}/${{ steps.release_id.outputs.release_id }}/`\n*Commit:* `${{ github.sha }}`\n*Repository:* ${{ github.repository }}\n*Triggered by:* ${{ github.actor }}\n\n<https://dash.cloudflare.com/${{ secrets.R2_ACCOUNT_ID }}/r2/default/buckets/${{ secrets.R2_BUCKET_NAME }}/objects/${{ steps.release_id.outputs.release_id }}|View in Cloudflare R2 Dashboard>"
 
       - name: Clean up workspace
         if: always()
