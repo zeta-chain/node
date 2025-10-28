@@ -594,6 +594,34 @@ func (_m *ZetacoreClient) GetSupportedChains(ctx context.Context) ([]chains.Chai
 	return r0, r1
 }
 
+// GetSyncStatus provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetSyncStatus(_a0 context.Context) (bool, error) {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSyncStatus")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (bool, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTSS provides a mock function with given fields: ctx
 func (_m *ZetacoreClient) GetTSS(ctx context.Context) (types.TSS, error) {
 	ret := _m.Called(ctx)
