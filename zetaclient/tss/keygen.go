@@ -131,7 +131,9 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 			Int64("zeta_height", zetaHeight).
 			Int("connections_established_to_peers", connectedPeers).
 			Int("total_members_for_keygen", keygenMembers).
-			Msgf("waiting for keygen block to arrive or new keygen block to be set (%d/%d active)", connectedPeers+1, keygenMembers) // Adding 1 to connectedPeers to include self
+			Msgf("waiting for keygen block to arrive or new keygen block to be set (%d/%d active)", connectedPeers+1, keygenMembers)
+
+			// Adding 1 to connectedPeers to include self
 		return true, nil
 	case zetaHeight > keygenHeight:
 		// connected peers only includes the connections established to other peers
@@ -143,7 +145,8 @@ func (k *keygenCeremony) iteration(ctx context.Context) (shouldRetry bool, err e
 			Int64("zeta_height", zetaHeight).
 			Int("connections_established_to_peers", connectedPeers).
 			Int("total_members_for_keygen", keygenMembers).
-			Msgf("waiting for keygen finalization (%d/%d active)", connectedPeers+1, keygenMembers) // Adding 1 to connectedPeers to include self
+			Msgf("waiting for keygen finalization (%d/%d active)", connectedPeers+1, keygenMembers)
+			// Adding 1 to connectedPeers to include self
 		return true, nil
 	}
 
