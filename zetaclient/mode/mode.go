@@ -29,7 +29,7 @@ const (
 
 	// ChaosMode represents the chaos-testing execution mode for the ZetaClient.
 	//
-	// A observer-signer in chaos mode works as if in standard mode, but function calls that
+	// An observer-signer in chaos mode works as if in standard mode, but function calls that
 	// interact with outside resources (e.g. ZetaChain, connected chains, TSS, and other nodes) may
 	// intentionally fail.
 	//

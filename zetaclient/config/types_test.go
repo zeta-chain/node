@@ -7,9 +7,19 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 func TestValidate(t *testing.T) {
+	var sampleTestConfig = config.Config{
+		KeyringBackend:     "test",
+		ChainID:            "athens_7001-1",
+		ZetaCoreURL:        "127.0.0.1",
+		AuthzGranter:       "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+		AuthzHotkey:        "hotkey",
+		ConfigUpdateTicker: 6,
+	}
+
 	// set SDK config to use "zeta" address prefix
 	sdkconfig.SetDefault(false)
 
@@ -121,6 +131,25 @@ func TestValidate(t *testing.T) {
 				return cfg
 			}(),
 			errorMsg: "reason: mempool congestion threshold cannot be negative, got: -1",
+		},
+		{
+			name: "empty ChaosPercentagesPath",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ClientMode = mode.ChaosMode
+				return cfg
+			}(),
+			errorMsg: "ChaosPercentagesPath is a required field",
+		},
+		{
+			name: "invalid ChaosPercentagesPath",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ClientMode = mode.ChaosMode
+				cfg.ChaosPercentagesPath = "invalid/path"
+				return cfg
+			}(),
+			errorMsg: `invalid ChaosPercentagesPath "invalid/path"`,
 		},
 	}
 

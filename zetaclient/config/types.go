@@ -2,7 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
+	"os"
 	"strings"
 	"sync"
 
@@ -204,8 +206,13 @@ func (c Config) Validate() error {
 		)
 	}
 
-	if c.ClientMode.IsChaosMode() && c.ChaosPercentagesPath == "" {
-		return errors.New("ChaosPercentagesPath is a required field")
+	if c.ClientMode.IsChaosMode() {
+		if c.ChaosPercentagesPath == "" {
+			return errors.New("ChaosPercentagesPath is a required field")
+		}
+		if _, err := os.Stat(c.ChaosPercentagesPath); err != nil {
+			return fmt.Errorf("invalid ChaosPercentagesPath %q: %w", c.ChaosPercentagesPath, err)
+		}
 	}
 
 	return nil

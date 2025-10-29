@@ -13,15 +13,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-var sampleTestConfig = config.Config{
-	KeyringBackend:     "test",
-	ChainID:            "athens_7001-1",
-	ZetaCoreURL:        "127.0.0.1",
-	AuthzGranter:       "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
-	AuthzHotkey:        "hotkey",
-	ConfigUpdateTicker: 6,
-}
-
 func Test_LoadRestrictedAddressesConfig(t *testing.T) {
 	// Create test addresses
 	testAddresses := []string{
