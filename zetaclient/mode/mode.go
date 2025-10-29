@@ -35,7 +35,8 @@ const (
 	ChaosMode
 )
 
-var ErrInvalidModeString = errors.New("invalid client mode string")
+var ErrInvalidModeString = fmt.Errorf("invalid client mode string; should be %q, %q, or %q",
+	stringStandard, stringDry, stringChaos)
 
 const (
 	stringStandard = "standard"
