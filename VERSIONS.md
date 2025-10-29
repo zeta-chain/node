@@ -28,7 +28,7 @@
 
 ---
 
-*Last updated: 2025-10-21*
+*Last updated: 2025-10-29*
 
 [v36]: https://github.com/zeta-chain/node/releases/tag/v36.0.4
 [zetaclient-v37]: https://github.com/zeta-chain/node/releases/tag/zetaclient_v37.0.0
