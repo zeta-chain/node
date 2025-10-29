@@ -31,8 +31,6 @@ type initializeConfigOptions struct {
 	level              int8
 	configUpdateTicker uint64
 
-	p2pDiagnostic              bool
-	p2pDiagnosticTicker        uint64
 	TSSPath                    string
 	TestTSSKeySign             bool
 	KeyringBackend             string
@@ -72,10 +70,8 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization, this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
-	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
+	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, text)")
 	f.BoolVar(&cfg.logSampler, "log-sampler", false, "set to to true to turn on log sampling")
-	f.BoolVar(&cfg.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
-	f.Uint64Var(&cfg.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, usageP2PDiag)
 	f.Uint64Var(&cfg.configUpdateTicker, "config-update-ticker", 5, usageTicker)
 	f.StringVar(&cfg.TSSPath, "tss-path", "~/.tss", "path to tss location")
 	f.BoolVar(&cfg.TestTSSKeySign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
@@ -119,10 +115,8 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.LogLevel = opts.level
 	configData.LogFormat = opts.logFormat
 	configData.LogSampler = opts.logSampler
-	configData.P2PDiagnostic = opts.p2pDiagnostic
 	configData.TssPath = opts.TSSPath
 	configData.TestTssKeysign = opts.TestTSSKeySign
-	configData.P2PDiagnosticTicker = opts.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)
 	configData.RelayerKeyPath = opts.RelayerKeyPath

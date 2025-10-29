@@ -113,9 +113,7 @@ type Config struct {
 	ZetaCoreURL             string         `json:"ZetaCoreURL"`
 	AuthzGranter            string         `json:"AuthzGranter"`
 	AuthzHotkey             string         `json:"AuthzHotkey"`
-	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
 	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
 	TssPath                 string         `json:"TssPath"`
 	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
 	TestTssKeysign          bool           `json:"TestTssKeysign"`
