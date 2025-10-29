@@ -1,12 +1,14 @@
-// Package mode lists the execution modes for the zetaclient.
+// Package mode lists the execution modes for the ZetaClient.
 package mode
 
 import (
-	"errors"
 	"fmt"
 )
 
 type ClientMode uint8
+
+// InvalidMode is not a valid client mode.
+const InvalidMode ClientMode = 0b11111111
 
 const (
 	// StandardMode represents the standard mode of execution for the ZetaClient.
@@ -54,7 +56,7 @@ func New(s string) (ClientMode, error) {
 	case stringChaos:
 		return ChaosMode, nil
 	default:
-		return 0, ErrInvalidModeString
+		return InvalidMode, ErrInvalidModeString
 	}
 }
 

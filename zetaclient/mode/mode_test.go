@@ -12,6 +12,7 @@ func TestNew(t *testing.T) {
 	mode, err := New("invalid")
 	require.Error(err)
 	require.ErrorIs(err, ErrInvalidModeString)
+	require.Equal(InvalidMode, mode)
 
 	mode, err = New("standard")
 	require.NoError(err)
