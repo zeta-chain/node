@@ -9,11 +9,24 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
+var sampleTestConfig = config.Config{
+	KeyringBackend:     "test",
+	ChainID:            "athens_7001-1",
+	ZetaCoreURL:        "127.0.0.1",
+	AuthzGranter:       "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+	AuthzHotkey:        "hotkey",
+	ConfigUpdateTicker: 6,
+}
+
 func TestValidate(t *testing.T) {
+	// set SDK config to use "zeta" address prefix
+	sdkconfig.SetDefault(false)
+
 	tests := []struct {
 		name        string
 		config      config.Config
@@ -21,39 +34,107 @@ func TestValidate(t *testing.T) {
 		errorMsg    string
 	}{
 		{
-			name: "valid config with default fields",
-			config: func() config.Config {
-				cfg := config.New(false)
-				cfg.KeyringBackend = "test"
-				return cfg
-			}(),
+			name:   "valid config",
+			config: sampleTestConfig,
 		},
 		{
 			name: "invalid public IP address",
 			config: func() config.Config {
-				cfg := config.New(false)
+				cfg := sampleTestConfig
 				cfg.PublicIP = "192.168.1"
 				return cfg
 			}(),
-			errorMsg: "invalid public IP 192.168.1",
+			errorMsg: "reason: invalid public IP, got: 192.168.1",
 		},
 		{
-			name: "invalid DNS name",
+			name: "invalid public DNS name",
 			config: func() config.Config {
-				cfg := config.New(false)
+				cfg := sampleTestConfig
 				cfg.PublicDNS = "invalid..dns"
 				return cfg
 			}(),
-			errorMsg: "invalid public DNS invalid..dns",
+			errorMsg: "reason: invalid public DNS, got: invalid..dns",
+		},
+		{
+			name: "invalid chain ID",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ChainID = "zeta1nvalid"
+				return cfg
+			}(),
+			errorMsg: "reason: invalid chain id, got: zeta1nvalid",
+		},
+		{
+			name: "invalid zetacore URL",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ZetaCoreURL = "     "
+				return cfg
+			}(),
+			errorMsg: "reason: invalid zetacore URL, got:     ",
+		},
+		{
+			name: "invalid granter address",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.AuthzGranter = "cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs" // not ZetaChain address
+				return cfg
+			}(),
+			errorMsg: "reason: invalid bech32 granter address, got: cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+		},
+		{
+			name: "empty AuthzHotkey (grantee) name",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.AuthzHotkey = ""
+				return cfg
+			}(),
+			errorMsg: "reason: grantee name is empty",
+		},
+		{
+			name: "invalid log level",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.LogLevel = 6
+				return cfg
+			}(),
+			errorMsg: "reason: log level must be between 0 and 5, got: 6",
+		},
+		{
+			name: "invalid config update ticker",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ConfigUpdateTicker = 0
+				return cfg
+			}(),
+			errorMsg: "reason: config update ticker is 0",
 		},
 		{
 			name: "invalid keyring backend",
 			config: func() config.Config {
-				cfg := config.New(false)
+				cfg := sampleTestConfig
 				cfg.KeyringBackend = "invalid"
 				return cfg
 			}(),
-			errorMsg: "invalid keyring backend invalid",
+			errorMsg: "reason: invalid keyring backend, got: invalid",
+		},
+		{
+			name: "invalid max base fee",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.MaxBaseFee = -1
+				return cfg
+			}(),
+			errorMsg: "reason: max base fee cannot be negative, got: -1",
+		},
+		{
+			name: "invalid mempool congestion threshold",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.MempoolCongestionThreshold = -1
+				return cfg
+			}(),
+			errorMsg: "reason: mempool congestion threshold cannot be negative, got: -1",
 		},
 	}
 
