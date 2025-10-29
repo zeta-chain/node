@@ -1,5 +1,8 @@
 name: Release Test Binaries to Cloudflare R2
 
+# Automates building and uploading test binaries to Cloudflare R2, so developers don't have to
+# manually build and upload them from their local machines before testing.
+
 on:
   workflow_dispatch:
     inputs:
