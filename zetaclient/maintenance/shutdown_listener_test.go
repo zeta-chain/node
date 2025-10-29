@@ -2,6 +2,7 @@ package maintenance
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -70,13 +71,89 @@ func TestShutdownListener(t *testing.T) {
 		// GetBlockHeight is not mocked because we want the test to panic if it's called
 		// NewBlockSubscriber is not mocked because we want the test to panic if it's called
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
 			return len(client.Calls) == 1
 		}, time.Second, time.Millisecond)
+
+		assertChannelNotClosed(t, complete)
+	})
+
+	t.Run("shutdown if zetacore is syncing", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+		testRestartListenerTicker := 1 * time.Second
+		testWaitForSyncing := 2 * time.Second
+		listener := &ShutdownListener{
+			client:                client,
+			logger:                logger,
+			getVersion:            getVersionDefault,
+			restartListenerTicker: testRestartListenerTicker,
+			waitForSyncing:        testWaitForSyncing,
+		}
+
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
+		client.Mock.On("GetSyncStatus", ctx).Return(true, nil)
+
+		complete := make(chan interface{})
+		var once sync.Once
+		listener.Listen(ctx, func() {
+			once.Do(func() {
+				close(complete)
+			})
+		})
+
+		require.Eventually(t, func() bool {
+			return len(client.Calls) == 3
+		}, 5*time.Second, 100*time.Millisecond)
+
+		<-complete
+	})
+
+	t.Run("shutdown cancelled if zetacore stops syncing before timeout", func(t *testing.T) {
+		testCtx, testCancel := context.WithCancel(context.Background())
+		defer testCancel()
+
+		client := mocks.NewZetacoreClient(t)
+		testRestartListenerTicker := 200 * time.Millisecond
+		testWaitForSyncing := 1 * time.Second
+		listener := &ShutdownListener{
+			client:                client,
+			logger:                logger,
+			getVersion:            getVersionDefault,
+			restartListenerTicker: testRestartListenerTicker,
+			waitForSyncing:        testWaitForSyncing,
+		}
+
+		client.Mock.On("GetOperationalFlags", testCtx).Return(observertypes.OperationalFlags{
+			RestartHeight: 2,
+		}, nil).Maybe()
+		client.Mock.On("GetBlockHeight", testCtx).Return(int64(3), nil).Maybe()
+		client.Mock.On("GetSyncStatus", testCtx).Return(true, nil).Once()
+		client.Mock.On("GetSyncStatus", testCtx).Return(false, nil).Times(3)
+
+		complete := make(chan interface{})
+		var once sync.Once
+		listener.Listen(testCtx, func() {
+			once.Do(func() {
+				close(complete)
+			})
+		})
+
+		require.Eventually(t, func() bool {
+			syncStatusCalls := 0
+			for _, call := range client.Calls {
+				if call.Method == "GetSyncStatus" {
+					syncStatusCalls++
+				}
+			}
+			return syncStatusCalls == 4
+		}, 3*time.Second, 100*time.Millisecond)
 
 		assertChannelNotClosed(t, complete)
 	})
@@ -92,13 +169,17 @@ func TestShutdownListener(t *testing.T) {
 		client.Mock.On("GetBlockHeight", ctx).Return(int64(11), nil)
 
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
 			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
+
 		assertChannelNotClosed(t, complete)
 	})
 
@@ -120,8 +201,11 @@ func TestShutdownListener(t *testing.T) {
 
 		// listener also does not shutdown
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
@@ -148,8 +232,11 @@ func TestShutdownListener(t *testing.T) {
 
 		// listener would also shutdown
 		complete := make(chan interface{})
+		var once sync.Once
 		listener.Listen(ctx, func() {
-			close(complete)
+			once.Do(func() {
+				close(complete)
+			})
 		})
 
 		require.Eventually(t, func() bool {
