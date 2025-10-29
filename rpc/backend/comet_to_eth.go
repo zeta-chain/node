@@ -118,7 +118,7 @@ func (b *Backend) EthBlockFromCometBlock(
 	// 5. get MsgEthereumTxs
 
 	msgs, additionals := b.EthMsgsFromCometBlock(resBlock, blockRes)
-	txs := make([]*ethtypes.Transaction, len(msgs))
+	txs := []*ethtypes.Transaction{}
 	for i, ethMsg := range msgs {
 		if additionals[i] == nil {
 			txs = append(txs, ethMsg.AsTransaction())
@@ -151,7 +151,7 @@ func (b *Backend) EthBlockFromCometBlock(
 	ethHeader.GasUsed = gasUsed
 
 	// 9. create eth block
-	ethBlock := ethtypes.NewBlock(ethHeader, body, nil, trie.NewStackTrie(nil))
+	ethBlock := ethtypes.NewBlock(ethHeader, body, []*ethtypes.Receipt{}, trie.NewStackTrie(nil))
 	return ethBlock, nil
 }
 
