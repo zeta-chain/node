@@ -146,11 +146,11 @@ More information about Sui gas can be found in the [Sui Gas Documentation](https
 ZetaChain maintains a gas price parameter for Sui that represents the computation price on the Sui network.
 
 **Important**: Unlike other chains, the gas limit parameter for Sui does not represent a gas limit in computation units.
-Instead, the gas limit represents the overall gas fees denominated in MIST (Sui's smallest unit, where 1 SUI = 1,000,000,000 MIST).
+Instead, the gas limit represents the maximum number of units used to calculate the overall gas budget.
 
-The withdraw fee for Sui is therefore directly specified by the gas limit value:
+The withdraw fee for Sui is calculated as the gas budget:
 ```
-Withdraw Fee = Gas Limit (in MIST)
+Withdraw Fee (Gas Budget in MIST) = Gas Price × Gas Limit
 ```
 
 ### TON
@@ -173,23 +173,94 @@ Withdraw Fee = Gas Price × Gas Limit = 400 × 21,000 = 8,400,000
 
 ### Reverting Withdraw
 
+When a withdraw transaction reverts on the connected chain, there are two scenarios:
+
+**Without `callOnRevert`**: If no `callOnRevert` option was specified during the withdraw, the entire withdraw amount is returned to the user on ZetaChain.
+
+**With `callOnRevert`**: If a `callOnRevert` option was specified during the withdraw, an `onRevert` hook is called on ZetaChain.
+
+In both scenarios, the fees for the revert transaction are covered by the protocol. This means the user receives the full withdraw amount back.
+
+For `onRevert` hook calls, a fixed gas limit is used by the protocol.
+This gas limit can be retrieved with the [following query](https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/fungible/system_contract) under the `gateway_gas_limit` field.
+
 ### Aborting Withdraw
+
+Aborts occur when a revert transaction itself reverts or cannot be executed.
+
+When the user specifies an abort address, the protocol will attempt to call the `onAbort` hook on this address on ZetaChain.
+
+As with revert transactions, the fees for the abort transaction are covered by the protocol and use the fixed gas limit defined in the system contract.
 
 ## Connected Chains Deposit Fees
 
+When making deposits from a connected chain to ZetaChain,
+users typically pay the inherent fees of the connected chain for the deposit transaction.
+The deposit call on ZetaChain is typically covered by the protocol.
+There are some exceptions per chain covered below.
+
+For deposits on ZetaChain that include a smart contract call, a fixed gas limit is used by the protocol for the call.
+This gas limit can be retrieved with the [following query](https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/fungible/system_contract) under the `gateway_gas_limit` field.
+
 ### EVM
+
+[Ethereum Gas Documentation](https://ethereum.org/developers/docs/gas/).
+
+When executing a transaction that includes a single deposit to ZetaChain, the user only pays the inherent fees of the connected EVM chain for the deposit transaction.
+
+As a protection against spam deposits, if the transaction contains multiple deposits to ZetaChain, an additional fee per deposit is charged.
+
+The additional fee is the `additionalActionFeeWei` parameter defined in the connected chain gateway contract.
+
+Therefore, the total additional fee for multiple deposits is calculated in wei (or other base unit) as:
+```
+Total Additional Fee = (Number of Deposits - 1) × additionalActionFeeWei
+```
+
+> **Note**: As of this writing, the multiple deposits mechanism is not yet implemented on ZetaChain mainnet. Subsequent deposits in a single transaction are currently ignored.
 
 ### Bitcoin
 
+[Bitcoin Fee Documentation](https://developer.bitcoin.org/devguide/transactions.html).
+
 ### Solana
+
+[Solana Fee Documentation](https://solana.com/docs/core/fees).
 
 ### Sui
 
+[Sui Gas Documentation](https://docs.sui.io/concepts/tokenomics/gas-pricing).
+
+No additional fees are charged for deposits from the Sui network to ZetaChain.
+
 ### TON
+
+[TON Fee Documentation](https://docs.ton.org/v3/documentation/smart-contracts/transaction-fees/fees).
+
+TON differs from other chains in that the provided amount is not separate from the fee paid for the transaction. The gas fees are deducted directly from the deposited amount.
+
+For `deposit` and `depositAndCall` operations, ZetaChain currently uses the [ordinary mode for messages](https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#message-modes).
+
+The fee calculation formula is defined in the [gateway contract](https://github.com/zeta-chain/protocol-contracts-ton/blob/d30343520a7e4167658fcacd786b6adb38c20959/contracts/common/gas.fc#L57C12-L57C78):
+```
+Fee = flat_gas_price + (gas_amount - flat_gas_limit) × (gas_price >> 16)
+```
+
+Where:
+- `gas_amount` depends on the operation type ([defined here](https://github.com/zeta-chain/protocol-contracts-ton/blob/d30343520a7e4167658fcacd786b6adb38c20959/contracts/gateway.fc#L37)):
+    - **10,000** for `deposit`
+    - **13,000** for `depositAndCall`
+- `flat_gas_price`, `flat_gas_limit`, and `gas_price` are determined by the [TON chain configuration](https://tonviewer.com/config#21) and remain consistent across testnet and mainnet.
 
 ### Reverting Deposit
 
 ### Aborting Deposit
+
+Aborts occur when a revert transaction itself reverts or cannot be executed.
+
+Aborting deposits have the same behavior as aborting withdraws. When the user specifies an abort address, the protocol will attempt to call the `onAbort` hook on this address on ZetaChain.
+
+As with revert transactions, the fees for the abort transaction are covered by the protocol and use the fixed gas limit defined in the system contract.
 
 ## Cosmos Transaction Fees
 
@@ -239,3 +310,7 @@ You can find below resources and references for the fee mechanisms of the differ
 * [Solana Fees Documentation](https://solana.com/docs/core/fees)
 * [Sui Fees Documentation](https://docs.sui.io/concepts/tokenomics/gas-pricing)
 * [TON Fees Documentation](https://docs.ton.org/v3/documentation/smart-contracts/transaction-fees/fees)
+
+---
+
+*Last updated: 2025-10-29*
