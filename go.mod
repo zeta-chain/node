@@ -413,7 +413,7 @@ replace (
 	// which is a fork of https://github.com/threshold-network/tss-lib
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
-	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20251024155232-2faad6966813
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20251029143525-e0e4705563a4
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
 	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4

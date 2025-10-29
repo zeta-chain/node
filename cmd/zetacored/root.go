@@ -35,7 +35,6 @@ import (
 	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -166,20 +165,6 @@ func NewRootCmd() *cobra.Command {
 // InitAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
-	configurator := evmtypes.NewEVMConfigurator()
-	err := configurator.
-		WithExtendedEips(zetacoredconfig.CosmosEVMActivators).
-		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
-			Denom:         denom,
-			ExtendedDenom: denom,
-			DisplayDenom:  denom,
-			Decimals:      18,
-		}).
-		Configure()
-	if err != nil {
-		panic(err)
-	}
-
 	type CustomAppConfig struct {
 		serverconfig.Config
 

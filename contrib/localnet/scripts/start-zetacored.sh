@@ -255,6 +255,7 @@ then
     .app_state.feemarket.params.base_fee_change_denominator = "300" |
     .app_state.feemarket.params.elasticity_multiplier = "4" |
     .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000100", "0x0000000000000000000000000000000000000400", "0x0000000000000000000000000000000000000800", "0x0000000000000000000000000000000000000801", "0x0000000000000000000000000000000000000804", "0x0000000000000000000000000000000000000805", "0x0000000000000000000000000000000000000806"] |
+    .app_state.bank.denom_metadata=[{"description":"The native staking token for zetacored.","denom_units":[{"denom":"azeta","exponent":0,"aliases":[]},{"denom":"zeta","exponent":18,"aliases":[]}],"base":"azeta","display":"zeta","name":"Zeta","symbol":"ZETA","uri":"","uri_hash":""}] | 
     .consensus.params.block.max_gas = "50000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
