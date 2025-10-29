@@ -55,6 +55,13 @@ func New(baseObserver *base.Observer, suiClient SuiClient, gateway *sui.Gateway)
 
 	ob.LoadLastTxScanned()
 
+	// load cursors from auxiliary database for each supported package
+	ob.LoadAuxString(ob.gateway.PackageID())
+	ob.LoadAuxString(ob.gateway.Original().PackageID())
+	if ob.gateway.Previous() != nil {
+		ob.LoadAuxString(ob.gateway.Previous().PackageID())
+	}
+
 	return ob
 }
 
