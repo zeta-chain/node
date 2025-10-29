@@ -22,6 +22,36 @@ cache-preimage = {{ .EVM.EnablePreimageRecording }}
 # EVMChainID is the EIP-155 compatible replay protection chain ID. This is separate from the Cosmos chain ID.
 evm-chain-id = {{ .EVM.EVMChainID }}
 
+# MinTip defines the minimum priority fee for the mempool.
+min-tip = {{ .EVM.MinTip }}
+
+# GethMetricsAddress defines the addr to bind the geth metrics server to. Default 127.0.0.1:8100.
+geth-metrics-address = "{{ .EVM.GethMetricsAddress }}"
+
+# Mempool configuration for EVM transactions
+[evm.mempool]
+
+# PriceLimit is the minimum gas price to enforce for acceptance into the pool (in wei)
+price-limit = {{ .EVM.Mempool.PriceLimit }}
+
+# PriceBump is the minimum price bump percentage to replace an already existing transaction (nonce)
+price-bump = {{ .EVM.Mempool.PriceBump }}
+
+# AccountSlots is the number of executable transaction slots guaranteed per account
+account-slots = {{ .EVM.Mempool.AccountSlots }}
+
+# GlobalSlots is the maximum number of executable transaction slots for all accounts
+global-slots = {{ .EVM.Mempool.GlobalSlots }}
+
+# AccountQueue is the maximum number of non-executable transaction slots permitted per account
+account-queue = {{ .EVM.Mempool.AccountQueue }}
+
+# GlobalQueue is the maximum number of non-executable transaction slots for all accounts
+global-queue = {{ .EVM.Mempool.GlobalQueue }}
+
+# Lifetime is the maximum amount of time non-executable transaction are queued
+lifetime = "{{ .EVM.Mempool.Lifetime }}"
+
 ###############################################################################
 ###                           JSON RPC Configuration                        ###
 ###############################################################################
@@ -36,6 +66,10 @@ address = "{{ .JSONRPC.Address }}"
 
 # Address defines the EVM WebSocket server address to bind to.
 ws-address = "{{ .JSONRPC.WsAddress }}"
+
+# WSOrigins defines the allowed origins for WebSocket connections.
+# Example: ["localhost", "127.0.0.1", "myapp.example.com"]
+ws-origins = [{{range $index, $elmt := .JSONRPC.WSOrigins}}{{if $index}}, {{end}}"{{$elmt}}"{{end}}]
 
 # API defines a list of JSON-RPC namespaces that should be enabled
 # Example: "eth,txpool,personal,net,debug,web3"
@@ -86,12 +120,14 @@ enable-indexer = {{ .JSONRPC.EnableIndexer }}
 # Prometheus metrics path: /debug/metrics/prometheus
 metrics-address = "{{ .JSONRPC.MetricsAddress }}"
 
-# WSOrigins defines the allowed origins for WebSocket connections.
-# Example: ["localhost", "127.0.0.1", "myapp.example.com"]
-ws-origins = [{{range $index, $elmt := .JSONRPC.WSOrigins}}{{if $index}}, {{end}}"{{$elmt}}"{{end}}]
+# Maximum number of requests in a batch.
+batch-request-limit = {{ .JSONRPC.BatchRequestLimit }}
 
-# Upgrade height for fix of revert gas refund logic when transaction reverted.
-fix-revert-gas-refund-height = {{ .JSONRPC.FixRevertGasRefundHeight }}
+# Maximum number of bytes returned from a batched call.
+batch-response-max-size = {{ .JSONRPC.BatchResponseMaxSize }}
+
+# Enabled profiling in the debug namespace
+enable-profiling = {{ .JSONRPC.EnableProfiling }}
 
 ###############################################################################
 ###                             TLS Configuration                           ###

@@ -8,6 +8,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	evmante "github.com/cosmos/evm/ante"
+
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -90,11 +92,14 @@ import (
 	"github.com/cosmos/evm/x/vm"
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/ethereum/go-ethereum/common"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native" // register native tracers
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 
+	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
+	evmmempool "github.com/cosmos/evm/mempool"
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/docs/openapi"
 	srvflags "github.com/zeta-chain/node/server/flags"
@@ -204,10 +209,12 @@ var (
 type App struct {
 	*baseapp.BaseApp
 
-	cdc               *codec.LegacyAmino
-	appCodec          codec.Codec
-	interfaceRegistry types.InterfaceRegistry
-	invCheckPeriod    uint
+	cdc                *codec.LegacyAmino
+	appCodec           codec.Codec
+	interfaceRegistry  types.InterfaceRegistry
+	invCheckPeriod     uint
+	clientCtx          client.Context
+	pendingTxListeners []evmante.PendingTxListener
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -246,6 +253,7 @@ type App struct {
 	EvmKeeper       *evmkeeper.Keeper
 	Erc20Keeper     erc20keeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
+	EVMMempool      *evmmempool.ExperimentalEVMMempool
 
 	// zetachain keepers
 	AuthorityKeeper   authoritykeeper.Keeper
@@ -903,6 +911,19 @@ func (app *App) AppCodec() codec.Codec {
 // InterfaceRegistry returns Gaia's InterfaceRegistry
 func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
+}
+
+func (app *App) SetClientCtx(clientCtx client.Context) { // TODO:VLAD - Remove this if possible
+	app.clientCtx = clientCtx
+}
+
+func (app *App) GetMempool() sdkmempool.ExtMempool {
+	return app.EVMMempool
+}
+
+// RegisterPendingTxListener is used by json-rpc server to listen to pending transactions callback.
+func (app *App) RegisterPendingTxListener(listener func(common.Hash)) {
+	app.pendingTxListeners = append(app.pendingTxListeners, listener)
 }
 
 // AutoCliOpts returns the autocli options for the app.

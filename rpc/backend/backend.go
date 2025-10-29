@@ -19,10 +19,10 @@ import (
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	evmmempool "github.com/cosmos/evm/mempool"
-	"github.com/cosmos/evm/server/config"
 	servertypes "github.com/cosmos/evm/server/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/server/config"
 
 	"cosmossdk.io/log"
 

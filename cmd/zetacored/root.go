@@ -231,8 +231,9 @@ func initTmConfig() *tmcfg.Config {
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig evmosencoding.Config) {
-	ac := appCreator{}
-
+	sdkAppCreator := func(l log.Logger, d dbm.DB, w io.Writer, ao servertypes.AppOptions) servertypes.Application {
+		return newApp(l, d, w, ao)
+	}
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(
@@ -259,13 +260,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig evmosencoding.Config) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 
 		debug.Cmd(),
-		snapshot.Cmd(ac.newApp),
+		snapshot.Cmd(sdkAppCreator),
 	)
 
 	zevmserver.AddCommands(
 		rootCmd,
-		zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome),
-		ac.appExport,
+		zevmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
+		appExport,
 		addModuleInitFlags,
 	)
 
@@ -337,14 +338,12 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-type appCreator struct{}
-
-func (ac appCreator) newApp(
+func newApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) zevmserver.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
@@ -389,7 +388,7 @@ func (ac appCreator) newApp(
 }
 
 // appExport is used to export the state of the application for a genesis file.
-func (ac appCreator) appExport(
+func appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
