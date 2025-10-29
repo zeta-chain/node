@@ -63,7 +63,6 @@ jobs:
           if aws s3 ls "s3://${R2_BUCKET_NAME}/${RELEASE_ID}/" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" > /dev/null 2>&1; then
             echo "Error: Release ${RELEASE_ID} already exists in R2"
-            echo "Path: ${R2_BUCKET_NAME}/${RELEASE_ID}/"
             exit 1
           fi
           echo "Release ID is unique, proceeding with upload"
@@ -157,7 +156,6 @@ jobs:
           echo "## Release Upload Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release ID**: \`${RELEASE_ID}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Bucket**: \`${R2_BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Path**: \`${RELEASE_ID}/\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
