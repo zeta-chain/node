@@ -68,6 +68,10 @@ if [ "$HOTKEY_BACKEND" == "file" ]; then
     BACKEND="file"
 fi
 
+# The ZetaClient instances created by this script can connect with different ZetaCore instances.
+# - "zetaclient-new-validator" connects with "zetacore-new-validator".
+# - "zetaclient-dry" connects with "zetacore0".
+# - "zetaclientN" connects with "zetacoreN".
 if [[ $HOSTNAME == "zetaclient-new-validator" ]]; then
     node="zetacore-new-validator"
 elif [[ $HOSTNAME == "zetaclient-dry" ]]; then
@@ -112,7 +116,7 @@ if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
     enable_multiple_calls
 
     # If eth2 is enabled, set the endpoint in the zetaclient_config.json.
-    # In this case, the additional evm is represented with the sepolia chain, and we manually set
+    # In this case, the additional EVM is represented with the sepolia chain, and we manually set
     # the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545) in
     # /root/.zetacored/config/zetaclient_config.json.
     if host eth2 > /dev/null; then
@@ -122,13 +126,13 @@ if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
 fi
 
 if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]; then
-    # Use alternative DNS name (instead of IP) for other zetaclients (DNS should work as well).
+    # TODO: use alternative DNS name (instead of IP) for other zetaclients (DNS should work as well).
     # See: https://github.com/zeta-chain/node/issues/4374.
     zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 \
         --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" \
         --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
-    # Import relayer private key for zetaclient{$num}.
+    # zetaclient-dry does not need to import the relayer private key.
     if [[ $HOSTNAME != "zetaclient-dry" ]]; then
         import_relayer_key "${num}"
     fi
