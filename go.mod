@@ -304,7 +304,6 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
-	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.4
 	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251024131414-98b6687542f8
@@ -316,7 +315,6 @@ require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/x/feegrant v0.2.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.48.1 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.48.1 // indirect
@@ -331,9 +329,11 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
+	github.com/ferranbt/fastssz v0.1.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/stun/v2 v2.0.0 // indirect
@@ -414,7 +414,7 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
 	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20251024155232-2faad6966813
-	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
 	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
 )

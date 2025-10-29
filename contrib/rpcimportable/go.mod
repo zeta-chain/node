@@ -14,7 +14,7 @@ replace (
 // go-ethereum fork must be used as it removes incompatible pebbledb version
 // TODO evm: verify if pebbledb issue is in cosmos go ethereum fork
 replace (
-    github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+    github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1
 )
 
 replace (
