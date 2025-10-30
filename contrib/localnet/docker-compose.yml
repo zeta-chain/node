@@ -232,6 +232,28 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  zetaclient-dry:
+    image: zetanode:latest
+    container_name: zetaclient-dry
+    hostname: zetaclient-dry
+    profiles:
+      - dry
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.26
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6066
+    ports:
+      - "6066:6066" # pprof
+      - "8891:8886" # metrics
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
   eth:
     image: ethereum/client-go:v1.14.0
     container_name: eth

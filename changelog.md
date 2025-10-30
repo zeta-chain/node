@@ -56,6 +56,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4359](https://github.com/zeta-chain/node/pull/4359) - add chaos mode for ZetaClient
 * [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
 * [4378](https://github.com/zeta-chain/node/pull/4378) - add number of connected peers to tss keygen log
+* [4387](https://github.com/zeta-chain/node/pull/4387) - add new dry zetaclient to localnet
 
 ### Tests
 
@@ -69,7 +70,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
 * [4356](https://github.com/zeta-chain/node/pull/4356) - rename protocol contract imports to `protocol-contracts-evm`
 * [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
-
+* [4391](https://github.com/zeta-chain/node/pull/4391) - change client mode config
 
 ### Fixes
 
