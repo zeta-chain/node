@@ -34,7 +34,7 @@ Unlike traditional GitFlow where all features eventually merge to a single integ
 
 **`release/zetaclient/vY`** - Created from `develop` or `main`
 
-- Independent version cycle: v1.0.0, v1.1.0, v2.0.0, etc.
+- Independent version cycle (starting from v37): v37.0.0, v37.1.0, v38.0.0, etc.
 - Source branch depends on release type:
     - From `develop`: Independent ZetaClient release
     - From `main`: Coordinated release with ZetaCore
@@ -78,7 +78,7 @@ Each protocol contracts repository maintains its own independent versioning.
 
 - Each protocol contracts repository (EVM, Solana, TON, Sui) follows its own independent semantic versioning
 
-Example versions: ZetaCore v36.0.0, ZetaClient v2.5.1, EVM Gateway v1.2.3
+Example versions: ZetaCore v36.0.0, ZetaClient v38.0.0, EVM Gateway v1.2.3
 
 ## Release Process
 
@@ -88,6 +88,10 @@ Example versions: ZetaCore v36.0.0, ZetaClient v2.5.1, EVM Gateway v1.2.3
 2. Run [ZetaClient release Github action](https://github.com/zeta-chain/node/actions/workflows/publish-release-zetaclient.yml)
 3. No ZetaCore release required
 4. Coordinate deployment of the release
+
+> **Note:** Currently, pass the version in semver format (e.g., `v37.0.0`).
+> After release creation, manually rename the tag and GitHub release to use the `zetaclient_` prefix (e.g., `zetaclient_v37.0.0`) to differentiate from ZetaCore releases.
+> This will be automated in the future (see [#4389](https://github.com/zeta-chain/node/issues/4389)).
 
 ### Consensus-Breaking Release
 
