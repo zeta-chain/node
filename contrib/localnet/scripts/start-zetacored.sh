@@ -178,10 +178,16 @@ fi
 if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   ZETACORED_REPLICAS=2
-  if host zetacore3 ; then
-    echo "zetacore3 exists, setting ZETACORED_REPLICAS to 4"
-    ZETACORED_REPLICAS=4
+  if host zetacore2; then
+    echo "zetacore2 exists, incrementing ZETACORED_REPLICAS"
+    ZETACORED_REPLICAS=$((ZETACORED_REPLICAS+1))
   fi
+  if host zetacore3; then
+    echo "zetacore3 exists, incrementing ZETACORED_REPLICAS"
+    ZETACORED_REPLICAS=$((ZETACORED_REPLICAS+1))
+  fi
+  echo "ZETACORED_REPLICAS = ${ZETACORED_REPLICAS}"
+
   # generate node list
   START=1
   # shellcheck disable=SC2100
@@ -213,10 +219,15 @@ then
     echo "zetacore-new-validator exists"
     ssh zetaclient-new-validator mkdir -p ~/.zetacored/
     while ! scp zetacore-new-validator:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_non_validator.json; do
-          echo "Waiting for os_info.json from node zetacore-new-validator"
-          sleep 1
-        done
+        echo "Waiting for os_info.json from node zetacore-new-validator"
+        sleep 1
+    done
     scp ~/.zetacored/os_info/os_non_validator.json zetaclient-new-validator:~/.zetacored/os.json
+  fi
+
+  if host zetaclient-dry ; then
+    echo "zetaclient-dry exists"
+    scp ~/.zetacored/os_info/os.json zetaclient-dry:~/.zetacored/os.json
   fi
 
   ssh zetaclient0 mkdir -p ~/.zetacored/
@@ -290,6 +301,7 @@ then
     ssh $NODE mkdir -p ~/.zetacored/config/gentx/peer/
     scp ~/.zetacored/config/gentx/* $NODE:~/.zetacored/config/gentx/peer/
   done
+
   # Create gentx files on other nodes and copy them to host node
   mkdir ~/.zetacored/config/gentx/z2gentx
   for NODE in "${NODELIST[@]}"; do
@@ -300,17 +312,17 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
-#  TODO : USE --modify flag to modify the genesis file when v18 is released
+  # TODO : USE --modify flag to modify the genesis file when v18 is released
   if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
 
-# 4. Collect all the gentx files in zetacore0 and create the final genesis.json
+  # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
   zetacored validate-genesis
 
-# 5. Copy the final genesis.json to all the nodes
+  # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
@@ -341,13 +353,19 @@ fi
 # End of genesis creation steps . The steps below are common to all the nodes
 
 # Update persistent peers
-if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]
-then
+if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]; then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
+
+  if host zetaclient-dry ; then
+      ssh zetaclient-dry mkdir -p ~/.zetacored/keyring-test/
+      scp ~/.zetacored/keyring-test/* zetaclient-dry:~/.zetacored/keyring-test/
+      ssh zetaclient-dry mkdir -p ~/.zetacored/keyring-file/
+      scp ~/.zetacored/keyring-file/* zetaclient-dry:~/.zetacored/keyring-file/
+  fi
 
    pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
    pps=${pp:1:58}
