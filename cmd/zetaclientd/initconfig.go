@@ -13,7 +13,7 @@ import (
 
 // initializeConfigOptions is a set of CLI options for `init` command.
 type initializeConfigOptions struct {
-	mode mode.ClientMode
+	mode string
 
 	chaosSeed            int64
 	chaosPercentagesPath string
@@ -45,7 +45,7 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
-		usageMode                 = "mode for cross-chain transaction processing (0:standard, 1:dry, 2:chaos)"
+		usageMode                 = "mode for cross-chain transaction processing (standard, dry, or chaos)"
 		usageChaosSeed            = "seed for the pseudo-random chaos number generator (default: 0 uses a random seed)"
 		usageChaosPercentagesPath = "path for the chaos percentages file containing the failure rates for each failable method"
 		usagePeer                 = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
@@ -58,7 +58,7 @@ func setupInitializeConfigOptions() {
 		usageMempoolThreshold     = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 
-	f.Uint8Var((*uint8)(&cfg.mode), "mode", uint8(mode.StandardMode), usageMode)
+	f.StringVar(&cfg.mode, "mode", "standard", usageMode)
 	f.Int64Var(&cfg.chaosSeed, "chaos-seed", 0, usageChaosSeed)
 	f.StringVar(&cfg.chaosPercentagesPath, "chaos-percentages-path", "", usageChaosPercentagesPath)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
@@ -100,8 +100,13 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	clientMode, err := mode.New(opts.mode)
+	if err != nil {
+		return err
+	}
+
 	// Populate new struct with cli arguments
-	configData.ClientMode = opts.mode
+	configData.ClientMode = clientMode
 	configData.ChaosSeed = opts.chaosSeed
 	configData.ChaosPercentagesPath = opts.chaosPercentagesPath
 	configData.Peer = initializeConfigOpts.peer
