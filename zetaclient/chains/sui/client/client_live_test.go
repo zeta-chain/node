@@ -2,14 +2,16 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/zeta-chain/node/zetaclient/common"
-
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
+	e2econf "github.com/zeta-chain/node/e2e/config"
+	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
@@ -19,11 +21,125 @@ const (
 	RPCTestnet = "https://sui-testnet.public.blastapi.io"
 )
 
-func TestClientLive(t *testing.T) {
-	if !common.LiveTestEnabled() {
-		t.Skip("skipping live test")
-		return
+func suiDeployPackage(
+	t *testing.T,
+	client *Client,
+	deployerSigner *sui.SignerSecp256k1,
+	bytecodeBase64s []string,
+	extraDependencies []string,
+	objectTypeFilters []string,
+) (string, map[string]string) {
+	ctx := context.Background()
+
+	deployerAddress := deployerSigner.Address()
+	fmt.Printf("deployerAddress: %s\n", deployerAddress)
+
+	// aside from the standard framework dependencies, add extra dependencies if provided
+	dependencies := append([]string{
+		"0x1", // Sui Framework
+		"0x2", // Move Standard Library
+	}, extraDependencies...) // other dependencies
+
+	// build the publish transaction and sign it with deployer key
+	publishTx, err := client.Publish(ctx, models.PublishRequest{
+		Sender:          deployerAddress,
+		CompiledModules: bytecodeBase64s,
+		Dependencies:    dependencies,
+		GasBudget:       "100000000",
+	})
+	require.NoError(t, err, "create publish tx")
+
+	signature, err := deployerSigner.SignTxBlock(publishTx)
+	require.NoError(t, err, "sign transaction")
+
+	// execute the publish transaction and wait for it to be executed
+	resp, err := client.SuiExecuteTransactionBlock(ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:   publishTx.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:        true,
+			ShowBalanceChanges: true,
+			ShowEvents:         true,
+			ShowObjectChanges:  true,
+		},
+		RequestType: "WaitForLocalExecution",
+	})
+	require.NoError(t, err)
+	require.True(t, resp.Effects.Status.Status == TxStatusSuccess, resp.Effects.Status.Error)
+
+	// find packageID
+	var packageID string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "published" {
+			packageID = change.PackageId
+		}
 	}
+	require.NotEmpty(t, packageID, "packageID not found")
+
+	// find objects by type filters
+	objectIDs := make(map[string]string)
+	for _, filter := range objectTypeFilters {
+		for _, change := range resp.ObjectChanges {
+			if change.Type == "created" && strings.Contains(change.ObjectType, filter) {
+				objectIDs[filter] = change.ObjectId
+			}
+		}
+	}
+
+	return packageID, objectIDs
+}
+
+func TestClientLive(t *testing.T) {
+	t.Run("DeployExample", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		const (
+			filterGlobalConfigType = "connected::GlobalConfig"
+			filterPartnerType      = "connected::Partner"
+			filterClockType        = "connected::Clock"
+		)
+
+		// deployer account, same as in e2e test
+		accountDeployer := e2econf.Account{RawPrivateKey: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"}
+		deployerSigner, err := accountDeployer.SuiSigner()
+		require.NoError(t, err, "get deployer signer")
+
+		// hardcoded compiled binaries paths
+		tokenBinPath := "/Users/charliechen/dev/node/e2e/contracts/sui/example/build/example/bytecode_modules/token.mv"
+		connectedBinPath := "/Users/charliechen/dev/node/e2e/contracts/sui/example/build/example/bytecode_modules/connected.mv"
+		tokenBytecodeBase64 := suibin.ReadMoveBinaryBase64(t, tokenBinPath)
+		connectedBytecodeBase64 := suibin.ReadMoveBinaryBase64(t, connectedBinPath)
+
+		// dependencies, new gateway package
+		extraDependencies := []string{
+			"0x28acc3a03af7658e52456617ac5ba6933ebf8dfb03469697b3673577a4262e24",
+			"0x6b2fe12c605d64e14ca69f9aba51550593ba92ff43376d0a6cc26a5ca226f9bd",
+		}
+
+		objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
+		packageID, objectIDs := suiDeployPackage(
+			t,
+			ts.Client,
+			deployerSigner,
+			[]string{tokenBytecodeBase64, connectedBytecodeBase64},
+			extraDependencies,
+			objectTypeFilters,
+		)
+		fmt.Printf("deployed example package with packageID: %s\n", packageID)
+
+		globalConfigID, ok := objectIDs[filterGlobalConfigType]
+		require.True(t, ok, "globalConfig object not found")
+		fmt.Printf("globalConfigID: %s\n", globalConfigID)
+
+		partnerID, ok := objectIDs[filterPartnerType]
+		require.True(t, ok, "partner object not found")
+		fmt.Printf("partnerID: %s\n", partnerID)
+
+		clockID, ok := objectIDs[filterClockType]
+		require.True(t, ok, "clock object not found")
+		fmt.Printf("clockID: %s\n", clockID)
+	})
 
 	t.Run("HealthCheck", func(t *testing.T) {
 		// ARRANGE

@@ -1,12 +1,12 @@
 [package]
 name = "gateway"
 edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
-published-at = "ORIGINAL-PACKAGE-ID"
+published-at = "0x28acc3a03af7658e52456617ac5ba6933ebf8dfb03469697b3673577a4262e24"
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.51.5" }
+#Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.51.5" }
 
 # For remote import, use the `{ git = "...", subdir = "...", rev = "..." }`.
 # Revision can be a branch, a tag, and a commit hash.

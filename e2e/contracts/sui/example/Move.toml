@@ -5,8 +5,16 @@ edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.51.5" }
-gateway = { local = "../protocol-contracts-sui-upgrade"}
+# MoveStdlib
+Sui = { git = "https://github.com/MystenLabs/sui.git", rev = "2c930c25f8d3", subdir = "crates/sui-framework/packages/sui-framework" }
+
+Bridge = { git = "https://github.com/MystenLabs/sui.git", rev = "2c930c25f8d3", subdir = "crates/sui-framework/packages/bridge" }
+
+MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", rev = "2c930c25f8d3", subdir = "crates/sui-framework/packages/move-stdlib" }
+
+SuiSystem = { git = "https://github.com/MystenLabs/sui.git", rev = "2c930c25f8d3", subdir = "crates/sui-framework/packages/sui-system" }
+
+gateway = { git = "https://github.com/zeta-chain/protocol-contracts-sui.git", rev = "ba6aeed63af0b52f30188d22f71616de6924a5a2" }
 
 # For remote import, use the `{ git = "...", subdir = "...", rev = "..." }`.
 # Revision can be a branch, a tag, and a commit hash.
@@ -21,7 +29,7 @@ gateway = { local = "../protocol-contracts-sui-upgrade"}
 
 [addresses]
 example = "0x0"
-gateway = "0x0"
+gateway = "0x28acc3a03af7658e52456617ac5ba6933ebf8dfb03469697b3673577a4262e24"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
 # for example, `std = "0x1"` is exported by the Standard Library.

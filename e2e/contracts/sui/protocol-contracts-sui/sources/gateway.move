@@ -147,11 +147,6 @@ fun init(ctx: &mut TxContext) {
 
 // === Entrypoints ===
 
-// upgraded returns true to indicate gateway has been upgraded
-entry fun upgraded(): bool {
-    true
-}
-
 // increase_nonce increases the nonce of the gateway
 // it is used when a failed outbound needs to be reported to ZetaChain
 // it is sent by the tss and therefore requires the withdraw cap
