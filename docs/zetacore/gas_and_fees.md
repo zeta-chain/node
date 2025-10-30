@@ -126,8 +126,6 @@ However, the gas stability pool must be manually funded to enable fee increases 
 
 ### Solana
 
-### Solana
-
 For Solana transactions, ZetaChain uses Solana's compute unit model for fee calculation.
 More information about Solana fees can be found in the [Solana Fee Documentation](https://solana.com/docs/core/fees).
 
@@ -221,11 +219,18 @@ Total Additional Fee = (Number of Deposits - 1) × additionalActionFeeWei
 
 ### Bitcoin
 
-[Bitcoin Fee Documentation](https://developer.bitcoin.org/devguide/transactions.html).
+For Bitcoin transactions, refer to the [Bitcoin Fee Documentation](https://developer.bitcoin.org/devguide/transactions.html).
+
+In addition to the Bitcoin network fees, a depositor fee is deducted from the deposited amount.
+The depositor fee is charged to cover the cost of spending the deposited UTXO in the future.
+
+The logic to calculate this depositor fee can be found in the [following page](https://www.zetachain.com/docs/developers/chains/bitcoin#fees).
 
 ### Solana
 
 [Solana Fee Documentation](https://solana.com/docs/core/fees).
+
+No additional fees are charged for deposits from the Solana network to ZetaChain.
 
 ### Sui
 
@@ -253,6 +258,19 @@ Where:
 - `flat_gas_price`, `flat_gas_limit`, and `gas_price` are determined by the [TON chain configuration](https://tonviewer.com/config#21) and remain consistent across testnet and mainnet.
 
 ### Reverting Deposit
+
+When a deposit reverts, ZetaChain will initiate a revert transaction on the connected chain.
+
+The fees for the revert transaction follow the same rules as the withdraw fees section, with the formula:
+```
+Revert Fee = gasLimit × gasPrice
+```
+
+The `gasLimit` is determined by the ZRC20 default gas limit value, or by a custom `revertGasLimit` specified during the deposit.
+
+The fees are directly deducted from the amount transferred during the deposit:
+- When the asset is the native gas token of the connected chain, the fees are deducted from the deposited amount.
+- When the asset is a token, the tokens are swapped to the native gas token to cover the fees using internal liquidity pools.
 
 ### Aborting Deposit
 
