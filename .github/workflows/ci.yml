@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-      - release/*
+      - release/**
   merge_group:
   pull_request:
 
