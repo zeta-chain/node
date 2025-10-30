@@ -7,9 +7,6 @@ import (
 
 type ClientMode uint8
 
-// InvalidMode is not a valid client mode.
-const InvalidMode ClientMode = 0b11111111
-
 const (
 	// StandardMode represents the standard mode of execution for the ZetaClient.
 	//
@@ -36,6 +33,9 @@ const (
 	// We use chaos mode to replicate unstable environments for testing.
 	ChaosMode
 )
+
+// InvalidMode is not a valid client mode.
+const InvalidMode ClientMode = 0b11111111
 
 var ErrInvalidModeString = fmt.Errorf("invalid client mode string; should be %q, %q, or %q",
 	stringStandard, stringDry, stringChaos)
