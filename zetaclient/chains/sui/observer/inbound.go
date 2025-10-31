@@ -22,8 +22,9 @@ import (
 )
 
 var (
-	errTxNotFound = errors.New("no tx found")
-	errCompliance = errors.New("compliance check failed")
+	errTxNotFound  = errors.New("no tx found")
+	errCompliance  = errors.New("compliance check failed")
+	errVoteInbound = errors.New("vote inbound error")
 )
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
@@ -75,11 +76,12 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 		err := ob.processInboundEvent(ctx, event, nil, false, false)
 
 		switch {
-		case errors.Is(err, errTxNotFound):
+		case errors.Is(err, errTxNotFound),
+			errors.Is(err, errVoteInbound):
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("tx not found or not finalized; pausing")
+				Msg("tx not found or vote inbound failed; retrying")
 			return nil
 		case errors.Is(err, errCompliance):
 			// skip restricted tx and update the cursor
@@ -202,7 +204,7 @@ func (ob *Observer) processInboundEvent(
 	_, err = ob.ZetaRepo().
 		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return err
+		return errors.Wrap(errVoteInbound, err.Error())
 	}
 
 	return nil
