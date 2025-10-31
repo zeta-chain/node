@@ -53,9 +53,6 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 				uint8(i),
 			)
 		}
-		for i, acc := range alt.Addresses {
-			r.Logger.Info("address lookup table account %s, writable %d", acc.String(), writableIndexes[i])
-		}
 
 	} else {
 		initAddressLookupTable = true
