@@ -21,15 +21,24 @@ For simplicity, we will mostly refer to gas and fees as "fees" in the following 
 
 ## Usages of Fees in ZetaChain
 
-ZetaChain involves fees in several distinct contexts:
+ZetaChain involves fees in several distinct contexts, which can be grouped into fees related to local transactions on the ZetaChain L1 and fees related to cross-chain interactions with connected chains.
 
-* **ZetaChain EVM Transaction Fees**: ZetaChain integrates the EVM module that makes it an EVM-compatible Layer 1 blockchain. Sending EVM transactions to ZetaChain involves using the standard EVM transaction fee mechanism.
+### Local L1 Fees (ZetaChain)
+
+These fees cover operations executed directly on the ZetaChain Layer 1 (L1) blockchain.
+Most users will primarily interact with ZetaChain EVM Transaction Fees.
+
+* **ZetaChain EVM Transaction Fees**: ZetaChain integrates the [EVM module](https://github.com/cosmos/evm) that makes it an EVM-compatible Layer 1 blockchain. Sending EVM transactions to ZetaChain involves using the standard EVM transaction fee mechanism.
+
+* **Cosmos Transaction Fees**: As a Layer 1 blockchain built with Cosmos SDK, sending direct Cosmos transactions on ZetaChain involves using the Cosmos gas mechanism for fee calculation and payment.
+
+### Cross-Chain Fees
+
+These fees are incurred when a user initiates a transaction that bridges assets or data between ZetaChain and a connected chains.
 
 * **Connected Chains Withdraw Fees**: The calculation and payment of fees when a user initiates an outgoing cross-chain transaction from ZetaChain to a connected chain.
 
 * **Connected Chains Deposit Fees**: The calculation and payment of fees when a user initiates an incoming cross-chain transaction from a connected chain to ZetaChain.
-
-* **Cosmos Transaction Fees**: As a Layer 1 blockchain built with Cosmos SDK, sending direct Cosmos transactions on ZetaChain involves using the Cosmos gas mechanism for fee calculation and payment.
 
 ## ZetaChain EVM Transaction Fees
 
@@ -59,6 +68,44 @@ Or using the [Cast CLI](https://getfoundry.sh):
 cast block latest --rpc-url https://zetachain-evm.blockpi.network/v1/rpc/public
 ```
 
+## Cosmos Transaction Fees
+
+ZetaChain, being a Cosmos SDK-based blockchain, employs the Cosmos gas mechanism for fee calculation and payment for direct Cosmos transactions.
+Documentation for Cosmos SDK fees can be found [here](https://docs.cosmos.network/v0.53/learn/beginner/gas-fees).
+
+Direct interactions are used for operations such as staking, ZETA transfers, or governance voting, although these operations can now be performed via the [EVM precompiles](https://evm.cosmos.network/docs/evm/v0.4.x/documentation/smart-contracts/precompiles). Therefore, it is generally rare for users to perform direct Cosmos transactions on ZetaChain. All interactions for cross-chain transactions are done via the EVM interface.
+
+Cosmos transactions are still used for system transactions sent by the observer signers and for administrative operations.
+
+### System Messages
+
+System messages represent the following operations:
+
+- Voting inbound observations
+- Voting outbound observations
+- Voting gas prices for connected chains
+- Adding and removing inbound and outbound trackers
+
+For these system messages, the ZetaClient process uses fixed gas limit values defined in [this file](https://github.com/zeta-chain/node/blob/develop/zetaclient/zetacore/constant.go).
+
+### Gas Limit for Inbound Voting
+
+The gas limit used for inbound voting has some specificities.
+There is currently no distinctive message between voting and executing inbound, the vote message reaching sufficient quorum will execute the inbound automatically.
+However, the execution of the inbound might trigger a smart contract call that requires an increased amount of gas.
+Since there is no way to predict which vote will trigger execution, and higher gas limits result in higher fees in Cosmos transactions, the following mechanism is used to avoid requiring high gas limits for each vote message:
+
+- Each vote message is sent with a base gas limit (currently 500,000)
+- When the vote message fails due to out of gas during execution, the ZetaClient process re-sends the vote message with an increased gas limit (currently 7,000,000)
+
+This mechanism will be removed in the future once a distinct message for executing inbound is implemented.
+
+### Administrative Operations
+
+The administrative operations can be found at [this page](https://www.zetachain.com/docs/developers/architecture/privileged).
+
+They must be executed using the [group module](https://tutorials.cosmos.network/tutorials/8-understand-sdk-modules/3-group.html).
+
 ## Connected Chains Withdraw Fees
 
 Users create outgoing cross-chain transactions to connected chains using the withdraw interface of the ZetaChain gateway:
@@ -75,7 +122,7 @@ The additional withdraw fees can be queried on the ZRC20 asset contract with the
 // for simple withdraws, default gas limit set per zrc20
 function withdrawGasFee() external view returns (address, uint256);
 
-// for withdraws that include a call on the connected chain
+// for withdraws that include a call on the connected chain, gas limit is specified by the user depending on the call complexity
 function withdrawGasFeeWithGasLimit(uint256 gasLimit) external view returns (address, uint256);
 ```
 
@@ -100,11 +147,14 @@ Withdraw Fee = Gas Price × Gas Limit
 
 The gas price represents the cost per unit of gas on the connected EVM chain,
 while the gas limit represents the maximum amount of gas allocated for executing the transaction on that chain.
+These gas price and gas limit values are specific to the connected chain and are completely independent from the gas parameters used for the transaction on the ZetaChain EVM.
 
 **Important Consideration**: The gas limit is fully consumed regardless of whether the cross-chain call uses all the allocated gas.
 In the current architecture, any remaining unused gas is sent to a gas stability pool.
 This pool is used to compensate for additional fees for transactions during periods of gas price surges,
 helping to ensure transaction execution during network congestion.
+
+> **Note**: In a future upgrade, a portion of the unused gas will be refunded to users to optimize fee efficiency.
 
 ### Bitcoin
 
@@ -266,7 +316,7 @@ The fees for the revert transaction follow the same rules as the withdraw fees s
 Revert Fee = gasLimit × gasPrice
 ```
 
-The `gasLimit` is determined by the ZRC20 default gas limit value, or by a custom `revertGasLimit` specified during the deposit.
+The `gasLimit` is determined by the ZRC20 default gas limit value, or by a custom `onRevertGasLimit` specified during the deposit.
 
 The fees are directly deducted from the amount transferred during the deposit:
 - When the asset is the native gas token of the connected chain, the fees are deducted from the deposited amount.
@@ -279,44 +329,6 @@ Aborts occur when a revert transaction itself reverts or cannot be executed.
 Aborting deposits have the same behavior as aborting withdraws. When the user specifies an abort address, the protocol will attempt to call the `onAbort` hook on this address on ZetaChain.
 
 As with revert transactions, the fees for the abort transaction are covered by the protocol and use the fixed gas limit defined in the system contract.
-
-## Cosmos Transaction Fees
-
-ZetaChain, being a Cosmos SDK-based blockchain, employs the Cosmos gas mechanism for fee calculation and payment for direct Cosmos transactions.
-Documentation for Cosmos SDK fees can be found [here](https://docs.cosmos.network/v0.53/learn/beginner/gas-fees).
-
-Direct interactions are used for operations such as staking, ZETA transfers, or governance voting, although these operations can now be performed via the [EVM precompiles](https://evm.cosmos.network/docs/evm/v0.4.x/documentation/smart-contracts/precompiles). Therefore, it is generally rare for users to perform direct Cosmos transactions on ZetaChain. All interactions for cross-chain transactions are done via the EVM interface.
-
-Cosmos transactions are still used for system transactions sent by the observer signers and for administrative operations.
-
-### System Messages
-
-System messages represent the following operations:
-
-- Voting inbound observations
-- Voting outbound observations
-- Voting gas prices for connected chains
-- Adding and removing inbound and outbound trackers
-
-For these system messages, the ZetaClient process uses fixed gas limit values defined in [this file](https://github.com/zeta-chain/node/blob/develop/zetaclient/zetacore/constant.go).
-
-### Gas Limit for Inbound Voting
-
-The gas limit used for inbound voting has some specificities.
-There is currently no distinctive message between voting and executing inbound—the vote message reaching sufficient quorum will execute the inbound automatically.
-However, the execution of the inbound might trigger a smart contract call that requires an increased amount of gas.
-Since higher gas limits result in higher fees in Cosmos transactions, the following mechanism is used to avoid requiring high gas limits for each vote message:
-
-- Each vote message is sent with a base gas limit (currently 500,000)
-- When the vote message fails due to out of gas during execution, the ZetaClient process re-sends the vote message with an increased gas limit (currently 7,000,000)
-
-This mechanism will be removed in the future once a distinct message for executing inbound is implemented.
-
-### Administrative Operations
-
-The administrative operations can be found at [this page](https://www.zetachain.com/docs/developers/architecture/privileged).
-
-They must be executed using the [group module](https://tutorials.cosmos.network/tutorials/8-understand-sdk-modules/3-group.html).
 
 ## Resources
 
