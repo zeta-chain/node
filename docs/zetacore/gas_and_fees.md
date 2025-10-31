@@ -314,7 +314,7 @@ This mechanism will be removed in the future once a distinct message for executi
 
 ### Administrative Operations
 
-The admnistrative operations can be found at [this page](https://www.zetachain.com/docs/developers/architecture/privileged).
+The administrative operations can be found at [this page](https://www.zetachain.com/docs/developers/architecture/privileged).
 
 They must be executed using the [group module](https://tutorials.cosmos.network/tutorials/8-understand-sdk-modules/3-group.html).
 
