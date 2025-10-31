@@ -6,6 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
@@ -18,18 +20,43 @@ import (
 // TestSolanaWithdrawAndCallAddressLookupTable executes withdrawAndCall on zevm and calls connected program on solana
 // similar to TestSolanaWithdrawAndCall, but uses AddressLookupTable to provide accounts for connected program
 func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string) {
-	require.True(r, len(args) == 1 || len(args) == 3)
+	require.True(r, len(args) == 1 || len(args) == 2)
 
 	var (
 		addressLookupTableAddress solana.PublicKey
 		writableIndexes           []uint8
 		initAddressLookupTable    bool
+		randomWallets             []solana.PublicKey
 	)
-	if len(args) == 3 {
+
+	if len(args) == 2 {
+		r.Logger.Info("using existing address lookup table")
+
 		var err error
 		addressLookupTableAddress, err = solana.PublicKeyFromBase58(args[1])
 		require.NoError(r, err, "invalid AddressLookupTable address")
-		writableIndexes = utils.ParseUint8Array(r, args[2])
+
+		predefinedAccountsLen := 4   // pda, connected pda, system program, sysvar instructions
+		writableIndexes = []uint8{0} // only first one is mutable from predefined accounts
+		alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
+			r.Ctx,
+			r.SolanaClient,
+			addressLookupTableAddress,
+			&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
+		)
+		require.NoError(r, err)
+
+		for i := predefinedAccountsLen; i < len(alt.Addresses); i++ {
+			randomWallets = append(randomWallets, alt.Addresses[i])
+			writableIndexes = append(
+				writableIndexes,
+				uint8(i),
+			)
+		}
+		for i, acc := range alt.Addresses {
+			r.Logger.Info("address lookup table account %s, writable %d", acc.String(), writableIndexes[i])
+		}
+
 	} else {
 		initAddressLookupTable = true
 	}
@@ -61,8 +88,8 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 	require.NoError(r, err)
 
 	// in case AddressLookupTable address is not provided (eg. for local testing) use prefunded random accounts to create AddressLookupTable
-	randomWallets := []solana.PublicKey{}
 	if initAddressLookupTable {
+		r.Logger.Info("initializing new address lookup table")
 		accounts := []solana.PublicKey{}
 
 		accounts = append(accounts, connectedPda)

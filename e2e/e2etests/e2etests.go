@@ -750,6 +750,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SOL from ZEVM and call solana program using Address Lookup Table",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
+			{Description: "ALT address", DefaultValue: ""},
 		},
 		TestSolanaWithdrawAndCallAddressLookupTable,
 		runner.WithMinimumVersion("v29.0.0"),
