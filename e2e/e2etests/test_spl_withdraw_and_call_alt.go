@@ -20,16 +20,19 @@ import (
 // TestSPLWithdrawAndCallAddressLookupTable executes spl withdrawAndCall on zevm and calls connected program on solana
 // similar to TestSPLWithdrawAndCall, but uses AddressLookupTable to provide accounts for connected program
 func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string) {
-	require.True(r, len(args) == 1 || len(args) == 2)
+	require.Len(r, args, 2)
 
 	var (
 		addressLookupTableAddress solana.PublicKey
 		writableIndexes           []uint8
-		initAddressLookupTable    bool
 		randomWallets             []solana.PublicKey
 	)
-	if len(args) == 2 {
+
+	// init ALT if address is not provided in args
+	initAddressLookupTable := args[1] == ""
+	if !initAddressLookupTable {
 		r.Logger.Info("using existing address lookup table")
+
 		var err error
 		addressLookupTableAddress, err = solana.PublicKeyFromBase58(args[1])
 		require.NoError(r, err, "invalid AddressLookupTable address")
@@ -45,13 +48,12 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 
 		for i := predefinedAccountsLen; i < len(alt.Addresses); i++ {
 			randomWallets = append(randomWallets, alt.Addresses[i])
+			// #nosec G115 e2eTest - always in range
 			writableIndexes = append(
 				writableIndexes,
 				uint8(i),
 			)
 		}
-	} else {
-		initAddressLookupTable = true
 	}
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
