@@ -53,7 +53,7 @@ curl -X POST https://zetachain-evm.blockpi.network/v1/rpc/public \
   }'
 ```
 
-Or using the Cast CLI:
+Or using the [Cast CLI](https://getfoundry.sh):
 
 ```shell
 cast block latest --rpc-url https://zetachain-evm.blockpi.network/v1/rpc/public
