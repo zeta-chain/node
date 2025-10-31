@@ -17,6 +17,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	zetaos "github.com/zeta-chain/node/pkg/os"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 

@@ -122,11 +122,11 @@ func (*TSSClient) SignBatch(context.Context, [][]byte, uint64, uint64, int64,
 
 // BitcoinClient is a dry-wrapper for Bitcoin clients.
 type BitcoinClient struct {
-	bitcoin.Client
+	bitcoin.BitcoinClient
 }
 
-func WrapBitcoinClient(client bitcoin.Client) *BitcoinClient {
-	return &BitcoinClient{Client: client}
+func WrapBitcoinClient(client bitcoin.BitcoinClient) *BitcoinClient {
+	return &BitcoinClient{BitcoinClient: client}
 }
 
 func (*BitcoinClient) SendRawTransaction(context.Context,
@@ -141,11 +141,11 @@ func (*BitcoinClient) SendRawTransaction(context.Context,
 
 // EVMClient is a dry-wrapper for EVM clients.
 type EVMClient struct {
-	evm.Client
+	evm.EVMClient
 }
 
-func WrapEVMClient(client evm.Client) *EVMClient {
-	return &EVMClient{Client: client}
+func WrapEVMClient(client evm.EVMClient) *EVMClient {
+	return &EVMClient{EVMClient: client}
 }
 
 func (*EVMClient) SendTransaction(context.Context, *eth.Transaction) error {
@@ -158,11 +158,11 @@ func (*EVMClient) SendTransaction(context.Context, *eth.Transaction) error {
 
 // SolanaClient is a dry-wrapper for Solana clients.
 type SolanaClient struct {
-	solana.Client
+	solana.SolanaClient
 }
 
-func WrapSolanaClient(client solana.Client) *SolanaClient {
-	return &SolanaClient{Client: client}
+func WrapSolanaClient(client solana.SolanaClient) *SolanaClient {
+	return &SolanaClient{SolanaClient: client}
 }
 
 func (*SolanaClient) SendTransactionWithOpts(context.Context, *sol.Transaction,
@@ -177,11 +177,11 @@ func (*SolanaClient) SendTransactionWithOpts(context.Context, *sol.Transaction,
 
 // SuiClient is a dry-wrapper for Sui clients.
 type SuiClient struct {
-	sui.Client
+	sui.SuiClient
 }
 
-func WrapSuiClient(client sui.Client) *SuiClient {
-	return &SuiClient{Client: client}
+func WrapSuiClient(client sui.SuiClient) *SuiClient {
+	return &SuiClient{SuiClient: client}
 }
 
 func (*SuiClient) SuiExecuteTransactionBlock(context.Context,
@@ -196,11 +196,11 @@ func (*SuiClient) SuiExecuteTransactionBlock(context.Context,
 
 // TONClient is a dry-wrapper for TON clients.
 type TONClient struct {
-	ton.Client
+	ton.TONClient
 }
 
-func WrapTONClient(client ton.Client) *TONClient {
-	return &TONClient{Client: client}
+func WrapTONClient(client ton.TONClient) *TONClient {
+	return &TONClient{TONClient: client}
 }
 
 func (*TONClient) SendMessage(context.Context, []byte) (uint32, error) {

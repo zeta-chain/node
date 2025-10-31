@@ -227,13 +227,19 @@ generate: proto-gen openapi specs typescript docs-zetacored go-generate fmt
 ###                         Localnet                          				###
 ###############################################################################
 e2e-images: zetanode orchestrator
-start-localnet: e2e-images start-localnet-skip-build
+start-localnet: e2e-images solana start-localnet-skip-build
 
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
 	export E2E_ARGS="${E2E_ARGS} --setup-solana --setup-sui --setup-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton --profile monitoring up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) \
+		--profile solana \
+		--profile sui \
+		--profile ton \
+		--profile monitoring \
+		--profile dry \
+		up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
@@ -276,7 +282,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
@@ -305,7 +311,7 @@ start-e2e-performance-test-1k: e2e-images solana
 start-stress-test-eth: e2e-images
 	@echo "--> Starting stress test for eth"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-zevm --test-stress-eth --iterations=1000" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring --profile dry up -d
 
 start-stress-test-solana: e2e-images solana
 	@echo "--> Starting stress test for solana"
@@ -338,17 +344,17 @@ start-tss-migration-test: e2e-images solana
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile dry up -d
 
 start-ton-test: e2e-images
 	@echo "--> Starting TON test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton --profile dry up -d
 
 start-sui-test: e2e-images
 	@echo "--> Starting sui test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-sui" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile dry up -d
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"

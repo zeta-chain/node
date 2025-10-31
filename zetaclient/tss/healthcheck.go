@@ -97,12 +97,19 @@ func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckPro
 
 	connectedPeersCounter := func(_ context.Context, _ *ticker.Ticker) error {
 		p2pHost := server.GetP2PHost()
-		connectedPeers := lo.Map(p2pHost.Network().Conns(), func(conn libp2p_network.Conn, _ int) peer.AddrInfo {
-			return peer.AddrInfo{
-				ID:    conn.RemotePeer(),
-				Addrs: []maddr.Multiaddr{conn.RemoteMultiaddr()},
-			}
-		})
+		connectedPeers := lo.FilterMap(
+			p2pHost.Network().Conns(),
+			func(conn libp2p_network.Conn, _ int) (peer.AddrInfo, bool) {
+				remoteAddr := conn.RemoteMultiaddr()
+				if remoteAddr == nil {
+					return peer.AddrInfo{}, false
+				}
+				return peer.AddrInfo{
+					ID:    conn.RemotePeer(),
+					Addrs: []maddr.Multiaddr{remoteAddr},
+				}, true
+			},
+		)
 		p.Telemetry.SetConnectedPeers(connectedPeers)
 		p.NumConnectedPeersMetric.Set(float64(len(connectedPeers)))
 		return nil

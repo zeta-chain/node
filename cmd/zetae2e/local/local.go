@@ -335,6 +335,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
+	// update to using higher timeouts when running stress tests
+	if testStress {
+		if deployerRunner.ReceiptTimeout == 0 {
+			deployerRunner.ReceiptTimeout = 15 * time.Minute
+		}
+		if deployerRunner.CctxTimeout == 0 {
+			deployerRunner.CctxTimeout = 15 * time.Minute
+		}
+	}
 
 	deployerRunner.PrintContractAddresses()
 

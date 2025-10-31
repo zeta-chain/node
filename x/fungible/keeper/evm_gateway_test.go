@@ -19,7 +19,7 @@ func TestKeeper_DepositAndCallZeta(t *testing.T) {
 		// TODO: enable back
 		// https://github.com/zeta-chain/node/issues/4373
 		t.Skip()
-		
+
 		// Arrange
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		chainID := chains.Ethereum.ChainId
