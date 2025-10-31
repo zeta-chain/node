@@ -103,7 +103,7 @@ while the gas limit represents the maximum amount of gas allocated for executing
 
 **Important Consideration**: The gas limit is fully consumed regardless of whether the cross-chain call uses all the allocated gas.
 In the current architecture, any remaining unused gas is sent to a gas stability pool.
-This pool is used to increase the gas price for transactions during periods of gas price surges,
+This pool is used to compensate for additional fees for transactions during periods of gas price surges,
 helping to ensure transaction execution during network congestion.
 
 ### Bitcoin
