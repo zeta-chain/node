@@ -280,7 +280,7 @@ The logic to calculate this depositor fee can be found in the [following page](h
 
 [Solana Fee Documentation](https://solana.com/docs/core/fees).
 
-No additional fees are charged for deposits from the Solana network to ZetaChain.
+An additional deposit fee of 2,000,000 Lamports (`0.002` SOL) is charged for deposits from the Solana network to ZetaChain, on top of the standard Solana network transaction fees.
 
 ### Sui
 
