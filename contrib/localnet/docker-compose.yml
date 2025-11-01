@@ -114,6 +114,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6061
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     restart: always
     ports:
       - "6061:6061" # pprof
@@ -121,6 +123,7 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient1:
     image: zetanode:latest
@@ -137,6 +140,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6062
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     restart: always
     ports:
       - "6062:6062" # pprof
@@ -144,6 +149,7 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient2:
     image: zetanode:latest
@@ -162,6 +168,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6063
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     ports:
       - "6063:6063" # pprof
       - "8888:8886" # metrics
@@ -186,6 +194,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6064
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     ports:
       - "6064:6064" # pprof
       - "8889:8886" # metrics
@@ -552,6 +562,7 @@ services:
 
 volumes:
   ssh:
+  chaosprofiles:
   preparams:
   grafana_storage:
   redis_data:

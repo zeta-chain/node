@@ -57,6 +57,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
 * [4378](https://github.com/zeta-chain/node/pull/4378) - add number of connected peers to tss keygen log
 * [4387](https://github.com/zeta-chain/node/pull/4387) - add new dry zetaclient to localnet
+* [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
 
 ### Tests
 
