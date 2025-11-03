@@ -176,6 +176,7 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient3:
     image: zetanode:latest
@@ -202,6 +203,7 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetacore-new-validator:
     image: zetanode:latest

@@ -185,7 +185,7 @@ if [[ $HOSTNAME == "zetaclient-dry" ]]; then
     done
 fi
 
-if [[ ! -z $CHAOS_PROFILE ]]; then
+if [[ -n $CHAOS_PROFILE ]]; then
     set_chaos_mode
 fi
 
