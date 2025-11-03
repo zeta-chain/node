@@ -8,8 +8,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	evmante "github.com/cosmos/evm/ante"
-
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -37,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -82,7 +81,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmante "github.com/cosmos/evm/ante"
 	evmosencoding "github.com/cosmos/evm/encoding"
+	evmmempool "github.com/cosmos/evm/mempool"
 	"github.com/cosmos/evm/utils"
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
@@ -98,8 +99,6 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 
-	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
-	evmmempool "github.com/cosmos/evm/mempool"
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/docs/openapi"
 	srvflags "github.com/zeta-chain/node/server/flags"

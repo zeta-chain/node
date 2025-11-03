@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
@@ -26,10 +28,6 @@ import (
 	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/node/rpc/stream"
 	"github.com/zeta-chain/node/server/config"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const (
@@ -78,7 +76,12 @@ type websocketsServer struct {
 	logger         log.Logger
 }
 
-func NewWebsocketsServer(clientCtx client.Context, logger log.Logger, stream *stream.RPCStream, cfg *config.Config) WebsocketsServer {
+func NewWebsocketsServer(
+	clientCtx client.Context,
+	logger log.Logger,
+	stream *stream.RPCStream,
+	cfg *config.Config,
+) WebsocketsServer {
 	logger = logger.With("api", "websocket-server")
 	return &websocketsServer{
 		rpcAddr:        cfg.JSONRPC.Address,
@@ -163,7 +166,13 @@ func (s *websocketsServer) checkOrigin(r *http.Request) bool {
 	// Parse the origin URL to get the host
 	originURL, err := url.Parse(origin)
 	if err != nil {
-		s.logger.Debug("websocket connection rejected: invalid origin URL", "origin", sanitizedOrigin, "error", err.Error())
+		s.logger.Debug(
+			"websocket connection rejected: invalid origin URL",
+			"origin",
+			sanitizedOrigin,
+			"error",
+			err.Error(),
+		)
 		return false
 	}
 
@@ -176,7 +185,13 @@ func (s *websocketsServer) checkOrigin(r *http.Request) bool {
 		}
 	}
 
-	s.logger.Debug("websocket connection rejected: origin not allowed", "origin", sanitizedOrigin, "allowed", s.allowedOrigins)
+	s.logger.Debug(
+		"websocket connection rejected: origin not allowed",
+		"origin",
+		sanitizedOrigin,
+		"allowed",
+		s.allowedOrigins,
+	)
 	return false
 }
 

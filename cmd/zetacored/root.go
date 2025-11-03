@@ -34,11 +34,11 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
+	evmosencoding "github.com/cosmos/evm/encoding"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	evmosencoding "github.com/cosmos/evm/encoding"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"

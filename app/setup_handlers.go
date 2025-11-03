@@ -6,7 +6,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"golang.org/x/mod/semver"
 
@@ -101,6 +103,45 @@ func SetupHandlers(app *App) {
 				if err != nil {
 					return vm, err
 				}
+			}
+
+			// TODO: are these fields ok?
+			app.BankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+				Description: "The native staking token for zetacored",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    "azeta",
+						Exponent: 0,
+						Aliases:  nil,
+					},
+					{
+						Denom:    "zeta",
+						Exponent: 18,
+						Aliases:  nil,
+					},
+				},
+				Base:    "azeta",
+				Display: "zeta",
+				Name:    "Zeta Token",
+				Symbol:  "ZETA",
+				URI:     "",
+				URIHash: "",
+			})
+
+			// (Required for NON-18 denom chains *only)
+			// Update EVM params to add Extended denom options
+			// Ensure that this corresponds to the EVM denom
+			// (tyically the bond denom)
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			// evmParams := app.EvmKeeper.GetParams(sdkCtx)
+			// evmParams.ExtendedDenomOptions = &types.ExtendedDenomOptions{ExtendedDenom: "atest"}
+			// err = app.EvmKeeper.SetParams(sdkCtx, evmParams)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// Initialize EvmCoinInfo in the module store
+			if err := app.EvmKeeper.InitEvmCoinInfo(sdkCtx); err != nil {
+				return nil, err
 			}
 
 			return app.mm.RunMigrations(ctx, app.configurator, vm)

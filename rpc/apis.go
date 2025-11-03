@@ -3,10 +3,12 @@ package rpc
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/rpc"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
 	evmmempool "github.com/cosmos/evm/mempool"
 	servertypes "github.com/cosmos/evm/server/types"
+	"github.com/ethereum/go-ethereum/rpc"
+
 	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/eth"
@@ -17,9 +19,6 @@ import (
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/txpool"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/web3"
 	"github.com/zeta-chain/node/rpc/stream"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // RPC namespaces and API version
