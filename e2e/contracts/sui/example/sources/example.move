@@ -4,7 +4,7 @@ use std::ascii;
 use std::ascii::String;
 use sui::address::from_bytes;
 use sui::coin::Coin;
-use gateway::gateway::{Gateway, MessageContext, active_message_context, message_context_sender, message_context_target};
+use gateway::gateway::{MessageContext, message_context_sender, message_context_target};
 
 // === Errors ===
 
@@ -61,7 +61,6 @@ fun init(ctx: &mut TxContext) {
 }
 
 public entry fun on_call<SOURCE_COIN>(
-    gateway: &Gateway,
     message_context: &MessageContext,
     in_coins: Coin<SOURCE_COIN>,
     cetus_config: &mut GlobalConfig,
@@ -78,10 +77,6 @@ public entry fun on_call<SOURCE_COIN>(
     if (data == b"revert") {
         assert!(false, ENonceMismatch);
     };
-
-    // check if the message context is active
-    let active_message_context = active_message_context(gateway);
-    assert!(active_message_context == object::id(message_context), EInactiveMessageContext);
 
     // decode the sender, target package, and receiver from the payload
     let (authenticated_sender, target_package, receiver) = decode_sender_target_and_receiver(data);
