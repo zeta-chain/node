@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Features
+
+### Tests
+
+### Fixes
+
+* [4414](https://github.com/zeta-chain/node/pull/4414) - fix example package deployment by removing gateway object reference
+
 ### Breaking Changes
 
 * EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
