@@ -72,6 +72,10 @@ const (
 	// [signature, recipient, asset]
 	TopicsERC20CustodyWithdrawAndCall = 3
 
+	// TopicsERC20CustodyWithdrawAndCallV2 is the number of topics for an ERC20 custody withdraw and call V2 event
+	// [signature, recipient, asset]
+	TopicsERC20CustodyWithdrawAndCallV2 = 3
+
 	// TopicsZetaConnectorWithdraw is the number of topics for a Zeta connector withdraw event
 	TopicsZetaConnectorWithdraw = 2 // [to, amount]
 )

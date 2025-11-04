@@ -266,6 +266,7 @@ func parseAndCheckERC20CustodyWithdraw(
 }
 
 // parseAndCheckERC20CustodyWithdrawAndCall parses and checks the ERC20 custody withdraw and call event
+// It supports both WithdrawnAndCalled (v1) and WithdrawnAndCalledV2 events
 func parseAndCheckERC20CustodyWithdrawAndCall(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
@@ -275,6 +276,50 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 	params := cctx.GetCurrentOutboundParam()
 
 	for _, vLog := range receipt.Logs {
+		// Try parsing WithdrawnAndCalledV2 first (newer version)
+		withdrawnV2, err := custody.ERC20CustodyFilterer.ParseWithdrawnAndCalledV2(*vLog)
+		if err == nil {
+			// basic event check
+			if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdrawAndCallV2); err != nil {
+				return big.NewInt(
+						0,
+					), chains.ReceiveStatus_failed, errors.Wrap(
+						err,
+						"failed to validate erc20 custody withdraw and call v2 event",
+					)
+			}
+			// destination
+			if !strings.EqualFold(withdrawnV2.To.Hex(), params.Receiver) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+					"receiver address mismatch in event, want %s got %s",
+					params.Receiver,
+					withdrawnV2.To.Hex(),
+				)
+			}
+			// token
+			if !strings.EqualFold(withdrawnV2.Token.Hex(), cctx.InboundParams.Asset) {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+					"asset address mismatch in event, want %s got %s",
+					cctx.InboundParams.Asset,
+					withdrawnV2.Token.Hex(),
+				)
+			}
+			// amount
+			if withdrawnV2.Amount.Cmp(params.Amount.BigInt()) != 0 {
+				return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+					"amount mismatch in event, want %s got %s",
+					params.Amount.String(),
+					withdrawnV2.Amount.String(),
+				)
+			}
+			// data
+			if err := checkCCTXMessage(withdrawnV2.Data, cctx.RelayedMessage); err != nil {
+				return big.NewInt(0), chains.ReceiveStatus_failed, err
+			}
+
+			return withdrawnV2.Amount, chains.ReceiveStatus_success, nil
+		}
+
 		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawnAndCalled(*vLog)
 		if err != nil {
 			continue
