@@ -61,14 +61,6 @@ zetacored version
 zetaclientd version
 ```
 
-## Building Test Release Binaries
-
-Test release binaries can be built and uploaded to Cloudflare R2 using the GitHub Actions workflow. This workflow automates building and uploading test binaries so developers don't have to manually build and upload them from their local machines.
-
-To trigger the workflow, navigate to the [Actions](https://github.com/zeta-chain/node/actions/workflows/release-test-build.yml) tab and run the "Release Test Binaries to Cloudflare R2" workflow. Optionally provide a custom **Version** (e.g., `v1.0.0-test`) and/or **Ref** (branch, tag, or commit SHA) to build from.
-
-The workflow will build both `zetacored` and `zetaclientd` binaries for all supported platforms and upload them to Cloudflare R2. Once complete, the release ID and download location will be provided in the workflow summary and Slack notification.
-
 ## Making changes to the source code
 
 After making changes to any of the protocol buffer files, run the following
@@ -96,6 +88,7 @@ Find below further documentation for development and running your own ZetaChain 
 - [Get familiar with our release lifecycle](docs/development/RELEASE_LIFECYCLE.md)
 - [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
 - [Make a new ZetaChain release](docs/development/RELEASES.md)
+- [Build test release binaries](docs/development/BUILDING_TEST_RELEASES.md)
 - [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
 - [Run the simulation tests](docs/development/SIMULATION_TESTING.md)
 - [Learn about gas and fees in ZetaChain](docs/zetacore/gas_and_fees.md)
