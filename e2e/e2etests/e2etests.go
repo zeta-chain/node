@@ -47,6 +47,7 @@ const (
 	TestERC20WithdrawName                      = "erc20_withdraw"
 	TestERC20WithdrawAndArbitraryCallName      = "erc20_withdraw_and_arbitrary_call"
 	TestERC20WithdrawAndCallName               = "erc20_withdraw_and_call"
+	TestERC20WithdrawAndCallV2Name             = "erc20_withdraw_and_call_v2"
 	TestERC20WithdrawAndCallNoMessageName      = "erc20_withdraw_and_call_no_message"
 	TestERC20WithdrawAndCallRevertName         = "erc20_withdraw_and_call_revert"
 	TestERC20WithdrawAndCallRevertWithCallName = "erc20_withdraw_and_call_revert_with_call"
@@ -614,6 +615,16 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestERC20WithdrawAndCallV2Name,
+		"withdraw ERC20 from ZEVM and authenticated call a contract with version (V2)",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "message context version", DefaultValue: "1"},
+		},
+		TestERC20WithdrawAndCallV2,
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawAndCallNoMessageName,
