@@ -81,7 +81,7 @@ func Test_NewCCTXErrorJsonMessage(t *testing.T) {
 		)
 	})
 
-	t.Run("do not repack into CCTXErrorMessage if older error has been formated already", func(t *testing.T) {
+	t.Run("do not repack into CCTXErrorMessage if older error has been formatted already", func(t *testing.T) {
 		m := cctxerror.NewCCTXErrorJSONMessage("message", sampleErr)
 		require.Equal(
 			t,

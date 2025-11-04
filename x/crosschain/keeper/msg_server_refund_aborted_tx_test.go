@@ -175,7 +175,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 
-	t.Run("should error if aleady refunded", func(t *testing.T) {
+	t.Run("should error if already refunded", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
