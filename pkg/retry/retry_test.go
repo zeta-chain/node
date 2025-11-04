@@ -185,5 +185,5 @@ func TestDoTyped(t *testing.T) {
 func trackTime(t *testing.T, from time.Time) {
 	duration := time.Since(from)
 
-	t.Logf("Retrier invokation: t = %dms", duration.Milliseconds())
+	t.Logf("Retrier invocation: t = %dms", duration.Milliseconds())
 }
