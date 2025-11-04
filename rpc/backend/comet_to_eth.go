@@ -202,18 +202,9 @@ func (b *Backend) ReceiptsFromCometBlock(
 	receipts := make([]*ethtypes.Receipt, len(msgs))
 	cumulatedGasUsed := uint64(0)
 	for i, ethMsg := range msgs {
-		txResult, _, err := b.GetTxByEthHash(ethMsg.Hash()) // TODO evm
+		txResult, additional, err := b.GetTxByEthHash(common.HexToHash(ethMsg.Hash)) // TODO evm
 		if err != nil {
-			return nil, fmt.Errorf("tx not found: hash=%s, error=%s", ethMsg.Hash(), err.Error())
-		}
-
-		cumulatedGasUsed += txResult.GasUsed
-
-		var effectiveGasPrice *big.Int
-		if baseFee != nil {
-			effectiveGasPrice = rpctypes.EffectiveGasPrice(ethMsg.Raw.Transaction, baseFee)
-		} else {
-			effectiveGasPrice = ethMsg.Raw.GasFeeCap()
+			return nil, fmt.Errorf("tx not found: hash=%s, error=%s", ethMsg.Hash, err.Error())
 		}
 
 		var status uint64
@@ -226,6 +217,45 @@ func (b *Backend) ReceiptsFromCometBlock(
 		contractAddress := common.Address{}
 		if ethMsg.Raw.To() == nil {
 			contractAddress = crypto.CreateAddress(ethMsg.GetSender(), ethMsg.Raw.Nonce())
+		}
+
+		cumulatedGasUsed += txResult.GasUsed
+
+		var effectiveGasPrice *big.Int
+		if baseFee != nil {
+			effectiveGasPrice = rpctypes.EffectiveGasPrice(ethMsg.Raw.Transaction, baseFee)
+		} else {
+			effectiveGasPrice = ethMsg.Raw.GasFeeCap()
+		}
+
+		if additional != nil {
+			receipt := &ethtypes.Receipt{
+				// Consensus fields: These fields are defined by the Yellow Paper
+				Type:              ethMsg.Raw.Type(),
+				PostState:         nil,
+				Status:            status, // convert to 1=success, 0=failure
+				CumulativeGasUsed: cumulatedGasUsed,
+				Bloom:             ethtypes.Bloom{},
+				Logs:              nil,
+
+				// Implementation fields: These fields are added by geth when processing a transaction.
+				TxHash:            common.HexToHash(ethMsg.Hash),
+				ContractAddress:   contractAddress,
+				GasUsed:           txResult.GasUsed,
+				EffectiveGasPrice: effectiveGasPrice,
+				BlobGasUsed:       uint64(0),     // TODO: fill this field
+				BlobGasPrice:      big.NewInt(0), // TODO: fill this field
+
+				// Inclusion information: These fields provide information about the inclusion of the
+				// transaction corresponding to this receipt.
+				BlockHash:        blockHash,
+				BlockNumber:      big.NewInt(resBlock.Block.Height),
+				TransactionIndex: uint(txResult.EthTxIndex), // #nosec G115 -- checked for int overflow already
+			}
+
+			receipts[i] = receipt
+
+			continue
 		}
 
 		msgIndex := int(txResult.MsgIndex) // #nosec G115 -- checked for int overflow already
@@ -250,7 +280,7 @@ func (b *Backend) ReceiptsFromCometBlock(
 			Logs:              logs,
 
 			// Implementation fields: These fields are added by geth when processing a transaction.
-			TxHash:            ethMsg.Hash(),
+			TxHash:            common.HexToHash(ethMsg.Hash),
 			ContractAddress:   contractAddress,
 			GasUsed:           txResult.GasUsed,
 			EffectiveGasPrice: effectiveGasPrice,
@@ -302,7 +332,7 @@ func (b *Backend) EthMsgsFromCometBlock(
 				ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 				if ok {
 					shouldCheckForSyntheticTx = false
-					// ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex() TODO: will this deserialize correctly?
+					ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex() // TODO: will this deserialize correctly?
 					ethMsgs = append(ethMsgs, ethMsg)
 					txsAdditional = append(txsAdditional, nil)
 				}
@@ -381,7 +411,7 @@ func (b *Backend) parseSyntethicTxFromAdditionalFields(
 	ethMsg := &evmtypes.MsgEthereumTx{}
 	ethMsg.FromEthereumTx(t)
 
-	// ethMsg.Hash = additional.Hash.Hex() // TODO evm check
+	ethMsg.Hash = additional.Hash.Hex() // TODO evm check
 	ethMsg.From = additional.Sender.Bytes()
 	return ethMsg
 }

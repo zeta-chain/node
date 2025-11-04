@@ -285,8 +285,6 @@ func NewRPCTransactionFromIncompleteMsg(
 	msg *evmtypes.MsgEthereumTx, blockHash common.Hash, blockNumber, index uint64, baseFee *big.Int,
 	chainID *big.Int, txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
-	tx := msg.AsTransaction()
-
 	to := &common.Address{}
 	*to = txAdditional.Recipient
 	// for transactions before v31 this value was mistakenly used for Gas field
@@ -299,7 +297,7 @@ func NewRPCTransactionFromIncompleteMsg(
 		From:     common.BytesToAddress(msg.From),
 		Gas:      hexutil.Uint64(gas),
 		GasPrice: (*hexutil.Big)(baseFee),
-		Hash:     tx.Hash(), // TODO: evm, check if this is correct, and what to do with added fields
+		Hash:     common.HexToHash(msg.Hash), // TODO: evm, check if this is correct, and what to do with added fields
 		Input:    txAdditional.Data,
 		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from evm
 		To:       to,

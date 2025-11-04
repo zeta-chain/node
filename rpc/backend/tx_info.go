@@ -72,7 +72,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		// Fallback to find tx index by iterating all valid eth transactions
 		msgs, _ := b.EthMsgsFromCometBlock(block, blockRes)
 		for i := range msgs {
-			if msgs[i].Hash() == txHash {
+			if msgs[i].Hash == txHash.Hex() {
 				if i > math.MaxInt32 {
 					return nil, errors.New("tx index overflow")
 				}
@@ -127,7 +127,7 @@ func (b *Backend) GetTransactionByHashPending(txHash common.Hash) (*rpctypes.RPC
 			continue
 		}
 
-		if msg.Hash() == txHash {
+		if msg.Hash == txHash.Hex() {
 			// use zero block values since it's not included in a block yet
 			return rpctypes.NewTransactionFromMsg(
 				msg,
