@@ -63,7 +63,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
 * [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
 * [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
-* [4395](https://github.com/zeta-chain/node/pull/4395/) - update e2e to set higher timeouts when running stress test
+* [4395](https://github.com/zeta-chain/node/pull/4395) - update e2e to set higher timeouts when running stress test
+* [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
 
 ### Refactor
 

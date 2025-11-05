@@ -36,9 +36,10 @@ var (
 // Source is the base chaos object from which all chaos interface implementations inherit.
 // It is safe for concurrent use by multiple goroutines.
 type Source struct {
-	mu          sync.Mutex
-	percentages map[string](map[string]int) // map[itfc](map[mthd]percentage)
-	rand        *rand.Rand
+	mu      sync.Mutex
+	profile map[string](map[string]int) // map[itfc](map[mthd]percentage)
+	seed    int64
+	rand    *rand.Rand
 }
 
 // NewSource parses the universal configuration into the source chaos object.
@@ -55,21 +56,21 @@ func NewSource(logger zerolog.Logger, config config.Config) (*Source, error) {
 	}
 	rand := rand.New(rand.NewSource(seed)) // #nosec G404 -- This is intended
 
-	// Read the file with the fail percentages.
-	data, err := os.ReadFile(config.ChaosPercentagesPath)
+	// Read the file with the fail profile.
+	data, err := os.ReadFile(config.ChaosProfilePath)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrReadPercentages, err)
 	}
 
-	// Parse the file with the fail percentages.
-	percentages := make(map[string](map[string]int))
-	err = json.Unmarshal(data, &percentages)
+	// Parse the file with the fail profile.
+	profile := make(map[string](map[string]int))
+	err = json.Unmarshal(data, &profile)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrParsePercentages, err)
 	}
 
 	// Validate percentages.
-	for itfc, mthds := range percentages {
+	for itfc, mthds := range profile {
 		for mthd, percentage := range mthds {
 			if percentage < 0 || percentage > 100 {
 				return nil, fmt.Errorf("%w for method %q in %q", ErrInvalidPercentage, mthd, itfc)
@@ -77,16 +78,21 @@ func NewSource(logger zerolog.Logger, config config.Config) (*Source, error) {
 		}
 	}
 
-	return &Source{percentages: percentages, rand: rand}, nil
+	return &Source{profile: profile, seed: seed, rand: rand}, nil
 }
 
 // shouldFail determines whether a method should fail based on its failure percentage.
 //
 // It generates a random integer in the range [0, 100). If the generated number is less than the
-// method's fail percentage (stored in the percentages map), shouldFail returns true; otherwise, it
-// returns false.
-func (source *Source) shouldFail(itfc, mthd string) bool {
+// method's fail percentage (stored in the percentages map), shouldFail returns an error; otherwise,
+// it returns nil.
+func (source *Source) shouldFail(itfc, mthd string) error {
 	source.mu.Lock()
 	defer source.mu.Unlock()
-	return source.rand.Intn(100) < source.percentages[itfc][mthd]
+	n := source.rand.Intn(100)
+	p := source.profile[itfc][mthd]
+	if n < p {
+		return fmt.Errorf("%w (seed: %d): %s.%s (%d < %d)", ErrChaos, source.seed, itfc, mthd, n, p)
+	}
+	return nil
 }
