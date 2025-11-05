@@ -1,19 +1,21 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime/pprof"
-
-	"context"
-	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	_ "cosmossdk.io/store/pruning/types"
 	abciserver "github.com/cometbft/cometbft/abci/server"
+	_ "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -23,49 +25,40 @@ import (
 	cmtstate "github.com/cometbft/cometbft/proto/tendermint/state"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/proxy"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	sm "github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/store"
 	cmttypes "github.com/cometbft/cometbft/types"
-
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-
+	"github.com/cosmos/cosmos-sdk/server"
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
-
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/evm/indexer"
 	"github.com/cosmos/evm/server/config"
+	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
+	srvflags "github.com/cosmos/evm/server/flags"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-
-	"time"
-
-	ethdebug "github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
+	"github.com/spf13/cobra"
 	"golang.org/x/net/netutil"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	_ "cosmossdk.io/store/pruning/types"
-	_ "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
-	srvflags "github.com/cosmos/evm/server/flags"
-	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
+	ethdebug "github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 )
 
 // AddCommands adds server commands
@@ -186,37 +179,47 @@ func Listen(addr string, config *config.Config) (net.Listener, error) {
 	return ln, err
 }
 
-func start(svrCtx *server.Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
-	config, err := cosmosevmserverconfig.GetConfig(svrCtx.Viper)
+func start(
+	svrCtx *server.Context,
+	clientCtx client.Context,
+	appCreator types.AppCreator,
+	withCmt bool,
+	opts StartCmdOptions,
+) error {
+	serverConfig, err := cosmosevmserverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	if err := config.ValidateBasic(); err != nil {
+	if err := serverConfig.ValidateBasic(); err != nil {
 		return fmt.Errorf("invalid server config: %w", err)
 	}
 
-	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
+	app, appCleanupFn, err := setupApp(svrCtx, appCreator, opts)
 	if err != nil {
 		return err
 	}
 	defer appCleanupFn()
 
-	metrics, err := startTelemetry(config)
+	metrics, err := startTelemetry(serverConfig)
 	if err != nil {
 		return err
 	}
 
 	if !withCmt {
 		svrCtx.Logger.Info("starting ABCI without CometBFT")
-		return startStandAlone(svrCtx, &config, clientCtx, app, metrics, opts)
+		return startStandAlone(svrCtx, &serverConfig, clientCtx, app, metrics, opts)
 	}
 
 	svrCtx.Logger.Info("starting ABCI with CometBFT")
-	return startInProcess(svrCtx, &config, clientCtx, app, metrics, opts)
+	return startInProcess(svrCtx, &serverConfig, clientCtx, app, metrics, opts)
 }
 
-func startApp(svrCtx *server.Context, appCreator types.AppCreator, opts StartCmdOptions) (types.Application, func(), error) {
+func setupApp(
+	svrCtx *server.Context,
+	appCreator types.AppCreator,
+	opts StartCmdOptions,
+) (types.Application, func(), error) {
 	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to setup trace writer: %w", err)
@@ -388,13 +391,19 @@ func startInProcess(
 		}()
 	}
 
-	if (config.API.Enable || config.GRPC.Enable || config.JSONRPC.Enable || config.JSONRPC.EnableIndexer) && cmtNode != nil {
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC or JSONRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local CometBFT RPC client.
+	if (config.API.Enable || config.GRPC.Enable || config.JSONRPC.Enable || config.JSONRPC.EnableIndexer) &&
+		cmtNode != nil {
 		clientCtx = clientCtx.WithClient(local.New(cmtNode))
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
 		app.RegisterNodeService(clientCtx, config.Config)
 	}
 
+	// Enable metrics if JSONRPC is enabled and --metrics is passed
+	// Flag not added in config to avoid user enabling in config without passing in CLI
 	if config.JSONRPC.Enable && svrCtx.Viper.GetBool(srvflags.JSONRPCEnableMetrics) {
 		ethmetricsexp.Setup(config.JSONRPC.MetricsAddress)
 	}
@@ -473,10 +482,16 @@ func startInProcess(
 		}
 	}
 
+	// At this point it is safe to block the process if we're in query only mode as
+	// we do not need to start Rosetta or handle any CometBFT related processes.
 	if gRPCOnly {
+		// wait for signal capture and gracefully return
+		// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 		return g.Wait()
 	}
 
+	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
@@ -662,7 +677,12 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
+func testnetify(
+	ctx *server.Context,
+	testnetAppCreator types.AppCreator,
+	db dbm.DB,
+	traceWriter io.WriteCloser,
+) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -729,8 +749,7 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	ctx.Viper.Set(KeyNewValAddr, validatorAddress.Bytes())
-	ctx.Viper.Set(KeyUserPubKey, userPubKey)
+	ctx.Viper.Set(KeyValidatorAddr, validatorAddress.Bytes())
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	// We need to create a temporary proxyApp to get the initial state of the application.
@@ -781,7 +800,6 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		}
 		block = blockStore.LoadBlock(blockStore.Height())
 	default:
-		fmt.Println("Default condition.", appHeight, blockStore.Height())
 		// If there is any other state, we just load the block
 		block = blockStore.LoadBlock(blockStore.Height())
 	}
@@ -846,7 +864,7 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		Proposer:   newVal,
 	}
 
-	// Replace all valSets in state to be the valSet with just our validator.
+	// Replace all valSets in state to be the valSet with just one validator.
 	cmtState.Validators = newValSet
 	cmtState.LastValidators = newValSet
 	cmtState.NextValidators = newValSet
@@ -857,7 +875,6 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	// Create a ValidatorsInfo struct to store in stateDB.
 	valSet, err := cmtState.Validators.ToProto()
 	if err != nil {
 		return nil, err
@@ -871,19 +888,16 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	// Modfiy Validators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()), buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Modify LastValidators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()-1), buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Modify NextValidators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()+1), buf)
 	if err != nil {
 		return nil, err

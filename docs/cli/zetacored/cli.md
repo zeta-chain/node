@@ -37,6 +37,7 @@ Zetacore Daemon (server)
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
 * [zetacored status](#zetacored-status)	 - Query remote node for status
+* [zetacored testnet](#zetacored-testnet)	 - Modify state to create testnet from current local data
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored upgrade-handler-version](#zetacored-upgrade-handler-version)	 - Print the default upgrade handler version
 * [zetacored validate](#zetacored-validate)	 - Validates the genesis file at the default location or at the location passed as an arg
@@ -9722,6 +9723,7 @@ zetacored start [flags]
       --home string                                     The application home directory 
       --inter-block-cache                               Enable inter-block caching (default true)
       --inv-check-period uint                           Assert registered invariants every N blocks
+      --is-testnet                                      Enable testnet mode to fork from existing state
       --json-rpc.address string                         the JSON-RPC server address to listen on 
       --json-rpc.allow-insecure-unlock                  Allow insecure account unlocking when account-related RPCs are exposed by http (default true)
       --json-rpc.allow-unprotected-txs                  Allow for unprotected (non EIP155 signed) transactions to be submitted via the node's RPC when the global parameter is disabled
@@ -9742,6 +9744,7 @@ zetacored start [flags]
       --min-retain-blocks uint                          Minimum block height offset during ABCI commit to prune CometBFT blocks
       --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000azeta)
       --moniker string                                  node name 
+      --new-chain-ID string                             New chain ID to use when running in testnet mode
       --p2p.external-address string                     ip:port address to advertise to peers for them to dial
       --p2p.laddr string                                node listen address. (0.0.0.0:0 means any interface, any port) 
       --p2p.persistent_peers string                     comma-delimited ID@host:port persistent peers
@@ -9759,6 +9762,7 @@ zetacored start [flags]
       --rpc.laddr string                                RPC listen address. Port required 
       --rpc.pprof_laddr string                          pprof listen address (https://golang.org/pkg/net/http/pprof)
       --rpc.unsafe                                      enabled unsafe rpc methods
+      --shutdown-grace duration                         On Shutdown, duration to wait for resource clean up (default 3s)
       --skip-config-overwrite                           Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead
       --state-sync.snapshot-interval uint               State sync snapshot interval
       --state-sync.snapshot-keep-recent uint32          State sync snapshot to keep (default 2)
@@ -9798,6 +9802,49 @@ zetacored status [flags]
   -h, --help            help for status
   -n, --node string     Node to connect to 
   -o, --output string   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
+
+## zetacored testnet
+
+Modify state to create testnet from current local data
+
+### Synopsis
+
+Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
+The provided opeartorAddress is used as the operator for the single validator in this network. The existing node key is reused .
+
+
+```
+zetacored testnet [newChainID] [operatorAddress] [flags]
+```
+
+### Examples
+
+```
+zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
+```
+
+### Options
+
+```
+  -h, --help                 help for testnet
+      --skip-confirmation    Skip the confirmation prompt
+      --trace-store string   Enable KVStore tracing to an output file
+      --with-cometbft        Run abci app embedded in-process with CometBFT (default true)
 ```
 
 ### Options inherited from parent commands
