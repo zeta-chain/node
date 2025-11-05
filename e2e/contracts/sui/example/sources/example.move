@@ -16,9 +16,7 @@ const EUnauthorizedSender: u64 = 2;
 // zetaclient should be able to differentiate this error from real withdraw_impl nonce mismatch
 const ENonceMismatch: u64 = 3;
 
-const EInactiveMessageContext: u64 = 4;
-
-const EPackageMismatch: u64 = 5;
+const EPackageMismatch: u64 = 4;
 
 // stub for shared objects
 public struct GlobalConfig has key {
