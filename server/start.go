@@ -23,10 +23,9 @@ import (
 const (
 	KeyIsTestnet         = "is-testnet"
 	KeyNewChainID        = "new-chain-ID"
-	KeyNewValAddr        = "new-validator-addr"
-	KeyUserPubKey        = "user-pub-key"
-	FlagSkipConfirmation = "skip-confirmation"
+	KeyValidatorAddr     = "validator-address"
 	KeyOperatorAddress   = "operator-address"
+	FlagSkipConfirmation = "skip-confirmation"
 )
 
 type StartCmdOptions struct {
@@ -142,7 +141,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(srvflags.Transport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(srvflags.TraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(server.FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000azeta)")
-	cmd.Flags().Duration(server.FlagShutdownGrace, 2*time.Second, "On Shutdown, duration to wait for resource clean up")
+	cmd.Flags().Duration(server.FlagShutdownGrace, 3*time.Second, "On Shutdown, duration to wait for resource clean up")
 	cmd.Flags().IntSlice(server.FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().Uint64(server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(server.FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")

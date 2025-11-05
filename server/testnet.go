@@ -36,43 +36,29 @@ func TestnetCmdWithOptions(testnetAppCreator types.AppCreator, opts StartCmdOpti
 	}
 
 	cmd := &cobra.Command{
-		Use:   "testnet [newChainID]",
+		Use:   "testnet [newChainID] [operatorAddress]",
 		Short: "Modify state to create testnet from current local data",
-		Long: `Modify state to create a testnet from current local state.
-This command modifies the chain ID and validator set to allow the local validator
-to control the network. After running this command, use the regular "start" command
-to start the network.
-
-
-WARNING: This operation modifies state in your data folder and cannot be undone.
-
-Example usage:
-  zetacored testnet testnet_7001-1
-  zetacored start
-
-The first block may take up to one minute to be committed, depending on how old
-the state is. If using old snapshots, pending state (expiring locks, etc.) may
-need to be committed first.
+		Long: `Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
+The provided opeartorAddress is used as the operator for the single validator in this network. The existing node key is reused .
 `,
-		Example: "zetacored testnet testnet_7001-1",
-		Args:    cobra.RangeArgs(1, 2),
+		Example: "zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+		Args:    cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 
 			_, err := server.GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get pruning options from flags: %w", err)
 			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get client query context: %w", err)
 			}
 
 			newChainID := args[0]
 			operatorAddress := args[1]
 
-			// TODO add validation
 			skipConfirmation, _ := cmd.Flags().GetBool(FlagSkipConfirmation)
 
 			if !skipConfirmation {
@@ -93,8 +79,11 @@ need to be committed first.
 			withCmt, _ := cmd.Flags().GetBool(srvflags.WithCometBFT)
 
 			err = opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCmt, opts)
+			if err != nil {
+				return fmt.Errorf("failed to start command handler: %w", err)
+			}
 
-			return err
+			return nil
 		},
 	}
 
@@ -110,32 +99,43 @@ func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) e
 	if !ok {
 		panic("expected *zeta.ZetaApp")
 	}
+	err := updateObserverData(*app)
+	if err != nil {
+		return fmt.Errorf("failed to update observer state: %w", err)
+	}
+	err = updateValidatorData(svrCtx, *app)
+	if err != nil {
+		return fmt.Errorf("failed to update staking for testnet: %w", err)
+	}
+	return nil
+}
+
+func updateObserverData(app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 
 	observerSet, found := app.ObserverKeeper.GetObserverSet(ctx)
 	if !found {
-		panic("no observer set")
+		return fmt.Errorf("could not find observer set")
 	}
 
 	newObserverSet := observertypes.ObserverSet{
 		ObserverList: []string{observerSet.ObserverList[0]},
 	}
 	app.ObserverKeeper.SetObserverSet(ctx, newObserverSet)
-
-	err := updateStakingForTestnet(svrCtx, *app)
-	if err != nil {
-		panic(err)
-	}
+	app.ObserverKeeper.SetLastObserverCount(ctx, &observertypes.LastObserverCount{
+		Count:            1,
+		LastChangeHeight: ctx.BlockHeight(),
+	})
 	return nil
 }
 
-func updateStakingForTestnet(svrCtx *server.Context, app zeta.App) error {
+func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
 
 	validators, err := app.StakingKeeper.GetAllValidators(ctx)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to get all validators: %w", err)
 	}
 
 	newVal := stakingtypes.Validator{}
@@ -143,7 +143,7 @@ func updateStakingForTestnet(svrCtx *server.Context, app zeta.App) error {
 	for _, val := range validators {
 		accAddr, err := observertypes.GetAccAddressFromOperatorAddress(val.OperatorAddress)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("failed to get account address from operator address: %w", err)
 		}
 		if accAddr.String() == operatorAddrStr {
 			newVal = val
@@ -151,20 +151,20 @@ func updateStakingForTestnet(svrCtx *server.Context, app zeta.App) error {
 		val.Status = stakingtypes.Unbonded
 		err = app.StakingKeeper.SetValidator(ctx, val)
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("failed to set validator status to unbonded: %w", err)
 		}
 	}
 
 	params, err := app.StakingKeeper.GetParams(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get staking params: %w", err)
 	}
 
 	params.MaxValidators = 1
 	params.UnbondingTime = 5 * time.Second
 	err = app.StakingKeeper.SetParams(ctx, params)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set staking params: %w", err)
 	}
 	if newVal.OperatorAddress == "" {
 		return fmt.Errorf("operator address %s not found in validator set", operatorAddrStr)
@@ -174,70 +174,74 @@ func updateStakingForTestnet(svrCtx *server.Context, app zeta.App) error {
 	stakingStore := ctx.KVStore(stakingKey)
 	iterator, err := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get validators power store iterator: %w", err)
 	}
 
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
-	iterator.Close()
+	if err := iterator.Close(); err != nil {
+		return fmt.Errorf("failed to close validators power store iterator: %w", err)
+	}
 
 	svrCtx.Logger.Info("Cleared staking validators by power index")
 	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get last validators iterator: %w", err)
 	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
-	iterator.Close()
+	if err := iterator.Close(); err != nil {
+		return fmt.Errorf("failed to close last validators iterator: %w", err)
+	}
 
 	svrCtx.Logger.Info("Cleared staking last validator power")
 
 	//
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator: %w", err)
 	}
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator by consensus address: %w", err)
 	}
 	err = app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator by power index: %w", err)
 	}
 
 	valAddress, err := sdk.ValAddressFromBech32(newVal.GetOperator())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse validator address from bech32: %w", err)
 	}
 	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddress, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set last validator power: %w", err)
 	}
 	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddress); err != nil {
-		return err
+		return fmt.Errorf("failed to execute after validator created hook: %w", err)
 	}
 
 	err = app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator historical rewards: %w", err)
 	}
 	err = app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator current rewards: %w", err)
 	}
 	err = app.DistrKeeper.SetValidatorAccumulatedCommission(ctx, valAddress, distrtypes.InitialValidatorAccumulatedCommission())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator accumulated commission: %w", err)
 	}
 	err = app.DistrKeeper.SetValidatorOutstandingRewards(ctx, valAddress, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator outstanding rewards: %w", err)
 	}
 
-	newValAddr := svrCtx.Viper.GetString(KeyNewValAddr)
+	newValAddr := svrCtx.Viper.GetString(KeyValidatorAddr)
 
 	newConsAddr := sdk.ConsAddress(newValAddr)
 	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
@@ -247,7 +251,7 @@ func updateStakingForTestnet(svrCtx *server.Context, app zeta.App) error {
 	}
 	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set validator signing info: %w", err)
 	}
 
 	return nil

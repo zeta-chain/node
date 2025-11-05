@@ -28,7 +28,6 @@ import (
 	sm "github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/store"
 	cmttypes "github.com/cometbft/cometbft/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
@@ -187,12 +186,12 @@ func Listen(addr string, config *config.Config) (net.Listener, error) {
 }
 
 func start(svrCtx *server.Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
-	config, err := cosmosevmserverconfig.GetConfig(svrCtx.Viper)
+	serverConfig, err := cosmosevmserverconfig.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	if err := config.ValidateBasic(); err != nil {
+	if err := serverConfig.ValidateBasic(); err != nil {
 		return fmt.Errorf("invalid server config: %w", err)
 	}
 
@@ -202,18 +201,18 @@ func start(svrCtx *server.Context, clientCtx client.Context, appCreator types.Ap
 	}
 	defer appCleanupFn()
 
-	metrics, err := startTelemetry(config)
+	metrics, err := startTelemetry(serverConfig)
 	if err != nil {
 		return err
 	}
 
 	if !withCmt {
 		svrCtx.Logger.Info("starting ABCI without CometBFT")
-		return startStandAlone(svrCtx, &config, clientCtx, app, metrics, opts)
+		return startStandAlone(svrCtx, &serverConfig, clientCtx, app, metrics, opts)
 	}
 
 	svrCtx.Logger.Info("starting ABCI with CometBFT")
-	return startInProcess(svrCtx, &config, clientCtx, app, metrics, opts)
+	return startInProcess(svrCtx, &serverConfig, clientCtx, app, metrics, opts)
 }
 
 func startApp(svrCtx *server.Context, appCreator types.AppCreator, opts StartCmdOptions) (types.Application, func(), error) {
@@ -388,6 +387,9 @@ func startInProcess(
 		}()
 	}
 
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC or JSONRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local CometBFT RPC client.
 	if (config.API.Enable || config.GRPC.Enable || config.JSONRPC.Enable || config.JSONRPC.EnableIndexer) && cmtNode != nil {
 		clientCtx = clientCtx.WithClient(local.New(cmtNode))
 		app.RegisterTxService(clientCtx)
@@ -395,6 +397,8 @@ func startInProcess(
 		app.RegisterNodeService(clientCtx, config.Config)
 	}
 
+	// Enable metrics if JSONRPC is enabled and --metrics is passed
+	// Flag not added in config to avoid user enabling in config without passing in CLI
 	if config.JSONRPC.Enable && svrCtx.Viper.GetBool(srvflags.JSONRPCEnableMetrics) {
 		ethmetricsexp.Setup(config.JSONRPC.MetricsAddress)
 	}
@@ -473,10 +477,16 @@ func startInProcess(
 		}
 	}
 
+	// At this point it is safe to block the process if we're in query only mode as
+	// we do not need to start Rosetta or handle any CometBFT related processes.
 	if gRPCOnly {
+		// wait for signal capture and gracefully return
+		// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 		return g.Wait()
 	}
 
+	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
@@ -729,8 +739,7 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	ctx.Viper.Set(KeyNewValAddr, validatorAddress.Bytes())
-	ctx.Viper.Set(KeyUserPubKey, userPubKey)
+	ctx.Viper.Set(KeyValidatorAddr, validatorAddress.Bytes())
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	// We need to create a temporary proxyApp to get the initial state of the application.
@@ -781,7 +790,6 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		}
 		block = blockStore.LoadBlock(blockStore.Height())
 	default:
-		fmt.Println("Default condition.", appHeight, blockStore.Height())
 		// If there is any other state, we just load the block
 		block = blockStore.LoadBlock(blockStore.Height())
 	}
@@ -846,7 +854,7 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		Proposer:   newVal,
 	}
 
-	// Replace all valSets in state to be the valSet with just our validator.
+	// Replace all valSets in state to be the valSet with just one validator.
 	cmtState.Validators = newValSet
 	cmtState.LastValidators = newValSet
 	cmtState.NextValidators = newValSet
@@ -857,7 +865,6 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	// Create a ValidatorsInfo struct to store in stateDB.
 	valSet, err := cmtState.Validators.ToProto()
 	if err != nil {
 		return nil, err
@@ -871,19 +878,16 @@ func testnetify(ctx *server.Context, testnetAppCreator types.AppCreator, db dbm.
 		return nil, err
 	}
 
-	// Modfiy Validators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()), buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Modify LastValidators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()-1), buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Modify NextValidators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()+1), buf)
 	if err != nil {
 		return nil, err
