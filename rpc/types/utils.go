@@ -469,11 +469,17 @@ func RPCMarshalHeader(head *ethtypes.Header, blockHash []byte) map[string]interf
 //
 // This method refers to go-ethereum v1.16.3 internal package method - RPCMarshalBlock
 // (https://github.com/ethereum/go-ethereum/blob/d818a9af7bd5919808df78f31580f59382c53150/internal/ethapi/api.go#L929-L962)
-func RPCMarshalBlock(block *ethtypes.Block, cmtBlock *cmtrpccore.ResultBlock, msgs []*evmtypes.MsgEthereumTx, inclTx bool, fullTx bool, config *ethparams.ChainConfig) (map[string]interface{}, error) {
+func RPCMarshalBlock(
+	block *ethtypes.Block,
+	cmtBlock *cmtrpccore.ResultBlock,
+	msgs []*evmtypes.MsgEthereumTx,
+	additionals []*TxResultAdditionalFields,
+	inclTx bool, fullTx bool,
+	config *ethparams.ChainConfig) (map[string]interface{}, error) {
 	blockHash := cmtBlock.BlockID.Hash.Bytes()
 	fields := RPCMarshalHeader(block.Header(), blockHash)
 	fields["size"] = hexutil.Uint64(block.Size())
-
+	ethRPCTxs := []interface{}{}
 	if inclTx {
 		formatTx := func(idx int, tx *ethtypes.Transaction) interface{} {
 			return tx.Hash()
@@ -484,22 +490,26 @@ func RPCMarshalBlock(block *ethtypes.Block, cmtBlock *cmtrpccore.ResultBlock, ms
 				return newRPCTransactionFromBlockIndex(block, common.BytesToHash(blockHash), txIdx, config)
 			}
 		}
+
+		for _, msg := range msgs {
+			ethRPCTxs = append(ethRPCTxs, msg.Hash)
+		}
 		txs := block.Transactions()
 		transactions := make([]interface{}, len(txs))
 		for i, tx := range txs {
 			transactions[i] = formatTx(i, tx)
 		}
-		fields["transactions"] = transactions
+		fields["transactions"] = ethRPCTxs
 	}
-	uncles := block.Uncles()
-	uncleHashes := make([]common.Hash, len(uncles))
-	for i, uncle := range uncles {
-		uncleHashes[i] = uncle.Hash()
-	}
-	fields["uncles"] = uncleHashes
-	if block.Withdrawals() != nil {
-		fields["withdrawals"] = block.Withdrawals()
-	}
+	// uncles := block.Uncles()
+	// uncleHashes := make([]common.Hash, len(uncles))
+	// for i, uncle := range uncles {
+	// 	uncleHashes[i] = uncle.Hash()
+	// }
+	// fields["uncles"] = uncleHashes
+	// if block.Withdrawals() != nil {
+	// 	fields["withdrawals"] = block.Withdrawals()
+	// }
 	return fields, nil
 }
 

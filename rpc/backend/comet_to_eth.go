@@ -43,13 +43,13 @@ func (b *Backend) RPCBlockFromCometBlock( // TODO evm: refactor to include synth
 	blockRes *cmtrpctypes.ResultBlockResults,
 	fullTx bool,
 ) (map[string]interface{}, error) {
-	msgs, _ := b.EthMsgsFromCometBlock(resBlock, blockRes)
+	msgs, additionals := b.EthMsgsFromCometBlock(resBlock, blockRes)
 	ethBlock, err := b.EthBlockFromCometBlock(resBlock, blockRes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rpc block from comet block: %w", err)
 	}
 
-	return rpctypes.RPCMarshalBlock(ethBlock, resBlock, msgs, true, fullTx, b.ChainConfig())
+	return rpctypes.RPCMarshalBlock(ethBlock, resBlock, msgs, additionals, true, fullTx, b.ChainConfig())
 }
 
 // BlockNumberFromComet returns the BlockNumber from BlockNumberOrHash
