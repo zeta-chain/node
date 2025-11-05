@@ -38,7 +38,9 @@ func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opt
 	}
 
 	if opts.TestSui {
-		r.SuiVerifyGatewayPackageUpgrade()
+		// To verify V1 -> V2 upgrade, the package upgrade is moved to setup_sui.go
+		// This is because the upgrade test base line v36.0.1 does not match the V1 package in Sui live networks
+		//r.SuiVerifyGatewayPackageUpgrade()
 	}
 }
 

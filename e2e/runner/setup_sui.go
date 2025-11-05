@@ -34,11 +34,20 @@ const (
 	// suiExamplePath is the path to the example package
 	suiExamplePath = "example"
 
-	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
-	suiGatewayUpgradedPath = "protocol-contracts-sui-upgrade"
+	// suiGatewayPathV1 is the path to the gateway package
+	suiGatewayPathV1 = "protocol-contracts-sui"
+
+	// suiGatewayUpgradedPathV2 is the path to the upgraded Sui gateway package
+	suiGatewayUpgradedPathV2 = "protocol-contracts-sui-upgrade"
 )
 
 var (
+	// suiGatewayBinGateway is the path to the gateway binary file
+	suiGatewayBinGateway = fmt.Sprintf("%s/build/gateway/bytecode_modules/gateway.mv", suiGatewayPathV1)
+
+	// suiGatewayBinEVM is the path to the EVM binary file
+	suiGatewayBinEVM = fmt.Sprintf("%s/build/gateway/bytecode_modules/evm.mv", suiGatewayPathV1)
+
 	// suiExampleBinToken is the path to the example token binary file
 	suiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
 
@@ -73,11 +82,14 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
-	// deploy gateway package
+	// build gateway package v1
+	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayPathV1))
+
+	// deploy gateway package v1
 	whitelistCapID, withdrawCapID := r.suiDeployGateway()
 
-	// issue message context
-	messageContextID := r.issueMessageContext()
+	// send withdraw cap to TSS
+	r.suiTransferObjectToTSS(deployerSigner, withdrawCapID)
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -86,8 +98,19 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
-	// build and deploy example package with on_call function
+	r.Logger.Print("⚙️ upgrading gateway package to v2")
+
+	// upgrade to V2 gateway package
+	r.suiUpgradeGatewayPackage()
+
+	// message context only exists in V2
+	messageContextID := r.issueMessageContext()
+
+	// build and deploy example package with on_call function (only supported by v2)
+	r.Logger.Print("⚙️ building example package")
 	r.suiBuildExample()
+
+	r.Logger.Print("⚙️ deploying example package")
 	r.suiDeployExample(
 		&r.SuiExample,
 		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinToken)),
@@ -95,15 +118,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 		[]string{r.SuiGateway.PackageID()},
 	)
 
-	// send withdraw cap to TSS
-	r.suiTransferObjectToTSS(deployerSigner, withdrawCapID)
-
 	// send message context to TSS
 	r.suiTransferObjectToTSS(deployerSigner, messageContextID)
-
-	// set the chain params
-	err = r.setSuiChainParams(true)
-	require.NoError(r, err)
 }
 
 // SuiUpdateGatewayInfo updates the gateway information from chain params
@@ -173,31 +189,19 @@ func (r *E2ERunner) suiBuildPackage(path string) {
 
 // suiBuildGatewayUpgraded builds the upgraded gateway package
 func (r *E2ERunner) suiBuildGatewayUpgraded() {
-	// in order to upgrade the gateway package, we need e patches to the Move.toml files:
-	// 1. set the `published-at` so that SUI knows which deployed gateway package the upgrade applies to.
-	// 2. use `gateway = 0x0` as a placeholder that will be replaced by new gateway package address.
-	// 3. set the old placeholder "ORIGINAL-PACKAGE-ID" to actual package ID, will deprecate it in the future.
+	// set v1 gateway package ID to the 'published-at' field so that SUI knows which gateway package to upgrade
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
-	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), gatewayAddress, `gateway = "0x0"`)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "ORIGINAL-PACKAGE-ID"`, publishedAt)
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPathV2), `published-at = "0x0"`, publishedAt)
 
 	// build the upgraded gateway package
-	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPath))
+	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPathV2))
 }
 
 // suiBuildExample builds the example package
 func (r *E2ERunner) suiBuildExample() {
-	// in order to import the gateway package, we need 3 patches to the Move.toml files:
-	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
-	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
-	// 3. set the actual gateway address in the example package, otherwise the build will fail.
+	// we need to set the published-at field to the v2 gateway package ID, which is referenced by the example package
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
-	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `gateway = "0x0"`, gatewayAddress)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiExamplePath), `gateway = "0x0"`, gatewayAddress)
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPathV2), `published-at = "0x0"`, publishedAt)
 
 	r.suiBuildPackage(r.WorkDirPrefixed(suiExamplePath))
 }
@@ -217,8 +221,13 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 		filterWithdrawCapType,
 		filterUpgradeCapType,
 	}
+
+	// read binaries from build directory
+	gatewayBytecode := suibin.ReadMoveBinaryBase64(r, suiGatewayBinGateway)
+	evmBytecode := suibin.ReadMoveBinaryBase64(r, suiGatewayBinEVM)
+
 	packageID, objectIDs := r.suiDeployPackage(
-		[]string{suibin.GatewayBytecodeBase64(), suibin.EVMBytecodeBase64()},
+		[]string{gatewayBytecode, evmBytecode},
 		[]string{},
 		objectTypeFilters,
 	)
@@ -400,8 +409,11 @@ func (r *E2ERunner) issueMessageContext() string {
 	require.NoError(r, err, "get deployer signer")
 
 	var (
-		adminCapType   = fmt.Sprintf("%s::gateway::AdminCap", r.SuiGateway.PackageID())
-		msgContextType = fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.PackageID())
+		// the AdminCap is defined in the v1 package, so old package ID should be used
+		// the MessageContext is defined in the v2 package, so new package ID should be used
+		originalPackageID = r.SuiGateway.Original().PackageID()
+		adminCapType      = fmt.Sprintf("%s::gateway::AdminCap", originalPackageID)
+		msgContextType    = fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.PackageID())
 	)
 
 	// message context object exists or not

@@ -521,9 +521,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiWithdrawRestrictedName,
 		}
-		if !deployerRunner.IsRunningUpgrade() {
-			suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
-		}
+		// run withdrawAndCall tests, because upgrade is already done in setup_sui.go
+		//if !deployerRunner.IsRunningUpgrade() {
+		suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
+		//}
 
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}

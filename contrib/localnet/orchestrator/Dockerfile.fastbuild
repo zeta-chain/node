@@ -15,6 +15,7 @@ COPY contrib/localnet/orchestrator/proposals_e2e_end/ /work/proposals_e2e_end/
 COPY contrib/localnet/scripts/wait-for-ton.sh /work/
 COPY contrib/localnet/sui/sui_client.yaml /root/.sui/sui_config/client.yaml
 COPY e2e/contracts/sui/example /work/example
+COPY e2e/contracts/sui/protocol-contracts-sui /work/protocol-contracts-sui
 COPY e2e/contracts/sui/protocol-contracts-sui-upgrade /work/protocol-contracts-sui-upgrade
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
 

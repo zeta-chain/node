@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"os"
 	"os/exec"
@@ -68,6 +69,8 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	// build the upgraded gateway package
 	r.suiBuildGatewayUpgraded()
 
+	r.Logger.Print("gateway package ID v1: %s", r.SuiGateway.PackageID())
+
 	// construct the CLI command for package upgrade
 	// #nosec G204, inputs are controlled in E2E test
 	cmdUpgrade := exec.Command("sui", []string{
@@ -77,7 +80,7 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
 	}...)
-	cmdUpgrade.Dir = r.WorkDirPrefixed(suiGatewayUpgradedPath)
+	cmdUpgrade.Dir = r.WorkDirPrefixed(suiGatewayUpgradedPathV2)
 
 	// run command and show output
 	startTime := time.Now()
@@ -100,6 +103,11 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	}
 	require.NotEmpty(r, packageID, "new gateway package ID not found")
 
+	// replace v1 package ID with v2 package ID in the 'published-at' field
+	publishedAtOld := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
+	publishedAtNew := fmt.Sprintf(`published-at = "%s"`, packageID)
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPathV2), publishedAtOld, publishedAtNew)
+
 	// find withdraw cap ID
 	withdrawCapID, found := r.suiGetOwnedObjectID(r.SuiTSSAddress, r.SuiGateway.WithdrawCapType())
 	require.True(r, found, "withdraw cap object not found")
@@ -111,6 +119,8 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 		sui.MakePairID(packageID, r.SuiGateway.ObjectID(), withdrawCapID, previousPackageID, originalPackageID),
 	)
 	require.NoError(r, err)
+
+	r.Logger.Print("gateway package ID v2: %s", r.SuiGateway.PackageID())
 
 	// update the chain params
 	err = r.setSuiChainParams(false)
