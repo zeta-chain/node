@@ -96,11 +96,11 @@ func (c *TrackingDetails) checkSolanaOutboundTx(ctx *context.Context) error {
 	if solClient == nil {
 		return fmt.Errorf("error creating rpc client")
 	}
-	solRepo := solrepo.New(solClient)
+	solRepo := solrepo.New(solClient, solana.PublicKey{} /* unused */)
 
 	for _, hash := range txHashList {
 		signature := solana.MustSignatureFromBase58(hash)
-		_, err := solRepo.GetTransaction(goCtx, signature)
+		_, err := solRepo.GetTransaction(goCtx, signature, solrpc.CommitmentFinalized)
 		if err != nil {
 			continue
 		}

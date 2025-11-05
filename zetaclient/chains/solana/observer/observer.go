@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"time"
 
 	sol "github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
@@ -14,56 +15,13 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// SolanaClient is the interface for the Solana RPC client.
-type SolanaClient interface {
-	GetVersion(context.Context) (*solrpc.GetVersionResult, error)
-
-	GetHealth(context.Context) (string, error)
-
+type SolanaRepo interface {
+	GetFirstSignature(context.Context) (sol.Signature, error)
+	GetSignaturesSince(context.Context, sol.Signature) ([]*solrpc.TransactionSignature, error)
+	GetTransaction(context.Context, sol.Signature, solrpc.CommitmentType) (*solrpc.GetTransactionResult, error)
+	HealthCheck(context.Context) (*time.Time, error)
 	GetSlot(context.Context, solrpc.CommitmentType) (uint64, error)
-
-	GetBlockTime(_ context.Context, block uint64) (*sol.UnixTimeSeconds, error)
-
-	GetAccountInfo(context.Context, sol.PublicKey) (*solrpc.GetAccountInfoResult, error)
-
-	GetAccountInfoWithOpts(
-		context.Context,
-		sol.PublicKey,
-		*solrpc.GetAccountInfoOpts,
-	) (*solrpc.GetAccountInfoResult, error)
-
-	GetBalance(_ context.Context,
-		account sol.PublicKey,
-		_ solrpc.CommitmentType,
-	) (*solrpc.GetBalanceResult, error)
-
-	GetLatestBlockhash(context.Context,
-		solrpc.CommitmentType,
-	) (*solrpc.GetLatestBlockhashResult, error)
-
-	GetRecentPrioritizationFees(_ context.Context,
-		accounts sol.PublicKeySlice,
-	) ([]solrpc.PriorizationFeeResult, error)
-
-	GetTransaction(context.Context,
-		sol.Signature,
-		*solrpc.GetTransactionOpts,
-	) (*solrpc.GetTransactionResult, error)
-
-	GetConfirmedTransactionWithOpts(context.Context,
-		sol.Signature,
-		*solrpc.GetTransactionOpts,
-	) (*solrpc.TransactionWithMeta, error)
-
-	GetSignaturesForAddressWithOpts(context.Context,
-		sol.PublicKey,
-		*solrpc.GetSignaturesForAddressOpts,
-	) ([]*solrpc.TransactionSignature, error)
-
-	SendTransactionWithOpts(context.Context,
-		*sol.Transaction,
-		solrpc.TransactionOpts,
-	) (sol.Signature, error)
+	GetPriorityFee(context.Context) (uint64, error)
 }
 
 // Observer is the observer for the Solana chain
@@ -71,10 +29,7 @@ type Observer struct {
 	// base.Observer implements the base chain observer
 	*base.Observer
 
-	// solanaClient is the Solana RPC client that interacts with the Solana chain
-	solanaClient SolanaClient
-
-	solanaRepo *repo.SolanaRepo
+	solanaRepo SolanaRepo
 
 	// gatewayID is the program ID of gateway program on Solana chain
 	gatewayID sol.PublicKey
@@ -88,7 +43,7 @@ type Observer struct {
 
 // New Observer constructor
 func New(baseObserver *base.Observer,
-	solanaClient SolanaClient,
+	solanaClient repo.SolanaClient,
 	gatewayAddress string,
 ) (*Observer, error) {
 	// parse gateway ID and PDA
@@ -97,12 +52,11 @@ func New(baseObserver *base.Observer,
 		return nil, errors.Wrapf(err, "cannot parse gateway address %s", gatewayAddress)
 	}
 
-	solanaRepo := repo.New(solanaClient)
+	solanaRepo := repo.New(solanaClient, gatewayID)
 
 	// create solana observer
 	ob := &Observer{
 		Observer:           baseObserver,
-		solanaClient:       solanaClient,
 		solanaRepo:         solanaRepo,
 		gatewayID:          gatewayID,
 		pda:                pda,
@@ -152,7 +106,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 		return errors.Wrap(err, "unable to check rpc status")
 	}
 
-	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
+	metrics.ReportBlockLatency(ob.Chain().Name, *blockTime)
 
 	return nil
 }

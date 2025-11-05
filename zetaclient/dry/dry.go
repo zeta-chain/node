@@ -29,7 +29,7 @@ import (
 	crosschain "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
-	"github.com/zeta-chain/node/zetaclient/chains/solana"
+	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
@@ -158,10 +158,10 @@ func (*EVMClient) SendTransaction(context.Context, *eth.Transaction) error {
 
 // SolanaClient is a dry-wrapper for Solana clients.
 type SolanaClient struct {
-	solana.SolanaClient
+	solrepo.SolanaClient
 }
 
-func WrapSolanaClient(client solana.SolanaClient) *SolanaClient {
+func WrapSolanaClient(client solrepo.SolanaClient) *SolanaClient {
 	return &SolanaClient{SolanaClient: client}
 }
 

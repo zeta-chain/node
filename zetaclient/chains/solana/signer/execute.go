@@ -9,8 +9,6 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
 	sol "github.com/gagliardetto/solana-go"
-	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
@@ -108,21 +106,10 @@ func (signer *Signer) prepareExecuteMsgParams(
 		return nil, nil, stderrors.New("solana AddressLookupTable feature is disabled")
 	}
 
-	client, ok := signer.solanaClient.(*rpc.Client)
-	if !ok {
-		return nil, nil, stderrors.New(
-			"solana AddressLookupTable requires *rpc.Client; got different SolanaClient implementation",
-		)
-	}
-	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
-		ctx,
-		client,
-		*msg.AddressLookupTableAddress(),
-		&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed},
-	)
-
+	address := *msg.AddressLookupTableAddress()
+	alt, err := signer.solanaRepo.GetAddressLookupTableState(ctx, address)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot get alt")
+		return nil, nil, err
 	}
 
 	writableSet := make(map[int]struct{}, len(msg.Alt.WritableIndexes))

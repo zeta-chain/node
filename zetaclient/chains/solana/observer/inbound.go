@@ -20,100 +20,96 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
-const MaxSignaturesPerTicker = 100
+// maxSignaturesPerTicker is the maximum number of signatures to process on a ticker.
+const maxSignaturesPerTicker = 100
 
-// ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
+// ObserveInbound observes the Solana chain for inbounds and posts votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-	pageLimit := repo.DefaultPageLimit
+	logger := ob.Logger().Inbound
 
-	// scan from gateway 1st signature if last scanned tx is absent in the database
-	// the 1st gateway signature is typically the program initialization
+	// Scan from gateway's 1st signature if last scanned transaction is absent in the database.
+	// The 1st gateway signature is typically the program initialization.
 	if ob.LastTxScanned() == "" {
-		lastSig, err := ob.solanaRepo.GetFirstSignatureForAddress(ctx, ob.gatewayID, pageLimit)
+		sig, err := ob.solanaRepo.GetFirstSignature(ctx)
 		if err != nil {
-			format := "error GetFirstSignatureForAddress for chain %d address %s"
-			return errors.Wrapf(err, format, chainID, ob.gatewayID)
+			return err
 		}
-		ob.WithLastTxScanned(lastSig.String())
+		ob.WithLastTxScanned(sig.String())
 	}
 
-	// query last finalized slot
-	lastSlot, errSlot := ob.solanaClient.GetSlot(ctx, rpc.CommitmentFinalized)
+	// Get last finalized slot.
+	lastSlot, errSlot := ob.solanaRepo.GetSlot(ctx, rpc.CommitmentFinalized)
 	if errSlot != nil {
-		ob.Logger().Inbound.Err(errSlot).Msg("unable to get last slot")
+		logger.Err(errSlot).Msg("failed to get last finalized slot")
 	}
 
-	// get all signatures for the gateway address since last scanned signature
+	// Get all signatures for the gateway address since the last scanned signature.
 	lastSig := solana.MustSignatureFromBase58(ob.LastTxScanned())
-	signatures, err := ob.solanaRepo.GetSignaturesForAddressUntil(ctx, ob.gatewayID, lastSig, pageLimit)
+	sigs, err := ob.solanaRepo.GetSignaturesSince(ctx, lastSig)
 	if err != nil {
-		ob.Logger().Inbound.Err(err).Msg("error calling GetSignaturesForAddressUntil")
+		logger.Err(err).Send()
 		return err
 	}
 
-	// update metrics if no new signatures found
-	if len(signatures) == 0 {
+	if len(sigs) == 0 {
+		// Update metrics if there are no new signatures.
 		if errSlot == nil {
 			ob.WithLastBlockScanned(lastSlot)
 		}
 	} else {
-		ob.Logger().Inbound.Info().Int("signatures", len(signatures)).Msg("got inbound signatures")
+		logger.Info().Int("signatures", len(sigs)).Msg("got inbound signatures")
 	}
 
-	// loop signature from oldest to latest to filter inbound events
-	for i := len(signatures) - 1; i >= 0; i-- {
-		sig := signatures[i]
-		sigString := sig.Signature.String()
+	// Iterate over the signatures from oldest to latest to filter inbound events.
+	for i := len(sigs) - 1; i >= 0; i-- {
+		sig := sigs[i]
 
-		// process successfully signature only
+		// Process only successfull transactions.
 		if sig.Err == nil {
-			txResult, err := ob.solanaRepo.GetTransaction(ctx, sig.Signature)
-			switch {
-			case errors.Is(err, repo.ErrUnsupportedTxVersion):
-				ob.Logger().Inbound.Warn().
+			txResult, err := ob.solanaRepo.GetTransaction(ctx, sig.Signature, rpc.CommitmentFinalized)
+			if errors.Is(err, repo.ErrUnsupportedTxVersion) {
+				logger.Warn().
 					Stringer("tx_signature", sig.Signature).
-					Msg("observe inbound: skip unsupported transaction")
-			// just save the sig to last scanned txs
-			case err != nil:
-				// we have to re-scan this signature on next ticker
-				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
-			default:
-				// filter the events
-				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+					Msg("skipping unsupported transaction")
+			} else if err != nil {
+				return err
+			} else {
+				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, logger)
 				if err != nil {
 					// Log the error but continue processing other transactions
-					ob.Logger().Inbound.Error().
+					logger.Error().
 						Err(err).
-						Str("tx_signature", sigString).
+						Stringer("tx_signature", sig.Signature).
 						Msg("observe inbound: error filtering events, skipping")
 					continue
 				}
 
-				// vote on the events
-				if err := ob.VoteInboundEvents(ctx, events, false, false); err != nil {
-					// return error to retry this transaction
-					return errors.Wrapf(err, "error voting on events for transaction %s, will retry", sigString)
+				err = ob.VoteInboundEvents(ctx, events, false, false)
+				if err != nil {
+					return errors.Wrapf(err,
+						"error voting on events for transaction %s, will retry",
+						sig.Signature.String(),
+					)
 				}
 			}
 		}
 
 		// signature scanned; save last scanned signature to both memory and db, ignore db error
-		if err = ob.SaveLastTxScanned(sigString, sig.Slot); err != nil {
-			ob.Logger().Inbound.Error().
+		err = ob.SaveLastTxScanned(sig.Signature.String(), sig.Slot)
+		if err != nil {
+			logger.Error().
 				Err(err).
-				Str("tx_signature", sigString).
-				Msg("observe inbound: error saving last sig")
+				Stringer("tx_signature", sig.Signature).
+				Msg("error saving last signature")
 		}
 
-		ob.Logger().Inbound.Info().
-			Str("tx_signature", sigString).
+		logger.Info().
+			Stringer("tx_signature", sig.Signature).
 			Uint64("tx_slot", sig.Slot).
-			Msg("observe inbound: last scanned sig")
+			Msg("last scanned signature")
 
-		// take a rest if max signatures per ticker is reached
-		if len(signatures)-i >= MaxSignaturesPerTicker {
+		// Take a rest if the maximum number of signatures per ticker has been reached.
+		if len(sigs)-i >= maxSignaturesPerTicker {
 			break
 		}
 	}
@@ -132,7 +128,8 @@ func (ob *Observer) VoteInboundEvents(
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
 			if fromTracker {
-				metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+				metrics.InboundObservationsTrackerTotal.
+					WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
 					Inc()
 			} else {
 				metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
@@ -164,6 +161,7 @@ func FilterInboundEvents(
 	senderChainID int64,
 	logger zerolog.Logger,
 ) ([]*clienttypes.InboundEvent, error) {
+
 	if txResult.Meta.Err != nil {
 		return nil, errors.Errorf("transaction failed with error: %v", txResult.Meta.Err)
 	}

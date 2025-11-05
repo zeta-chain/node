@@ -297,14 +297,14 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	if solClient == nil {
 		return fmt.Errorf("error creating rpc client")
 	}
-	solRepo := solrepo.New(solClient)
+	solRepo := solrepo.New(solClient, solana.PublicKey{} /* unused */)
 
 	signature, err := solana.SignatureFromBase58(inboundHash)
 	if err != nil {
 		return fmt.Errorf("error parsing signature: %w", err)
 	}
 
-	txResult, err := solRepo.GetTransaction(goCtx, signature)
+	txResult, err := solRepo.GetTransaction(goCtx, signature, solrpc.CommitmentFinalized)
 	if err != nil {
 		return fmt.Errorf("error getting transaction: %w", err)
 	}

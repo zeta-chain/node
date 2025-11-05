@@ -1,190 +1,251 @@
 // Package repo implements the Repository pattern to provide an abstraction layer over interactions
 // with the Solana client.
-//
-// TODO: This is the start of a modularized repository for Solana, many functions in the
-// observer-signer still call the RPC functions directly. We want to move all these usages to inside
-// the SolanaRepo structure.
-//
-// See: https://github.com/zeta-chain/node/issues/4224
 package repo
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
-	sol "github.com/gagliardetto/solana-go"
-	solrpc "github.com/gagliardetto/solana-go/rpc"
+	"github.com/gagliardetto/solana-go"
+	alt "github.com/gagliardetto/solana-go/programs/address-lookup-table"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
+
+	zetamath "github.com/zeta-chain/node/pkg/math"
 )
 
 const (
-	// TODO: this does not need to be exported, and can remove pageLimit from GetFirst... params.
-	//
-	// defaultPageLimit is the default number of signatures to fetch in one GetSignaturesForAddressWithOpts call
-	DefaultPageLimit = 1000
-
 	// see: https://github.com/solana-labs/solana/blob/master/rpc/src/rpc.rs#L7276
 	errorCodeUnsupportedTransactionVersion = "-32015"
+
+	// broadcastOutboundCommitment is the commitment level for broadcasting solana outbound.
+	// Commitment "finalized" eliminate all risk but the tradeoff is pretty severe and effectively
+	// reduces the expiration of tx by about 13 seconds. The "confirmed" level has very low risk of
+	// belonging to a dropped fork.
+	// see: https://solana.com/developers/guides/advanced/confirmation#use-an-appropriate-preflight-commitment-level
+	broadcastOutboundCommitment = rpc.CommitmentConfirmed
 )
 
-// ErrUnsupportedTxVersion is returned when the transaction version is not supported by zetaclient
-var ErrUnsupportedTxVersion = errors.New("unsupported tx version")
-
-type SolanaClient interface {
-	GetSlot(context.Context, solrpc.CommitmentType) (uint64, error)
-
-	GetBlockTime(_ context.Context, block uint64) (*sol.UnixTimeSeconds, error)
-
-	GetAccountInfo(context.Context, sol.PublicKey) (*solrpc.GetAccountInfoResult, error)
-
-	GetTransaction(context.Context,
-		sol.Signature,
-		*solrpc.GetTransactionOpts,
-	) (*solrpc.GetTransactionResult, error)
-
-	GetSignaturesForAddressWithOpts(context.Context,
-		sol.PublicKey,
-		*solrpc.GetSignaturesForAddressOpts,
-	) ([]*solrpc.TransactionSignature, error)
-}
-
 type SolanaRepo struct {
-	solanaClient SolanaClient
+	client SolanaClient
+
+	// gatewayID is the program ID of the gateway program on Solana chain.
+	gatewayID solana.PublicKey
 }
 
-func New(solanaClient SolanaClient) *SolanaRepo {
-	return &SolanaRepo{solanaClient: solanaClient}
+func New(client SolanaClient, gatewayID solana.PublicKey) *SolanaRepo {
+	return &SolanaRepo{client, gatewayID}
 }
 
-// GetFirstSignatureForAddress searches the first signature for the given address.
-// Note: make sure that the RPC provider used has enough transaction history.
-func (repo SolanaRepo) GetFirstSignatureForAddress(ctx context.Context,
-	address sol.PublicKey,
-	pageLimit int,
-) (sol.Signature, error) {
-	// search backwards until we find the first signature
-	var lastSignature sol.Signature
-	for {
-		fetchedSignatures, err := repo.solanaClient.GetSignaturesForAddressWithOpts(
-			ctx,
-			address,
-			&solrpc.GetSignaturesForAddressOpts{
-				Limit:      &pageLimit,
-				Before:     lastSignature, // exclusive
-				Commitment: solrpc.CommitmentFinalized,
-			},
-		)
-		if err != nil {
-			return sol.Signature{}, errors.Wrapf(
-				err,
-				"error GetSignaturesForAddressWithOpts for address %s",
-				address,
-			)
-		}
-
-		// no more signatures, stop searching
-		if len(fetchedSignatures) == 0 {
-			break
-		}
-
-		// update last signature for next search
-		lastSignature = fetchedSignatures[len(fetchedSignatures)-1].Signature
-	}
-
-	// there is no signature for the given address
-	if lastSignature.IsZero() {
-		return lastSignature, errors.Errorf("no signatures found for address %s", address)
-	}
-
-	return lastSignature, nil
-}
-
-// GetSignaturesForAddressUntil searches for signatures for the given address until the given
-// signature (exclusive).
-// Note: make sure that the rpc provider used has enough transaction history.
-func (repo SolanaRepo) GetSignaturesForAddressUntil(ctx context.Context,
-	address sol.PublicKey,
-	untilSig sol.Signature,
-	pageLimit int,
-) ([]*solrpc.TransactionSignature, error) {
-	var lastSignature sol.Signature
-	var allSignatures []*solrpc.TransactionSignature
-
-	// make sure that the 'untilSig' exists to prevent undefined behavior on GetSignaturesForAddressWithOpts
-	_, err := repo.GetTransaction(ctx, untilSig)
-	if err != nil && !errors.Is(err, ErrUnsupportedTxVersion) {
-		return nil, errors.Wrapf(err, "error GetTransaction for untilSig %s", untilSig)
-	}
-
-	// search backwards until we hit the 'untilSig' signature
-	for {
-		fetchedSignatures, err := repo.solanaClient.GetSignaturesForAddressWithOpts(
-			ctx,
-			address,
-			&solrpc.GetSignaturesForAddressOpts{
-				Limit:      &pageLimit,
-				Before:     lastSignature, // exclusive
-				Until:      untilSig,      // exclusive
-				Commitment: solrpc.CommitmentFinalized,
-			},
-		)
-		if err != nil {
-			return nil, errors.Wrapf(
-				err,
-				"error GetSignaturesForAddressWithOpts for address %s",
-				address,
-			)
-		}
-
-		// no more signatures, stop searching
-		if len(fetchedSignatures) == 0 {
-			break
-		}
-
-		// update last signature for next search
-		lastSignature = fetchedSignatures[len(fetchedSignatures)-1].Signature
-
-		// append fetched signatures
-		allSignatures = append(allSignatures, fetchedSignatures...)
-	}
-
-	return allSignatures, nil
-}
-
-// GetTransaction fetches a transaction with the given signature.
-// Note that it might return ErrUnsupportedTxVersion (for tx that we don't support yet).
-func (repo SolanaRepo) GetTransaction(ctx context.Context,
-	sig sol.Signature,
-) (*solrpc.GetTransactionResult, error) {
-	txResult, err := repo.solanaClient.GetTransaction(ctx, sig, &solrpc.GetTransactionOpts{
-		Commitment:                     solrpc.CommitmentFinalized,
-		MaxSupportedTransactionVersion: &solrpc.MaxSupportedTransactionVersion0,
-	})
-
-	switch {
-	case err != nil && strings.Contains(err.Error(), errorCodeUnsupportedTransactionVersion):
-		return nil, ErrUnsupportedTxVersion
-	case err != nil:
+// HealthCheck checks the health of the RPC client by querying for the latest block time.
+func (repo *SolanaRepo) HealthCheck(ctx context.Context) (*time.Time, error) {
+	// Get last finalized slot.
+	slot, err := repo.GetSlot(ctx, rpc.CommitmentFinalized)
+	if err != nil {
 		return nil, err
-	default:
-		return txResult, nil
 	}
+
+	// Get latest block time.
+	blockTime, err := repo.client.GetBlockTime(ctx, slot)
+	if err != nil {
+		return nil, newClientError(ErrClientGetBlockTime, err)
+	}
+
+	time := blockTime.Time()
+	return &time, nil
 }
 
-// HealthCheck returns the last block time
-func (repo SolanaRepo) HealthCheck(ctx context.Context) (time.Time, error) {
-	// query latest slot
-	slot, err := repo.solanaClient.GetSlot(ctx, solrpc.CommitmentFinalized)
+// TODO
+func (repo *SolanaRepo) GetLatestBlockHash(ctx context.Context) (blockhash solana.Hash, _ error) {
+	result, err := repo.client.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "unable to get latest slot")
+		return blockhash, newClientError(ErrClientGetLatestBlockhash, err)
+	}
+	return result.Value.Blockhash, nil
+}
+
+// GetSlot returns the the most recent slot of the given commitment type.
+func (repo *SolanaRepo) GetSlot(ctx context.Context,
+	commitment rpc.CommitmentType,
+) (uint64, error) {
+	slot, err := repo.client.GetSlot(ctx, commitment)
+	if err != nil {
+		errSlot := fmt.Errorf("%w - %s", ErrClientGetSlot, commitment)
+		return 0, newClientError(errSlot, err)
 	}
 
-	// query latest block time
-	blockTime, err := repo.solanaClient.GetBlockTime(ctx, slot)
+	return slot, nil
+}
+
+// TODO
+func (repo *SolanaRepo) GetAccountInfo(ctx context.Context,
+	account solana.PublicKey,
+	commitment rpc.CommitmentType,
+) (*rpc.GetAccountInfoResult, error) {
+	opts := rpc.GetAccountInfoOpts{Commitment: commitment}
+	result, err := repo.client.GetAccountInfoWithOpts(ctx, account, &opts)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "unable to get latest block time")
+		return nil, newClientError(ErrClientGetAccountInfo, err)
 	}
 
-	return blockTime.Time(), nil
+	return result, nil
+}
+
+// TODO
+func (repo *SolanaRepo) GetBalance(ctx context.Context,
+	account solana.PublicKey,
+	commitment rpc.CommitmentType,
+) (uint64, error) {
+	result, err := repo.client.GetBalance(ctx, account, commitment)
+	if err != nil {
+		return 0, newClientError(ErrClientGetBalance, err)
+	}
+
+	return result.Value, nil
+}
+
+// GetTransaction returns a transaction with the given signature.
+// It might return ErrUnsupportedTxVersion for transactions that we do not support yet.
+func (repo *SolanaRepo) GetTransaction(ctx context.Context,
+	sig solana.Signature,
+	commitment rpc.CommitmentType,
+) (*rpc.GetTransactionResult, error) {
+	opts := &rpc.GetTransactionOpts{
+		Commitment:                     commitment,
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
+	}
+
+	result, err := repo.client.GetTransaction(ctx, sig, opts)
+	if err != nil {
+		if strings.Contains(err.Error(), errorCodeUnsupportedTransactionVersion) {
+			err = fmt.Errorf("%w: %w", ErrUnsupportedTxVersion, err)
+		} else {
+			err = newClientError(ErrClientGetTransaction, err)
+		}
+		return nil, fmt.Errorf("%w (signature: %s)", err, sig.String())
+	}
+
+	return result, nil
+}
+
+// GetPriorityFee queries recent priority fees and returns their median (in micro lamports).
+func (repo *SolanaRepo) GetPriorityFee(ctx context.Context) (uint64, error) {
+	// Get recent priority fees.
+	fees, err := repo.client.GetRecentPrioritizationFees(ctx, nil)
+	if err != nil {
+		return 0, newClientError(ErrClientGetRecentPrioritizationFees, err)
+	}
+
+	// Compute median priority fee (excludes zeroes).
+	positiveFees := make([]uint64, 0, len(fees))
+	for _, fee := range fees {
+		if fee.PrioritizationFee > 0 {
+			positiveFees = append(positiveFees, fee.PrioritizationFee)
+		}
+	}
+	priorityFee := zetamath.SliceMedianValue(positiveFees, true)
+
+	return priorityFee, nil
+}
+
+// GetFirstSignature returns the first signature for the gateway address.
+func (repo *SolanaRepo) GetFirstSignature(ctx context.Context) (solana.Signature, error) {
+	opts := rpc.GetSignaturesForAddressOpts{Commitment: rpc.CommitmentFinalized}
+	_, err := repo.getSignatures(ctx, &opts, false)
+	if err != nil {
+		return solana.Signature{}, err
+	}
+
+	sig := opts.Before
+
+	if sig.IsZero() {
+		return sig, ErrFoundNoSignatures
+	}
+
+	return sig, nil
+}
+
+// GetSignaturesSince returns the signatures finalized since the given signature (exclusive).
+func (repo *SolanaRepo) GetSignaturesSince(ctx context.Context,
+	sig solana.Signature,
+) ([]*rpc.TransactionSignature, error) {
+	// Make sure that limit signature exists to prevent undefined behavior.
+	_, err := repo.GetTransaction(ctx, sig, rpc.CommitmentFinalized)
+	if err != nil && !errors.Is(err, ErrUnsupportedTxVersion) {
+		return nil, err
+	}
+
+	opts := rpc.GetSignaturesForAddressOpts{
+		Until:      sig, // exclusive
+		Commitment: rpc.CommitmentFinalized,
+	}
+
+	return repo.getSignatures(ctx, &opts, true)
+}
+
+// TODO
+func (repo *SolanaRepo) SendTransaction(ctx context.Context,
+	tx *solana.Transaction,
+) (solana.Signature, error) {
+	opts := rpc.TransactionOpts{PreflightCommitment: broadcastOutboundCommitment}
+
+	sig, err := repo.client.SendTransactionWithOpts(ctx, tx, opts)
+	if err != nil {
+		return sig, newClientError(ErrClientSendTransaction, err)
+	}
+
+	return sig, nil
+}
+
+func (repo *SolanaRepo) GetAddressLookupTableState(ctx context.Context,
+	address solana.PublicKey,
+) (*alt.AddressLookupTableState, error) {
+	client, ok := repo.client.(*rpc.Client)
+	if !ok {
+		return nil, errors.New("solana AddressLookupTable requires *rpc.Client")
+	}
+
+	opts := rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentProcessed}
+	altState, err := alt.GetAddressLookupTableStateWithOpts(ctx, client, address, &opts)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrGetAddressLookupTableState, err)
+	}
+
+	return altState, nil
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// getSignatures queries the last signatures given the parameters in opts.
+// It returns the signatures if and only if store is set to true.
+// It mutates opts, so opts.Before holds the last observed signature.
+//
+// NOTE: make sure that the RPC provider has enough transaction history.
+func (repo SolanaRepo) getSignatures(ctx context.Context,
+	opts *rpc.GetSignaturesForAddressOpts,
+	store bool,
+) ([]*rpc.TransactionSignature, error) {
+	var all []*rpc.TransactionSignature
+
+	// Search backwards until we hit the given signature.
+	for {
+		sigs, err := repo.client.GetSignaturesForAddressWithOpts(ctx, repo.gatewayID, opts)
+		if err != nil {
+			return nil, newClientError(ErrClientGetSignaturesForAddress, err)
+		}
+
+		// Stop if there are no more signatures.
+		if len(sigs) == 0 {
+			break
+		}
+
+		opts.Before = sigs[len(sigs)-1].Signature
+		if store {
+			all = append(all, sigs...)
+		}
+	}
+
+	return all, nil
 }

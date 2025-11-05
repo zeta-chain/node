@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -32,7 +33,7 @@ func Test_NewSigner(t *testing.T) {
 		name         string
 		chain        chains.Chain
 		chainParams  observertypes.ChainParams
-		solanaClient signer.SolanaClient
+		solanaClient repo.SolanaClient
 		tssSigner    tssrepo.TSSClient
 		relayerKey   *keys.RelayerKey
 		ts           *metrics.TelemetryServer

@@ -15,6 +15,7 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -38,47 +39,9 @@ const (
 	// given 1~2 seconds finality at the 'confirmed' level, 1 minute can cover 30~60 (the lookahead) parallel CCTXs processing
 	pdaNonceWaitTimeout = 1 * time.Minute
 
-	// broadcastOutboundCommitment is the commitment level for broadcasting solana outbound.
-	// Commitment "finalized" eliminate all risk but the tradeoff is pretty severe and effectively
-	// reduces the expiration of tx by about 13 seconds. The "confirmed" level has very low risk of
-	// belonging to a dropped fork.
-	// see: https://solana.com/developers/guides/advanced/confirmation#use-an-appropriate-preflight-commitment-level
-	broadcastOutboundCommitment = solrpc.CommitmentConfirmed
-
 	// SolanaMaxComputeBudget is the max compute budget for a transaction.
 	SolanaMaxComputeBudget = 1_400_000
 )
-
-// SolanaClient is the interface for the Solana RPC client.
-type SolanaClient interface {
-	GetAccountInfo(context.Context, sol.PublicKey) (*solrpc.GetAccountInfoResult, error)
-
-	GetAccountInfoWithOpts(
-		context.Context,
-		sol.PublicKey,
-		*solrpc.GetAccountInfoOpts,
-	) (*solrpc.GetAccountInfoResult, error)
-
-	GetBalance(_ context.Context,
-		account sol.PublicKey,
-		_ solrpc.CommitmentType,
-	) (*solrpc.GetBalanceResult, error)
-
-	GetLatestBlockhash(context.Context,
-		solrpc.CommitmentType,
-	) (*solrpc.GetLatestBlockhashResult, error)
-
-	GetTransaction(context.Context,
-		sol.Signature,
-		*solrpc.GetTransactionOpts,
-	) (*solrpc.GetTransactionResult, error)
-
-	// This is a mutating function that does not get called when zetaclient is in dry-mode.
-	SendTransactionWithOpts(context.Context,
-		*sol.Transaction,
-		solrpc.TransactionOpts,
-	) (sol.Signature, error)
-}
 
 type Outbound struct {
 	Tx          *sol.Transaction
@@ -91,8 +54,8 @@ type outboundGetter func() (*Outbound, error)
 type Signer struct {
 	*base.Signer
 
-	// solanaClient is the Solana RPC client that interacts with the Solana chain
-	solanaClient SolanaClient
+	// solanaRepo is the Solana repository that abstracts interactions with the Solana chain
+	solanaRepo *repo.SolanaRepo
 
 	// relayerKey is the private key of the relayer account for Solana chain
 	// relayerKey is optional, the signer will not relay transactions if it is not set
@@ -107,7 +70,7 @@ type Signer struct {
 
 // New Signer constructor.
 func New(baseSigner *base.Signer,
-	solanaClient SolanaClient,
+	solanaClient repo.SolanaClient,
 	gatewayAddress string,
 	relayerKey *keys.RelayerKey,
 ) (*Signer, error) {
@@ -133,12 +96,14 @@ func New(baseSigner *base.Signer,
 		baseSigner.Logger().Std.Info().Msg("solana relayer key was not provided")
 	}
 
+	solanaRepo := repo.New(solanaClient, gatewayID)
+
 	return &Signer{
-		Signer:       baseSigner,
-		solanaClient: solanaClient,
-		gatewayID:    gatewayID,
-		relayerKey:   rk,
-		pda:          pda,
+		Signer:     baseSigner,
+		solanaRepo: solanaRepo,
+		gatewayID:  gatewayID,
+		relayerKey: rk,
+		pda:        pda,
 	}, nil
 }
 
@@ -293,9 +258,9 @@ func (signer *Signer) signTx(
 	addrs sol.PublicKeySlice,
 ) (*sol.Transaction, error) {
 	// get a recent blockhash
-	recent, err := signer.solanaClient.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
+	blockhash, err := signer.solanaRepo.GetLatestBlockHash(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "getLatestBlockhash error")
+		return nil, err
 	}
 
 	// prepend compute unit limit instruction if needed
@@ -321,7 +286,7 @@ func (signer *Signer) signTx(
 	}
 
 	// create a transaction
-	tx, err := sol.NewTransaction(instructions, recent.Value.Blockhash, opts...)
+	tx, err := sol.NewTransaction(instructions, blockhash, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create new tx")
 	}
@@ -377,13 +342,9 @@ func (signer *Signer) broadcastOutbound(
 			break
 		}
 
-		// broadcast the signed tx to the Solana network with preflight check
+		// broadcast the signed tx to the Solana network
 		// the PDA nonce MUST be equal to 'nonce' if arrived here, guaranteed by upstream code
-		txSig, err := signer.solanaClient.SendTransactionWithOpts(
-			ctx,
-			tx,
-			solrpc.TransactionOpts{PreflightCommitment: broadcastOutboundCommitment},
-		)
+		txSig, err := signer.solanaRepo.SendTransaction(ctx, tx)
 		if err != nil {
 			shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, signer.GetGatewayAddress())
 			if outbound.FallbackMsg != nil && shouldUseFallbackTx {
@@ -480,12 +441,14 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 		return
 	}
 
-	result, err := signer.solanaClient.GetBalance(ctx, signer.relayerKey.PublicKey(), solrpc.CommitmentFinalized)
+	account := signer.relayerKey.PublicKey()
+	balance, err := signer.solanaRepo.GetBalance(ctx, account, solrpc.CommitmentFinalized)
 	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msg("error calling GetBalance")
+		signer.Logger().Std.Error().Err(err).Send()
 		return
 	}
-	solBalance := float64(result.Value) / float64(sol.LAMPORTS_PER_SOL)
+
+	solBalance := float64(balance) / float64(sol.LAMPORTS_PER_SOL)
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
@@ -576,11 +539,7 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) e
 // getGatewayNonce queries the gateway nonce from the PDA account information
 func (signer *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
 	// query the gateway PDA account information
-	pdaInfo, err := signer.solanaClient.GetAccountInfoWithOpts(
-		ctx,
-		signer.pda,
-		&solrpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
-	)
+	pdaInfo, err := signer.solanaRepo.GetAccountInfo(ctx, signer.pda, solrpc.CommitmentConfirmed)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get gateway PDA account info")
 	}
