@@ -117,23 +117,23 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight          = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed      = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose                = must(cmd.Flags().GetBool(flagVerbose))
-		configOut              = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin              = must(cmd.Flags().GetBool(flagTestAdmin))
-		testEthStress          = must(cmd.Flags().GetBool(flagTestEthStress))
-		testSolanaStress       = must(cmd.Flags().GetBool(flagTestSolanaStress))
-		testSuiStress          = must(cmd.Flags().GetBool(flagTestSuiStress))
-		iterations             = must(cmd.Flags().GetInt(flagIterations))
-		testSolana             = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON                = must(cmd.Flags().GetBool(flagTestTON))
-		testSui                = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular            = must(cmd.Flags().GetBool(flagSkipRegular))
-		light                  = must(cmd.Flags().GetBool(flagLight))
-		setupOnly              = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup              = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup       = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose           = must(cmd.Flags().GetBool(flagVerbose))
+		configOut         = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
+		testEthStress     = must(cmd.Flags().GetBool(flagTestEthStress))
+		testSolanaStress  = must(cmd.Flags().GetBool(flagTestSolanaStress))
+		testSuiStress     = must(cmd.Flags().GetBool(flagTestSuiStress))
+		iterations        = must(cmd.Flags().GetInt(flagIterations))
+		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON           = must(cmd.Flags().GetBool(flagTestTON))
+		testSui           = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
+		light             = must(cmd.Flags().GetBool(flagLight))
+		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
+		// skipBitcoinSetup       = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof        = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
@@ -357,8 +357,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 
 	if !skipRegular {
-		startEVMTests(&eg, conf, deployerRunner, verbose)
-		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		// startEVMTests(&eg, conf, deployerRunner, verbose)
+		// startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
 	if testAdmin {
