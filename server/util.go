@@ -13,9 +13,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	_ "cosmossdk.io/store/pruning/types"
 	abciserver "github.com/cometbft/cometbft/abci/server"
-	_ "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -35,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -46,7 +43,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/evm/indexer"
 	"github.com/cosmos/evm/server/config"
-	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
 	srvflags "github.com/cosmos/evm/server/flags"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
@@ -76,13 +72,13 @@ func AddCommands(
 	}
 
 	cometbftCmd.AddCommand(
-		sdkserver.ShowNodeIDCmd(),
-		sdkserver.ShowValidatorCmd(),
-		sdkserver.ShowAddressCmd(),
-		sdkserver.VersionCmd(),
+		server.ShowNodeIDCmd(),
+		server.ShowValidatorCmd(),
+		server.ShowAddressCmd(),
+		server.VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-		sdkserver.BootstrapStateCmd(appCreator),
+		server.BootstrapStateCmd(appCreator),
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -91,9 +87,9 @@ func AddCommands(
 	rootCmd.AddCommand(
 		startCmd,
 		cometbftCmd,
-		sdkserver.ExportCmd(appExport, defaultNodeHome),
+		server.ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-		sdkserver.NewRollbackCmd(appCreator, defaultNodeHome),
+		server.NewRollbackCmd(appCreator, defaultNodeHome),
 
 		// custom tx indexer command
 		NewIndexTxCmd(),
@@ -186,7 +182,7 @@ func start(
 	withCmt bool,
 	opts StartCmdOptions,
 ) error {
-	serverConfig, err := cosmosevmserverconfig.GetConfig(svrCtx.Viper)
+	serverConfig, err := config.GetConfig(svrCtx.Viper)
 	if err != nil {
 		return fmt.Errorf("failed to get server config: %w", err)
 	}
@@ -208,7 +204,7 @@ func start(
 
 	if !withCmt {
 		svrCtx.Logger.Info("starting ABCI without CometBFT")
-		return startStandAlone(svrCtx, &serverConfig, clientCtx, app, metrics, opts)
+		return startStandAlone(svrCtx, clientCtx, app, opts)
 	}
 
 	svrCtx.Logger.Info("starting ABCI with CometBFT")
@@ -293,10 +289,8 @@ func setupTraceWriter(svrCtx *server.Context) (traceWriter io.WriteCloser, clean
 // startStandAlone starts an ABCI server in stand-alone mode
 func startStandAlone(
 	svrCtx *server.Context,
-	config *cosmosevmserverconfig.Config,
 	clientCtx client.Context,
 	app types.Application,
-	metrics *telemetry.Metrics,
 	opts StartCmdOptions,
 ) error {
 	addr := svrCtx.Viper.GetString(srvflags.Address)
@@ -333,7 +327,7 @@ func startStandAlone(
 
 func startInProcess(
 	svrCtx *server.Context,
-	config *cosmosevmserverconfig.Config,
+	config *config.Config,
 	clientCtx client.Context,
 	app types.Application,
 	metrics *telemetry.Metrics,
@@ -549,7 +543,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	)
 }
 
-func startTelemetry(cfg cosmosevmserverconfig.Config) (*telemetry.Metrics, error) {
+func startTelemetry(cfg config.Config) (*telemetry.Metrics, error) {
 	if !cfg.Telemetry.Enabled {
 		return nil, nil
 	}
@@ -647,7 +641,7 @@ func startJSONRPCServer(
 	svrCtx *server.Context,
 	clientCtx client.Context,
 	g *errgroup.Group,
-	config *cosmosevmserverconfig.Config,
+	config *config.Config,
 	genDocProvider node.GenesisDocProvider,
 	cmtRPCAddr string,
 	idxer cosmosevmtypes.EVMTxIndexer,
@@ -672,7 +666,7 @@ func startJSONRPCServer(
 }
 
 func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
-	return cosmosevmserverconfig.OpenDB(server.NewDefaultContext().Viper, rootDir, backendType)
+	return config.OpenDB(server.NewDefaultContext().Viper, rootDir, backendType)
 }
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
@@ -760,6 +754,7 @@ func testnetify(
 
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
+	//nolint:dogsled // external function, we only need proxyMetrics
 	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
@@ -771,7 +766,7 @@ func testnetify(
 	}
 	err = proxyApp.Stop()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to stop proxy app: %w", err)
 	}
 	appHash := res.LastBlockAppHash
 	appHeight := res.LastBlockHeight
