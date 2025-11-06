@@ -3,10 +3,8 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
@@ -40,54 +38,74 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 		return nil, err
 	}
 
-	// check tx index is not out of bound
-	if len(blk.Block.Txs) > math.MaxUint32 {
-		return nil, fmt.Errorf("tx count %d is overfloing", len(blk.Block.Txs))
-	}
-	txsLen := uint32(len(blk.Block.Txs)) // #nosec G115 -- checked for int overflow already
-	if txsLen < transaction.TxIndex {
-		b.Logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
-		return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
-	}
-
-	var predecessors []*evmtypes.MsgEthereumTx
-	for _, txBz := range blk.Block.Txs[:transaction.TxIndex] {
-		tx, err := b.ClientCtx.TxConfig.TxDecoder()(txBz)
-		if err != nil {
-			b.Logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
-			continue
-		}
-		for _, msg := range tx.GetMsgs() {
-			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				continue
-			}
-
-			predecessors = append(predecessors, ethMsg)
-		}
-	}
-
-	tx, err := b.ClientCtx.TxConfig.TxDecoder()(blk.Block.Txs[transaction.TxIndex])
+	blockResult, err := b.CometBlockResultByNumber(&blk.Block.Height)
 	if err != nil {
-		b.Logger.Debug("tx not found", "hash", hash)
-		return nil, err
+		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
 	}
 
-	// add predecessor messages in current cosmos tx
-	index := int(transaction.MsgIndex) // #nosec G115
-	for i := 0; i < index; i++ {
-		ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
-		if !ok {
-			continue
+	predecessors := []*evmtypes.MsgEthereumTx{}
+	msgs, _ := b.EthMsgsFromCometBlock(blk, blockResult)
+	var ethMsg *evmtypes.MsgEthereumTx
+	for _, m := range msgs {
+		if m.Hash == hash.Hex() {
+			ethMsg = m
+			break
 		}
-		predecessors = append(predecessors, ethMsg)
+		predecessors = append(predecessors, m)
 	}
 
-	ethMessage, ok := tx.GetMsgs()[transaction.MsgIndex].(*evmtypes.MsgEthereumTx)
-	if !ok {
-		b.Logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
-		return nil, fmt.Errorf("invalid transaction type %T", tx)
+	if ethMsg == nil {
+		return nil, fmt.Errorf("tx not found in block %d", blk.Block.Height)
 	}
+
+	// // check tx index is not out of bound
+	// if len(blk.Block.Txs) > math.MaxUint32 {
+	// 	return nil, fmt.Errorf("tx count %d is overfloing", len(blk.Block.Txs))
+	// }
+	// txsLen := uint32(len(blk.Block.Txs)) // #nosec G115 -- checked for int overflow already
+	// if txsLen < transaction.TxIndex {
+	// 	b.Logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
+	// 	return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
+	// }
+
+	// var predecessors []*evmtypes.MsgEthereumTx
+	// for _, txBz := range blk.Block.Txs[:transaction.TxIndex] {
+	// 	tx, err := b.ClientCtx.TxConfig.TxDecoder()(txBz)
+	// 	if err != nil {
+	// 		b.Logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
+	// 		continue
+	// 	}
+	// 	for _, msg := range tx.GetMsgs() {
+	// 		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+	// 		if !ok {
+	// 			continue
+	// 		}
+
+	// 		predecessors = append(predecessors, ethMsg)
+	// 	}
+	// }
+
+	// tx, err := b.ClientCtx.TxConfig.TxDecoder()(blk.Block.Txs[transaction.TxIndex])
+	// if err != nil {
+	// 	b.Logger.Debug("tx not found", "hash", hash)
+	// 	return nil, err
+	// }
+
+	// // add predecessor messages in current cosmos tx
+	// index := int(transaction.MsgIndex) // #nosec G115
+	// for i := 0; i < index; i++ {
+	// 	ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
+	// 	if !ok {
+	// 		continue
+	// 	}
+	// 	predecessors = append(predecessors, ethMsg)
+	// }
+
+	// ethMessage, ok := tx.GetMsgs()[transaction.MsgIndex].(*evmtypes.MsgEthereumTx)
+	// if !ok {
+	// 	b.Logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
+	// 	return nil, fmt.Errorf("invalid transaction type %T", tx)
+	// }
 
 	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
 	if !ok {
@@ -100,7 +118,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 	}
 
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
-		Msg:             ethMessage,
+		Msg:             ethMsg,
 		Predecessors:    predecessors,
 		BlockNumber:     blk.Block.Height,
 		BlockTime:       blk.Block.Time,
@@ -166,29 +184,8 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		b.Logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
 	}
-	txDecoder := b.ClientCtx.TxConfig.TxDecoder()
 
-	var txsMessages []*evmtypes.MsgEthereumTx
-	for i, tx := range txs {
-		if !rpctypes.TxSucessOrExpectedFailure(blockRes.TxsResults[i]) {
-			b.Logger.Debug("invalid tx result code", "cosmos-hash", hexutil.Encode(tx.Hash()))
-			continue
-		}
-		decodedTx, err := txDecoder(tx)
-		if err != nil {
-			b.Logger.Error("failed to decode transaction", "hash", txs[i].Hash(), "error", err.Error())
-			continue
-		}
-
-		for _, msg := range decodedTx.GetMsgs() {
-			ethMessage, ok := msg.(*evmtypes.MsgEthereumTx)
-			if !ok {
-				// Just considers Ethereum transactions
-				continue
-			}
-			txsMessages = append(txsMessages, ethMessage)
-		}
-	}
+	msgs, _ := b.EthMsgsFromCometBlock(block, blockRes)
 
 	// minus one to get the context at the beginning of the block
 	contextHeight := height - 1
@@ -209,7 +206,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
-		Txs:             txsMessages,
+		Txs:             msgs,
 		TraceConfig:     b.convertConfig(config),
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
