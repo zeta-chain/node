@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	types2 "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -138,28 +137,62 @@ func updateObserverData(app zeta.App) error {
 func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
-
-	validators, err := app.StakingKeeper.GetAllValidators(ctx)
+	newValPubkeyBytes := svrCtx.Viper.Get(KeyValidatorPubkey).([]byte)
+	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
+	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
 	if err != nil {
-		return fmt.Errorf("failed to get all validators: %w", err)
+		return fmt.Errorf("failed to pack pubkey into Any: %w", err)
+	}
+	fmt.Println("Setting new validator pubkey:", pubkeyAny.String())
+
+	fmt.Println("Setting new validator operator address from:", operatorAddrStr)
+
+	valAddress, err := observertypes.GetOperatorAddressFromAccAddress(operatorAddrStr)
+	if err != nil {
+		return fmt.Errorf("failed to get operator address from account address: %w", err)
 	}
 
-	newVal := stakingtypes.Validator{}
+	fmt.Println("Setting new validator operator address:", valAddress.String())
 
-	for _, val := range validators {
-		accAddr, err := observertypes.GetAccAddressFromOperatorAddress(val.OperatorAddress)
-		if err != nil {
-			return fmt.Errorf("failed to get account address from operator address: %w", err)
-		}
-		if accAddr.String() == operatorAddrStr {
-			newVal = val
-		}
-		//val.Status = stakingtypes.Unbonded
-		//err = app.StakingKeeper.SetValidator(ctx, val)
-		//if err != nil {
-		//	return fmt.Errorf("failed to set validator status to unbonded: %w", err)
-		//}
+	newVal := stakingtypes.Validator{
+		OperatorAddress: valAddress.String(),
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(900000000000000),
+		DelegatorShares: math.LegacyMustNewDecFromStr("10000000"),
+		Description: stakingtypes.Description{
+			Moniker: "Testnet Validator",
+		},
+		Commission: stakingtypes.Commission{
+			CommissionRates: stakingtypes.CommissionRates{
+				Rate:          math.LegacyMustNewDecFromStr("0.05"),
+				MaxRate:       math.LegacyMustNewDecFromStr("0.1"),
+				MaxChangeRate: math.LegacyMustNewDecFromStr("0.05"),
+			},
+		},
+		MinSelfDelegation: math.OneInt(),
 	}
+
+	//validators, err := app.StakingKeeper.GetAllValidators(ctx)
+	//if err != nil {
+	//	return fmt.Errorf("failed to get all validators: %w", err)
+	//}
+
+	//for _, val := range validators {
+	//	accAddr, err := observertypes.GetAccAddressFromOperatorAddress(val.OperatorAddress)
+	//	if err != nil {
+	//		return fmt.Errorf("failed to get account address from operator address: %w", err)
+	//	}
+	//	if accAddr.String() == operatorAddrStr {
+	//		newVal = val
+	//	}
+	//	//val.Status = stakingtypes.Unbonded
+	//	//err = app.StakingKeeper.SetValidator(ctx, val)
+	//	//if err != nil {
+	//	//	return fmt.Errorf("failed to set validator status to unbonded: %w", err)
+	//	//}
+	//}
 
 	//params, err := app.StakingKeeper.GetParams(ctx)
 	//if err != nil {
@@ -172,9 +205,6 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	//if err != nil {
 	//	return fmt.Errorf("failed to set staking params: %w", err)
 	//}
-	if newVal.OperatorAddress == "" {
-		return fmt.Errorf("operator address %s not found in validator set", operatorAddrStr)
-	}
 
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
 	stakingStore := ctx.KVStore(stakingKey)
@@ -205,21 +235,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	svrCtx.Logger.Info("Cleared staking last validator power")
 
 	//
-	newValPubkeyBytes := svrCtx.Viper.Get(KeyValidatorPubkey).([]byte)
-	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
-	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
-	if err != nil {
-		return fmt.Errorf("failed to pack pubkey into Any: %w", err)
-	}
-	fmt.Println("Setting new validator pubkey:", pubkeyAny.String())
-	newVal.ConsensusPubkey = pubkeyAny
 
-	pk, ok := newVal.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return fmt.Errorf("failed to get cached pubkey value")
-	}
-
-	fmt.Println("Setting new validator pubkey:", pk.String())
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
 	if err != nil {
 		return fmt.Errorf("failed to set validator: %w", err)
@@ -233,10 +249,11 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return fmt.Errorf("failed to set validator by power index: %w", err)
 	}
 
-	valAddress, err := sdk.ValAddressFromBech32(newVal.GetOperator())
+	valAddress, err = sdk.ValAddressFromBech32(newVal.GetOperator())
 	if err != nil {
 		return fmt.Errorf("failed to parse validator address from bech32: %w", err)
 	}
+
 	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddress, 0)
 	if err != nil {
 		return fmt.Errorf("failed to set last validator power: %w", err)

@@ -821,7 +821,7 @@ func testnetify(
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
 
-	privValidator.Reset()
+	//privValidator.Reset()
 
 	err = privValidator.SignVote(newChainID, voteProto)
 	if err != nil {
