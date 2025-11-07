@@ -123,13 +123,6 @@ which accepts a path for the resulting pprof file.
 			err = opts.StartCommandHandler(serverCtx, clientCtx, appCreator, withCmt, opts)
 
 			serverCtx.Logger.Debug("received quit signal")
-			graceDuration, _ := cmd.Flags().GetDuration(server.FlagShutdownGrace)
-			if graceDuration > 0 {
-				serverCtx.Logger.Info("graceful shutdown start", server.FlagShutdownGrace, graceDuration)
-				<-time.After(graceDuration)
-				serverCtx.Logger.Info("graceful shutdown complete")
-			}
-
 			return err
 		},
 	}

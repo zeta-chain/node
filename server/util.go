@@ -253,12 +253,10 @@ func setupApp(
 
 	cleanupFn := func() {
 		traceCleanupFn()
-		if err := db.Close(); err != nil {
-			svrCtx.Logger.Error("error closing db", "error", err)
-		}
 		if localErr := app.Close(); localErr != nil {
 			svrCtx.Logger.Error("error closing app", "error", localErr)
 		}
+		// Note: db.Close() is not called here because app.Close() already closes the database
 	}
 
 	return app, cleanupFn, nil
@@ -553,7 +551,20 @@ func startTelemetry(cfg config.Config) (*telemetry.Metrics, error) {
 func getCtx(svrCtx *server.Context, block bool) (*errgroup.Group, context.Context) {
 	ctx, cancelFn := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
-	server.ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+
+	// Enable graceful shutdown if grace duration is set
+	graceDuration := svrCtx.Viper.GetDuration(server.FlagShutdownGrace)
+	wrappedCancelFn := cancelFn
+	if graceDuration > 0 {
+		wrappedCancelFn = func() {
+			cancelFn()
+			svrCtx.Logger.Info("graceful shutdown start, waiting for services to stop", server.FlagShutdownGrace, graceDuration)
+			time.Sleep(graceDuration)
+			svrCtx.Logger.Info("graceful shutdown complete")
+		}
+	}
+
+	server.ListenForQuitSignals(g, block, wrappedCancelFn, svrCtx.Logger)
 	return g, ctx
 }
 
@@ -677,7 +688,14 @@ func testnetify(
 	db dbm.DB,
 	traceWriter io.WriteCloser,
 ) (types.Application, error) {
-	config := ctx.Config
+	nodeConfig := ctx.Config
+
+	// Modify P2P config to prevent connections to other peers.
+	nodeConfig.P2P.Seeds = ""
+	nodeConfig.P2P.PersistentPeers = ""
+	nodeConfig.P2P.MaxNumInboundPeers = 0
+	nodeConfig.P2P.MaxNumOutboundPeers = 0
+	cmtcfg.WriteConfigFile(filepath.Join(nodeConfig.RootDir, "config", "config.toml"), nodeConfig)
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
 	if !ok {
@@ -685,7 +703,7 @@ func testnetify(
 	}
 
 	// Modify app genesis chain ID and save to genesis file.
-	genFilePath := config.GenesisFile()
+	genFilePath := nodeConfig.GenesisFile()
 	appGen, err := genutiltypes.AppGenesisFromFile(genFilePath)
 	if err != nil {
 		return nil, err
@@ -699,7 +717,7 @@ func testnetify(
 	}
 
 	// Regenerate addrbook.json to prevent peers on old network from causing error logs.
-	addrBookPath := filepath.Join(config.RootDir, "config", "addrbook.json")
+	addrBookPath := filepath.Join(nodeConfig.RootDir, "config", "addrbook.json")
 	if err := os.Remove(addrBookPath); err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to remove existing addrbook.json: %w", err)
 	}
@@ -710,16 +728,16 @@ func testnetify(
 	}
 
 	// Load the comet genesis doc provider.
-	genDocProvider := node.DefaultGenesisDocProviderFunc(config)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(nodeConfig)
 
 	// Initialize blockStore and stateDB.
-	blockStoreDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "blockstore", Config: config})
+	blockStoreDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "blockstore", Config: nodeConfig})
 	if err != nil {
 		return nil, err
 	}
 	blockStore := store.NewBlockStore(blockStoreDB)
 
-	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: config})
+	stateDB, err := cmtcfg.DefaultDBProvider(&cmtcfg.DBContext{ID: "state", Config: nodeConfig})
 	if err != nil {
 		return nil, err
 	}
@@ -727,7 +745,7 @@ func testnetify(
 	defer blockStore.Close()
 	defer stateDB.Close()
 
-	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
+	privValidator := pvm.LoadOrGenFilePV(nodeConfig.PrivValidatorKeyFile(), nodeConfig.PrivValidatorStateFile())
 	userPubKey, err := privValidator.GetPubKey()
 	if err != nil {
 		return nil, err
@@ -735,7 +753,7 @@ func testnetify(
 	validatorAddress := userPubKey.Address()
 
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
-		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
+		DiscardABCIResponses: nodeConfig.Storage.DiscardABCIResponses,
 	})
 
 	cmtState, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
@@ -751,7 +769,7 @@ func testnetify(
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.
 	// This height difference changes how we go about modifying the state.
 	cmtApp := server.NewCometABCIWrapper(testnetApp)
-	_, context := getCtx(ctx, true)
+	_, proxyAppContext := getCtx(ctx, true)
 
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
@@ -761,7 +779,7 @@ func testnetify(
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %w", err)
 	}
-	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
+	res, err := proxyApp.Query().Info(proxyAppContext, proxy.RequestInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error calling Info: %w", err)
 	}
@@ -776,7 +794,6 @@ func testnetify(
 	switch {
 	case appHeight == blockStore.Height():
 		block = blockStore.LoadBlock(blockStore.Height())
-		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
 		if cmtState.LastBlockHeight != appHeight {
 			cmtState.LastBlockHeight = appHeight
 			block.AppHash = appHash

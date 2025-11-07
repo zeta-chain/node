@@ -69,7 +69,7 @@ The provided opeartorAddress is used as the operator for the single validator in
 				// Confirmation prompt to prevent accidental modification of state.
 				reader := bufio.NewReader(os.Stdin)
 				fmt.Println(
-					"This operation will modify state in your data folder and cannot be undone. Do you want to continue? (y/n)",
+					"This operation will modify state in your data folder and cannot be undone. This operation also updates the configuration , so it would not work with read only file systems. Do you want to continue? (y/n)",
 				)
 				text, _ := reader.ReadString('\n')
 				response := strings.TrimSpace(strings.ToLower(text))
@@ -96,6 +96,7 @@ The provided opeartorAddress is used as the operator for the single validator in
 	cmd.Flags().Bool(FlagSkipConfirmation, false, "Skip the confirmation prompt")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.TraceStore, "", "Enable KVStore tracing to an output file")
+	cmd.Flags().Duration(server.FlagShutdownGrace, 3*time.Second, "On Shutdown, duration to wait for resource clean up")
 
 	return cmd
 }
