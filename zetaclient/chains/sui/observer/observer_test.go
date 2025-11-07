@@ -225,6 +225,56 @@ func TestObserver(t *testing.T) {
 		)
 	})
 
+	t.Run("ObserveInbound retry if vote inbound fails", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		evmBob := sample.EthAddress()
+
+		// Given a deposit event
+		packageID := ts.gateway.PackageID()
+		expectedQuery := client.EventQuery{
+			PackageID: packageID,
+			Module:    sui.GatewayModule,
+			Cursor:    "",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		txHash := "Tx_retry"
+		events := []models.SuiEventResponse{
+			ts.SampleEvent(packageID, txHash, string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+
+		// Given transaction block
+		ts.OnGetTx(txHash, "10000", true, false, nil)
+
+		// Given vote inbound RPC failure
+		ts.zetaMock.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", "", errors.New("rpc error"))
+
+		// Given CCTX not found
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check cursor is not updated
+		require.Equal(t, "", ts.GetAuxString(packageID))
+
+		// No inbound votes should be created
+		require.Empty(t, ts.inboundVotesBag)
+	})
+
 	t.Run("ObserveInbound restricted address", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
