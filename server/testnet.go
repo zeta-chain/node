@@ -7,8 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,7 +105,7 @@ func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) e
 	if !ok {
 		panic("expected *zeta.ZetaApp")
 	}
-	err := updateObserverData(*app)
+	err := updateObserverData(svrCtx, *app)
 	if err != nil {
 		return fmt.Errorf("failed to update observer state: %w", err)
 	}
@@ -113,16 +116,11 @@ func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) e
 	return nil
 }
 
-func updateObserverData(app zeta.App) error {
+func updateObserverData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-
-	observerSet, found := app.ObserverKeeper.GetObserverSet(ctx)
-	if !found {
-		return fmt.Errorf("could not find observer set")
-	}
-
+	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
 	newObserverSet := observertypes.ObserverSet{
-		ObserverList: []string{observerSet.ObserverList[0]},
+		ObserverList: []string{operatorAddrStr},
 	}
 	app.ObserverKeeper.SetObserverSet(ctx, newObserverSet)
 	app.ObserverKeeper.SetLastObserverCount(ctx, &observertypes.LastObserverCount{
@@ -135,27 +133,44 @@ func updateObserverData(app zeta.App) error {
 func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
-
-	validators, err := app.StakingKeeper.GetAllValidators(ctx)
+	newValPubkeyBytes := svrCtx.Viper.Get(KeyValidatorConsensusPubkey).([]byte)
+	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
+	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
 	if err != nil {
-		return fmt.Errorf("failed to get all validators: %w", err)
+		return fmt.Errorf("failed to pack pubkey into Any: %w", err)
 	}
 
-	newVal := stakingtypes.Validator{}
+	newValAddr := svrCtx.Viper.GetString(KeyValidatorConsensusAddr)
+	newConsAddr := sdk.ConsAddress(newValAddr)
 
-	for _, val := range validators {
-		accAddr, err := observertypes.GetAccAddressFromOperatorAddress(val.OperatorAddress)
-		if err != nil {
-			return fmt.Errorf("failed to get account address from operator address: %w", err)
-		}
-		if accAddr.String() == operatorAddrStr {
-			newVal = val
-		}
-		val.Status = stakingtypes.Unbonded
-		err = app.StakingKeeper.SetValidator(ctx, val)
-		if err != nil {
-			return fmt.Errorf("failed to set validator status to unbonded: %w", err)
-		}
+	valAddress, err := observertypes.GetOperatorAddressFromAccAddress(operatorAddrStr)
+	if err != nil {
+		return fmt.Errorf("failed to get operator address from account address: %w", err)
+	}
+
+	tokens, ok := math.NewIntFromString("30000000000000000000000")
+	if !ok {
+		return fmt.Errorf("failed to parse tokens string to Int")
+	}
+
+	newVal := stakingtypes.Validator{
+		OperatorAddress: valAddress.String(),
+		ConsensusPubkey: pubkeyAny,
+		Jailed:          false,
+		Status:          stakingtypes.Bonded,
+		Tokens:          tokens,
+		DelegatorShares: math.LegacyMustNewDecFromStr("30000000000000000000000.000000000000000"),
+		Description: stakingtypes.Description{
+			Moniker: "Testnet Validator",
+		},
+		Commission: stakingtypes.Commission{
+			CommissionRates: stakingtypes.CommissionRates{
+				Rate:          math.LegacyMustNewDecFromStr("0.010000000000000000"),
+				MaxRate:       math.LegacyMustNewDecFromStr("0.200000000000000000"),
+				MaxChangeRate: math.LegacyMustNewDecFromStr("0.100000000000000000"),
+			},
+		},
+		MinSelfDelegation: math.OneInt(),
 	}
 
 	params, err := app.StakingKeeper.GetParams(ctx)
@@ -168,9 +183,6 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	err = app.StakingKeeper.SetParams(ctx, params)
 	if err != nil {
 		return fmt.Errorf("failed to set staking params: %w", err)
-	}
-	if newVal.OperatorAddress == "" {
-		return fmt.Errorf("operator address %s not found in validator set", operatorAddrStr)
 	}
 
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
@@ -202,6 +214,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	svrCtx.Logger.Info("Cleared staking last validator power")
 
 	//
+
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
 	if err != nil {
 		return fmt.Errorf("failed to set validator: %w", err)
@@ -215,10 +228,6 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return fmt.Errorf("failed to set validator by power index: %w", err)
 	}
 
-	valAddress, err := sdk.ValAddressFromBech32(newVal.GetOperator())
-	if err != nil {
-		return fmt.Errorf("failed to parse validator address from bech32: %w", err)
-	}
 	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddress, 0)
 	if err != nil {
 		return fmt.Errorf("failed to set last validator power: %w", err)
@@ -261,9 +270,6 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return fmt.Errorf("failed to set validator outstanding rewards: %w", err)
 	}
 
-	newValAddr := svrCtx.Viper.GetString(KeyValidatorAddr)
-
-	newConsAddr := sdk.ConsAddress(newValAddr)
 	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
 		Address:     newConsAddr.String(),
 		StartHeight: app.LastBlockHeight() - 1,
@@ -272,6 +278,16 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
 	if err != nil {
 		return fmt.Errorf("failed to set validator signing info: %w", err)
+	}
+
+	sp, err := app.SlashingKeeper.GetParams(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get slashing params: %w", err)
+	}
+	sp.MinSignedPerWindow = math.LegacyZeroDec()
+	err = app.SlashingKeeper.SetParams(ctx, sp)
+	if err != nil {
+		return fmt.Errorf("failed to set slashing params: %w", err)
 	}
 
 	return nil

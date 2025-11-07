@@ -743,7 +743,8 @@ func testnetify(
 		return nil, err
 	}
 
-	ctx.Viper.Set(KeyValidatorAddr, validatorAddress.Bytes())
+	ctx.Viper.Set(KeyValidatorConsensusAddr, validatorAddress.Bytes())
+	ctx.Viper.Set(KeyValidatorConsensusPubkey, userPubKey.Bytes())
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	// We need to create a temporary proxyApp to get the initial state of the application.
@@ -852,7 +853,7 @@ func testnetify(
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,
-		VotingPower: 900000000000000,
+		VotingPower: 300000000000000,
 	}
 	newValSet := &cmttypes.ValidatorSet{
 		Validators: []*cmttypes.Validator{newVal},

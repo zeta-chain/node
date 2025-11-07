@@ -29,7 +29,7 @@ type timeoutConfig struct {
 	defaultValue time.Duration
 }
 
-// overWriteConfig overwites the consensus timeout configurations to the default values.
+// overWriteConfigCmd overwites the consensus timeout configurations to the default values.
 func overWriteConfig(cmd *cobra.Command) error {
 	serverCtx := server.GetServerContextFromCmd(cmd)
 

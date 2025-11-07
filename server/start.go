@@ -21,11 +21,12 @@ import (
 )
 
 const (
-	KeyIsTestnet         = "is-testnet"
-	KeyNewChainID        = "new-chain-ID"
-	KeyValidatorAddr     = "validator-address"
-	KeyOperatorAddress   = "operator-address"
-	FlagSkipConfirmation = "skip-confirmation"
+	KeyIsTestnet                = "is-testnet"
+	KeyNewChainID               = "new-chain-ID"
+	KeyValidatorConsensusAddr   = "validator-consensus-address"
+	KeyValidatorConsensusPubkey = "validator-consensus-pubkey"
+	KeyOperatorAddress          = "operator-address"
+	FlagSkipConfirmation        = "skip-confirmation"
 )
 
 type StartCmdOptions struct {
