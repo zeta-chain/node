@@ -263,7 +263,7 @@ type MsgExecute struct {
 	// executeType indicates if it's a call or revert operation
 	executeType ExecuteType
 
-	// Remaining accounts for arbirtrary program
+	// Remaining accounts for arbitrary program
 	remainingAccounts []*solana.AccountMeta
 
 	// Address of AddressLookupTable
@@ -586,7 +586,7 @@ type MsgExecuteSPL struct {
 	// executeType indicates if it's a call or revert operation
 	executeType ExecuteType
 
-	// Remaining accounts for arbirtrary program
+	// Remaining accounts for arbitrary program
 	remainingAccounts []*solana.AccountMeta
 
 	// Address of AddressLookupTable

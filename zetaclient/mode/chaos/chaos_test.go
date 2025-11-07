@@ -24,12 +24,12 @@ func TestNewSource(t *testing.T) {
 		require.NotNil(t, source)
 		require.Empty(t, log)
 
-		require.NotNil(t, source.percentages)
+		require.NotNil(t, source.profile)
 		require.NotNil(t, source.rand)
 
-		require.Equal(t, 92, source.percentages["interface"]["method"])
-		require.Len(t, source.percentages, 1)
-		require.Len(t, source.percentages["interface"], 1)
+		require.Equal(t, 92, source.profile["interface"]["method"])
+		require.Len(t, source.profile, 1)
+		require.Len(t, source.profile["interface"], 1)
 	})
 
 	t.Run("ok (with no seed)", func(t *testing.T) {
@@ -38,12 +38,12 @@ func TestNewSource(t *testing.T) {
 		require.NotNil(t, source)
 		require.Contains(t, log.String(), "using a random chaos seed")
 
-		require.NotNil(t, source.percentages)
+		require.NotNil(t, source.profile)
 		require.NotNil(t, source.rand)
 
-		require.Equal(t, 92, source.percentages["interface"]["method"])
-		require.Len(t, source.percentages, 1)
-		require.Len(t, source.percentages["interface"], 1)
+		require.Equal(t, 92, source.profile["interface"]["method"])
+		require.Len(t, source.profile, 1)
+		require.Len(t, source.profile["interface"], 1)
 	})
 
 	t.Run("invalid mode", func(t *testing.T) {
@@ -108,23 +108,21 @@ func TestShouldFail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, source)
 
-	var shouldFail bool
+	err = source.shouldFail("A", "W")
+	require.NoError(t, err)
 
-	shouldFail = source.shouldFail("A", "W")
-	require.False(t, shouldFail)
+	err = source.shouldFail("A", "X")
+	require.Error(t, err)
 
-	shouldFail = source.shouldFail("A", "X")
-	require.True(t, shouldFail)
+	err = source.shouldFail("B", "X")
+	require.Error(t, err)
 
-	shouldFail = source.shouldFail("B", "X")
-	require.True(t, shouldFail)
-
-	shouldFail = source.shouldFail("B", "Y")
-	require.False(t, shouldFail)
+	err = source.shouldFail("B", "Y")
+	require.NoError(t, err)
 
 	yes, no := 0, 0
 	for range 1000 {
-		if source.shouldFail("B", "Z") {
+		if source.shouldFail("B", "Z") != nil {
 			yes++
 		} else {
 			no++
@@ -154,9 +152,9 @@ func newSource(mode mode.ClientMode, seed int64, path string) (*bytes.Buffer, *S
 	log := new(bytes.Buffer)
 	logger := zerolog.New(log)
 	config := config.Config{
-		ClientMode:           mode,
-		ChaosSeed:            seed,
-		ChaosPercentagesPath: path,
+		ClientMode:       mode,
+		ChaosSeed:        seed,
+		ChaosProfilePath: path,
 	}
 	source, err := NewSource(logger, config)
 	return log, source, err

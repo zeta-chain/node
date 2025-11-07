@@ -7,7 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Custom release version (optional, e.g., v1.0.0-test). If not provided, will auto-generate from latest tag, date, and commit hash.'
+        description: 'Custom release version (optional, e.g., v1.0.0-test). If not provided, will auto-generate from branch name, date, and commit hash.'
+        required: false
+        type: string
+      ref:
+        description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
         required: false
         type: string
 
@@ -19,12 +23,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Generate release identifier
         id: release_id
         env:
           GH_TOKEN: ${{ github.token }}
           CUSTOM_VERSION: ${{ inputs.version }}
+          REF_INPUT: ${{ inputs.ref }}
         run: |
           if [ -n "$CUSTOM_VERSION" ]; then
             RELEASE_ID="$CUSTOM_VERSION"
@@ -32,13 +39,17 @@ jobs:
           else
             DATE=$(date +%Y%m%d)
             SHORT_HASH=${GITHUB_SHA:0:7}
-            LATEST_TAG=$(gh release view --json tagName --jq '.tagName' 2>/dev/null || echo "v0.0.0")
-            if [ -z "$LATEST_TAG" ]; then
-              LATEST_TAG="v0.0.0"
+            # Use ref input if provided, otherwise use default branch
+            if [ -n "$REF_INPUT" ]; then
+              # Extract branch/tag name from ref (remove refs/heads/ or refs/tags/ prefix)
+              BRANCH_NAME=$(echo "$REF_INPUT" | sed 's|^refs/heads/||' | sed 's|^refs/tags/||')
+            else
+              # Use default branch
+              BRANCH_NAME=$(echo "${{ github.ref }}" | sed 's|^refs/heads/||')
             fi
-            RELEASE_ID="${LATEST_TAG}-${DATE}-${SHORT_HASH}"
+            RELEASE_ID="${BRANCH_NAME}-${DATE}-${SHORT_HASH}"
             echo "Auto-generated release identifier: ${RELEASE_ID}"
-            echo "Latest release tag: ${LATEST_TAG}"
+            echo "Branch: ${BRANCH_NAME}"
           fi
           echo "release_id=${RELEASE_ID}" >> $GITHUB_OUTPUT
           echo "Release identifier: ${RELEASE_ID}"
@@ -83,6 +94,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Build ${{ matrix.component }} artifacts
         run: |

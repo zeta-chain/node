@@ -15,8 +15,8 @@ import (
 type initializeConfigOptions struct {
 	mode string
 
-	chaosSeed            int64
-	chaosPercentagesPath string
+	chaosSeed        int64
+	chaosProfilePath string
 
 	peer               string
 	publicIP           string
@@ -45,22 +45,22 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
-		usageMode                 = "mode for cross-chain transaction processing (standard, dry, or chaos)"
-		usageChaosSeed            = "seed for the pseudo-random chaos number generator (default: 0 uses a random seed)"
-		usageChaosPercentagesPath = "path for the chaos percentages file containing the failure rates for each failable method"
-		usagePeer                 = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
-		usageHotKey               = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
-		usageLogLevel             = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
-		usageP2PDiag              = "p2p diagnostic ticker (default: 0 means no ticker)"
-		usageTicker               = "config update ticker (default: 0 means no ticker)"
-		usageKeyring              = "keyring backend to use (test, file)"
-		usageMaxBaseFee           = "the maximum base fee in Gwei allowed to send ZetaChain transactions (0 means no limit)"
-		usageMempoolThreshold     = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
+		usageMode             = "mode for cross-chain transaction processing (standard, dry, or chaos)"
+		usageChaosSeed        = "seed for the pseudo-random chaos number generator (default: 0 uses a random seed)"
+		usageChaosProfilePath = "path for the chaos profile file containing the failure rates for each failable method"
+		usagePeer             = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
+		usageHotKey           = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
+		usageLogLevel         = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
+		usageP2PDiag          = "p2p diagnostic ticker (default: 0 means no ticker)"
+		usageTicker           = "config update ticker (default: 0 means no ticker)"
+		usageKeyring          = "keyring backend to use (test, file)"
+		usageMaxBaseFee       = "the maximum base fee in Gwei allowed to send ZetaChain transactions (0 means no limit)"
+		usageMempoolThreshold = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 
 	f.StringVar(&cfg.mode, "mode", "standard", usageMode)
 	f.Int64Var(&cfg.chaosSeed, "chaos-seed", 0, usageChaosSeed)
-	f.StringVar(&cfg.chaosPercentagesPath, "chaos-percentages-path", "", usageChaosPercentagesPath)
+	f.StringVar(&cfg.chaosProfilePath, "chaos-profile-path", "", usageChaosProfilePath)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
@@ -108,7 +108,7 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	// Populate new struct with cli arguments
 	configData.ClientMode = clientMode
 	configData.ChaosSeed = opts.chaosSeed
-	configData.ChaosPercentagesPath = opts.chaosPercentagesPath
+	configData.ChaosProfilePath = opts.chaosProfilePath
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
 	configData.PublicDNS = opts.publicDNS
