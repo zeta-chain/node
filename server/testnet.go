@@ -108,15 +108,16 @@ func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) e
 	}
 	err := updateObserverData(svrCtx, *app)
 	if err != nil {
-		return fmt.Errorf("failed to update observer state: %w", err)
+		return fmt.Errorf("failed to update observer data: %w", err)
 	}
 	err = updateValidatorData(svrCtx, *app)
 	if err != nil {
-		return fmt.Errorf("failed to update staking for testnet: %w", err)
+		return fmt.Errorf("failed to update validator data: %w", err)
 	}
 	return nil
 }
 
+// updateObserverData updates the observer state to have a single observer: the operator address.
 func updateObserverData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
@@ -131,6 +132,8 @@ func updateObserverData(svrCtx *server.Context, app zeta.App) error {
 	return nil
 }
 
+// updateValidatorData updates application state to have a single validator with the provided operator address and consensus pubkey.
+// this affects staking, slashing, and distribution modules.
 func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
@@ -213,8 +216,6 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	}
 
 	svrCtx.Logger.Info("Cleared staking last validator power")
-
-	//
 
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
 	if err != nil {

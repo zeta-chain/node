@@ -682,6 +682,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
+// this function focuses on modifying the CometBFT state to match the new chainID and validator info.
 func testnetify(
 	ctx *server.Context,
 	testnetAppCreator types.AppCreator,
@@ -761,6 +762,7 @@ func testnetify(
 		return nil, err
 	}
 
+	// This is used later when modifying the application state.
 	ctx.Viper.Set(KeyValidatorConsensusAddr, validatorAddress.Bytes())
 	ctx.Viper.Set(KeyValidatorConsensusPubkey, userPubKey.Bytes())
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
@@ -837,7 +839,6 @@ func testnetify(
 
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
-
 	privValidator.Reset()
 
 	err = privValidator.SignVote(newChainID, voteProto)
@@ -866,7 +867,8 @@ func testnetify(
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator. This is updated into the comet bft state.
+	// The voting power is set to a high value to avoid any potential proposer selection issues.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,
