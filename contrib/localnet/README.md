@@ -45,6 +45,24 @@ To stop the localnet:
 docker-compose down
 ```
 
+### Running in chaos mode
+
+You can use the `CHAOS_SEED` and `CHAOS_PROFILE` environment variables to run the localnet
+ZetaClient nodes in chaos mode.
+
+```
+CHAOS_SEED=12345 CHAOS_PROFILE=1 docker-compose up -d
+```
+
+The `CHAOS_PROFILE` variable defines which profile from `contrib/localnet/chaosprofiles` is going
+to be used to setup chaos mode.
+
+Also, the `CHAOS_SEED` variable is optional.
+
+```
+CHAOS_PROFILE=1 docker-compose up -d
+```
+
 ## Orchestrator
 
 The `orchestrator` directory contains the orchestrator node which coordinates E2E tests.

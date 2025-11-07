@@ -25,7 +25,23 @@ enable_multiple_calls() {
 }
 
 set_dry_mode() {
+    echo "Setting dry mode"
     jq '.ClientMode = 1' \
+        /root/.zetacored/config/zetaclient_config.json > tmp.json && \
+        mv tmp.json /root/.zetacored/config/zetaclient_config.json
+}
+
+set_chaos_mode() {
+    if [[ -z $CHAOS_SEED ]]; then
+        CHAOS_SEED=0
+    fi
+
+    echo "Setting chaos mode (CHAOS_SEED = ${CHAOS_SEED}) (CHAOS_PROFILE = ${CHAOS_PROFILE})"
+
+    jq ".ClientMode = 2 |
+        .ChaosSeed = ${CHAOS_SEED} |
+        .ChaosProfilePath = \"/root/chaosprofiles/profile${CHAOS_PROFILE}.json\"
+    " \
         /root/.zetacored/config/zetaclient_config.json > tmp.json && \
         mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }
@@ -167,6 +183,10 @@ if [[ $HOSTNAME == "zetaclient-dry" ]]; then
         echo "Waiting for TSS..."
         sleep 1
     done
+fi
+
+if [[ -n $CHAOS_PROFILE ]]; then
+    set_chaos_mode
 fi
 
 echo "Running zetaclientd via supervisor"
