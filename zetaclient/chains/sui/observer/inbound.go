@@ -204,7 +204,7 @@ func (ob *Observer) processInboundEvent(
 	_, err = ob.ZetaRepo().
 		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(errVoteInbound, err.Error())
+		return fmt.Errorf("%w: %w", errVoteInbound, err)
 	}
 
 	return nil
