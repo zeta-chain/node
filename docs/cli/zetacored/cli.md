@@ -9763,7 +9763,7 @@ zetacored start [flags]
       --rpc.pprof_laddr string                          pprof listen address (https://golang.org/pkg/net/http/pprof)
       --rpc.unsafe                                      enabled unsafe rpc methods
       --shutdown-grace duration                         On Shutdown, duration to wait for resource clean up (default 3s)
-      --skip-config-overwrite                           Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead
+      --skip-config-overwrite                           Skip running the config configuration overwrite handler. This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead
       --state-sync.snapshot-interval uint               State sync snapshot interval
       --state-sync.snapshot-keep-recent uint32          State sync snapshot to keep (default 2)
       --tls.certificate-path string                     the cert.pem file path for the server TLS configuration
@@ -9825,7 +9825,7 @@ Modify state to create testnet from current local data
 ### Synopsis
 
 Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
-The provided opeartorAddress is used as the operator for the single validator in this network. The existing node key is reused .
+The provided operatorAddress is used as the operator for the single validator in this network. The existing node key is reused.
 
 
 ```
@@ -9841,10 +9841,11 @@ zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
 ### Options
 
 ```
-  -h, --help                 help for testnet
-      --skip-confirmation    Skip the confirmation prompt
-      --trace-store string   Enable KVStore tracing to an output file
-      --with-cometbft        Run abci app embedded in-process with CometBFT (default true)
+  -h, --help                      help for testnet
+      --shutdown-grace duration   On Shutdown, duration to wait for resource clean up (default 3s)
+      --skip-confirmation         Skip the confirmation prompt
+      --trace-store string        Enable KVStore tracing to an output file
+      --with-cometbft             Run abci app embedded in-process with CometBFT (default true)
 ```
 
 ### Options inherited from parent commands

@@ -559,7 +559,11 @@ func getCtx(svrCtx *server.Context, block bool) (*errgroup.Group, context.Contex
 	if graceDuration > 0 {
 		wrappedCancelFn = func() {
 			cancelFn()
-			svrCtx.Logger.Info("graceful shutdown start, waiting for services to stop", server.FlagShutdownGrace, graceDuration)
+			svrCtx.Logger.Info(
+				"graceful shutdown start, waiting for services to stop",
+				server.FlagShutdownGrace,
+				graceDuration,
+			)
 			time.Sleep(graceDuration)
 			svrCtx.Logger.Info("graceful shutdown complete")
 		}
