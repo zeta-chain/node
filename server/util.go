@@ -256,7 +256,8 @@ func setupApp(
 		if localErr := app.Close(); localErr != nil {
 			svrCtx.Logger.Error("error closing app", "error", localErr)
 		}
-		// Note: db.Close() is not called here because app.Close() already closes the database
+		// Note: db.Close() is not called here because app.Close() already closes the database.
+		// Calling db.Close() again would cause "pebble: closed" panic.
 	}
 
 	return app, cleanupFn, nil

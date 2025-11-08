@@ -97,7 +97,7 @@ which accepts a path for the resulting pprof file.
 
 			serverCtx.Logger.Info("Unlocking keyring")
 
-			// fire unlock precess for keyring
+			// fire unlock process for keyring
 			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			if keyringBackend == keyring.BackendFile {
 				_, err = clientCtx.Keyring.List()
@@ -128,7 +128,7 @@ which accepts a path for the resulting pprof file.
 	}
 
 	cmd.Flags().
-		Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
+		Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler. This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.Address, "tcp://0.0.0.0:26658", "Listen address")

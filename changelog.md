@@ -57,6 +57,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
 * [4378](https://github.com/zeta-chain/node/pull/4378) - add number of connected peers to tss keygen log
 * [4387](https://github.com/zeta-chain/node/pull/4387) - add new dry zetaclient to localnet
+* [4419](https://github.com/zeta-chain/node/pull/4419) - add testnet command to create a fork from existing node data
 
 ### Tests
 
@@ -64,6 +65,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
 * [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
 * [4395](https://github.com/zeta-chain/node/pull/4395/) - update e2e to set higher timeouts when running stress test
+
 
 ### Refactor
 

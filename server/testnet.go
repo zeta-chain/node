@@ -43,10 +43,10 @@ func TestnetCmdWithOptions(testnetAppCreator types.AppCreator, opts StartCmdOpti
 		Use:   "testnet [newChainID] [operatorAddress]",
 		Short: "Modify state to create testnet from current local data",
 		Long: `Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
-The provided opeartorAddress is used as the operator for the single validator in this network. The existing node key is reused .
+The provided operatorAddress is used as the operator for the single validator in this network. The existing node key is reused.
 `,
 		Example: "zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
-		Args:    cobra.MaximumNArgs(2),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 
@@ -63,7 +63,10 @@ The provided opeartorAddress is used as the operator for the single validator in
 			newChainID := args[0]
 			operatorAddress := args[1]
 
-			skipConfirmation, _ := cmd.Flags().GetBool(FlagSkipConfirmation)
+			skipConfirmation, err := cmd.Flags().GetBool(FlagSkipConfirmation)
+			if err != nil {
+				return fmt.Errorf("failed to get skip-confirmation flag: %w", err)
+			}
 
 			if !skipConfirmation {
 				// Confirmation prompt to prevent accidental modification of state.
@@ -82,7 +85,10 @@ The provided opeartorAddress is used as the operator for the single validator in
 			serverCtx.Viper.Set(KeyIsTestnet, true)
 			serverCtx.Viper.Set(KeyNewChainID, newChainID)
 			serverCtx.Viper.Set(KeyOperatorAddress, operatorAddress)
-			withCmt, _ := cmd.Flags().GetBool(srvflags.WithCometBFT)
+			withCmt, err := cmd.Flags().GetBool(srvflags.WithCometBFT)
+			if err != nil {
+				return fmt.Errorf("failed to get with-cometbft flag: %w", err)
+			}
 
 			err = opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCmt, opts)
 			if err != nil {
@@ -137,15 +143,22 @@ func updateObserverData(svrCtx *server.Context, app zeta.App) error {
 func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	operatorAddrStr := svrCtx.Viper.GetString(KeyOperatorAddress)
-	newValPubkeyBytes := svrCtx.Viper.Get(KeyValidatorConsensusPubkey).([]byte)
+
+	newValPubkeyBytes, ok := svrCtx.Viper.Get(KeyValidatorConsensusPubkey).([]byte)
+	if !ok {
+		return fmt.Errorf("failed to get validator consensus pubkey as bytes")
+	}
 	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
 	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
 	if err != nil {
 		return fmt.Errorf("failed to pack pubkey into Any: %w", err)
 	}
 
-	newValAddr := svrCtx.Viper.GetString(KeyValidatorConsensusAddr)
-	newConsAddr := sdk.ConsAddress(newValAddr)
+	newValAddrBytes, ok := svrCtx.Viper.Get(KeyValidatorConsensusAddr).([]byte)
+	if !ok {
+		return fmt.Errorf("failed to get validator consensus address as bytes")
+	}
+	newConsAddr := sdk.ConsAddress(newValAddrBytes)
 
 	valAddress, err := observertypes.GetOperatorAddressFromAccAddress(operatorAddrStr)
 	if err != nil {
