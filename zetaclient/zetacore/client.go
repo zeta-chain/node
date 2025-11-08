@@ -10,8 +10,8 @@ import (
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	evmosencoding "github.com/cosmos/evm/encoding"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -41,7 +41,7 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg testutil.TestEncodingConfig
+	encodingCfg evmosencoding.Config
 	keys        keyinterfaces.ObserverKeys
 	chainID     string
 	chain       chains.Chain
@@ -188,7 +188,7 @@ func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
 	config config.ClientConfiguration,
-	encodingConfig testutil.TestEncodingConfig,
+	encodingConfig evmosencoding.Config,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {

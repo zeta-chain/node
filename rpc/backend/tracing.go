@@ -4,19 +4,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: evm refactor this back to support synthetic txs
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
+func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
 	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
@@ -29,19 +32,19 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, errors.New("genesis is not traceable")
 	}
 
-	blk, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(transaction.Height))
+	blk, err := b.CometBlockByNumber(rpctypes.BlockNumber(transaction.Height))
 	if err != nil {
 		b.Logger.Debug("block not found", "height", transaction.Height)
 		return nil, err
 	}
 
-	blockResult, err := b.TendermintBlockResultByNumber(&blk.Block.Height)
+	blockResult, err := b.CometBlockResultByNumber(&blk.Block.Height)
 	if err != nil {
 		return nil, fmt.Errorf("block result not found for height %d", blk.Block.Height)
 	}
 
 	predecessors := []*evmtypes.MsgEthereumTx{}
-	msgs, _ := b.EthMsgsFromTendermintBlock(blk, blockResult)
+	msgs, _ := b.EthMsgsFromCometBlock(blk, blockResult)
 	var ethMsg *evmtypes.MsgEthereumTx
 	for _, m := range msgs {
 		if m.Hash == hash.Hex() {
@@ -54,6 +57,55 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	if ethMsg == nil {
 		return nil, fmt.Errorf("tx not found in block %d", blk.Block.Height)
 	}
+
+	// // check tx index is not out of bound
+	// if len(blk.Block.Txs) > math.MaxUint32 {
+	// 	return nil, fmt.Errorf("tx count %d is overfloing", len(blk.Block.Txs))
+	// }
+	// txsLen := uint32(len(blk.Block.Txs)) // #nosec G115 -- checked for int overflow already
+	// if txsLen < transaction.TxIndex {
+	// 	b.Logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
+	// 	return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
+	// }
+
+	// var predecessors []*evmtypes.MsgEthereumTx
+	// for _, txBz := range blk.Block.Txs[:transaction.TxIndex] {
+	// 	tx, err := b.ClientCtx.TxConfig.TxDecoder()(txBz)
+	// 	if err != nil {
+	// 		b.Logger.Debug("failed to decode transaction in block", "height", blk.Block.Height, "error", err.Error())
+	// 		continue
+	// 	}
+	// 	for _, msg := range tx.GetMsgs() {
+	// 		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
+	// 		if !ok {
+	// 			continue
+	// 		}
+
+	// 		predecessors = append(predecessors, ethMsg)
+	// 	}
+	// }
+
+	// tx, err := b.ClientCtx.TxConfig.TxDecoder()(blk.Block.Txs[transaction.TxIndex])
+	// if err != nil {
+	// 	b.Logger.Debug("tx not found", "hash", hash)
+	// 	return nil, err
+	// }
+
+	// // add predecessor messages in current cosmos tx
+	// index := int(transaction.MsgIndex) // #nosec G115
+	// for i := 0; i < index; i++ {
+	// 	ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
+	// 	if !ok {
+	// 		continue
+	// 	}
+	// 	predecessors = append(predecessors, ethMsg)
+	// }
+
+	// ethMessage, ok := tx.GetMsgs()[transaction.MsgIndex].(*evmtypes.MsgEthereumTx)
+	// if !ok {
+	// 	b.Logger.Debug("invalid transaction type", "type", fmt.Sprintf("%T", tx))
+	// 	return nil, fmt.Errorf("invalid transaction type %T", tx)
+	// }
 
 	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
 	if !ok {
@@ -77,13 +129,14 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig = config
+		traceTxRequest.TraceConfig = b.convertConfig(config)
 	}
 
 	// minus one to get the context of block beginning
 	contextHeight := transaction.Height - 1
 	if contextHeight < 1 {
-		// 0 is a special value in `ContextWithHeight`
+		// In Ethereum, the genesis block height is 0, but in CometBFT, the genesis block height is 1.
+		// So here we set the minimum requested height to 1.
 		contextHeight = 1
 	}
 	traceResult, err := b.QueryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
@@ -102,11 +155,20 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	return decodedResult, nil
 }
 
+func (b *Backend) convertConfig(config *rpctypes.TraceConfig) *evmtypes.TraceConfig {
+	if config == nil {
+		return &evmtypes.TraceConfig{}
+	}
+	cfg := config.TraceConfig
+	cfg.TracerJsonConfig = string(config.TracerConfig)
+	return &cfg
+}
+
 // TraceBlock configures a new tracer according to the provided configuration, and
 // executes all the transactions contained within. The return value will be one item
 // per transaction, dependent on the requested tracer.
 func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
-	config *evmtypes.TraceConfig,
+	config *rpctypes.TraceConfig,
 	block *tmrpctypes.ResultBlock,
 ) ([]*evmtypes.TxTraceResult, error) {
 	txs := block.Block.Txs
@@ -117,12 +179,13 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		return []*evmtypes.TxTraceResult{}, nil
 	}
 
-	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
+	blockRes, err := b.CometBlockResultByNumber(&block.Block.Height)
 	if err != nil {
 		b.Logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
 	}
-	msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
+
+	msgs, _ := b.EthMsgsFromCometBlock(block, blockRes)
 
 	// minus one to get the context at the beginning of the block
 	contextHeight := height - 1
@@ -144,7 +207,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     config,
+		TraceConfig:     b.convertConfig(config),
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
@@ -164,4 +227,70 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	return decodedResults, nil
+}
+
+// TraceCall executes a call with the given arguments and returns the structured logs
+// created during the execution of EVM. It returns them as a JSON object.
+func (b *Backend) TraceCall(
+	args evmtypes.TransactionArgs,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+	config *rpctypes.TraceConfig,
+) (interface{}, error) {
+	// Marshal tx args
+	bz, err := json.Marshal(&args)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get block number from blockNrOrHash
+	blockNr, err := b.BlockNumberFromComet(blockNrOrHash)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the block to get necessary context
+	header, err := b.CometHeaderByNumber(blockNr)
+	if err != nil {
+		b.Logger.Debug("block not found", "number", blockNr)
+		return nil, err
+	}
+
+	traceCallRequest := evmtypes.QueryTraceCallRequest{
+		Args:            bz,
+		GasCap:          b.RPCGasCap(),
+		ProposerAddress: sdk.ConsAddress(header.Header.ProposerAddress),
+		BlockNumber:     header.Header.Height,
+		BlockHash:       common.Bytes2Hex(header.Header.Hash()),
+		BlockTime:       header.Header.Time,
+		ChainId:         b.EvmChainID.Int64(),
+	}
+
+	if config != nil {
+		traceCallRequest.TraceConfig = b.convertConfig(config)
+	}
+
+	// get the context of provided block
+	contextHeight := header.Header.Height
+	if contextHeight < 1 {
+		// In Ethereum, the genesis block height is 0, but in CometBFT, the genesis block height is 1.
+		// So here we set the minimum requested height to 1.
+		contextHeight = 1
+	}
+
+	// Use the block height as context for the query
+	ctxWithHeight := rpctypes.ContextWithHeight(contextHeight)
+	traceResult, err := b.QueryClient.TraceCall(ctxWithHeight, &traceCallRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	// Response format is unknown due to custom tracer config param
+	// More information can be found here https://geth.ethereum.org/docs/dapp/tracing-filtered
+	var decodedResult interface{}
+	err = json.Unmarshal(traceResult.Data, &decodedResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return decodedResult, nil
 }

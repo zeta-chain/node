@@ -35,7 +35,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/evm/crypto/hd"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	"github.com/cosmos/evm/ethereum/eip712"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
@@ -784,7 +784,7 @@ func newCodec(evmChainID uint64) (*codec.ProtoCodec, codectypes.InterfaceRegistr
 	evidencetypes.RegisterInterfaces(interfaceRegistry)
 	crisistypes.RegisterInterfaces(interfaceRegistry)
 	evmtypes.RegisterInterfaces(interfaceRegistry)
-	cosmosevmtypes.RegisterInterfaces(interfaceRegistry)
+	eip712.RegisterInterfaces(interfaceRegistry)
 	crosschaintypes.RegisterInterfaces(interfaceRegistry)
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)

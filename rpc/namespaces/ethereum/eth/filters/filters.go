@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"cosmossdk.io/log"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -15,8 +13,12 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong
@@ -44,13 +46,7 @@ func NewBlockFilter(logger log.Logger, backend Backend, criteria filters.FilterC
 
 // NewRangeFilter creates a new filter which uses a bloom filter on blocks to
 // figure out whether a particular block is interesting or not.
-func NewRangeFilter(
-	logger log.Logger,
-	backend Backend,
-	begin, end int64,
-	addresses []common.Address,
-	topics [][]common.Hash,
-) *Filter {
+func NewRangeFilter(logger log.Logger, backend Backend, begin, end int64, addresses []common.Address, topics [][]common.Hash) *Filter {
 	// Flatten the address and topic filter clauses into a single bloombits filter
 	// system. Since the bloombits are not positional, nil topics are permitted,
 	// which get flattened into a nil byte slice.
@@ -94,34 +90,25 @@ func newFilter(logger log.Logger, backend Backend, criteria filters.FilterCriter
 
 // Logs searches the blockchain for matching log entries, returning all from the
 // first block that contains matches, updating the start of the filter accordingly.
-func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*ethtypes.Log, error) {
+func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) (logs []*ethtypes.Log, err error) {
 	if blockLimit == 0 {
 		return nil, nil
 	}
 
-	logs := []*ethtypes.Log{}
-	var err error
-
 	// If we're doing singleton block filtering, execute and return
 	if f.criteria.BlockHash != nil && *f.criteria.BlockHash != (common.Hash{}) {
-		resBlock, err := f.backend.TendermintBlockByHash(*f.criteria.BlockHash)
+		resBlock, err := f.backend.CometBlockByHash(*f.criteria.BlockHash)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch header by hash %s: %w", f.criteria.BlockHash, err)
 		}
 
-		blockRes, err := f.backend.TendermintBlockResultByNumber(&resBlock.Block.Height)
+		blockRes, err := f.backend.CometBlockResultByNumber(&resBlock.Block.Height)
 		if err != nil {
-			f.logger.Debug(
-				"failed to fetch block result from Tendermint",
-				"height",
-				resBlock.Block.Height,
-				"error",
-				err.Error(),
-			)
+			f.logger.Debug("failed to fetch block result from CometBFT", "height", resBlock.Block.Height, "error", err.Error())
 			return nil, err
 		}
 
-		bloom, err := f.backend.BlockBloom(blockRes)
+		bloom, err := f.backend.BlockBloomFromCometBlock(blockRes)
 		if err != nil {
 			return nil, err
 		}
@@ -130,8 +117,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 	}
 
 	// Disallow pending logs.
-	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() ||
-		f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
+	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() || f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
 		return nil, errPendingLogsUnsupported
 	}
 
@@ -185,13 +171,13 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 
 	for height := from; height <= to; height++ {
 		h := int64(height) //#nosec G115
-		blockRes, err := f.backend.TendermintBlockResultByNumber(&h)
+		blockRes, err := f.backend.CometBlockResultByNumber(&h)
 		if err != nil {
-			f.logger.Debug("failed to fetch block result from Tendermint", "height", height, "error", err.Error())
-			return nil, fmt.Errorf("failed to fetch block result from Tendermint: %w", err)
+			f.logger.Debug("failed to fetch block result from CometBFT", "height", height, "error", err.Error())
+			return nil, fmt.Errorf("failed to fetch block result from CometBFT: %w", err)
 		}
 
-		bloom, err := f.backend.BlockBloom(blockRes)
+		bloom, err := f.backend.BlockBloomFromCometBlock(blockRes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query block bloom filter from block results: %w", err)
 		}
@@ -211,7 +197,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 }
 
 // blockLogs returns the logs matching the filter criteria within a single block.
-func (f *Filter) blockLogs(blockRes *tmrpctypes.ResultBlockResults, bloom ethtypes.Bloom) ([]*ethtypes.Log, error) {
+func (f *Filter) blockLogs(blockRes *cmtrpctypes.ResultBlockResults, bloom ethtypes.Bloom) ([]*ethtypes.Log, error) {
 	if !bloomFilter(bloom, f.criteria.Addresses, f.criteria.Topics) {
 		return []*ethtypes.Log{}, nil
 	}

@@ -29,7 +29,7 @@ func (k Keeper) CodeHash(c context.Context, req *types.QueryCodeHashRequest) (*t
 	if acc == nil {
 		return nil, status.Error(codes.NotFound, "account not found")
 	}
-	if !acc.IsContract() {
+	if !k.evmKeeper.IsContract(ctx, address) {
 		return nil, status.Error(codes.NotFound, "account is not a contract")
 	}
 

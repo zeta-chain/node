@@ -28,7 +28,6 @@ func NewSimApp(
 	configurator := evmtypes.NewEVMConfigurator()
 	configurator.ResetTestConfig()
 	err := configurator.
-		WithChainConfig(evmtypes.DefaultChainConfig(777)).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
 			Denom:         config.BaseDenom,
 			ExtendedDenom: config.BaseDenom,

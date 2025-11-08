@@ -23,7 +23,6 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -35,8 +34,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
+	evmosencoding "github.com/cosmos/evm/encoding"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -166,23 +165,6 @@ func NewRootCmd() *cobra.Command {
 // InitAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
-	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
-
-	configurator := evmtypes.NewEVMConfigurator()
-	err := configurator.
-		WithExtendedEips(zetacoredconfig.CosmosEVMActivators).
-		WithChainConfig(ethCfg).
-		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
-			Denom:         denom,
-			ExtendedDenom: denom,
-			DisplayDenom:  denom,
-			Decimals:      18,
-		}).
-		Configure()
-	if err != nil {
-		panic(err)
-	}
-
 	type CustomAppConfig struct {
 		serverconfig.Config
 
@@ -233,11 +215,10 @@ func initTmConfig() *tmcfg.Config {
 	return cfg
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingConfig) {
-	ac := appCreator{
-		encCfg: encodingConfig,
+func initRootCmd(rootCmd *cobra.Command, encodingConfig evmosencoding.Config) {
+	sdkAppCreator := func(l log.Logger, d dbm.DB, w io.Writer, ao servertypes.AppOptions) servertypes.Application {
+		return newApp(l, d, w, ao)
 	}
-
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(
@@ -264,13 +245,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		tmcli.NewCompletionCmd(rootCmd, true),
 
 		debug.Cmd(),
-		snapshot.Cmd(ac.newApp),
+		snapshot.Cmd(sdkAppCreator),
 	)
 
 	zevmserver.AddCommands(
 		rootCmd,
-		zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome),
-		ac.appExport,
+		zevmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
+		appExport,
 		addModuleInitFlags,
 	)
 
@@ -342,16 +323,12 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-type appCreator struct {
-	encCfg testutil.TestEncodingConfig
-}
-
-func (ac appCreator) newApp(
+func newApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) zevmserver.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
@@ -396,7 +373,7 @@ func (ac appCreator) newApp(
 }
 
 // appExport is used to export the state of the application for a genesis file.
-func (ac appCreator) appExport(
+func appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,

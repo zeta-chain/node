@@ -3,19 +3,21 @@ package server
 import (
 	"net"
 	"net/http"
-	"time"
 
-	"cosmossdk.io/log"
-	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	sdkserver "github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/evm/server/config"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/netutil"
+
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+
+	"github.com/zeta-chain/node/server/config"
+
+	"cosmossdk.io/log"
+
+	sdkserver "github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // AddCommands adds server commands
@@ -27,7 +29,7 @@ func AddCommands(
 ) {
 	cometbftCmd := &cobra.Command{
 		Use:     "comet",
-		Aliases: []string{"cometbft", "tendermint"},
+		Aliases: []string{"cometbft"},
 		Short:   "CometBFT subcommands",
 	}
 
@@ -54,39 +56,6 @@ func AddCommands(
 		// custom tx indexer command
 		NewIndexTxCmd(),
 	)
-}
-
-// ConnectTmWS connects to a Tendermint WebSocket (WS) server.
-// Parameters:
-// - tmRPCAddr: The RPC address of the Tendermint server.
-// - tmEndpoint: The WebSocket endpoint on the Tendermint server.
-// - logger: A logger instance used to log debug and error messages.
-func ConnectTmWS(tmRPCAddr, tmEndpoint string, logger log.Logger) *rpcclient.WSClient {
-	tmWsClient, err := rpcclient.NewWS(tmRPCAddr, tmEndpoint,
-		rpcclient.MaxReconnectAttempts(256),
-		rpcclient.ReadWait(120*time.Second),
-		rpcclient.WriteWait(120*time.Second),
-		rpcclient.PingPeriod(50*time.Second),
-		rpcclient.OnReconnect(func() {
-			logger.Debug("EVM RPC reconnects to Tendermint WS", "address", tmRPCAddr+tmEndpoint)
-		}),
-	)
-
-	if err != nil {
-		logger.Error(
-			"Tendermint WS client could not be created",
-			"address", tmRPCAddr+tmEndpoint,
-			"error", err,
-		)
-	} else if err := tmWsClient.OnStart(); err != nil {
-		logger.Error(
-			"Tendermint WS client could not start",
-			"address", tmRPCAddr+tmEndpoint,
-			"error", err,
-		)
-	}
-
-	return tmWsClient
 }
 
 // MountGRPCWebServices mounts gRPC-Web services on specific HTTP POST routes.

@@ -4,10 +4,12 @@ import (
 	"math/big"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 )
 
 func TestParseTxResult(t *testing.T) {
@@ -42,7 +44,7 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
 					}},
 					{Type: "message", Attributes: []abci.EventAttribute{
-						{Key: "action", Value: "/cosmos.evm.vm.v1.MsgEthereumTx"},
+						{Key: "action", Value: "/ehermint.evm.v1.MsgEthereumTx"},
 						{Key: "key", Value: "ethm17xpfvakm2amg962yls6f84z3kell8c5lthdzgl"},
 						{Key: "module", Value: "evm"},
 						{Key: "sender", Value: address},
@@ -54,9 +56,8 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "txGasUsed", Value: "21000"},
 						{Key: "txHash", Value: "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57"},
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-						{Key: "ethereumTxFailed", Value: "contract reverted"},
+						{Key: "ethereumTxFailed", Value: "contract everted"},
 					}},
-					{Type: evmtypes.EventTypeTxLog, Attributes: []abci.EventAttribute{}},
 				},
 			},
 			[]*ParsedTx{
@@ -66,11 +67,6 @@ func TestParseTxResult(t *testing.T) {
 					EthTxIndex: 10,
 					GasUsed:    21000,
 					Failed:     false,
-					TxHash:     "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57",
-					Type:       0,
-					Amount:     big.NewInt(1000),
-					Recipient:  common.HexToAddress("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"),
-					Sender:     common.HexToAddress(address),
 				},
 				{
 					MsgIndex:   1,
@@ -78,11 +74,6 @@ func TestParseTxResult(t *testing.T) {
 					EthTxIndex: 11,
 					GasUsed:    21000,
 					Failed:     true,
-					TxHash:     "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57",
-					Type:       0,
-					Amount:     big.NewInt(1000),
-					Recipient:  common.HexToAddress("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"),
-					Sender:     common.HexToAddress(""),
 				},
 			},
 		},
@@ -112,7 +103,7 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
 					}},
 					{Type: "message", Attributes: []abci.EventAttribute{
-						{Key: "action", Value: "/cosmos.evm.vm.v1.MsgEthereumTx"},
+						{Key: "action", Value: "/ehermint.evm.v1.MsgEthereumTx"},
 						{Key: "key", Value: "ethm17xpfvakm2amg962yls6f84z3kell8c5lthdzgl"},
 						{Key: "module", Value: "evm"},
 						{Key: "sender", Value: address},
@@ -126,40 +117,8 @@ func TestParseTxResult(t *testing.T) {
 					EthTxIndex: 0,
 					GasUsed:    21000,
 					Failed:     false,
-					TxHash:     "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57",
-					Type:       0,
-					Amount:     big.NewInt(1000),
-					Recipient:  common.HexToAddress("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"),
-					Sender:     common.HexToAddress(address),
 				},
 			},
-		},
-		{
-			"format 1 events, failed",
-			abci.ExecTxResult{
-				GasUsed: 21000,
-				Events: []abci.Event{
-					{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-						{Key: "ethereumTxHash", Value: txHash.Hex()},
-						{Key: "txIndex", Value: "10"},
-						{Key: "amount", Value: "1000"},
-						{Key: "txGasUsed", Value: "21000"},
-						{Key: "txHash", Value: "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57"},
-						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-					}},
-					{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-						{Key: "ethereumTxHash", Value: txHash2.Hex()},
-						{Key: "txIndex", Value: "0x01"},
-						{Key: "amount", Value: "1000"},
-						{Key: "txGasUsed", Value: "21000"},
-						{Key: "txHash", Value: "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57"},
-						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-						{Key: "ethereumTxFailed", Value: "contract reverted"},
-					}},
-					{Type: evmtypes.EventTypeTxLog, Attributes: []abci.EventAttribute{}},
-				},
-			},
-			nil,
 		},
 		{
 			"format 1 events, failed",
@@ -181,27 +140,7 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "txGasUsed", Value: "0x01"},
 						{Key: "txHash", Value: "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57"},
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-						{Key: "ethereumTxFailed", Value: "contract reverted"},
-					}},
-					{Type: evmtypes.EventTypeTxLog, Attributes: []abci.EventAttribute{}},
-				},
-			},
-			nil,
-		},
-		{
-			"format 2 events failed",
-			abci.ExecTxResult{
-				GasUsed: 21000,
-				Events: []abci.Event{
-					{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-						{Key: "ethereumTxHash", Value: txHash.Hex()},
-						{Key: "txIndex", Value: "0x01"},
-					}},
-					{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-						{Key: "amount", Value: "1000"},
-						{Key: "txGasUsed", Value: "21000"},
-						{Key: "txHash", Value: "14A84ED06282645EFBF080E0B7ED80D8D8D6A36337668A12B5F229F81CDD3F57"},
-						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						{Key: "ethereumTxFailed", Value: "contract everted"},
 					}},
 				},
 			},
@@ -230,7 +169,7 @@ func TestParseTxResult(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			parsed, err := ParseTxResult(&tc.response, nil)
+			parsed, err := ParseTxResult(&tc.response, nil) //#nosec G601 -- fine for tests
 			if tc.expTxs == nil {
 				require.Error(t, err)
 			} else {

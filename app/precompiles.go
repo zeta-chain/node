@@ -94,39 +94,40 @@ func NewAvailableStaticPrecompiles(
 		panic(fmt.Errorf("failed to instantiate bech32 precompile: %w", err))
 	}
 
-	stakingPrecompile, err := stakingprecompile.NewPrecompile(stakingKeeper, options.AddressCodec)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate staking precompile: %w", err))
-	}
-
-	distributionPrecompile, err := distprecompile.NewPrecompile(
-		distributionKeeper,
+	stakingPrecompile := stakingprecompile.NewPrecompile(
 		stakingKeeper,
-		evmKeeper,
+		stakingkeeper.NewMsgServerImpl(&stakingKeeper),
+		stakingkeeper.NewQuerier(&stakingKeeper),
+		bankKeeper,
 		options.AddressCodec,
 	)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate distribution precompile: %w", err))
-	}
 
-	bankPrecompile, err := bankprecompile.NewPrecompile(bankKeeper, erc20Keeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate bank precompile: %w", err))
-	}
+	distributionPrecompile := distprecompile.NewPrecompile(
+		distributionKeeper,
+		distributionkeeper.NewMsgServerImpl(distributionKeeper),
+		distributionkeeper.NewQuerier(distributionKeeper),
+		stakingKeeper,
+		bankKeeper,
+		options.AddressCodec,
+	)
 
-	govPrecompile, err := govprecompile.NewPrecompile(govKeeper, codec, options.AddressCodec)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate gov precompile: %w", err))
-	}
+	bankPrecompile := bankprecompile.NewPrecompile(bankKeeper, erc20Keeper)
 
-	slashingPrecompile, err := slashingprecompile.NewPrecompile(
+	govPrecompile := govprecompile.NewPrecompile(
+		govkeeper.NewMsgServerImpl(&govKeeper),
+		govkeeper.NewQueryServer(&govKeeper),
+		bankKeeper,
+		codec,
+		options.AddressCodec,
+	)
+
+	slashingPrecompile := slashingprecompile.NewPrecompile(
 		slashingKeeper,
+		slashingkeeper.NewMsgServerImpl(slashingKeeper),
+		bankKeeper,
 		options.ValidatorAddrCodec,
 		options.ConsensusAddrCodec,
 	)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate slashing precompile: %w", err))
-	}
 
 	// Stateless precompiles
 	precompiles[bech32Precompile.Address()] = bech32Precompile

@@ -35,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -80,8 +81,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmante "github.com/cosmos/evm/ante"
 	evmosencoding "github.com/cosmos/evm/encoding"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	evmmempool "github.com/cosmos/evm/mempool"
+	"github.com/cosmos/evm/utils"
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/cosmos/evm/x/feemarket"
@@ -90,6 +93,7 @@ import (
 	"github.com/cosmos/evm/x/vm"
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/ethereum/go-ethereum/common"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native" // register native tracers
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -140,7 +144,7 @@ const Name = "zetacore"
 
 func init() {
 	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
-	sdk.DefaultPowerReduction = cosmosevmtypes.AttoPowerReduction
+	sdk.DefaultPowerReduction = utils.AttoPowerReduction
 	// modify fee market parameter defaults through global
 	//feemarkettypes.DefaultMinGasPrice = v5.MainnetMinGasPrices
 	//feemarkettypes.DefaultMinGasMultiplier = v5.MainnetMinGasMultiplier
@@ -204,10 +208,12 @@ var (
 type App struct {
 	*baseapp.BaseApp
 
-	cdc               *codec.LegacyAmino
-	appCodec          codec.Codec
-	interfaceRegistry types.InterfaceRegistry
-	invCheckPeriod    uint
+	cdc                *codec.LegacyAmino
+	appCodec           codec.Codec
+	interfaceRegistry  types.InterfaceRegistry
+	invCheckPeriod     uint
+	clientCtx          client.Context
+	pendingTxListeners []evmante.PendingTxListener
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -246,6 +252,7 @@ type App struct {
 	EvmKeeper       *evmkeeper.Keeper
 	Erc20Keeper     erc20keeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
+	EVMMempool      *evmmempool.ExperimentalEVMMempool
 
 	// zetachain keepers
 	AuthorityKeeper   authoritykeeper.Keeper
@@ -532,6 +539,7 @@ func New(
 		app.FeeMarketKeeper,
 		app.ConsensusParamsKeeper,
 		&app.Erc20Keeper,
+		evmChainID,
 		tracer,
 	)
 
@@ -712,7 +720,7 @@ func New(
 		//transfer.NewAppModule(app.TransferKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
-		vm.NewAppModule(app.EvmKeeper, app.AccountKeeper, app.AccountKeeper.AddressCodec()),
+		vm.NewAppModule(app.EvmKeeper, app.AccountKeeper, app.BankKeeper, app.AccountKeeper.AddressCodec()),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
@@ -744,6 +752,7 @@ func New(
 	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
 		authtypes.ModuleName,
+		evmtypes.ModuleName,
 	)
 
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
@@ -902,6 +911,19 @@ func (app *App) AppCodec() codec.Codec {
 // InterfaceRegistry returns Gaia's InterfaceRegistry
 func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
+}
+
+func (app *App) SetClientCtx(clientCtx client.Context) { // TODO:VLAD - Remove this if possible
+	app.clientCtx = clientCtx
+}
+
+func (app *App) GetMempool() sdkmempool.ExtMempool {
+	return app.EVMMempool
+}
+
+// RegisterPendingTxListener is used by json-rpc server to listen to pending transactions callback.
+func (app *App) RegisterPendingTxListener(listener func(common.Hash)) {
+	app.pendingTxListeners = append(app.pendingTxListeners, listener)
 }
 
 // AutoCliOpts returns the autocli options for the app.

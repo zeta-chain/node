@@ -3,7 +3,9 @@ package debug
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"math"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -11,17 +13,20 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/server"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	stderrors "github.com/pkg/errors"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // HandlerT keeps track of the cpu profiler and trace execution
@@ -59,23 +64,20 @@ func NewAPI(
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (a *API) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
+func (a *API) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
 	a.logger.Debug("debug_traceTransaction", "hash", hash)
 	return a.backend.TraceTransaction(hash, config)
 }
 
 // TraceBlockByNumber returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByNumber(
-	height rpctypes.BlockNumber,
-	config *evmtypes.TraceConfig,
-) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByNumber(height rpctypes.BlockNumber, config *rpctypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByNumber", "height", height)
 	if height == 0 {
 		return nil, errors.New("genesis is not traceable")
 	}
-	// Get Tendermint Block
-	resBlock, err := a.backend.TendermintBlockByNumber(height)
+	// Get CometBFT Block
+	resBlock, err := a.backend.CometBlockByNumber(height)
 	if err != nil {
 		a.logger.Debug("get block failed", "height", height, "error", err.Error())
 		return nil, err
@@ -86,10 +88,10 @@ func (a *API) TraceBlockByNumber(
 
 // TraceBlockByHash returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByHash(hash common.Hash, config *evmtypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByHash(hash common.Hash, config *rpctypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByHash", "hash", hash)
-	// Get Tendermint Block
-	resBlock, err := a.backend.TendermintBlockByHash(hash)
+	// Get CometBFT Block
+	resBlock, err := a.backend.CometBlockByHash(hash)
 	if err != nil {
 		a.logger.Debug("get block failed", "hash", hash.Hex(), "error", err.Error())
 		return nil, err
@@ -101,6 +103,71 @@ func (a *API) TraceBlockByHash(hash common.Hash, config *evmtypes.TraceConfig) (
 	}
 
 	return a.backend.TraceBlock(rpctypes.BlockNumber(resBlock.Block.Height), config, resBlock)
+}
+
+// TraceBlock returns the structured logs created during the execution of
+// EVM and returns them as a JSON object. It accepts an RLP-encoded block.
+func (a *API) TraceBlock(tblockRlp hexutil.Bytes, config *rpctypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+	a.logger.Debug("debug_traceBlock", "size", len(tblockRlp))
+	// Decode RLP-encoded block
+	var block types.Block
+	if err := rlp.DecodeBytes(tblockRlp, &block); err != nil {
+		a.logger.Debug("failed to decode block", "error", err.Error())
+		return nil, fmt.Errorf("could not decode block: %w", err)
+	}
+
+	// Get block number from the decoded block
+	blockNum := block.NumberU64()
+	if blockNum > math.MaxInt64 {
+		return nil, fmt.Errorf("block number overflow: %d exceeds max int64", blockNum)
+	}
+	blockNumber := rpctypes.BlockNumber(blockNum) //#nosec G115 -- overflow checked above
+	a.logger.Debug("decoded block", "number", blockNumber, "hash", block.Hash().Hex())
+
+	// Get CometBFT block by number (not hash, as Ethereum block hash may differ from CometBFT hash)
+	resBlock, err := a.backend.CometBlockByNumber(blockNumber)
+	if err != nil {
+		a.logger.Debug("get block failed", "number", blockNumber, "error", err.Error())
+		return nil, err
+	}
+
+	if resBlock == nil || resBlock.Block == nil {
+		a.logger.Debug("block not found", "number", blockNumber)
+		return nil, errors.New("block not found")
+	}
+
+	return a.backend.TraceBlock(blockNumber, config, resBlock)
+}
+
+// TraceCall lets you trace a given eth_call. It collects the structured logs
+// created during the execution of EVM if the given transaction was added on
+// top of the provided block and returns them as a JSON object.
+func (a *API) TraceCall(args evmtypes.TransactionArgs, blockNrOrHash rpctypes.BlockNumberOrHash, config *rpctypes.TraceConfig) (interface{}, error) {
+	a.logger.Debug("debug_traceCall", "args", args, "block number or hash", blockNrOrHash)
+	return a.backend.TraceCall(args, blockNrOrHash, config)
+}
+
+// GetRawBlock retrieves the RLP-encoded block by block number or hash.
+func (a *API) GetRawBlock(blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
+	a.logger.Debug("debug_getRawBlock", "block number or hash", blockNrOrHash)
+
+	// Get block number from blockNrOrHash
+	blockNum, err := a.backend.BlockNumberFromComet(blockNrOrHash)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get Ethereum block by number
+	block, err := a.backend.EthBlockByNumber(blockNum)
+	if err != nil {
+		return nil, err
+	}
+	if block == nil {
+		return nil, fmt.Errorf("block not found")
+	}
+
+	// Encode block to RLP
+	return rlp.EncodeToBytes(block)
 }
 
 // BlockProfile turns on goroutine profiling for nsec seconds and writes profile data to
@@ -215,7 +282,7 @@ func (a *API) StartCPUProfile(file string) error {
 			a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
 		}
-		f, err := os.Create(fp) //#nosec G304 forked code
+		f, err := os.Create(fp)
 		if err != nil {
 			a.logger.Debug("failed to create CPU profile file", "error", err.Error())
 			return err
@@ -343,9 +410,7 @@ func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
 	if !a.profilingEnabled {
 		return nil, rpctypes.ErrProfilingDisabled
 	}
-	header, err := a.backend.HeaderByNumber(
-		rpctypes.BlockNumber(number),
-	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	header, err := a.backend.HeaderByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -358,9 +423,7 @@ func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
 	if !a.profilingEnabled {
 		return nil, rpctypes.ErrProfilingDisabled
 	}
-	block, err := a.backend.EthBlockByNumber(
-		rpctypes.BlockNumber(number),
-	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -373,9 +436,7 @@ func (a *API) PrintBlock(number uint64) (string, error) {
 	if !a.profilingEnabled {
 		return "", rpctypes.ErrProfilingDisabled
 	}
-	block, err := a.backend.EthBlockByNumber(
-		rpctypes.BlockNumber(number),
-	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return "", err
 	}

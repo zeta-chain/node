@@ -4,7 +4,6 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -19,7 +18,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmosencoding "github.com/cosmos/evm/encoding"
-	cosmosevmtypes "github.com/cosmos/evm/types"
+	"github.com/cosmos/evm/ethereum/eip712"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
@@ -32,7 +31,7 @@ import (
 )
 
 // MakeEncodingConfig creates an EncodingConfig
-func MakeEncodingConfig(chainID uint64) testutil.TestEncodingConfig {
+func MakeEncodingConfig(chainID uint64) evmosencoding.Config {
 	encodingConfig := evmosencoding.MakeConfig(chainID)
 	registry := encodingConfig.InterfaceRegistry
 	// TODO test if we need to register these interfaces again as MakeConfig already registers them
@@ -48,7 +47,7 @@ func MakeEncodingConfig(chainID uint64) testutil.TestEncodingConfig {
 	evidencetypes.RegisterInterfaces(registry)
 	crisistypes.RegisterInterfaces(registry)
 	evmtypes.RegisterInterfaces(registry)
-	cosmosevmtypes.RegisterInterfaces(registry)
+	eip712.RegisterInterfaces(registry)
 	authoritytypes.RegisterInterfaces(registry)
 	crosschaintypes.RegisterInterfaces(registry)
 	emissionstypes.RegisterInterfaces(registry)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -434,6 +435,7 @@ func EVMKeeper(
 		feemarketKeeper,
 		consensusKeeper,
 		erc20Keeper,
+		7000, // TODO: use const
 		"",
 	)
 
@@ -449,9 +451,7 @@ func NewSDKKeepersWithKeys(
 ) SDKKeepers {
 	configurator := evmtypes.NewEVMConfigurator()
 	configurator.ResetTestConfig()
-	ethCfg := evmtypes.DefaultChainConfig(7000)
 	err := configurator.
-		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
 			Denom:         zetacoredconfig.BaseDenom,
 			ExtendedDenom: zetacoredconfig.BaseDenom,
@@ -525,6 +525,7 @@ func NewSDKKeepersWithKeys(
 		feeMarketKeeper,
 		consensusKeeper,
 		&erc20Keeper,
+		7000, // TODO: use const
 		"",
 	)
 	erc20Keeper = erc20keeper.NewKeeper(
@@ -751,7 +752,7 @@ func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
 	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
 	evmGenesis := *evmtypes.DefaultGenesisState()
 	evmGenesis.Params.EvmDenom = "azeta"
-	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)
+	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, sdkk.BankKeeper, evmGenesis, &sync.Once{})
 }
 
 // InitBlockProposer initialize the block proposer for test purposes with an associated validator

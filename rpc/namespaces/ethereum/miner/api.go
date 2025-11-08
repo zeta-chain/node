@@ -1,12 +1,14 @@
 package miner
 
 import (
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/zeta-chain/node/rpc/backend"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // API is the private miner prefixed set of APIs in the Miner JSON-RPC spec.

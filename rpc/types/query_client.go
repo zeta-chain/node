@@ -5,10 +5,12 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // QueryClient defines a gRPC Client used for:
@@ -31,7 +33,7 @@ func NewQueryClient(clientCtx client.Context) *QueryClient {
 }
 
 // GetProof performs an ABCI query with the given key and returns a merkle proof. The desired
-// tendermint height to perform the query should be set in the client context. The query will be
+// CometBFT height to perform the query should be set in the client context. The query will be
 // performed at one below this height (at the IAVL version) in order to obtain the correct merkle
 // proof. Proof queries at height less than or equal to 2 are not supported.
 // Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
