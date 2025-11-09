@@ -25,6 +25,11 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+const (
+	DefaultTestnetValidatorTokes = "30000000000000000000000"
+	DefaultDelegatorShares       = "30000000000000000000000.000000000000000"
+)
+
 func TestNetCmd(appCreator types.AppCreator) *cobra.Command {
 	return TestnetCmdWithOptions(appCreator, StartCmdOptions{
 		DBOpener:            openDB,
@@ -110,7 +115,7 @@ The provided operatorAddress is used as the operator for the single validator in
 func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) error {
 	app, ok := appInterface.(*zeta.App)
 	if !ok {
-		panic("expected *zeta.ZetaApp")
+		panic("expected *zeta.App")
 	}
 	err := updateObserverData(svrCtx, *app)
 	if err != nil {
@@ -165,7 +170,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return fmt.Errorf("failed to get operator address from account address: %w", err)
 	}
 
-	tokens, ok := math.NewIntFromString("30000000000000000000000")
+	tokens, ok := math.NewIntFromString(DefaultTestnetValidatorTokes)
 	if !ok {
 		return fmt.Errorf("failed to parse tokens string to Int")
 	}
@@ -176,7 +181,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		Jailed:          false,
 		Status:          stakingtypes.Bonded,
 		Tokens:          tokens,
-		DelegatorShares: math.LegacyMustNewDecFromStr("30000000000000000000000.000000000000000"),
+		DelegatorShares: math.LegacyMustNewDecFromStr(DefaultDelegatorShares),
 		Description: stakingtypes.Description{
 			Moniker: "Testnet Validator",
 		},

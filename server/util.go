@@ -444,7 +444,6 @@ func startInProcess(
 	clientCtx, httpSrv, httpSrvDone, err := startJSONRPCServer(
 		svrCtx,
 		clientCtx,
-		g,
 		config,
 		genDocProvider,
 		cfg.RPC.ListenAddress,
@@ -656,7 +655,6 @@ func startAPIServer(
 func startJSONRPCServer(
 	svrCtx *server.Context,
 	clientCtx client.Context,
-	g *errgroup.Group,
 	config *config.Config,
 	genDocProvider node.GenesisDocProvider,
 	cmtRPCAddr string,
@@ -674,11 +672,13 @@ func startJSONRPCServer(
 
 	ctx = clientCtx.WithChainID(genDoc.ChainID)
 	cmtEndpoint := "/websocket"
-	g.Go(func() error {
-		httpSrv, httpSrvDone, err = StartJSONRPC(svrCtx, clientCtx, cmtRPCAddr, cmtEndpoint, config, idxer)
-		return err
-	})
-	return
+
+	httpSrv, httpSrvDone, err = StartJSONRPC(svrCtx, ctx, cmtRPCAddr, cmtEndpoint, config, idxer)
+	if err != nil {
+		return ctx, nil, nil, err
+	}
+
+	return ctx, httpSrv, httpSrvDone, nil
 }
 
 func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
