@@ -25,8 +25,11 @@ const (
 	KeyNewChainID               = "new-chain-ID"
 	KeyValidatorConsensusAddr   = "validator-consensus-address"
 	KeyValidatorConsensusPubkey = "validator-consensus-pubkey"
+	KeyAppBlockedHeight         = "app-blocked-height"
 	KeyOperatorAddress          = "operator-address"
+	KeyUpgradeVersion           = "upgrade-version"
 	FlagSkipConfirmation        = "skip-confirmation"
+	FlagUpgradeVersion          = "upgrade-version"
 )
 
 type StartCmdOptions struct {

@@ -2,12 +2,15 @@ package server
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	types2 "github.com/cosmos/cosmos-sdk/codec/types"
@@ -50,8 +53,9 @@ func TestnetCmdWithOptions(testnetAppCreator types.AppCreator, opts StartCmdOpti
 		Long: `Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
 The provided operatorAddress is used as the operator for the single validator in this network. The existing node key is reused.
 `,
-		Example: "zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
-		Args:    cobra.ExactArgs(2),
+		Example: `  zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
+  					zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax --upgrade-version v37.0.0`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 
@@ -90,6 +94,15 @@ The provided operatorAddress is used as the operator for the single validator in
 			serverCtx.Viper.Set(KeyIsTestnet, true)
 			serverCtx.Viper.Set(KeyNewChainID, newChainID)
 			serverCtx.Viper.Set(KeyOperatorAddress, operatorAddress)
+
+			upgradeVersion, err := cmd.Flags().GetString(FlagUpgradeVersion)
+			if err != nil {
+				return fmt.Errorf("failed to get upgrade-version flag: %w", err)
+			}
+			if upgradeVersion != "" {
+				serverCtx.Viper.Set(KeyUpgradeVersion, upgradeVersion)
+			}
+
 			withCmt, err := cmd.Flags().GetBool(srvflags.WithCometBFT)
 			if err != nil {
 				return fmt.Errorf("failed to get with-cometbft flag: %w", err)
@@ -105,6 +118,7 @@ The provided operatorAddress is used as the operator for the single validator in
 	}
 
 	cmd.Flags().Bool(FlagSkipConfirmation, false, "Skip the confirmation prompt")
+	cmd.Flags().String(FlagUpgradeVersion, "", "Schedule upgrade to this version (e.g., v37.0.0). If empty, no upgrade is scheduled")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.TraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().Duration(server.FlagShutdownGrace, 3*time.Second, "On Shutdown, duration to wait for resource clean up")
@@ -125,6 +139,77 @@ func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) e
 	if err != nil {
 		return fmt.Errorf("failed to update validator data: %w", err)
 	}
+	err = updateUpgradeData(svrCtx, *app)
+	if err != nil {
+		return fmt.Errorf("failed to update upgrade data: %w", err)
+	}
+	return nil
+}
+
+// updateUpgradeData schedules an upgrade if the --upgrade-version flag is provided.
+// It detects the current OS/architecture and creates download URLs for both zetacored and zetaclientd binaries.
+func updateUpgradeData(svrCtx *server.Context, app zeta.App) error {
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+
+	// Check if upgrade version flag was provided
+	upgradeVersion := svrCtx.Viper.GetString(KeyUpgradeVersion)
+	if upgradeVersion == "" {
+		svrCtx.Logger.Info("No upgrade version specified, skipping upgrade scheduling")
+		return nil
+	}
+
+	// Clear any existing upgrade plan from the source testnet
+	existingPlan, err := app.UpgradeKeeper.GetUpgradePlan(ctx)
+	if err == nil && existingPlan.Name != "" {
+		svrCtx.Logger.Info("Clearing existing upgrade plan", "name", existingPlan.Name, "height", existingPlan.Height)
+		if err := app.UpgradeKeeper.ClearUpgradePlan(ctx); err != nil {
+			return fmt.Errorf("failed to clear existing upgrade plan: %w", err)
+		}
+	}
+	appBlockHeight := svrCtx.Viper.GetInt64(KeyAppBlockedHeight)
+	upgradeHeight := appBlockHeight + 100
+
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+	platform := fmt.Sprintf("%s/%s", goos, goarch)
+
+	downloadInfo := map[string]interface{}{
+		"binaries": map[string]string{
+			platform: fmt.Sprintf(
+				"https://github.com/zeta-chain/node/releases/download/%s/zetacored-ubuntu-22-%s",
+				upgradeVersion,
+				goarch,
+			),
+			fmt.Sprintf("zetaclientd-%s", platform): fmt.Sprintf(
+				"https://github.com/zeta-chain/node/releases/download/%s/zetaclientd-ubuntu-22-%s",
+				upgradeVersion,
+				goarch,
+			),
+		},
+	}
+
+	infoBytes, err := json.Marshal(downloadInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal upgrade info: %w", err)
+	}
+
+	svrCtx.Logger.Info(
+		"Scheduling upgrade",
+		"version", upgradeVersion,
+		"height", upgradeHeight,
+		"platform", platform,
+		"info", string(infoBytes),
+	)
+
+	err = app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradetypes.Plan{
+		Name:   upgradeVersion,
+		Info:   string(infoBytes),
+		Height: upgradeHeight,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to schedule upgrade: %w", err)
+	}
+
 	return nil
 }
 

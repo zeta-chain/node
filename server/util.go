@@ -842,6 +842,8 @@ func testnetify(
 		Signature:        []byte{},
 	}
 
+	ctx.Viper.Set(KeyAppBlockedHeight, cmtState.LastBlockHeight)
+
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
 	privValidator.Reset()
