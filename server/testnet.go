@@ -13,7 +13,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -22,6 +22,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	srvflags "github.com/cosmos/evm/server/flags"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	zeta "github.com/zeta-chain/node/app"
@@ -61,24 +62,28 @@ The provided operatorAddress is used as the operator for the single validator in
 
 			_, err := server.GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
-				return fmt.Errorf("failed to get pruning options from flags: %w", err)
+				return errors.Wrap(err, "failed to get pruning options from flags")
 			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
-				return fmt.Errorf("failed to get client query context: %w", err)
+				return errors.Wrap(err, "failed to get client query context")
 			}
 
 			newChainID := args[0]
 			operatorAddress := args[1]
 
+			_, err = sdk.AccAddressFromBech32(operatorAddress)
+			if err != nil {
+				return errors.Wrap(err, "invalid operator address")
+			}
+
 			skipConfirmation, err := cmd.Flags().GetBool(FlagSkipConfirmation)
 			if err != nil {
-				return fmt.Errorf("failed to get skip-confirmation flag: %w", err)
+				return errors.Wrap(err, "failed to get skip-confirmation flag")
 			}
 
 			if !skipConfirmation {
-				// Confirmation prompt to prevent accidental modification of state.
 				reader := bufio.NewReader(os.Stdin)
 				fmt.Println(
 					"This operation will modify state in your data folder and cannot be undone. This operation also updates the configuration , so it would not work with read only file systems. Do you want to continue? (y/n)",
@@ -105,12 +110,12 @@ The provided operatorAddress is used as the operator for the single validator in
 
 			withCmt, err := cmd.Flags().GetBool(srvflags.WithCometBFT)
 			if err != nil {
-				return fmt.Errorf("failed to get with-cometbft flag: %w", err)
+				return errors.Wrap(err, "failed to get with-cometbft flag")
 			}
 
 			err = opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCmt, opts)
 			if err != nil {
-				return fmt.Errorf("failed to start command handler: %w", err)
+				return errors.Wrap(err, "failed to start command handler")
 			}
 
 			return nil
@@ -129,15 +134,15 @@ The provided operatorAddress is used as the operator for the single validator in
 func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) error {
 	app, ok := appInterface.(*zeta.App)
 	if !ok {
-		panic("expected *zeta.App")
+		return fmt.Errorf("invalid app type: %T", appInterface)
 	}
 	err := updateObserverData(svrCtx, *app)
 	if err != nil {
-		return fmt.Errorf("failed to update observer data: %w", err)
+		return errors.Wrap(err, "failed to update observer data")
 	}
 	err = updateValidatorData(svrCtx, *app)
 	if err != nil {
-		return fmt.Errorf("failed to update validator data: %w", err)
+		return errors.Wrap(err, "failed to update validator data")
 	}
 	err = updateUpgradeData(svrCtx, *app)
 	if err != nil {
@@ -236,28 +241,28 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 
 	newValPubkeyBytes, ok := svrCtx.Viper.Get(KeyValidatorConsensusPubkey).([]byte)
 	if !ok {
-		return fmt.Errorf("failed to get validator consensus pubkey as bytes")
+		return errors.New("failed to get validator consensus pubkey as bytes")
 	}
 	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
-	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
+	pubkeyAny, err := codectypes.NewAnyWithValue(pubkey)
 	if err != nil {
-		return fmt.Errorf("failed to pack pubkey into Any: %w", err)
+		return errors.Wrap(err, "failed to pack pubkey into Any")
 	}
 
 	newValAddrBytes, ok := svrCtx.Viper.Get(KeyValidatorConsensusAddr).([]byte)
 	if !ok {
-		return fmt.Errorf("failed to get validator consensus address as bytes")
+		return errors.New("failed to get validator consensus address as bytes")
 	}
 	newConsAddr := sdk.ConsAddress(newValAddrBytes)
 
 	valAddress, err := observertypes.GetOperatorAddressFromAccAddress(operatorAddrStr)
 	if err != nil {
-		return fmt.Errorf("failed to get operator address from account address: %w", err)
+		return errors.Wrap(err, "failed to get operator address from account address")
 	}
 
 	tokens, ok := math.NewIntFromString(DefaultTestnetValidatorTokes)
 	if !ok {
-		return fmt.Errorf("failed to parse tokens string to Int")
+		return errors.New("failed to parse tokens string to Int")
 	}
 
 	newVal := stakingtypes.Validator{
@@ -282,63 +287,63 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 
 	params, err := app.StakingKeeper.GetParams(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get staking params: %w", err)
+		return errors.Wrap(err, "failed to get staking params")
 	}
 
 	params.MaxValidators = 1
 	params.UnbondingTime = 5 * time.Second
 	err = app.StakingKeeper.SetParams(ctx, params)
 	if err != nil {
-		return fmt.Errorf("failed to set staking params: %w", err)
+		return errors.Wrap(err, "failed to set staking params")
 	}
 
 	stakingKey := app.GetKey(stakingtypes.ModuleName)
 	stakingStore := ctx.KVStore(stakingKey)
 	iterator, err := app.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get validators power store iterator: %w", err)
+		return errors.Wrap(err, "failed to get validators power store iterator")
 	}
 
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	if err := iterator.Close(); err != nil {
-		return fmt.Errorf("failed to close validators power store iterator: %w", err)
+		return errors.Wrap(err, "failed to close validators power store iterator")
 	}
 
 	svrCtx.Logger.Info("Cleared staking validators by power index")
 	iterator, err = app.StakingKeeper.LastValidatorsIterator(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get last validators iterator: %w", err)
+		return errors.Wrap(err, "failed to get last validators iterator")
 	}
 	for ; iterator.Valid(); iterator.Next() {
 		stakingStore.Delete(iterator.Key())
 	}
 	if err := iterator.Close(); err != nil {
-		return fmt.Errorf("failed to close last validators iterator: %w", err)
+		return errors.Wrap(err, "failed to close last validators iterator")
 	}
 
 	svrCtx.Logger.Info("Cleared staking last validator power")
 
 	err = app.StakingKeeper.SetValidator(ctx, newVal)
 	if err != nil {
-		return fmt.Errorf("failed to set validator: %w", err)
+		return errors.Wrap(err, "failed to set validator")
 	}
 	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, newVal)
 	if err != nil {
-		return fmt.Errorf("failed to set validator by consensus address: %w", err)
+		return errors.Wrap(err, "failed to set validator by consensus address")
 	}
 	err = app.StakingKeeper.SetValidatorByPowerIndex(ctx, newVal)
 	if err != nil {
-		return fmt.Errorf("failed to set validator by power index: %w", err)
+		return errors.Wrap(err, "failed to set validator by power index")
 	}
 
 	err = app.StakingKeeper.SetLastValidatorPower(ctx, valAddress, 0)
 	if err != nil {
-		return fmt.Errorf("failed to set last validator power: %w", err)
+		return errors.Wrap(err, "failed to set last validator power")
 	}
 	if err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddress); err != nil {
-		return fmt.Errorf("failed to execute after validator created hook: %w", err)
+		return errors.Wrap(err, "failed to execute after validator created hook")
 	}
 
 	err = app.DistrKeeper.SetValidatorHistoricalRewards(
@@ -348,7 +353,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to set validator historical rewards: %w", err)
+		return errors.Wrap(err, "failed to set validator historical rewards")
 	}
 	err = app.DistrKeeper.SetValidatorCurrentRewards(
 		ctx,
@@ -356,7 +361,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		distrtypes.NewValidatorCurrentRewards(sdk.DecCoins{}, 1),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to set validator current rewards: %w", err)
+		return errors.Wrap(err, "failed to set validator current rewards")
 	}
 	err = app.DistrKeeper.SetValidatorAccumulatedCommission(
 		ctx,
@@ -364,7 +369,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		distrtypes.InitialValidatorAccumulatedCommission(),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to set validator accumulated commission: %w", err)
+		return errors.Wrap(err, "failed to set validator accumulated commission")
 	}
 	err = app.DistrKeeper.SetValidatorOutstandingRewards(
 		ctx,
@@ -372,7 +377,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to set validator outstanding rewards: %w", err)
+		return errors.Wrap(err, "failed to set validator outstanding rewards")
 	}
 
 	newValidatorSigningInfo := slashingtypes.ValidatorSigningInfo{
@@ -382,17 +387,17 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 	}
 	err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, newConsAddr, newValidatorSigningInfo)
 	if err != nil {
-		return fmt.Errorf("failed to set validator signing info: %w", err)
+		return errors.Wrap(err, "failed to set validator signing info")
 	}
 
 	sp, err := app.SlashingKeeper.GetParams(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get slashing params: %w", err)
+		return errors.Wrap(err, "failed to get slashing params")
 	}
 	sp.MinSignedPerWindow = math.LegacyZeroDec()
 	err = app.SlashingKeeper.SetParams(ctx, sp)
 	if err != nil {
-		return fmt.Errorf("failed to set slashing params: %w", err)
+		return errors.Wrap(err, "failed to set slashing params")
 	}
 
 	return nil
