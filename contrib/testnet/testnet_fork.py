@@ -6,11 +6,12 @@ This script downloads testnet state, syncs for a period, then converts it to a l
 single-validator testnet for testing purposes.
 
 Run from the root zeta-node directory:
-    python3 contrib/testnet/testnet_fork.py
+    python3 contrib/testnet/testnet_fork.py [--node-version VERSION]
 Or:
     make testnet-fork
 """
 
+import argparse
 import os
 import subprocess
 import sys
@@ -22,9 +23,6 @@ from pathlib import Path
 # ============================================================================
 # Configuration Constants
 # ============================================================================
-
-# Node version to build
-NODE_VERSION = "36.0.1"
 
 # Testnet configuration
 TESTNET_CHAIN_ID = "testnet_7001-1"
@@ -113,19 +111,37 @@ def replace_in_file(file_path, search, replace):
         print(f"Error updating {file_path}: {e}")
         sys.exit(1)
 
+def extract_major_version(version):
+    """Extract major version from a version string (e.g., 'v36.0.4' -> 'v36')."""
+    # Remove 'v' prefix if present
+    if version.startswith('v'):
+        version_without_v = version[1:]
+    else:
+        version_without_v = version
+
+    # Split by '.' and take first part
+    major = version_without_v.split('.')[0]
+
+    # Return with 'v' prefix
+    return f"v{major}"
+
 # ============================================================================
 # Main Script
 # ============================================================================
 
-def main():
+def main(node_version, upgrade_version=None):
     print("=" * 80)
     print("ZetaChain Testnet Fork Script")
+    print("=" * 80)
+    print(f"Using node version: {node_version}")
+    if upgrade_version:
+        print(f"Upgrade version: {upgrade_version}")
     print("=" * 80)
 
     # Step 1: Clean and build
     print("\n[1/9] Cleaning and building zetacored...")
     run_command("make clean")
-    run_command(f"NODE_VERSION={NODE_VERSION} make install")
+    run_command(f"NODE_VERSION={node_version} make install")
 
     # Step 2: Initialize node
     print("\n[2/9] Initializing zetacored...")
@@ -261,11 +277,53 @@ def main():
     # Step 9: Run testnet command
     print("\n[9/9] Running testnet command to modify state...")
     testnet_cmd = f"zetacored testnet {TESTNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
-    run_command(testnet_cmd)
+    if upgrade_version:
+        # Extract major version (e.g., v36.0.4 -> v36) to match handler name
+        upgrade_handler_version = extract_major_version(upgrade_version)
+        testnet_cmd += f" --upgrade-version {upgrade_handler_version}"
+        print(f"Scheduling upgrade to version: {upgrade_version} (handler: {upgrade_handler_version})")
+
+    # Run testnet command in background if upgrade version is provided (for testing)
+    if upgrade_version:
+        print(f"Running: {testnet_cmd}")
+        test_log_file = open(HOME_DIR / "zetacored_testnet.log", 'w')
+        test_process = subprocess.Popen(
+            testnet_cmd,
+            shell=True,
+            stdout=test_log_file,
+            stderr=subprocess.STDOUT
+        )
+        print(f"Started zetacored testnet with PID: {test_process.pid}")
+        print("Waiting 30 seconds...")
+        time.sleep(30)
+
+        print("Killing testnet node...")
+        test_process.kill()
+        test_process.wait()
+        test_log_file.close()
+        print(f"Testnet logs: {HOME_DIR / 'zetacored_testnet.log'}")
+    else:
+        run_command(testnet_cmd)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Fork testnet state to create a local single-validator testnet",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--node-version",
+        required=True,
+        help="Node version to build (e.g., 36.0.1)"
+    )
+    parser.add_argument(
+        "--upgrade-version",
+        default=None,
+        help="Schedule an upgrade to this version (e.g., v36.0.4). If not provided, no upgrade is scheduled."
+    )
+    args = parser.parse_args()
+
     try:
-        main()
+        main(args.node_version, args.upgrade_version)
     except KeyboardInterrupt:
         print("\n\nScript interrupted by user. Exiting...")
         sys.exit(1)

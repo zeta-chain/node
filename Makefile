@@ -11,6 +11,9 @@ DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
+OLD_VERSION := v36.0.1
+OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
+UPGRADE_VERSION := v37.0.0
 
 # common goreaser command definition
 GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
@@ -150,7 +153,11 @@ test-cctx:
 
 testnet-fork:
 	@echo "--> Running testnet fork script..."
-	@python3 contrib/testnet/testnet_fork.py
+	@python3 contrib/testnet/testnet_fork.py --node-version $(OLD_VERSION:v%=%)
+
+testnet-fork-upgrade:
+	@echo "--> Running testnet fork script with upgrade..."
+	@python3 contrib/testnet/testnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(UPGRADE_VERSION)
 
 ###############################################################################
 ###                                 Linting            	                    ###
@@ -375,7 +382,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v36' \
+		--build-arg OLD_VERSION='release/$(OLD_VERSION_MAJOR)' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
@@ -383,7 +390,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v36.0.1' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_VERSION)' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
