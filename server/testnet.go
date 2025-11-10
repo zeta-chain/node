@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -159,7 +159,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return errors.New("failed to get validator consensus pubkey as bytes")
 	}
 	pubkey := &ed25519.PubKey{Key: newValPubkeyBytes}
-	pubkeyAny, err := types2.NewAnyWithValue(pubkey)
+	pubkeyAny, err := codectypes.NewAnyWithValue(pubkey)
 	if err != nil {
 		return errors.Wrap(err, "failed to pack pubkey into Any")
 	}
