@@ -68,13 +68,17 @@ The provided operatorAddress is used as the operator for the single validator in
 			newChainID := args[0]
 			operatorAddress := args[1]
 
+			_, err = sdk.AccAddressFromBech32(operatorAddress)
+			if err != nil {
+				return fmt.Errorf("invalid operator address: %w", err)
+			}
+
 			skipConfirmation, err := cmd.Flags().GetBool(FlagSkipConfirmation)
 			if err != nil {
 				return fmt.Errorf("failed to get skip-confirmation flag: %w", err)
 			}
 
 			if !skipConfirmation {
-				// Confirmation prompt to prevent accidental modification of state.
 				reader := bufio.NewReader(os.Stdin)
 				fmt.Println(
 					"This operation will modify state in your data folder and cannot be undone. This operation also updates the configuration , so it would not work with read only file systems. Do you want to continue? (y/n)",
