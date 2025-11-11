@@ -159,6 +159,10 @@ testnet-fork-upgrade:
 	@echo "--> Running testnet fork script with upgrade..."
 	@python3 contrib/testnet/testnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(UPGRADE_VERSION)
 
+download-snapshot:
+	@echo "--> Downloading and caching testnet snapshot..."
+	@python3 contrib/testnet/download_snapshot.py
+
 ###############################################################################
 ###                                 Linting            	                    ###
 ###############################################################################
