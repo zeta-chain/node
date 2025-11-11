@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Testnet Fork Script
-===================
+Devnet Fork Script
+==================
 This script downloads testnet state, syncs for a period, then converts it to a local
-single-validator testnet for testing purposes.
+single-validator devnet for testing purposes.
 
 Run from the root zeta-node directory:
-    python3 contrib/testnet/testnet_fork.py
+    python3 contrib/devnet/devnet_fork.py
 Or:
-    make testnet-fork
+    make devnet-fork
 """
 
 import os
@@ -26,11 +26,11 @@ from pathlib import Path
 # Node version to build
 NODE_VERSION = "36.0.1"
 
-# Testnet configuration
-TESTNET_CHAIN_ID = "testnet_7001-1"
+# Devnet configuration (forked from Athens3 testnet)
+DEVNET_CHAIN_ID = "devnet_70000-1"
 OPERATOR_ADDRESS = "zeta13l7ladn2crrdcl9nupqn5kzyajcn03lkzgnrze"
 
-# Athens3 testnet config URLs
+# Athens3 testnet config URLs (source network for fork)
 ATHENS3_CONFIG_BASE = "https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3"
 ATHENS3_GENESIS_URL = f"{ATHENS3_CONFIG_BASE}/genesis.json"
 ATHENS3_CLIENT_URL = f"{ATHENS3_CONFIG_BASE}/client.toml"
@@ -48,7 +48,7 @@ SHUTDOWN_WAIT_SECONDS = 5
 HOME_DIR = Path.home()
 ZETACORED_DIR = HOME_DIR / ".zetacored"
 ZETACORED_CONFIG_DIR = ZETACORED_DIR / "config"
-ZETACORED_LOG_FILE = HOME_DIR / "zetacored_testnet_fork.log"
+ZETACORED_LOG_FILE = HOME_DIR / "zetacored_devnet_fork.log"
 
 # ============================================================================
 # Helper Functions
@@ -119,7 +119,7 @@ def replace_in_file(file_path, search, replace):
 
 def main():
     print("=" * 80)
-    print("ZetaChain Testnet Fork Script")
+    print("ZetaChain Devnet Fork Script")
     print("=" * 80)
 
     # Step 1: Clean and build
@@ -132,7 +132,7 @@ def main():
     run_command("zetacored init test --chain-id=athens_7001-1")
 
     # Step 3: Download config files
-    print("\n[3/9] Downloading Athens3 testnet configuration...")
+    print("\n[3/9] Downloading Athens3 configuration...")
     download_file(ATHENS3_GENESIS_URL, ZETACORED_CONFIG_DIR / "genesis.json")
     download_file(ATHENS3_CLIENT_URL, ZETACORED_CONFIG_DIR / "client.toml")
     download_file(ATHENS3_CONFIG_URL, ZETACORED_CONFIG_DIR / "config.toml")
@@ -143,10 +143,10 @@ def main():
     external_ip = get_external_ip()
     config_file = ZETACORED_CONFIG_DIR / "config.toml"
     replace_in_file(config_file, "{YOUR_EXTERNAL_IP_ADDRESS_HERE}", external_ip)
-    replace_in_file(config_file, "{MONIKER}", "testNode")
+    replace_in_file(config_file, "{MONIKER}", "devNode")
 
     # Step 5: Download and extract snapshot
-    print("\n[5/9] Downloading testnet snapshot...")
+    print("\n[5/9] Downloading snapshot...")
     try:
         snapshot_json = requests.get(SNAPSHOT_JSON_URL, timeout=30).json()
         snapshot_link = snapshot_json['snapshots'][0]['link']
@@ -258,10 +258,10 @@ def main():
     print(f"Waiting {SHUTDOWN_WAIT_SECONDS} seconds for clean shutdown...")
     time.sleep(SHUTDOWN_WAIT_SECONDS)
 
-    # Step 9: Run testnet command
-    print("\n[9/9] Running testnet command to modify state...")
-    testnet_cmd = f"zetacored testnet {TESTNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
-    run_command(testnet_cmd)
+    # Step 9: Run devnet command
+    print("\n[9/9] Running devnet command to modify state...")
+    devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
+    run_command(devnet_cmd)
 
 if __name__ == "__main__":
     try:

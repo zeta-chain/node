@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	KeyIsTestnet                = "is-testnet"
+	KeyIsDevnet                 = "is-devnet"
 	KeyNewChainID               = "new-chain-ID"
 	KeyValidatorConsensusAddr   = "validator-consensus-address"
 	KeyValidatorConsensusPubkey = "validator-consensus-pubkey"
@@ -223,8 +223,8 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(server.FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(server.FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
-	cmd.Flags().Bool(KeyIsTestnet, false, "Enable testnet mode to fork from existing state")
-	cmd.Flags().String(KeyNewChainID, "", "New chain ID to use when running in testnet mode")
+	cmd.Flags().Bool(KeyIsDevnet, false, "Enable devnet mode to fork from existing state")
+	cmd.Flags().String(KeyNewChainID, "", "New chain ID to use when running in devnet mode")
 
 	if opts.AddFlags != nil {
 		opts.AddFlags(cmd)

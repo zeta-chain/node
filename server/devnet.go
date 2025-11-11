@@ -27,31 +27,31 @@ import (
 )
 
 const (
-	DefaultTestnetValidatorTokes = "30000000000000000000000"
-	DefaultDelegatorShares       = "30000000000000000000000.000000000000000"
+	DefaultDevnetValidatorTokes = "30000000000000000000000"
+	DefaultDelegatorShares      = "30000000000000000000000.000000000000000"
 )
 
-func TestNetCmd(appCreator types.AppCreator) *cobra.Command {
-	return TestnetCmdWithOptions(appCreator, StartCmdOptions{
+func DevNetCmd(appCreator types.AppCreator) *cobra.Command {
+	return DevnetCmdWithOptions(appCreator, StartCmdOptions{
 		DBOpener:            openDB,
 		StartCommandHandler: start,
 	})
 }
 
-// TestnetCmdWithOptions creates a command that modifies the local state to create a testnet fork.
+// DevnetCmdWithOptions creates a command that modifies the local state to create a devnet fork.
 // After running this command, the network can be started with the regular start command.
-func TestnetCmdWithOptions(testnetAppCreator types.AppCreator, opts StartCmdOptions) *cobra.Command {
+func DevnetCmdWithOptions(devnetAppCreator types.AppCreator, opts StartCmdOptions) *cobra.Command {
 	if opts.DBOpener == nil || opts.StartCommandHandler == nil {
 		panic("DBOpener and StartCommandHandler must be provided")
 	}
 
 	cmd := &cobra.Command{
-		Use:   "testnet [newChainID] [operatorAddress]",
-		Short: "Modify state to create testnet from current local data",
-		Long: `Modify state to create a testnet from current local state. This will set the chain ID to the provided newChainID.
+		Use:   "devnet [newChainID] [operatorAddress]",
+		Short: "Modify state to create devnet from current local data",
+		Long: `Modify state to create a devnet from current local state. This will set the chain ID to the provided newChainID.
 The provided operatorAddress is used as the operator for the single validator in this network. The existing node key is reused.
 `,
-		Example: "zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+		Example: "zetacored devnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
@@ -92,7 +92,7 @@ The provided operatorAddress is used as the operator for the single validator in
 				}
 			}
 
-			serverCtx.Viper.Set(KeyIsTestnet, true)
+			serverCtx.Viper.Set(KeyIsDevnet, true)
 			serverCtx.Viper.Set(KeyNewChainID, newChainID)
 			serverCtx.Viper.Set(KeyOperatorAddress, operatorAddress)
 			withCmt, err := cmd.Flags().GetBool(srvflags.WithCometBFT)
@@ -100,7 +100,7 @@ The provided operatorAddress is used as the operator for the single validator in
 				return errors.Wrap(err, "failed to get with-cometbft flag")
 			}
 
-			err = opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCmt, opts)
+			err = opts.StartCommandHandler(serverCtx, clientCtx, devnetAppCreator, withCmt, opts)
 			if err != nil {
 				return errors.Wrap(err, "failed to start command handler")
 			}
@@ -117,7 +117,7 @@ The provided operatorAddress is used as the operator for the single validator in
 	return cmd
 }
 
-func initAppForTestnet(svrCtx *server.Context, appInterface types.Application) error {
+func initAppForDevnet(svrCtx *server.Context, appInterface types.Application) error {
 	app, ok := appInterface.(*zeta.App)
 	if !ok {
 		return fmt.Errorf("invalid app type: %T", appInterface)
@@ -175,7 +175,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		return errors.Wrap(err, "failed to get operator address from account address")
 	}
 
-	tokens, ok := math.NewIntFromString(DefaultTestnetValidatorTokes)
+	tokens, ok := math.NewIntFromString(DefaultDevnetValidatorTokes)
 	if !ok {
 		return errors.New("failed to parse tokens string to Int")
 	}
@@ -188,7 +188,7 @@ func updateValidatorData(svrCtx *server.Context, app zeta.App) error {
 		Tokens:          tokens,
 		DelegatorShares: math.LegacyMustNewDecFromStr(DefaultDelegatorShares),
 		Description: stakingtypes.Description{
-			Moniker: "Testnet Validator",
+			Moniker: "Devnet Validator",
 		},
 		Commission: stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{

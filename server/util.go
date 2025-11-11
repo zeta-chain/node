@@ -229,23 +229,23 @@ func setupApp(
 	}
 
 	var app types.Application
-	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		svrCtx.Logger.Info("starting in testnet mode, applying testnetify")
-		app, err = testnetify(svrCtx, appCreator, db, traceWriter)
+	if isDevnet, ok := svrCtx.Viper.Get(KeyIsDevnet).(bool); ok && isDevnet {
+		svrCtx.Logger.Info("starting in devnet mode, applying devnetify")
+		app, err = devnetify(svrCtx, appCreator, db, traceWriter)
 		if err != nil {
 			traceCleanupFn()
 			if closeErr := db.Close(); closeErr != nil {
-				svrCtx.Logger.Error("error closing db after testnetify failure", "error", closeErr)
+				svrCtx.Logger.Error("error closing db after devnetify failure", "error", closeErr)
 			}
-			return nil, nil, fmt.Errorf("failed to testnetify: %w", err)
+			return nil, nil, fmt.Errorf("failed to devnetify: %w", err)
 		}
-		err := initAppForTestnet(svrCtx, app)
+		err := initAppForDevnet(svrCtx, app)
 		if err != nil {
 			traceCleanupFn()
 			if closeErr := db.Close(); closeErr != nil {
-				svrCtx.Logger.Error("error closing db after testnetify failure", "error", closeErr)
+				svrCtx.Logger.Error("error closing db after devnetify failure", "error", closeErr)
 			}
-			return nil, nil, fmt.Errorf("failed to init app for testnet: %w", err)
+			return nil, nil, fmt.Errorf("failed to init app for devnet: %w", err)
 		}
 	} else {
 		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
@@ -685,12 +685,12 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	return config.OpenDB(server.NewDefaultContext().Viper, rootDir, backendType)
 }
 
-// testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
+// devnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
 // this function focuses on modifying the CometBFT state to match the new chainID and validator info.
-func testnetify(
+func devnetify(
 	ctx *server.Context,
-	testnetAppCreator types.AppCreator,
+	devnetAppCreator types.AppCreator,
 	db dbm.DB,
 	traceWriter io.WriteCloser,
 ) (types.Application, error) {
@@ -770,12 +770,12 @@ func testnetify(
 	// This is used later when modifying the application state.
 	ctx.Viper.Set(KeyValidatorConsensusAddr, validatorAddress.Bytes())
 	ctx.Viper.Set(KeyValidatorConsensusPubkey, userPubKey.Bytes())
-	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
+	devnetApp := devnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	// We need to create a temporary proxyApp to get the initial state of the application.
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.
 	// This height difference changes how we go about modifying the state.
-	cmtApp := server.NewCometABCIWrapper(testnetApp)
+	cmtApp := server.NewCometABCIWrapper(devnetApp)
 	_, proxyAppContext := getCtx(ctx, true)
 
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
@@ -932,7 +932,7 @@ func testnetify(
 		return nil, err
 	}
 
-	return testnetApp, err
+	return devnetApp, err
 }
 
 func GenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
