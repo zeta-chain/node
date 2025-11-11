@@ -51,7 +51,8 @@ func (signer *Signer) signGatewayExecute(
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign execute error")
@@ -91,7 +92,8 @@ func (signer *Signer) signGatewayExecuteRevert(
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign executeRevert error")
@@ -121,7 +123,8 @@ func (signer *Signer) signERC20CustodyWithdraw(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdraw error")
@@ -146,7 +149,8 @@ func (signer *Signer) signZetaConnectorWithdraw(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdraw error")
@@ -189,7 +193,8 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndCall error")
@@ -233,7 +238,8 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndRevert error")
@@ -270,7 +276,8 @@ func (signer *Signer) signZetaConnectorWithdrawRevert(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndRevert error")

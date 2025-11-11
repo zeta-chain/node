@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -23,6 +24,8 @@ type EVM struct {
 	scheduler *scheduler.Scheduler
 	observer  *observer.Observer
 	signer    *signer.Signer
+
+	nextNonce uint64
 }
 
 const (
@@ -72,6 +75,16 @@ func (e *EVM) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(e.observer.ChainParams().OutboundTicker)
 	})
 
+	// TSS keysign interval is based on Zeta block height, so we use different ticker interval
+	// values for localnet and live networks in order to hit every Zeta block height
+	blockTime := constant.ZetaBlockTime
+	if e.observer.Chain().NetworkType == chains.NetworkType_privnet {
+		blockTime = constant.ZetaBlockTimeLocalnet
+	}
+	optKeysignInterval := scheduler.IntervalUpdater(func() time.Duration {
+		return blockTime / 2
+	})
+
 	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(e.observer.Observer, app) })
 	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(e.observer.Observer, app) })
 	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(e.observer.Observer, app) })
@@ -96,6 +109,9 @@ func (e *EVM) Start(ctx context.Context) error {
 	// CCTX Scheduler
 	register(e.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
 
+	// TSS keysign scheduler
+	register(e.scheduleKeysign, "schedule_keysign", optKeysignInterval, optOutboundSkipper)
+
 	return nil
 }
 
@@ -108,6 +124,101 @@ func (e *EVM) group() scheduler.Group {
 	return scheduler.Group(
 		fmt.Sprintf("evm:%d", e.observer.Chain().ChainId),
 	)
+}
+
+// scheduleKeysign schedules keysign for outbound transactions
+func (e *EVM) scheduleKeysign(ctx context.Context) error {
+	zetaHeight, err := e.observer.ZetaRepo().GetBlockHeight(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta height")
+	}
+
+	// zetaBlock, _, err := scheduler.BlockFromContextWithDelay(ctx)
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to get zeta block from context")
+	// }
+
+	// if zetaBlock.Block.Height != zetaHeight {
+	// 	e.signer.Logger().Std.Info().Int64("block_height", zetaBlock.Block.Height).Int64("zeta_height", zetaHeight).Msg("block height mismatch")
+	// 	return nil
+	// }
+
+	// // keysign only when zeta height is a multiple of the schedule interval
+	// scheduleInterval := e.observer.ChainParams().OutboundScheduleInterval
+	// if zetaHeight%scheduleInterval != 0 {
+	// 	return nil
+	// }
+
+	// // query pending cctxs
+	// cctxList, err := e.observer.ZetaRepo().GetPendingCCTXs(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if len(cctxList) == 0 {
+	// 	return nil
+	// }
+
+	// // read real-time TSS nonce from connected chain
+	// nextNonce, err := e.signer.NextNonce(ctx)
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to get next nonce")
+	// }
+
+	// for critical pending outbound we reduce re-try interval
+	//criticalInterval := uint64(10)
+
+	// #nosec G115 always in range
+	// zetaHeight := uint64(zetaBlock.Block.Height)
+
+	// considering confirmation lag, the first CCTX's nonce usually lower than actual TSS nonce,
+	// so it makes more sense to consider real-time TSS nonce as the starting point for keysign.
+	// This may happen when signers are not in sync with the signed flags for each digest batch
+	// due to keysign p2p network errors or other reasons (e.g. offline), but the real-time TSS
+	// nonce is always up
+
+	// get digest batches to sign
+	batches := e.signer.GetDigestBatches()
+
+	if len(batches) > 0 {
+		e.signer.Logger().Std.Info().Int("num_batches", len(batches)).Msg("got digest batches to sign")
+	}
+
+	// locate first unsigned batch as the starting point for keysign, please note that:
+	// 1. there should always be >= 2/3 of signers have cached signatures for any signed batch
+	// 2. as far as one of the signers has cached signatures for a batch, tx can be processed, no worries
+	// 3. when looping through, if a batch isn't signed by 2/3 of the signers, the keysign will start from there
+	firstUnsignedBatchIndex := -1
+	for i, batch := range batches {
+		if !e.signer.IsBatchSigned(batch.BatchNonce()) {
+			firstUnsignedBatchIndex = i
+			break
+		}
+	}
+	// return if all batches were signed
+	if firstUnsignedBatchIndex == -1 {
+		return nil
+	}
+
+	// sign batches from the first unsigned to the last batch sequentially
+	for i := firstUnsignedBatchIndex; i < len(batches); i++ {
+		batch := batches[i]
+		if err := e.signer.SignBatch(ctx, batch, zetaHeight, false); err != nil {
+			return errors.Wrapf(err, "break batch keysign: %d", batch.BatchNonce())
+		}
+
+		// // if the next TSS nonce falls within the batch range, it's a critical batch
+		// criticalBatch := firstNonce >= batch.NonceLow() && firstNonce <= batch.NonceHigh()
+		// if criticalBatch {
+		// 	scheduleInterval = criticalInterval
+		// }
+
+		// if batch.BatchNonce()%scheduleInterval == zetaHeight%scheduleInterval {
+		// 	go e.signer.SignBatch(ctx, batch, zetaHeight, false)
+		// }
+	}
+
+	return nil
 }
 
 // scheduleCCTX schedules outbound transactions on each zeta block.
@@ -133,13 +244,13 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		lookahead = e.observer.ChainParams().OutboundScheduleLookahead
 
 		// #nosec G115 positive
-		scheduleInterval = uint64(e.observer.ChainParams().OutboundScheduleInterval)
+		//scheduleInterval = uint64(e.observer.ChainParams().OutboundScheduleInterval)
 
 		// for critical pending outbound we reduce re-try interval
-		criticalInterval = uint64(10)
+		//criticalInterval = uint64(10)
 
 		// for non-critical pending outbound we increase re-try interval
-		nonCriticalInterval = scheduleInterval * 2
+		//nonCriticalInterval = scheduleInterval * 2
 
 		// #nosec G115 always in range
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
@@ -150,15 +261,24 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		return err
 	}
 
-	trackerSet, err := e.getTrackerSet(ctx)
+	nextNonce, err := e.signer.NextNonce(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get tracker set")
+		return errors.Wrap(err, "unable to get next nonce")
 	}
+	if nextNonce > e.nextNonce {
+		e.nextNonce = nextNonce
+		e.observer.Logger().Outbound.Info().Msgf("next nonce increased to %d", e.nextNonce)
+	}
+
+	// trackerSet, err := e.getTrackerSet(ctx)
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to get tracker set")
+	// }
 
 	for idx, cctx := range cctxList {
 		var (
-			params     = cctx.GetCurrentOutboundParam()
-			nonce      = params.TssNonce
+			params = cctx.GetCurrentOutboundParam()
+			//nonce      = params.TssNonce
 			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
@@ -175,51 +295,55 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			)
 		}
 
+		// if next nonce is higher than cctx's nonce, it means the outbound is already processed
 		// vote outbound if it's already confirmed
-		continueKeysign, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx)
-		switch {
-		case err != nil:
-			e.outboundLogger(outboundID).Error().
-				Err(err).
-				Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
-			continue
-		case !continueKeysign:
-			e.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
-			continue
-		case e.signer.IsOutboundActive(outboundID):
-			// outbound is already being processed
-			continue
+		if params.TssNonce < nextNonce {
+			// vote outbound if it's already confirmed
+			continueKeysign, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx)
+			switch {
+			case err != nil:
+				e.outboundLogger(outboundID).Error().
+					Err(err).
+					Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
+				continue
+			case !continueKeysign:
+				e.outboundLogger(outboundID).Debug().Msg("schedule CCTX: outbound already processed")
+				continue
+			case e.signer.IsOutboundActive(outboundID):
+				// outbound is already being processed
+				continue
+			}
 		}
 
 		// determining critical outbound; if it satisfies following criteria
 		// 1. it's the first pending outbound for this chain
 		// 2. the following 5 nonces have been in tracker
-		if nonce%criticalInterval == zetaHeight%criticalInterval {
-			count := 0
-			for i := nonce + 1; i <= nonce+10; i++ {
-				if _, found := trackerSet[i]; found {
-					count++
-				}
-			}
-			if count >= 5 {
-				scheduleInterval = criticalInterval
-			}
-		}
+		// if nonce%criticalInterval == zetaHeight%criticalInterval {
+		// 	count := 0
+		// 	for i := nonce + 1; i <= nonce+10; i++ {
+		// 		if _, found := trackerSet[i]; found {
+		// 			count++
+		// 		}
+		// 	}
+		// 	if count >= 5 {
+		// 		scheduleInterval = criticalInterval
+		// 	}
+		// }
 
-		// if it's already in tracker, we increase re-try interval
-		if _, ok := trackerSet[nonce]; ok {
-			scheduleInterval = nonCriticalInterval
-		}
+		// // if it's already in tracker, we increase re-try interval
+		// if _, ok := trackerSet[nonce]; ok {
+		// 	scheduleInterval = nonCriticalInterval
+		// }
 
 		// otherwise, the normal interval is used
-		if nonce%scheduleInterval == zetaHeight%scheduleInterval {
-			go e.signer.TryProcessOutbound(
-				ctx,
-				cctx,
-				e.observer.ZetaRepo(),
-				zetaHeight,
-			)
-		}
+		//if nonce%scheduleInterval == zetaHeight%scheduleInterval {
+		go e.signer.TryProcessOutbound(
+			ctx,
+			cctx,
+			e.observer.ZetaRepo(),
+			zetaHeight,
+		)
+		//}
 
 		// #nosec G115 always in range
 		// only look at 'lookahead' cctxs per chain

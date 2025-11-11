@@ -60,7 +60,8 @@ func (signer *Signer) signWhitelistERC20Cmd(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign whitelist error")
@@ -101,7 +102,8 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signMigrateERC20CustodyFundsCmd error")
@@ -145,7 +147,8 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signUpdateERC20CustodyPauseStatusCmd error")
@@ -162,7 +165,8 @@ func (signer *Signer) signMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
+		txData.zetaHeight,
+		txData.cctxHeight,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signMigrateTssFundsCmd error")
