@@ -505,7 +505,8 @@ func setupCPUProfiling(svrCtx *server.Context) error {
 
 	svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 	if err := pprof.StartCPUProfile(f); err != nil {
-		f.Close()
+		// we can ignore the close error here as this is used just for the cleanup
+		_ = f.Close()
 		return fmt.Errorf("failed to start cpu profile: %w", err)
 	}
 
