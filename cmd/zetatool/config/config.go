@@ -33,7 +33,7 @@ func TestnetConfig() *Config {
 		ArbitrumRPC:  "https://sepolia-rollup.arbitrum.io/rpc",
 		OptimismRPC:  "https://sepolia.optimism.io",
 		AvalancheRPC: "https://avalanche-fuji-c-chain-rpc.publicnode.com",
-		WorldRPC:     "",
+		WorldRPC:     "https://worldchain-sepolia.g.alchemy.com/public",
 	}
 }
 
@@ -72,7 +72,7 @@ func MainnetConfig() *Config {
 		ArbitrumRPC:  "https://arb1.arbitrum.io/rpc",
 		OptimismRPC:  "https://mainnet.optimism.io",
 		AvalancheRPC: "https://api.avax.network/ext/bc/C/rpc",
-		WorldRPC:     "",
+		WorldRPC:     "https://worldchain-mainnet.g.alchemy.com/public",
 	}
 }
 

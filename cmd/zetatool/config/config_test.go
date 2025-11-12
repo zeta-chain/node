@@ -57,3 +57,25 @@ func TestGetConfig(t *testing.T) {
 		require.Equal(t, "https://zetachain-testnet-grpc.itrocket.net:443", cfg.ZetaChainRPC)
 	})
 }
+
+func TestWorldRPCConfig(t *testing.T) {
+	t.Run("TestnetConfig has World RPC", func(t *testing.T) {
+		cfg := config.TestnetConfig()
+		require.Equal(t, "https://worldchain-sepolia.g.alchemy.com/public", cfg.WorldRPC)
+	})
+
+	t.Run("MainnetConfig has World RPC", func(t *testing.T) {
+		cfg := config.MainnetConfig()
+		require.Equal(t, "https://worldchain-mainnet.g.alchemy.com/public", cfg.WorldRPC)
+	})
+
+	t.Run("DevnetConfig has empty World RPC", func(t *testing.T) {
+		cfg := config.DevnetConfig()
+		require.Equal(t, "", cfg.WorldRPC)
+	})
+
+	t.Run("PrivateNetConfig has empty World RPC", func(t *testing.T) {
+		cfg := config.PrivateNetConfig()
+		require.Equal(t, "", cfg.WorldRPC)
+	})
+}
