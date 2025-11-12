@@ -9835,7 +9835,8 @@ zetacored testnet [newChainID] [operatorAddress] [flags]
 ### Examples
 
 ```
-zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
+  zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
+  					zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax --upgrade-version v37.0.0
 ```
 
 ### Options
@@ -9845,6 +9846,7 @@ zetacored testnet testnet_7001-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
       --shutdown-grace duration   On Shutdown, duration to wait for resource clean up (default 3s)
       --skip-confirmation         Skip the confirmation prompt
       --trace-store string        Enable KVStore tracing to an output file
+      --upgrade-version string    Schedule upgrade to this version (e.g., v37.0.0). If empty, no upgrade is scheduled
       --with-cometbft             Run abci app embedded in-process with CometBFT (default true)
 ```
 

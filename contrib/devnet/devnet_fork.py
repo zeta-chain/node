@@ -259,7 +259,7 @@ def main():
     time.sleep(SHUTDOWN_WAIT_SECONDS)
 
     # Step 9: Run devnet command
-    print("\n[9/9] Running devnet command to modify state...")
+    print("\n[9/9] Running devnet command to modify state and start the network")
     devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
     run_command(devnet_cmd)
 
