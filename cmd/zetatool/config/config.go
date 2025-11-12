@@ -30,6 +30,10 @@ func TestnetConfig() *Config {
 		BscRPC:       "https://bsc-testnet-rpc.publicnode.com",
 		PolygonRPC:   "https://polygon-amoy.gateway.tenderly.com",
 		BaseRPC:      "https://base-sepolia-rpc.publicnode.com",
+		ArbitrumRPC:  "https://sepolia-rollup.arbitrum.io/rpc",
+		OptimismRPC:  "https://sepolia.optimism.io",
+		AvalancheRPC: "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+		WorldRPC:     "https://worldchain-sepolia.g.alchemy.com/public",
 	}
 }
 
@@ -46,6 +50,9 @@ func DevnetConfig() *Config {
 		BscRPC:       "",
 		PolygonRPC:   "",
 		BaseRPC:      "",
+		OptimismRPC:  "",
+		AvalancheRPC: "",
+		WorldRPC:     "",
 	}
 }
 
@@ -62,6 +69,10 @@ func MainnetConfig() *Config {
 		BaseRPC:      "https://base-mainnet.public.blastapi.io",
 		BscRPC:       "https://bsc-mainnet.public.blastapi.io",
 		PolygonRPC:   "https://polygon-rpc.com/",
+		ArbitrumRPC:  "https://arb1.arbitrum.io/rpc",
+		OptimismRPC:  "https://mainnet.optimism.io",
+		AvalancheRPC: "https://api.avax.network/ext/bc/C/rpc",
+		WorldRPC:     "https://worldchain-mainnet.g.alchemy.com/public",
 	}
 }
 
@@ -92,6 +103,10 @@ type Config struct {
 	BscRPC       string `json:"bsc_rpc"`
 	PolygonRPC   string `json:"polygon_rpc"`
 	BaseRPC      string `json:"base_rpc"`
+	ArbitrumRPC  string `json:"arbitrum_rpc"`
+	OptimismRPC  string `json:"optimism_rpc"`
+	AvalancheRPC string `json:"avalanche_rpc"`
+	WorldRPC     string `json:"world_rpc"`
 }
 
 func (c *Config) Save() error {

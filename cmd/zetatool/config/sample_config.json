@@ -9,5 +9,9 @@
   "solana_rpc": "",
   "bsc_rpc": "https://bsc-testnet-rpc.publicnode.com",
   "polygon_rpc": "https://polygon-amoy.gateway.tenderly.com",
-  "base_rpc": "https://base-sepolia-rpc.publicnode.com"
+  "base_rpc": "https://base-sepolia-rpc.publicnode.com",
+  "arbitrum_rpc": "https://sepolia-rollup.arbitrum.io/rpc",
+  "optimism_rpc": "https://sepolia.optimism.io",
+  "avalanche_rpc": "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+  "world_rpc": "https://worldchain-sepolia.g.alchemy.com/public"
 }
