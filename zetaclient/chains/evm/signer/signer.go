@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -39,8 +40,13 @@ const (
 	broadcastTimeout = time.Second * 15
 )
 
-// zeroValue is for outbounds that carry no ETH (gas token) value
-var zeroValue = big.NewInt(0)
+var (
+	// zeroValue is for outbounds that carry no ETH (gas token) value
+	zeroValue = big.NewInt(0)
+
+	// ErrWaitForSignature is the error returned when waiting for signature of a tx
+	ErrWaitForSignature = errors.New("waiting for signature of a tx")
+)
 
 type EVMClient interface {
 	NonceAt(_ context.Context, account ethcommon.Address, blockNumber *big.Int) (uint64, error)
@@ -155,10 +161,21 @@ func (signer *Signer) GetGatewayAddress() string {
 	return signer.gatewayAddress.String()
 }
 
+// NextNonce returns the next outbound's nonce of the TSS account
+func (signer *Signer) NextNonce(ctx context.Context) (uint64, error) {
+	nextNonce, err := signer.evmClient.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to get TSS account nonce")
+	}
+
+	metrics.NextTSSNonce.WithLabelValues(signer.Chain().Name).Set(float64(nextNonce))
+	return nextNonce, nil
+}
+
 // Sign given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
 func (signer *Signer) Sign(
-	ctx context.Context,
+	_ context.Context,
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -174,9 +191,13 @@ func (signer *Signer) Sign(
 
 	hashBytes := signer.evmClient.Signer().Hash(tx).Bytes()
 
-	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to sign tx")
+	// add digest to cache
+	signer.AddKeysignInfo(nonce, height, ethcommon.BytesToHash(hashBytes))
+
+	// get cached signature if available
+	sig, found := signer.GetSignature(nonce)
+	if !found {
+		return nil, nil, nil, errors.Wrapf(ErrWaitForSignature, "signature not available")
 	}
 
 	_, err = crypto.SigToPub(hashBytes, sig[:])
@@ -243,7 +264,7 @@ func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
 	zetaRepo *zrepo.ZetaRepo,
-	height uint64,
+	_ uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
 	signer.MarkOutbound(outboundID, true)
@@ -274,7 +295,7 @@ func (signer *Signer) TryProcessOutbound(
 			Str("signer", myID).
 			Logger()
 	)
-	logger.Info().Msg("TryProcessOutbound")
+	logger.Debug().Msg("TryProcessOutbound")
 
 	// retrieve app context
 	app, err := zctx.FromContext(ctx)
@@ -284,7 +305,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// Setup Transaction input
-	txData, skipTx, err := NewOutboundData(ctx, cctx, height, logger)
+	txData, skipTx, err := NewOutboundData(ctx, cctx, logger)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -326,7 +347,9 @@ func (signer *Signer) TryProcessOutbound(
 		zetaRepo,
 		toChain,
 	)
-	if err != nil {
+	if errors.Is(err, ErrWaitForSignature) {
+		return
+	} else if err != nil {
 		logger.Err(err).Msg("error signing outbound")
 		return
 	}

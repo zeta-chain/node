@@ -53,7 +53,6 @@ type OutboundData struct {
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	height uint64,
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
 	if cctx == nil {
@@ -141,7 +140,7 @@ func NewOutboundData(
 
 		gas:    gas,
 		nonce:  outboundParams.TssNonce,
-		height: height,
+		height: cctx.InboundParams.ObservedExternalHeight,
 
 		message: message,
 

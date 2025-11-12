@@ -32,9 +32,15 @@ type Signer struct {
 
 	activeOutbounds map[string]time.Time
 
+	// tssKeysignInfoMap maps nonce to TSS keysign information to be signed
+	tssKeysignInfoMap map[uint64]*tssKeysignInfo
+
+	// signedBatchNumbers is a map of batch numbers that have been signed
+	signedBatchNumbers map[uint64]bool
+
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	ClientMode mode.ClientMode
 }
@@ -58,6 +64,8 @@ func NewSigner(
 		tssSigner:             tssSigner,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
+		tssKeysignInfoMap:     make(map[uint64]*tssKeysignInfo),
+		signedBatchNumbers:    make(map[uint64]bool),
 		logger: Logger{
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
@@ -136,7 +144,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 		now := time.Now().UTC()
 		s.activeOutbounds[outboundID] = now
 
-		s.logger.Std.Info().
+		s.logger.Std.Debug().
 			Bool("outbound_active", active).
 			Str(logs.FieldOutboundID, outboundID).
 			Time("outbound_timestamp", now).
@@ -145,7 +153,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 	default:
 		timeTaken := time.Since(startedAt)
 
-		s.logger.Std.Info().
+		s.logger.Std.Debug().
 			Bool("outbound_active", active).
 			Str(logs.FieldOutboundID, outboundID).
 			Float64("outbound_time_taken", timeTaken.Seconds()).

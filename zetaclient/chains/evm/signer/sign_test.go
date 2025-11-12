@@ -19,7 +19,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 	// Setup txData struct
 
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -69,7 +69,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		cctx.OutboundParams[0].GasPriorityFee = big.NewInt(priorityFee).String()
 
 		// Given outbound data
-		txData, skip, err := NewOutboundData(ctx, cctx, 123, makeLogger(t))
+		txData, skip, err := NewOutboundData(ctx, cctx, makeLogger(t))
 		require.False(t, skip)
 		require.NoError(t, err)
 
@@ -100,7 +100,7 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -135,7 +135,7 @@ func TestSigner_SignCancel(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -170,7 +170,7 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -204,7 +204,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 

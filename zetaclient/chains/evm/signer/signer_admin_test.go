@@ -20,7 +20,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -98,7 +98,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 
 	require.NoError(t, err)
 	require.False(t, skip)
@@ -142,7 +142,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 
 	require.NoError(t, err)
 	require.False(t, skip)
@@ -203,7 +203,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -276,7 +276,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 
 	require.False(t, skip)
 	require.NoError(t, err)

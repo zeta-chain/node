@@ -202,7 +202,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 	nonce := uint64(123)
-	txData, skip, err := NewOutboundData(ctx, cctx, nonce, zerolog.Logger{})
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
 
