@@ -13,5 +13,5 @@
   "arbitrum_rpc": "https://sepolia-rollup.arbitrum.io/rpc",
   "optimism_rpc": "https://sepolia.optimism.io",
   "avalanche_rpc": "https://avalanche-fuji-c-chain-rpc.publicnode.com",
-  "world_rpc": ""
+  "world_rpc": "https://worldchain-sepolia.g.alchemy.com/public"
 }

@@ -28,7 +28,7 @@ func TestRead(t *testing.T) {
 		require.Equal(t, "https://sepolia-rollup.arbitrum.io/rpc", c.ArbitrumRPC)
 		require.Equal(t, "https://sepolia.optimism.io", c.OptimismRPC)
 		require.Equal(t, "https://avalanche-fuji-c-chain-rpc.publicnode.com", c.AvalancheRPC)
-		require.Equal(t, "", c.WorldRPC)
+		require.Equal(t, "https://worldchain-sepolia.g.alchemy.com/public", c.WorldRPC)
 	})
 }
 
