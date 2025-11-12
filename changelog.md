@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Features
+
+### Tests
+
+### Fixes
+
+* [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
+* [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+
+## v37.0.0
+
 ### Breaking Changes
 
 * EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
