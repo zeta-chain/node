@@ -32,6 +32,8 @@ import (
 const (
 	DefaultDevnetValidatorTokes = "30000000000000000000000"
 	DefaultDelegatorShares      = "30000000000000000000000.000000000000000"
+	// DefaultUpgradeHeighOffset is the offset used to schedule the upgrade
+	DefaultUpgradeHeighOffset = 100
 )
 
 func DevNetCmd(appCreator types.AppCreator) *cobra.Command {
@@ -193,7 +195,7 @@ func updateUpgradeData(svrCtx *server.Context, app zeta.App) error {
 		}
 	}
 	appBlockHeight := svrCtx.Viper.GetInt64(KeyAppBlockHeight)
-	upgradeHeight := appBlockHeight + 100
+	upgradeHeight := appBlockHeight + DefaultUpgradeHeighOffset
 
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
