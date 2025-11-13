@@ -498,6 +498,7 @@ func setupCPUProfiling(svrCtx *server.Context) error {
 		return fmt.Errorf("failed to expand cpu profile path: %w", err)
 	}
 
+	// #nosec G304 -- cpuProfile path is from server configuration
 	f, err := os.Create(fp)
 	if err != nil {
 		return fmt.Errorf("failed to create cpu profile file: %w", err)
@@ -534,10 +535,11 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
 		return
 	}
+	// #nosec G304 G302 -- traceWriterFile path is from server configuration
 	return os.OpenFile(
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-		0o666,
+		0o600,
 	)
 }
 
