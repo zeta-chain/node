@@ -32,10 +32,10 @@ type Signer struct {
 
 	activeOutbounds map[string]time.Time
 
-	// tssKeysignInfoMap maps nonce to TSS keysign information to be signed
-	tssKeysignInfoMap map[uint64]*tssKeysignInfo
+	// tssKeysignInfoMap maps nonce to TSS keysign information
+	tssKeysignInfoMap map[uint64]*TSSKeysignInfo
 
-	// signedBatchNumbers is a map of batch numbers that have been signed
+	// signedBatchNumbers tracks the signed batch numbers
 	signedBatchNumbers map[uint64]bool
 
 	// mu protects fields from concurrent access
@@ -64,7 +64,7 @@ func NewSigner(
 		tssSigner:             tssSigner,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
-		tssKeysignInfoMap:     make(map[uint64]*tssKeysignInfo),
+		tssKeysignInfoMap:     make(map[uint64]*TSSKeysignInfo),
 		signedBatchNumbers:    make(map[uint64]bool),
 		logger: Logger{
 			Std:        withLogFields(logger.Std),

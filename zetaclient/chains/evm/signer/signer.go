@@ -191,13 +191,10 @@ func (signer *Signer) Sign(
 
 	hashBytes := signer.evmClient.Signer().Hash(tx).Bytes()
 
-	// add digest to cache
-	signer.AddKeysignInfo(nonce, height, ethcommon.BytesToHash(hashBytes))
-
-	// get cached signature if available
-	sig, found := signer.GetSignature(nonce)
+	// get cached signature if available, otherwise add digest and wait for keysign
+	sig, found := signer.GetSignatureOrAddDigest(nonce, height, hashBytes)
 	if !found {
-		return nil, nil, nil, errors.Wrapf(ErrWaitForSignature, "signature not available")
+		return nil, nil, nil, ErrWaitForSignature
 	}
 
 	_, err = crypto.SigToPub(hashBytes, sig[:])

@@ -147,20 +147,30 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 	}
 
 	// query pending nonces and see if there is any tx to sign
+	nonceLow := uint64(0)
 	p, err := e.observer.ZetaRepo().GetPendingNonces(ctx)
-	if err != nil {
+	switch {
+	case err != nil:
 		return errors.Wrapf(err, "unable to get pending nonces for chain %d", e.Chain().ChainId)
-	}
-	if p.NonceLow >= p.NonceHigh {
-		return nil
+	case p.NonceLow < 0: // never happens
+		return fmt.Errorf("negative pending nonce %d for chain %d", p.NonceLow, e.Chain().ChainId)
+	default:
+		// remove stale keysign info
+		// #nosec G115 - checked positive
+		nonceLow = uint64(p.NonceLow)
+		e.signer.RemoveKeysignInfo(nonceLow)
+
+		// return if nothing to sign
+		if p.NonceLow >= p.NonceHigh {
+			return nil
+		}
 	}
 
 	// use the first pending nonce's batch number as the starting batch for keysign, please note that:
 	// 1. the starting batch is deterministic across all TSS signers
 	// 2. for any signed batch, there should always be >= 2/3 of signers have cached signatures for it
 	// 3. so far as any one of the signers has cached signatures for a batch, txs can be processed, no worries
-	// #nosec G115 e2eTest - always positive
-	batchNumber := base.NonceToBatchNumber(uint64(p.NonceLow))
+	batchNumber := base.NonceToBatchNumber(nonceLow)
 	batch := e.signer.GetKeysignBatch(batchNumber)
 	if batch == nil {
 		e.signer.Logger().Std.Info().Msg("waiting for pending cctxs to finalize")
