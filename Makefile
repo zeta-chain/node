@@ -12,7 +12,7 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 OLD_VERSION := v36.0.1
-#UPGRADE VERSION is currently used for devnet fork script only , since we do not have a zetacored release for v37 yet
+#UPGRADE VERSION is currently used for devnet fork script only ,since we do not have a zetacored release for v37 yet
 UPGRADE_VERSION := v37.0.0
 OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
 

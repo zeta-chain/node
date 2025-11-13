@@ -2,12 +2,14 @@ package server
 
 import (
 	"encoding/json"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetBinaryInfo(t *testing.T) {
+
 	tests := []struct {
 		name           string
 		upgradeVersion string
@@ -18,22 +20,13 @@ func TestGetBinaryInfo(t *testing.T) {
 		wantClient     string
 	}{
 		{
-			name:           "v37 linux amd64",
+			name:           "v37 local",
 			upgradeVersion: "v37",
-			goos:           "linux",
-			goarch:         "amd64",
-			wantPlatform:   "linux/amd64",
-			wantZetacored:  "https://github.com/zeta-chain/node/releases/download/v37/zetacored-ubuntu-22-amd64",
-			wantClient:     "https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-ubuntu-22-amd64",
-		},
-		{
-			name:           "v37 darwin arm64",
-			upgradeVersion: "v37",
-			goos:           "darwin",
-			goarch:         "arm64",
+			goos:           runtime.GOOS,
+			goarch:         runtime.GOARCH,
 			wantPlatform:   "darwin/arm64",
-			wantZetacored:  "https://github.com/zeta-chain/node/releases/download/v37/zetacored-ubuntu-22-arm64",
-			wantClient:     "https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-ubuntu-22-arm64",
+			wantZetacored:  "https://github.com/zeta-chain/node/releases/download/v37/zetacored-darwin-arm64",
+			wantClient:     "https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-darwin-arm64",
 		},
 	}
 

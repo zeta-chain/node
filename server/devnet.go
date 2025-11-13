@@ -155,13 +155,15 @@ func getBinaryInfo(upgradeVersion, goos, goarch string) ([]byte, error) {
 	downloadInfo := map[string]interface{}{
 		"binaries": map[string]string{
 			platform: fmt.Sprintf(
-				"https://github.com/zeta-chain/node/releases/download/%s/zetacored-ubuntu-22-%s",
+				"https://github.com/zeta-chain/node/releases/download/%s/zetacored-%s-%s",
 				upgradeVersion,
+				goos,
 				goarch,
 			),
 			fmt.Sprintf("zetaclientd-%s", platform): fmt.Sprintf(
-				"https://github.com/zeta-chain/node/releases/download/%s/zetaclientd-ubuntu-22-%s",
+				"https://github.com/zeta-chain/node/releases/download/%s/zetaclientd-%s-%s",
 				upgradeVersion,
+				goos,
 				goarch,
 			),
 		},
