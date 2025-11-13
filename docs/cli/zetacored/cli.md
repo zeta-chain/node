@@ -999,17 +999,18 @@ Modify state to create devnet from current local data
 
 Modify state to create a devnet from current local state. This will set the chain ID to the provided newChainID.
 The provided operatorAddress is used as the operator for the single validator in this network. The existing node key is reused.
+The optional upgradeVersion parameter schedules an upgrade to that version (e.g., v37.0.0). If not provided, no upgrade is scheduled.
 
 
 ```
-zetacored devnet [newChainID] [operatorAddress] [flags]
+zetacored devnet [newChainID] [operatorAddress] [upgradeVersion] [flags]
 ```
 
 ### Examples
 
 ```
   zetacored devnet devnet_70000-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax
-  					zetacored devnet devnet_70000-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax --upgrade-version v37.0.0
+  					zetacored devnet devnet_70000-1 zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax v37.0.0
 ```
 
 ### Options
@@ -1019,7 +1020,6 @@ zetacored devnet [newChainID] [operatorAddress] [flags]
       --shutdown-grace duration   On Shutdown, duration to wait for resource clean up (default 3s)
       --skip-confirmation         Skip the confirmation prompt
       --trace-store string        Enable KVStore tracing to an output file
-      --upgrade-version string    Schedule upgrade to this version (e.g., v37.0.0). If empty, no upgrade is scheduled
       --with-cometbft             Run abci app embedded in-process with CometBFT (default true)
 ```
 

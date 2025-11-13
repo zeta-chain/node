@@ -21,15 +21,22 @@ import (
 )
 
 const (
-	KeyIsDevnet                 = "is-devnet"
-	KeyNewChainID               = "new-chain-ID"
-	KeyValidatorConsensusAddr   = "validator-consensus-address"
+	// KeyIsDevnet is used to determine whether to run in devnet mode
+	KeyIsDevnet = "is-devnet"
+	// KeyNewChainID is the new chain ID to use in devnet mode
+	KeyNewChainID = "new-chain-ID"
+	// KeyOperatorAddress is the new operator address in devnet mode
+	KeyOperatorAddress = "operator-address"
+	// KeyUpgradeVersion is set to the upgrade version
+	KeyUpgradeVersion = "upgrade-version"
+	// KeyValidatorConsensusAddr is set to the validator consensus address in the devnetify function
+	KeyValidatorConsensusAddr = "validator-consensus-address"
+	// KeyValidatorConsensusPubkey is set to the validator consensus pubkey in the devnetify function
 	KeyValidatorConsensusPubkey = "validator-consensus-pubkey"
-	KeyAppBlockedHeight         = "app-blocked-height"
-	KeyOperatorAddress          = "operator-address"
-	KeyUpgradeVersion           = "upgrade-version"
-	FlagSkipConfirmation        = "skip-confirmation"
-	FlagUpgradeVersion          = "upgrade-version"
+	// KeyAppBlockHeight is set to the latest app block time in the devnetify function
+	KeyAppBlockHeight = "app-block-height"
+
+	FlagSkipConfirmation = "skip-confirmation"
 )
 
 type StartCmdOptions struct {

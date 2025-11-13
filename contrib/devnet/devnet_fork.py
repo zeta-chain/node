@@ -371,14 +371,15 @@ def main(node_version, upgrade_version=None):
 
     # Step 9: Run devnet command
     print("\n[9/10] Running devnet command to modify state...")
-    devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
     if upgrade_version:
         # Extract major version (e.g., v36.0.4 -> v36) to match handler name
         upgrade_handler_version = extract_major_version(upgrade_version)
-        devnet_cmd += f" --upgrade-version {upgrade_handler_version}"
+        devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} {upgrade_handler_version} --skip-confirmation"
         print(f"Scheduling upgrade to version: {upgrade_version} (handler: {upgrade_handler_version})")
+    else:
+        devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
 
-    # Run devnet command in background (for testing)
+
     print(f"Running: {devnet_cmd}")
     test_log_file = open(HOME_DIR / "zetacored_devnet.log", 'w')
     test_process = subprocess.Popen(
