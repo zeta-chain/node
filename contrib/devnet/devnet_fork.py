@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Testnet Fork Script
-===================
+Devnet Fork Script
+==================
 This script downloads testnet state, syncs for a period, then converts it to a local
-single-validator testnet for testing purposes.
+single-validator devnet for testing purposes.
 
 Run from the root zeta-node directory:
-    python3 contrib/testnet/testnet_fork.py [--node-version VERSION]
+    python3 contrib/devnet/devnet_fork.py [--node-version VERSION]
 Or:
-    make testnet-fork
+    make devnet-fork
 """
 
 import argparse
@@ -24,8 +24,8 @@ from pathlib import Path
 # Configuration Constants
 # ============================================================================
 
-# Testnet configuration
-TESTNET_CHAIN_ID = "testnet_7001-1"
+# Devnet configuration
+DEVNET_CHAIN_ID = "devnet_70000-1"
 OPERATOR_ADDRESS = "zeta13l7ladn2crrdcl9nupqn5kzyajcn03lkzgnrze"
 
 # Athens3 testnet config URLs
@@ -46,7 +46,7 @@ SHUTDOWN_WAIT_SECONDS = 5
 HOME_DIR = Path.home()
 ZETACORED_DIR = HOME_DIR / ".zetacored"
 ZETACORED_CONFIG_DIR = ZETACORED_DIR / "config"
-ZETACORED_LOG_FILE = HOME_DIR / "zetacored_testnet_fork.log"
+ZETACORED_LOG_FILE = HOME_DIR / "zetacored_devnet_fork.log"
 
 # ============================================================================
 # Helper Functions
@@ -204,7 +204,7 @@ def setup_cosmovisor(node_version, upgrade_version=None):
 
 def main(node_version, upgrade_version=None):
     print("=" * 80)
-    print("ZetaChain Testnet Fork Script")
+    print("ZetaChain Devnet Fork Script")
     print("=" * 80)
     print(f"Using node version: {node_version}")
     if upgrade_version:
@@ -369,33 +369,33 @@ def main(node_version, upgrade_version=None):
     print(f"Waiting {SHUTDOWN_WAIT_SECONDS} seconds for clean shutdown...")
     time.sleep(SHUTDOWN_WAIT_SECONDS)
 
-    # Step 9: Run testnet command
-    print("\n[9/10] Running testnet command to modify state...")
-    testnet_cmd = f"zetacored testnet {TESTNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
+    # Step 9: Run devnet command
+    print("\n[9/10] Running devnet command to modify state...")
+    devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
     if upgrade_version:
         # Extract major version (e.g., v36.0.4 -> v36) to match handler name
         upgrade_handler_version = extract_major_version(upgrade_version)
-        testnet_cmd += f" --upgrade-version {upgrade_handler_version}"
+        devnet_cmd += f" --upgrade-version {upgrade_handler_version}"
         print(f"Scheduling upgrade to version: {upgrade_version} (handler: {upgrade_handler_version})")
 
-    # Run testnet command in background (for testing)
-    print(f"Running: {testnet_cmd}")
-    test_log_file = open(HOME_DIR / "zetacored_testnet.log", 'w')
+    # Run devnet command in background (for testing)
+    print(f"Running: {devnet_cmd}")
+    test_log_file = open(HOME_DIR / "zetacored_devnet.log", 'w')
     test_process = subprocess.Popen(
-        testnet_cmd,
+        devnet_cmd,
         shell=True,
         stdout=test_log_file,
         stderr=subprocess.STDOUT
     )
-    print(f"Started zetacored testnet with PID: {test_process.pid}")
+    print(f"Started zetacored devnet with PID: {test_process.pid}")
     print("Waiting 30 seconds...")
     time.sleep(30)
 
-    print("Killing testnet node...")
+    print("Killing devnet node...")
     test_process.kill()
     test_process.wait()
     test_log_file.close()
-    print(f"Testnet logs: {HOME_DIR / 'zetacored_testnet.log'}")
+    print(f"Devnet logs: {HOME_DIR / 'zetacored_devnet.log'}")
 
     # Step 10: Set up Cosmovisor and start
     print("\n[10/10] Setting up Cosmovisor and starting node...")
@@ -410,7 +410,7 @@ def main(node_version, upgrade_version=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Fork testnet state to create a local single-validator testnet",
+        description="Fork testnet state to create a local single-validator devnet",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(

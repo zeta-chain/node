@@ -3,12 +3,12 @@
 Download Testnet Snapshot Script
 ==================================
 This script downloads the latest testnet snapshot and caches it locally
-for reuse in multiple testnet fork runs.
+for reuse in multiple devnet fork runs.
 
 The cached snapshot is stored in ~/zetacored_snapshot_testnet/
 
 Run from the root zeta-node directory:
-    python3 contrib/testnet/download_snapshot.py
+    python3 contrib/devnet/download_snapshot.py
 """
 
 import os
@@ -113,7 +113,6 @@ def main():
     print("Snapshot cached successfully!")
     print(f"Cache location: {SNAPSHOT_CACHE_DIR}")
     print("=" * 80)
-    print("\nYou can now run testnet_fork.py multiple times and it will use this cached snapshot.")
 
 if __name__ == "__main__":
     main()

@@ -123,7 +123,8 @@ The provided operatorAddress is used as the operator for the single validator in
 	}
 
 	cmd.Flags().Bool(FlagSkipConfirmation, false, "Skip the confirmation prompt")
-	cmd.Flags().String(FlagUpgradeVersion, "", "Schedule upgrade to this version (e.g., v37.0.0). If empty, no upgrade is scheduled")
+	cmd.Flags().
+		String(FlagUpgradeVersion, "", "Schedule upgrade to this version (e.g., v37.0.0). If empty, no upgrade is scheduled")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.TraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().Duration(server.FlagShutdownGrace, 3*time.Second, "On Shutdown, duration to wait for resource clean up")

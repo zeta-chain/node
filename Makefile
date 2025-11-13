@@ -151,17 +151,17 @@ chain-stop:
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
-testnet-fork:
-	@echo "--> Running testnet fork script..."
-	@python3 contrib/testnet/testnet_fork.py --node-version $(OLD_VERSION:v%=%)
+devnet-fork:
+	@echo "--> Running devnet fork script..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%)
 
-testnet-fork-upgrade:
-	@echo "--> Running testnet fork script with upgrade..."
-	@python3 contrib/testnet/testnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(UPGRADE_VERSION)
+devnet-fork-upgrade:
+	@echo "--> Running devnet fork script with upgrade..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(UPGRADE_VERSION)
 
 download-snapshot:
 	@echo "--> Downloading and caching testnet snapshot..."
-	@python3 contrib/testnet/download_snapshot.py
+	@python3 contrib/devnet/download_snapshot.py
 
 ###############################################################################
 ###                                 Linting            	                    ###
