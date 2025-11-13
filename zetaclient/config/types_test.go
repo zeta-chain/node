@@ -133,23 +133,23 @@ func TestValidate(t *testing.T) {
 			errorMsg: "reason: mempool congestion threshold cannot be negative, got: -1",
 		},
 		{
-			name: "empty ChaosPercentagesPath",
+			name: "empty ChaosProfilePath",
 			config: func() config.Config {
 				cfg := sampleTestConfig
 				cfg.ClientMode = mode.ChaosMode
 				return cfg
 			}(),
-			errorMsg: "ChaosPercentagesPath is a required field",
+			errorMsg: "ChaosProfilePath is a required field",
 		},
 		{
-			name: "invalid ChaosPercentagesPath",
+			name: "invalid ChaosProfilePath",
 			config: func() config.Config {
 				cfg := sampleTestConfig
 				cfg.ClientMode = mode.ChaosMode
-				cfg.ChaosPercentagesPath = "invalid/path"
+				cfg.ChaosProfilePath = "invalid/path"
 				return cfg
 			}(),
-			errorMsg: `invalid ChaosPercentagesPath "invalid/path"`,
+			errorMsg: `invalid ChaosProfilePath "invalid/path"`,
 		},
 	}
 

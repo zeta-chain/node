@@ -104,8 +104,8 @@ type FeatureFlags struct {
 type Config struct {
 	ClientMode mode.ClientMode `json:"ClientMode"`
 
-	ChaosSeed            int64  `json:"ChaosSeed"`
-	ChaosPercentagesPath string `json:"ChaosPercentagesPath"`
+	ChaosSeed        int64  `json:"ChaosSeed"`
+	ChaosProfilePath string `json:"ChaosProfilePath"`
 
 	Peer                    string         `json:"Peer"`
 	PublicIP                string         `json:"PublicIP"`
@@ -207,11 +207,11 @@ func (c Config) Validate() error {
 	}
 
 	if c.ClientMode.IsChaosMode() {
-		if c.ChaosPercentagesPath == "" {
-			return errors.New("ChaosPercentagesPath is a required field")
+		if c.ChaosProfilePath == "" {
+			return errors.New("ChaosProfilePath is a required field")
 		}
-		if _, err := os.Stat(c.ChaosPercentagesPath); err != nil {
-			return fmt.Errorf("invalid ChaosPercentagesPath %q: %w", c.ChaosPercentagesPath, err)
+		if _, err := os.Stat(c.ChaosProfilePath); err != nil {
+			return fmt.Errorf("invalid ChaosProfilePath %q: %w", c.ChaosProfilePath, err)
 		}
 	}
 

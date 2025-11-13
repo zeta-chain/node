@@ -4,7 +4,6 @@
 package chaos
 
 import (
-    "fmt"
 {{- range $path, $name := .Imports}}
     {{$name}} "{{$path}}"
 {{- end}}
@@ -70,12 +69,12 @@ func (self *chaos{{$itfc.Name}}) {{$mthd.Name}}
         )
     {{- else -}}
         {{- newline -}} {{- tab -}}
-        if self.shouldFail("{{$itfc.Name}}", "{{$mthd.Name}}") {
+        if err := self.shouldFail("{{$itfc.Name}}", "{{$mthd.Name}}"); err != nil {
             {{- /* Sets the chaos-mode error. */ -}}
             {{- range $i, $out := $mthd.Outs -}}
                 {{- if $out.IsError -}}
                     {{- newline -}} {{- tab -}} {{- tab -}}
-                    {{$out.First}} = fmt.Errorf("%w ({{$itfc.Name}}.{{$mthd.Name}})", ErrChaos)
+                    {{$out.First}} = err
                 {{- end -}}
             {{- end -}}
 

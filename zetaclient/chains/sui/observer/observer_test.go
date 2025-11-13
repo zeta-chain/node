@@ -35,6 +35,57 @@ import (
 var someArgStub = map[string]any{}
 
 func TestObserver(t *testing.T) {
+	t.Run("New Observer", func(t *testing.T) {
+		// ARRANGE
+		chain := chains.SuiMainnet
+		chainParams := mocks.MockChainParams(chain.ChainId, 10)
+
+		// Given gateway with multiple supported packages
+		packageID := "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff"
+		gatewayID := "0xba477ad7b87a31fde3d29c4e4512329d7340ec23e61f130ebb4d0169ba37e189"
+		withdrawCapID := "0x4a367f98d9299019e3d5bbc6ee1d41b5789172e14f7c63a881377766902438e2"
+		previousPackageID := "0x1db3a54b99c2741bf8b8aaa8266d6e7b6daf0c702a5ef5b0d6e9e6cf12527a90"
+		originalPackageID := "0xd84c71eaaff08377af842b2a6b0542f285ec29202b24361343bf8860254b5402"
+		gatewayAddress := sui.MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID)
+
+		// Given database
+		// Both last scanned tx (old cursor) and auxiliary strings (new cursors) are present in DB
+		database, err := db.NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+
+		// Given base observer and mock client
+		logger := base.Logger{}
+		baseObserver, err := base.NewObserver(chain, chainParams, nil, nil, 1000, nil, database, logger)
+		require.NoError(t, err)
+
+		// mock last tx scanned hash in db
+		err = baseObserver.WriteLastTxScannedToDB("last_tx_scanned_hash")
+		require.NoError(t, err)
+
+		// mock auxiliary strings in db
+		err = baseObserver.WriteAuxStringToDB(packageID, "cursor_1")
+		require.NoError(t, err)
+		err = baseObserver.WriteAuxStringToDB(previousPackageID, "cursor_2")
+		require.NoError(t, err)
+		err = baseObserver.WriteAuxStringToDB(originalPackageID, "cursor_3")
+		require.NoError(t, err)
+
+		// create gateway object from pair ID
+		gw, err := sui.NewGatewayFromPairID(gatewayAddress)
+		require.NoError(t, err)
+
+		// ACT
+		suiMock := mocks.NewSuiClient(t)
+		observer := New(baseObserver, suiMock, gw)
+
+		// ASSERT
+		// ensure both old cursor and new cursors are loaded from db
+		require.Equal(t, "last_tx_scanned_hash", observer.LastTxScanned())
+		require.Equal(t, "cursor_1", observer.GetAuxString(packageID))
+		require.Equal(t, "cursor_2", observer.GetAuxString(previousPackageID))
+		require.Equal(t, "cursor_3", observer.GetAuxString(originalPackageID))
+	})
+
 	t.Run("PostGasPrice", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
@@ -172,6 +223,56 @@ func TestObserver(t *testing.T) {
 			ts.log.String(),
 			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
+	})
+
+	t.Run("ObserveInbound retry if vote inbound fails", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		evmBob := sample.EthAddress()
+
+		// Given a deposit event
+		packageID := ts.gateway.PackageID()
+		expectedQuery := client.EventQuery{
+			PackageID: packageID,
+			Module:    sui.GatewayModule,
+			Cursor:    "",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		txHash := "Tx_retry"
+		events := []models.SuiEventResponse{
+			ts.SampleEvent(packageID, txHash, string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+
+		// Given transaction block
+		ts.OnGetTx(txHash, "10000", true, false, nil)
+
+		// Given vote inbound RPC failure
+		ts.zetaMock.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", "", errors.New("rpc error"))
+
+		// Given CCTX not found
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check cursor is not updated
+		require.Equal(t, "", ts.GetAuxString(packageID))
+
+		// No inbound votes should be created
+		require.Empty(t, ts.inboundVotesBag)
 	})
 
 	t.Run("ObserveInbound restricted address", func(t *testing.T) {

@@ -297,7 +297,7 @@ func assertCctxIndexEqual(t *testing.T, expectedCctxs []*types.CrossChainTx, cct
 	t.Helper()
 	require.Equal(t, len(expectedCctxs), len(cctxs), "slice lengths not equal")
 	for i, expectedCctx := range expectedCctxs {
-		require.Equal(t, expectedCctx.Index, cctxs[i].Index, "index missmatch at %v", i)
+		require.Equal(t, expectedCctx.Index, cctxs[i].Index, "index mismatch at %v", i)
 	}
 }
 

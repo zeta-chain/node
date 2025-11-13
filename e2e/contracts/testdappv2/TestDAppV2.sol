@@ -269,7 +269,7 @@ contract TestDAppV2 {
     function gatewayMultipleDeposits(address dst, bytes calldata payload) external payable {
         require(!isZetaChain);
         uint256 additionalFee = IGatewayEVM(gateway).additionalActionFeeWei();
-        // substract 5 fees from msg.value
+        // subtract 5 fees from msg.value
         uint256 amount = msg.value - additionalFee * 5;
 
         // initial free deposit
@@ -305,7 +305,7 @@ contract TestDAppV2 {
 
     function gatewayMultipleDepositsLegacy(address dst, uint256 fee) external payable {
         require(!isZetaChain);
-        // substract fee from msg.value
+        // subtract fee from msg.value
         uint256 amount = msg.value - fee;
 
         // initial free legacy deposit
