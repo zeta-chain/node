@@ -234,7 +234,7 @@ func CheckAndUpdateCCTXGasPriceBTC(
 	// use latest median gas price as new gas price, the reasons are:
 	// 1. the goal is to increase the average gas price of all the stuck txs to market level
 	// 2. zetaclient can't replace stuck tx individually, it only gives more funds to the last stuck tx (child tx)
-	// 3. updating all pending CCTXs to the same 'mediaGasPrice' number simplyfies the calculation in zetaclient
+	// 3. updating all pending CCTXs to the same 'mediaGasPrice' number simplifies the calculation in zetaclient
 	newGasPrice := medianGasPrice
 
 	// set priority fee to signal that fee bumping is allowed for this CCTX

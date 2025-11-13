@@ -76,7 +76,7 @@ func (k Keeper) ProcessAbort(
 				// this happens if the cctx events are not processed correctly with invalid withdrawals
 				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
 				// the contract call is considered as reverted
-				messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
+				messages.ErrorMessageAbort = "failed to process logs for abort: " + processLogsErr.Error()
 				cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
 				return
 			}

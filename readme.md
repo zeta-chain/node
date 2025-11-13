@@ -88,8 +88,10 @@ Find below further documentation for development and running your own ZetaChain 
 - [Get familiar with our release lifecycle](docs/development/RELEASE_LIFECYCLE.md)
 - [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
 - [Make a new ZetaChain release](docs/development/RELEASES.md)
+- [Build test release binaries](docs/development/BUILDING_TEST_RELEASES.md)
 - [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
 - [Run the simulation tests](docs/development/SIMULATION_TESTING.md)
+- [Learn about gas and fees in ZetaChain](docs/zetacore/gas_and_fees.md)
 
 ## Community
 

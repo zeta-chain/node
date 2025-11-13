@@ -12,8 +12,9 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 OLD_VERSION := v36.0.1
-OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
+#UPGRADE VERSION is currently used for devnet fork script only , since we do not have a zetacored release for v37 yet
 UPGRADE_VERSION := v37.0.0
+OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
 GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
