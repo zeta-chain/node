@@ -148,6 +148,10 @@ chain-stop:
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
+devnet-fork:
+	@echo "--> Running devnet fork script"
+	@python3 contrib/devnet/devnet_fork.py
+
 ###############################################################################
 ###                                 Linting            	                    ###
 ###############################################################################

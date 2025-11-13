@@ -269,7 +269,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 
 	zevmserver.AddCommands(
 		rootCmd,
-		zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome),
+		ac.newApp,
+		app.DefaultNodeHome,
 		ac.appExport,
 		addModuleInitFlags,
 	)
@@ -281,6 +282,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		txCommand(),
 		docsCommand(),
 		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true),
+		zevmserver.DevNetCmd(ac.newApp),
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
