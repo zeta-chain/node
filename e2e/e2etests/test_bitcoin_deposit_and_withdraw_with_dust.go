@@ -12,7 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestBitcoinDepositAndWithdrawWithDust deposits Bitcoin and call a smart contract that withdraw dust amount
+// TestBitcoinDepositAndWithdrawWithDust deposits Bitcoin and call a smart contract that withdraws dust amount
 // It tests the edge case where during a cross-chain call, a invalid withdraw is initiated (processLogs fails)
 func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	// Given "Live" BTC network
