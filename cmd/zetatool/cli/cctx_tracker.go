@@ -92,7 +92,7 @@ func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.TrackingDetails, error) {
 		cctxTrackingDetails = cctx.NewTrackingDetails()
 		err                 error
 	)
-	// Get the ballot identifier for the inbound transaction and confirm that cctx status in atleast either PendingInboundConfirmation or PendingInboundVoting
+	// Get the ballot identifier for the inbound transaction and confirm that cctx status in at least either PendingInboundConfirmation or PendingInboundVoting
 	err = cctxTrackingDetails.CheckInbound(ctx)
 	if err != nil {
 		return cctxTrackingDetails, fmt.Errorf("failed to get ballot identifier: %w", err)
