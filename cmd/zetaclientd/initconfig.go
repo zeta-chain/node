@@ -63,7 +63,9 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.chaosProfilePath, "chaos-profile-path", "", usageChaosProfilePath)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
-	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
+	// TODO: investigate if we can patch libp2p-go to handle public DNS
+	// https://github.com/zeta-chain/node/issues/4433
+	//f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
 	f.StringVar(&cfg.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")

@@ -43,13 +43,13 @@ func TestValidate(t *testing.T) {
 			errorMsg: "reason: invalid public IP, got: 192.168.1",
 		},
 		{
-			name: "invalid public DNS name",
+			name: "public DNS is not supported",
 			config: func() config.Config {
 				cfg := sampleTestConfig
-				cfg.PublicDNS = "invalid..dns"
+				cfg.PublicDNS = "my.zetaclient.com"
 				return cfg
 			}(),
-			errorMsg: "reason: invalid public DNS, got: invalid..dns",
+			errorMsg: "reason: public DNS is not supported, got: my.zetaclient.com",
 		},
 		{
 			name: "invalid chain ID",

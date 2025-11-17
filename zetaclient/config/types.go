@@ -159,8 +159,10 @@ func (c Config) Validate() error {
 		return errors.Errorf("reason: invalid public IP, got: %s", c.PublicIP)
 	}
 
-	if c.PublicDNS != "" && !govalidator.IsDNSName(c.PublicDNS) {
-		return errors.Errorf("reason: invalid public DNS, got: %s", c.PublicDNS)
+	// TODO: add back public DNS check once libp2p-go can handle public DNS
+	// https://github.com/zeta-chain/node/issues/4433
+	if c.PublicDNS != "" {
+		return errors.Errorf("reason: public DNS is not supported, got: %s", c.PublicDNS)
 	}
 
 	if _, err := chains.ZetaChainFromCosmosChainID(c.ChainID); err != nil {
