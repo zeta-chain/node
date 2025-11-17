@@ -35,7 +35,7 @@ const (
 	KeyValidatorConsensusPubkey = "validator-consensus-pubkey"
 	// KeyAppBlockHeight is set to the latest app block time in the devnetify function
 	KeyAppBlockHeight = "app-block-height"
-
+	// FlagSkipConfirmation is used to skip the confirmation prompt when running devnet mode
 	FlagSkipConfirmation = "skip-confirmation"
 )
 

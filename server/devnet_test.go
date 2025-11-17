@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"runtime"
 	"testing"
 
@@ -11,22 +12,22 @@ import (
 func TestGetBinaryInfo(t *testing.T) {
 
 	tests := []struct {
-		name           string
-		upgradeVersion string
-		goos           string
-		goarch         string
-		wantPlatform   string
-		wantZetacored  string
-		wantClient     string
+		name            string
+		upgradeVersion  string
+		goos            string
+		goarch          string
+		wantPlatform    string
+		wantZetacored   string
+		wantZetaClientd string
 	}{
 		{
-			name:           "v37 local",
-			upgradeVersion: "v37",
-			goos:           runtime.GOOS,
-			goarch:         runtime.GOARCH,
-			wantPlatform:   "darwin/arm64",
-			wantZetacored:  "https://github.com/zeta-chain/node/releases/download/v37/zetacored-darwin-arm64",
-			wantClient:     "https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-darwin-arm64",
+			name:            "v37 local",
+			upgradeVersion:  "v37",
+			goos:            runtime.GOOS,
+			goarch:          runtime.GOARCH,
+			wantPlatform:    runtime.GOOS + "/" + runtime.GOARCH,
+			wantZetacored:   fmt.Sprintf("https://github.com/zeta-chain/node/releases/download/v37/zetacored-%s-%s", runtime.GOOS, runtime.GOARCH),
+			wantZetaClientd: fmt.Sprintf("https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-%s-%s", runtime.GOOS, runtime.GOARCH),
 		},
 	}
 
@@ -52,7 +53,7 @@ func TestGetBinaryInfo(t *testing.T) {
 			clientKey := "zetaclientd-" + tt.wantPlatform
 			zetaclientdURL, ok := binaries[clientKey].(string)
 			require.True(t, ok)
-			require.Equal(t, tt.wantClient, zetaclientdURL)
+			require.Equal(t, tt.wantZetaClientd, zetaclientdURL)
 		})
 	}
 }

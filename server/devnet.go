@@ -134,16 +134,13 @@ func initAppForDevnet(svrCtx *server.Context, appInterface types.Application) er
 	if !ok {
 		return errors.New("failed to cast app interface to zeta app")
 	}
-	err := updateObserverData(svrCtx, *app)
-	if err != nil {
+	if err := updateObserverData(svrCtx, *app); err != nil {
 		return errors.Wrap(err, "failed to update observer data")
 	}
-	err = updateValidatorData(svrCtx, *app)
-	if err != nil {
+	if err := updateValidatorData(svrCtx, *app); err != nil {
 		return errors.Wrap(err, "failed to update validator data")
 	}
-	err = updateUpgradeData(svrCtx, *app)
-	if err != nil {
+	if err := updateUpgradeData(svrCtx, *app); err != nil {
 		return errors.Wrap(err, "failed to update upgrade data")
 	}
 	return nil

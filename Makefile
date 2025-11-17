@@ -12,8 +12,8 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 OLD_VERSION := v36.0.1
-#UPGRADE VERSION is currently used for devnet fork script only ,since we do not have a zetacored release for v37 yet
-UPGRADE_VERSION := v37.0.0
+#UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
+DEVNET_UPGRADE_VERSION := v37.0.0
 OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
@@ -158,7 +158,7 @@ devnet-fork:
 
 devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
-	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(UPGRADE_VERSION)
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
 
 download-snapshot:
 	@echo "--> Downloading and caching testnet snapshot..."
