@@ -2296,31 +2296,26 @@
     },
     {
       "code": 6005,
-      "name": "MemoLengthExceeded",
-      "msg": "MemoLengthExceeded"
-    },
-    {
-      "code": 6006,
       "name": "DepositPaused",
       "msg": "DepositPaused"
     },
     {
-      "code": 6007,
+      "code": 6006,
       "name": "SPLAtaAndMintAddressMismatch",
       "msg": "SPLAtaAndMintAddressMismatch"
     },
     {
-      "code": 6008,
+      "code": 6007,
       "name": "EmptyReceiver",
       "msg": "EmptyReceiver"
     },
     {
-      "code": 6009,
+      "code": 6008,
       "name": "InvalidInstructionData",
       "msg": "InvalidInstructionData"
     },
     {
-      "code": 6010,
+      "code": 6009,
       "name": "InvalidAtaOwner",
       "msg": "InvalidAtaOwner"
     }
