@@ -35,7 +35,7 @@ func OutboundVoteStatusSimulationMatrix() (simtypes.TransitionMatrix, []float64,
 	// column 2: 50% vote yes
 	// column 3: 0% vote yes
 	// For all conditions we assume if the vote is not a yes.
-	// then it is a no .Not voting condtion is handled by the ObserverVotesSimulationMatrix matrix
+	// then it is a no .Not voting condition is handled by the ObserverVotesSimulationMatrix matrix
 	yesVoteArray := []float64{1, .5, 0}
 	ballotVotesState := 1
 	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
@@ -58,7 +58,7 @@ func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int)
 	// column 3: 75% vote
 	// column 4: 40% vote
 	// column 5: 15% vote
-	// column 6: noone votes
+	// column 6: no one votes
 	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
