@@ -43,13 +43,13 @@ func TestValidate(t *testing.T) {
 			errorMsg: "reason: invalid public IP, got: 192.168.1",
 		},
 		{
-			name: "public DNS is not supported",
+			name: "invalid public DNS name",
 			config: func() config.Config {
 				cfg := sampleTestConfig
-				cfg.PublicDNS = "my.zetaclient.com"
+				cfg.PublicDNS = "invalid..dns"
 				return cfg
 			}(),
-			errorMsg: "reason: public DNS is not supported, got: my.zetaclient.com",
+			errorMsg: "reason: invalid public DNS, got: invalid..dns",
 		},
 		{
 			name: "invalid chain ID",
@@ -161,6 +161,59 @@ func TestValidate(t *testing.T) {
 				return
 			}
 			require.NoError(t, err, "expected no error, got %v", err)
+		})
+	}
+}
+
+func Test_ResolvePublicIP(t *testing.T) {
+	tests := []struct {
+		name     string
+		cfg      config.Config
+		expectIP string
+		errorMsg string
+	}{
+		{
+			name: "public IP is set",
+			cfg: config.Config{
+				PublicIP:  "127.0.0.1",
+				PublicDNS: "my.zetaclient.com",
+			},
+			expectIP: "127.0.0.1",
+		},
+		{
+			name:     "no public IP or DNS is set",
+			cfg:      config.Config{},
+			expectIP: "",
+		},
+		{
+			name: "only public DNS is set",
+			cfg: config.Config{
+				// a real world example (Blockdaemon):
+				// cjisrdnil456rejvnhd0.bdnodes.net => 202.8.10.137
+				PublicDNS: "localhost",
+			},
+			expectIP: "127.0.0.1",
+		},
+		{
+			name: "unable to resolve public DNS",
+			cfg: config.Config{
+				PublicDNS: "my.zetaclient.com",
+			},
+			errorMsg: "unable to resolve IP addresses for public DNS \"my.zetaclient.com\"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			publicIP, err := tt.cfg.ResolvePublicIP()
+			if tt.errorMsg != "" {
+				require.Empty(t, publicIP)
+				require.ErrorContains(t, err, tt.errorMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expectIP, publicIP)
 		})
 	}
 }

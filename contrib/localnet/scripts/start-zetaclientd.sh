@@ -145,7 +145,7 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
     # TODO: use alternative DNS name (instead of IP) for other zetaclients (DNS should work as well).
     # See: https://github.com/zeta-chain/node/issues/4374.
     zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 \
-        --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" \
+        --operator "$operatorAddress" --log-format=text --public-dns "$HOSTNAME.com" \
         --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
     # zetaclient-dry does not need to import the relayer private key.

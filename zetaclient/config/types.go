@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -159,10 +160,8 @@ func (c Config) Validate() error {
 		return errors.Errorf("reason: invalid public IP, got: %s", c.PublicIP)
 	}
 
-	// TODO: add back public DNS check once libp2p-go can handle public DNS
-	// https://github.com/zeta-chain/node/issues/4433
-	if c.PublicDNS != "" {
-		return errors.Errorf("reason: public DNS is not supported, got: %s", c.PublicDNS)
+	if c.PublicDNS != "" && !govalidator.IsDNSName(c.PublicDNS) {
+		return errors.Errorf("reason: invalid public DNS, got: %s", c.PublicDNS)
 	}
 
 	if _, err := chains.ZetaChainFromCosmosChainID(c.ChainID); err != nil {
@@ -218,6 +217,36 @@ func (c Config) Validate() error {
 	}
 
 	return nil
+}
+
+// ResolvePublicDNS4 resolves the public DNS to an IPv4 address when public IP isn't set.
+// For simplicity, the 1st resolved IPv4 address is used if multiple IP addresses are found.
+func (c Config) ResolvePublicIP() (string, error) {
+	// return public IP if already set
+	if c.PublicIP != "" {
+		return c.PublicIP, nil
+	}
+
+	// skip DNS resolution if public DNS isn't set
+	if c.PublicDNS == "" {
+		return "", nil
+	}
+
+	ips, err := net.LookupIP(c.PublicDNS)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to resolve IP addresses for public DNS %q", c.PublicDNS)
+	} else if len(ips) == 0 {
+		return "", fmt.Errorf("no IP address resolved for public DNS %q", c.PublicDNS)
+	}
+
+	// go-tss requires a valid IPv4 address
+	for _, ip := range ips {
+		if govalidator.IsIPv4(ip.String()) {
+			return ip.String(), nil
+		}
+	}
+
+	return "", fmt.Errorf("no IPv4 address resolved for public DNS %q", c.PublicDNS)
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID

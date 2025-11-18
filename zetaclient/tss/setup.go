@@ -211,6 +211,11 @@ func NewServer(
 		logger.Warn().Msg("no public IP or DNS is provided")
 	}
 
+	publicIP, err := cfg.ResolvePublicIP()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to resolve public IP")
+	}
+
 	tssPath, err := resolveTSSPath(cfg.TssPath, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to resolve TSS path")
@@ -224,8 +229,7 @@ func NewServer(
 			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
-		ExternalIP:       cfg.PublicIP,
-		ExternalDNS:      cfg.PublicDNS,
+		ExternalIP:       publicIP,
 		Port:             Port,
 		BootstrapPeers:   bootstrapPeers,
 		WhitelistedPeers: whitelistPeers,
