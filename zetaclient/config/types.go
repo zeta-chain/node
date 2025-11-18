@@ -6,12 +6,14 @@ import (
 	"maps"
 	"net"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/asaskevich/govalidator"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/showa-93/go-mask"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -221,7 +223,7 @@ func (c Config) Validate() error {
 
 // ResolvePublicDNS4 resolves the public DNS to an IPv4 address when public IP isn't set.
 // For simplicity, the 1st resolved IPv4 address is used if multiple IP addresses are found.
-func (c Config) ResolvePublicIP() (string, error) {
+func (c Config) ResolvePublicIP(logger zerolog.Logger) (string, error) {
 	// return public IP if already set
 	if c.PublicIP != "" {
 		return c.PublicIP, nil
@@ -232,6 +234,7 @@ func (c Config) ResolvePublicIP() (string, error) {
 		return "", nil
 	}
 
+	// lookup IP addresses
 	ips, err := net.LookupIP(c.PublicDNS)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to resolve IP addresses for public DNS %q", c.PublicDNS)
@@ -239,10 +242,18 @@ func (c Config) ResolvePublicIP() (string, error) {
 		return "", fmt.Errorf("no IP address resolved for public DNS %q", c.PublicDNS)
 	}
 
+	// sort IP addresses to be deterministic
+	strIPs := make([]string, len(ips))
+	for i, ip := range ips {
+		strIPs[i] = ip.String()
+	}
+	sort.Strings(strIPs)
+
 	// go-tss requires a valid IPv4 address
-	for _, ip := range ips {
-		if govalidator.IsIPv4(ip.String()) {
-			return ip.String(), nil
+	for _, ip := range strIPs {
+		if govalidator.IsIPv4(ip) {
+			logger.Info().Str("ip", ip).Msg("resolved public IP")
+			return ip, nil
 		}
 	}
 

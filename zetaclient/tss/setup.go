@@ -211,7 +211,7 @@ func NewServer(
 		logger.Warn().Msg("no public IP or DNS is provided")
 	}
 
-	publicIP, err := cfg.ResolvePublicIP()
+	publicIP, err := cfg.ResolvePublicIP(logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to resolve public IP")
 	}

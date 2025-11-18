@@ -3,6 +3,7 @@ package config_test
 import (
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/sdkconfig"
@@ -205,7 +206,7 @@ func Test_ResolvePublicIP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			publicIP, err := tt.cfg.ResolvePublicIP()
+			publicIP, err := tt.cfg.ResolvePublicIP(zerolog.Nop())
 			if tt.errorMsg != "" {
 				require.Empty(t, publicIP)
 				require.ErrorContains(t, err, tt.errorMsg)
