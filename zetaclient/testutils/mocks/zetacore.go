@@ -12,6 +12,8 @@ import (
 
 	context "context"
 
+	cosmos_sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
 	errors "github.com/zeta-chain/node/pkg/errors"
@@ -1008,6 +1010,36 @@ func (_m *ZetacoreClient) PostVoteTSS(_a0 context.Context, tssPubKey string, key
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, int64, chains.ReceiveStatus) error); ok {
 		r1 = rf(_a0, tssPubKey, keyGenZetaHeight, _a3)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// QueryTxResult provides a mock function with given fields: hash
+func (_m *ZetacoreClient) QueryTxResult(hash string) (*cosmos_sdktypes.TxResponse, error) {
+	ret := _m.Called(hash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for QueryTxResult")
+	}
+
+	var r0 *cosmos_sdktypes.TxResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*cosmos_sdktypes.TxResponse, error)); ok {
+		return rf(hash)
+	}
+	if rf, ok := ret.Get(0).(func(string) *cosmos_sdktypes.TxResponse); ok {
+		r0 = rf(hash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*cosmos_sdktypes.TxResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(hash)
 	} else {
 		r1 = ret.Error(1)
 	}

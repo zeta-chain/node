@@ -1,0 +1,13 @@
+{
+    "BitcoinClient": {},
+    "EVMClient": {},
+    "SolanaClient": {},
+    "SuiClient": {},
+    "TONClient": {},
+    "TSSClient": {},
+    "ZetacoreClient": {
+        "PostVoteGasPrice": 10,
+        "PostVoteInbound": 10,
+        "QueryTxResult": 10
+    }
+}

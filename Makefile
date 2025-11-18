@@ -366,6 +366,33 @@ start-legacy-test: e2e-images
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
+###                         Chaos Tests              						###
+###############################################################################
+chaos-all: stop-localnet
+	@CHAOS_PROFILE=1 $(MAKE) start-e2e-test
+
+chaos-inbound: stop-localnet
+	@CHAOS_PROFILE=2 $(MAKE) start-e2e-test
+
+chaos-outbound: stop-localnet
+	@CHAOS_PROFILE=3 $(MAKE) start-e2e-test
+
+chaos-btc: stop-localnet
+	@CHAOS_PROFILE=4 $(MAKE) start-e2e-test
+
+chaos-eth: stop-localnet
+	@CHAOS_PROFILE=5 $(MAKE) start-e2e-test
+
+chaos-solana: stop-localnet
+	@CHAOS_PROFILE=6 $(MAKE) start-solana-test
+
+chaos-sui: stop-localnet
+	@CHAOS_PROFILE=7 $(MAKE) start-sui-test
+
+chaos-ton: stop-localnet
+	@CHAOS_PROFILE=8 $(MAKE) start-ton-test
+
+###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################
 
