@@ -498,15 +498,15 @@ func setupCPUProfiling(svrCtx *server.Context) error {
 		return fmt.Errorf("failed to expand cpu profile path: %w", err)
 	}
 
-	f, err := os.Create(fp) //#nosec G304 -- cpu profile path from config
+	// #nosec G304 -- cpuProfile path is from server configuration
+	f, err := os.Create(fp)
 	if err != nil {
 		return fmt.Errorf("failed to create cpu profile file: %w", err)
 	}
 
 	svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 	if err := pprof.StartCPUProfile(f); err != nil {
-		// we can ignore the close error here as this is used just for the cleanup
-		_ = f.Close()
+		_ = f.Close() // #nosec G104 -- ignore error on cleanup path
 		return fmt.Errorf("failed to start cpu profile: %w", err)
 	}
 
@@ -535,7 +535,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
 		return
 	}
-	//#nosec G304 -- trace writer file path from config
+	// #nosec G304 G302 -- traceWriterFile path is from server configuration
 	return os.OpenFile(
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
@@ -843,6 +843,8 @@ func devnetify(
 		ValidatorIndex:   0,
 		Signature:        []byte{},
 	}
+
+	ctx.Viper.Set(KeyAppBlockHeight, cmtState.LastBlockHeight)
 
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()

@@ -80,7 +80,6 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4395](https://github.com/zeta-chain/node/pull/4395) - update e2e to set higher timeouts when running stress test
 * [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
 
-
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
