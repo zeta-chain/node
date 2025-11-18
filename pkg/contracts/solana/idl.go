@@ -41,8 +41,8 @@ type Seed struct {
 }
 
 type Arg struct {
-	Name string      `json:"name"`
-	Type interface{} `json:"type"`
+	Name string `json:"name"`
+	Type any    `json:"type"`
 }
 
 type Error struct {
@@ -62,6 +62,6 @@ type TypeField struct {
 }
 
 type Field struct {
-	Name string      `json:"name"`
-	Type interface{} `json:"type"`
+	Name string `json:"name"`
+	Type any    `json:"type"`
 }
