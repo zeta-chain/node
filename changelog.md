@@ -10,6 +10,7 @@
 
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+* [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
 
 ## v37.0.0
 
