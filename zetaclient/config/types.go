@@ -229,9 +229,9 @@ func (c Config) ResolvePublicIP(logger zerolog.Logger) (string, error) {
 		return c.PublicIP, nil
 	}
 
-	// skip DNS resolution if public DNS isn't set
+	// return error if public DNS isn't set
 	if c.PublicDNS == "" {
-		return "", nil
+		return "", errors.New("no public IP or DNS is provided")
 	}
 
 	// lookup IP addresses

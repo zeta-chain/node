@@ -184,7 +184,7 @@ func Test_ResolvePublicIP(t *testing.T) {
 		{
 			name:     "no public IP or DNS is set",
 			cfg:      config.Config{},
-			expectIP: "",
+			errorMsg: "no public IP or DNS is provided",
 		},
 		{
 			name: "only public DNS is set",
