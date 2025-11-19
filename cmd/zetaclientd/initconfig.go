@@ -13,7 +13,10 @@ import (
 
 // initializeConfigOptions is a set of CLI options for `init` command.
 type initializeConfigOptions struct {
-	mode mode.ClientMode
+	mode string
+
+	chaosSeed        int64
+	chaosProfilePath string
 
 	peer               string
 	publicIP           string
@@ -28,8 +31,6 @@ type initializeConfigOptions struct {
 	level              int8
 	configUpdateTicker uint64
 
-	p2pDiagnostic              bool
-	p2pDiagnosticTicker        uint64
 	TSSPath                    string
 	TestTSSKeySign             bool
 	KeyringBackend             string
@@ -44,7 +45,9 @@ func setupInitializeConfigOptions() {
 	f, cfg := InitializeConfigCmd.Flags(), &initializeConfigOpts
 
 	const (
-		usageMode             = "mode for cross-chain transaction processing (0:standard, 1:dry, 2:chaos)"
+		usageMode             = "mode for cross-chain transaction processing (standard, dry, or chaos)"
+		usageChaosSeed        = "seed for the pseudo-random chaos number generator (default: 0 uses a random seed)"
+		usageChaosProfilePath = "path for the chaos profile file containing the failure rates for each failable method"
 		usagePeer             = "peer address e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsH..."
 		usageHotKey           = "hotkey for zetaclient this key is used for TSS and ZetaClient operations"
 		usageLogLevel         = "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic)"
@@ -55,7 +58,9 @@ func setupInitializeConfigOptions() {
 		usageMempoolThreshold = "the threshold number of unconfirmed txs in the zetacore mempool to consider it congested (0 means no threshold)"
 	)
 
-	f.Uint8Var((*uint8)(&cfg.mode), "mode", uint8(mode.StandardMode), usageMode)
+	f.StringVar(&cfg.mode, "mode", "standard", usageMode)
+	f.Int64Var(&cfg.chaosSeed, "chaos-seed", 0, usageChaosSeed)
+	f.StringVar(&cfg.chaosProfilePath, "chaos-profile-path", "", usageChaosProfilePath)
 	f.StringVar(&cfg.peer, "peer", "", usagePeer)
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.publicDNS, "public-dns", "", "public dns name (alternative to public-ip)")
@@ -65,10 +70,8 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization, this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
-	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, test)")
+	f.StringVar(&cfg.logFormat, "log-format", "json", "log format (json, text)")
 	f.BoolVar(&cfg.logSampler, "log-sampler", false, "set to to true to turn on log sampling")
-	f.BoolVar(&cfg.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
-	f.Uint64Var(&cfg.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, usageP2PDiag)
 	f.Uint64Var(&cfg.configUpdateTicker, "config-update-ticker", 5, usageTicker)
 	f.StringVar(&cfg.TSSPath, "tss-path", "~/.tss", "path to tss location")
 	f.BoolVar(&cfg.TestTSSKeySign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
@@ -97,8 +100,15 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	clientMode, err := mode.New(opts.mode)
+	if err != nil {
+		return err
+	}
+
 	// Populate new struct with cli arguments
-	configData.ClientMode = opts.mode
+	configData.ClientMode = clientMode
+	configData.ChaosSeed = opts.chaosSeed
+	configData.ChaosProfilePath = opts.chaosProfilePath
 	configData.Peer = initializeConfigOpts.peer
 	configData.PublicIP = opts.publicIP
 	configData.PublicDNS = opts.publicDNS
@@ -110,10 +120,8 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.LogLevel = opts.level
 	configData.LogFormat = opts.logFormat
 	configData.LogSampler = opts.logSampler
-	configData.P2PDiagnostic = opts.p2pDiagnostic
 	configData.TssPath = opts.TSSPath
 	configData.TestTssKeysign = opts.TestTSSKeySign
-	configData.P2PDiagnosticTicker = opts.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = opts.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initializeConfigOpts.KeyringBackend)
 	configData.RelayerKeyPath = opts.RelayerKeyPath

@@ -2,12 +2,21 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
+	"net"
+	"os"
+	"sort"
 	"strings"
 	"sync"
 
+	"github.com/asaskevich/govalidator"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/showa-93/go-mask"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/mode"
 )
@@ -98,6 +107,9 @@ type FeatureFlags struct {
 type Config struct {
 	ClientMode mode.ClientMode `json:"ClientMode"`
 
+	ChaosSeed        int64  `json:"ChaosSeed"`
+	ChaosProfilePath string `json:"ChaosProfilePath"`
+
 	Peer                    string         `json:"Peer"`
 	PublicIP                string         `json:"PublicIP"`
 	PublicDNS               string         `json:"PublicDNS"`
@@ -110,9 +122,7 @@ type Config struct {
 	ZetaCoreURL             string         `json:"ZetaCoreURL"`
 	AuthzGranter            string         `json:"AuthzGranter"`
 	AuthzHotkey             string         `json:"AuthzHotkey"`
-	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
 	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
 	TssPath                 string         `json:"TssPath"`
 	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
 	TestTssKeysign          bool           `json:"TestTssKeysign"`
@@ -143,6 +153,111 @@ type Config struct {
 	FeatureFlags FeatureFlags `json:"FeatureFlags"`
 
 	mu *sync.RWMutex
+}
+
+// Validate performs basic validation on the configuration fields.
+func (c Config) Validate() error {
+	// go-tss requires a valid IPv4 address
+	if c.PublicIP != "" && !govalidator.IsIPv4(c.PublicIP) {
+		return errors.Errorf("reason: invalid public IP, got: %s", c.PublicIP)
+	}
+
+	if c.PublicDNS != "" && !govalidator.IsDNSName(c.PublicDNS) {
+		return errors.Errorf("reason: invalid public DNS, got: %s", c.PublicDNS)
+	}
+
+	if _, err := chains.ZetaChainFromCosmosChainID(c.ChainID); err != nil {
+		return errors.Errorf("reason: invalid chain id, got: %s", c.ChainID)
+	}
+
+	// ZetaCoreURL can be either an IP address or a hostname (e.g., Docker service name)
+	if c.ZetaCoreURL != "" && !govalidator.IsIP(c.ZetaCoreURL) && !govalidator.IsDNSName(c.ZetaCoreURL) {
+		return errors.Errorf("reason: invalid zetacore URL, got: %s", c.ZetaCoreURL)
+	}
+
+	// validate granter address - should be a valid bech32 address
+	if _, err := sdktypes.AccAddressFromBech32(c.AuthzGranter); err != nil {
+		return errors.Errorf("reason: invalid bech32 granter address, got: %s", c.AuthzGranter)
+	}
+
+	// validate grantee name - should not be empty
+	if strings.TrimSpace(c.AuthzHotkey) == "" {
+		return errors.Errorf("reason: grantee name is empty")
+	}
+
+	// acceptable log levels are: 0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic
+	if c.LogLevel < 0 || c.LogLevel > 5 {
+		return errors.Errorf("reason: log level must be between 0 and 5, got: %d", c.LogLevel)
+	}
+
+	if c.ConfigUpdateTicker == 0 {
+		return errors.Errorf("reason: config update ticker is 0")
+	}
+
+	if c.KeyringBackend != KeyringBackendFile && c.KeyringBackend != KeyringBackendTest {
+		return errors.Errorf("reason: invalid keyring backend, got: %s", c.KeyringBackend)
+	}
+
+	if c.MaxBaseFee < 0 {
+		return errors.Errorf("reason: max base fee cannot be negative, got: %d", c.MaxBaseFee)
+	}
+
+	if c.MempoolCongestionThreshold < 0 {
+		return errors.Errorf(
+			"reason: mempool congestion threshold cannot be negative, got: %d",
+			c.MempoolCongestionThreshold,
+		)
+	}
+
+	if c.ClientMode.IsChaosMode() {
+		if c.ChaosProfilePath == "" {
+			return errors.New("ChaosProfilePath is a required field")
+		}
+		if _, err := os.Stat(c.ChaosProfilePath); err != nil {
+			return fmt.Errorf("invalid ChaosProfilePath %q: %w", c.ChaosProfilePath, err)
+		}
+	}
+
+	return nil
+}
+
+// ResolvePublicDNS4 resolves the public DNS to an IPv4 address when public IP isn't set.
+// For simplicity, the 1st resolved IPv4 address is used if multiple IP addresses are found.
+func (c Config) ResolvePublicIP(logger zerolog.Logger) (string, error) {
+	// return public IP if already set
+	if c.PublicIP != "" {
+		return c.PublicIP, nil
+	}
+
+	// return error if public DNS isn't set
+	if c.PublicDNS == "" {
+		return "", errors.New("no public IP or DNS is provided")
+	}
+
+	// lookup IP addresses
+	ips, err := net.LookupIP(c.PublicDNS)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to resolve IP addresses for public DNS %q", c.PublicDNS)
+	} else if len(ips) == 0 {
+		return "", fmt.Errorf("no IP address resolved for public DNS %q", c.PublicDNS)
+	}
+
+	// sort IP addresses to be deterministic
+	strIPs := make([]string, len(ips))
+	for i, ip := range ips {
+		strIPs[i] = ip.String()
+	}
+	sort.Strings(strIPs)
+
+	// go-tss requires a valid IPv4 address
+	for _, ip := range strIPs {
+		if govalidator.IsIPv4(ip) {
+			logger.Info().Str("ip", ip).Msg("resolved public IP")
+			return ip, nil
+		}
+	}
+
+	return "", fmt.Errorf("no IPv4 address resolved for public DNS %q", c.PublicDNS)
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID

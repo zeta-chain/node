@@ -17,8 +17,10 @@ import (
 	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/dry"
 	"github.com/zeta-chain/node/zetaclient/maintenance"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
@@ -83,7 +85,8 @@ func Start(_ *cobra.Command, _ []string) error {
 	}
 
 	// Initialize core parameters from zetacore
-	if err = orchestrator.UpdateAppContext(ctx, appContext, zetacoreClient, logger.Std); err != nil {
+	err = orchestrator.UpdateAppContext(ctx, appContext, zetacoreClient, logger.Std)
+	if err != nil {
 		return errors.Wrap(err, "unable to update app context")
 	}
 
@@ -108,37 +111,53 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "pre start check failed")
 	}
 
-	tssSetupProps := zetatss.SetupProps{
-		Config:              cfg,
-		Zetacore:            zetacoreClient,
-		GranteePubKeyBech32: granteePubKeyBech32,
-		HotKeyPassword:      passes.hotkey,
-		TSSKeyPassword:      passes.tss,
-		BitcoinChainIDs:     btcChainIDsFromContext(appContext),
-		PostBlame:           isEnvFlagEnabled(envFlagPostBlame),
-		Telemetry:           telemetry,
-	}
-
-	// This will start p2p communication so it should only happen after
-	// preflight checks have completed
-	tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
-	if err != nil {
-		return errors.Wrap(err, "unable to setup TSS service")
-	}
-
-	graceful.AddStopper(tss.Stop)
-
-	// Starts various background TSS listeners.
-	// Shuts down zetaclientd if any is triggered.
-	maintenance.NewTSSListener(zetacoreClient, logger.Std).Listen(ctx, func() {
-		logger.Std.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
-		graceful.ShutdownNow()
-	})
-
+	// Starts background listener. Shuts down zetaclientd if it is triggered.
 	shutdownListener.Listen(ctx, func() {
 		logger.Std.Info().Msg("Shutdown listener received an action to shutdown zetaclientd.")
 		graceful.ShutdownNow()
 	})
+
+	// Does not start the TSS service when in dry mode.
+	var tssClient tssrepo.TSSClient
+	if cfg.ClientMode.IsDryMode() {
+		tss, err := zetacoreClient.GetTSS(ctx)
+		if err != nil {
+			return errors.Wrap(err, "unable to get TSS from zetacore client")
+		}
+
+		tssClient, err = dry.NewTSSClient(tss.TssPubkey)
+		if err != nil {
+			return errors.Wrap(err, "unable to create dry TSS client")
+		}
+	} else {
+		tssSetupProps := zetatss.SetupProps{
+			Config:              cfg,
+			Zetacore:            zetacoreClient,
+			GranteePubKeyBech32: granteePubKeyBech32,
+			HotKeyPassword:      passes.hotkey,
+			TSSKeyPassword:      passes.tss,
+			BitcoinChainIDs:     btcChainIDsFromContext(appContext),
+			PostBlame:           isEnvFlagEnabled(envFlagPostBlame),
+			Telemetry:           telemetry,
+		}
+
+		// This will start p2p communication so it should only happen after
+		// preflight checks have completed
+		tss, err := zetatss.Setup(ctx, tssSetupProps, logger.Std)
+		if err != nil {
+			return errors.Wrap(err, "unable to setup TSS service")
+		}
+
+		graceful.AddStopper(tss.Stop)
+
+		// Starts background TSS listener. Shuts down zetaclientd if it is triggered.
+		maintenance.NewTSSListener(zetacoreClient, logger.Std).Listen(ctx, func() {
+			logger.Std.Info().Msg("TSS listener received an action to shutdown zetaclientd.")
+			graceful.ShutdownNow()
+		})
+
+		tssClient = tss
+	}
 
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
 	// This is the high level object used for CCTX interactions
@@ -148,9 +167,10 @@ func Start(_ *cobra.Command, _ []string) error {
 	orchestrator, err := orchestrator.New(
 		taskScheduler,
 		zetacoreClient,
-		tss,
+		tssClient,
 		telemetry,
 		dbPath,
+		cfg,
 		logger,
 	)
 	if err != nil {

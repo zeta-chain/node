@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Features
+
+### Tests
+
+### Fixes
+
+* [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
+* [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+* [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
+* [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
+
+## v37.0.0
+
 ### Breaking Changes
 
 * EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
@@ -52,23 +65,34 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
 * [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
 * [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
+* [4384](https://github.com/zeta-chain/node/pull/4384) - disable TSS service in dry mode
+* [4359](https://github.com/zeta-chain/node/pull/4359) - add chaos mode for ZetaClient
+* [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
+* [4378](https://github.com/zeta-chain/node/pull/4378) - add number of connected peers to tss keygen log
+* [4387](https://github.com/zeta-chain/node/pull/4387) - add new dry zetaclient to localnet
+* [4419](https://github.com/zeta-chain/node/pull/4419) - add testnet command to create a fork from existing node data
 
 ### Tests
 
 * [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
 * [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
 * [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
+* [4395](https://github.com/zeta-chain/node/pull/4395) - update e2e to set higher timeouts when running stress test
+* [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
 
 ### Refactor
 
 * [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
 * [4356](https://github.com/zeta-chain/node/pull/4356) - rename protocol contract imports to `protocol-contracts-evm`
+* [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
+* [4391](https://github.com/zeta-chain/node/pull/4391) - change client mode config
 
 ### Fixes
 
 * [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
 * [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
 * [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
+* [4386](https://github.com/zeta-chain/node/pull/4386) - filter out nil address to prevent error logs
 
 ### Documentation
 

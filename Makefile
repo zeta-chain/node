@@ -11,6 +11,10 @@ DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
+OLD_VERSION := v36.0.1
+#UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
+DEVNET_UPGRADE_VERSION := v37.0.0
+OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
 GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
@@ -148,6 +152,18 @@ chain-stop:
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
+devnet-fork:
+	@echo "--> Running devnet fork script..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%)
+
+devnet-fork-upgrade:
+	@echo "--> Running devnet fork script with upgrade..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
+
+download-snapshot:
+	@echo "--> Downloading and caching testnet snapshot..."
+	@python3 contrib/devnet/download_snapshot.py
+
 ###############################################################################
 ###                                 Linting            	                    ###
 ###############################################################################
@@ -227,13 +243,19 @@ generate: proto-gen openapi specs typescript docs-zetacored go-generate fmt
 ###                         Localnet                          				###
 ###############################################################################
 e2e-images: zetanode orchestrator
-start-localnet: e2e-images start-localnet-skip-build
+start-localnet: e2e-images solana start-localnet-skip-build
 
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
 	export E2E_ARGS="${E2E_ARGS} --setup-solana --setup-sui --setup-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton --profile monitoring up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) \
+		--profile solana \
+		--profile sui \
+		--profile ton \
+		--profile monitoring \
+		--profile dry \
+		up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
@@ -276,7 +298,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
@@ -305,7 +327,7 @@ start-e2e-performance-test-1k: e2e-images solana
 start-stress-test-eth: e2e-images
 	@echo "--> Starting stress test for eth"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-zevm --test-stress-eth --iterations=1000" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring --profile dry up -d
 
 start-stress-test-solana: e2e-images solana
 	@echo "--> Starting stress test for solana"
@@ -338,17 +360,17 @@ start-tss-migration-test: e2e-images solana
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile dry up -d
 
 start-ton-test: e2e-images
 	@echo "--> Starting TON test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton --profile dry up -d
 
 start-sui-test: e2e-images
 	@echo "--> Starting sui test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-sui" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile dry up -d
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
@@ -365,7 +387,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v36' \
+		--build-arg OLD_VERSION='release/$(OLD_VERSION_MAJOR)' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
@@ -373,7 +395,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v36.0.1' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_VERSION)' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.

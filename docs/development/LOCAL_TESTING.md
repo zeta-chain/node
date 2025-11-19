@@ -32,19 +32,32 @@ This uses `docker compose` to start the localnet and run standard e2e tests insi
 - `LOCALNET_MODE`
 	- `setup-only`: only setup the localnet, do not run the e2e tests
 	- `upgrade`: run the upgrade tests
-	- unset: run the e2e tests
+	- `unset`: run the e2e tests
 - `E2E_ARGS`: arguments to provide to the `zetae2e local` command
     - `--verbose` will give you verbose logs
 	- `--test-filter` allows you to filter which tests to run by regular expression
 - `UPGRADE_HEIGHT`: block height to upgrade at when `LOCALNET_MODE=upgrade`
 - `ZETACORED_IMPORT_GENESIS_DATA`: path to genesis data to import before starting zetacored
 - `ZETACORED_START_PERIOD`: duration to tolerate `zetacored` health check failures during startup
+- `CHAOS_PROFILE`: run the ZetaClient nodes in chaos mode using the given profile.
+- `CHAOS_SEED`: the seed to use when for chaos mode (optional).
 
-Here is an example of using `E2E_ARGS`:
 
-```
+Here is an example that uses `E2E_ARGS`:
+
+```bash
 export E2E_ARGS='--verbose --test-filter eth_deposit|eth_withdraw'
 make start-e2e-test
+```
+
+Ans here are some examples that use `CHAOS_PROFILE` and `CHAOS_SEED`:
+
+```bash
+CHAOS_PROFILE=1 make start-e2e-test # remember that CHAOS_SEED is optional
+```
+
+```bash
+CHAOS_SEED=12345 CHAOS_PROFILE=2 make start-e2e-test
 ```
 
 This will execute `zetae2e local` as:
@@ -53,14 +66,17 @@ This will execute `zetae2e local` as:
 zetae2e local --verbose --test-filter eth_deposit|eth_withdraw --config config.yml
 ```
 
-More options directly to `docker compose` via the `NODE_COMPOSE_ARGS` variable. This allows setting additional profiles or configuring an overlay. Example:
+More options directly to `docker compose` via the `NODE_COMPOSE_ARGS` variable.
+This allows setting additional profiles or configuring an overlay.
+Example:
 
 ```
 export NODE_COMPOSE_ARGS="--profile monitoring -f docker-compose-persistent.yml"
 make start-e2e-test
 ```
 
-This starts the e2e tests while enabling the monitoring stack and persistence (data is not deleted between test runs).
+This starts the e2e tests while enabling the monitoring stack and persistence
+(data is not deleted between test runs).
 
 #### Run admin functions e2e tests
 

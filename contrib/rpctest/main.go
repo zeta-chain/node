@@ -27,10 +27,10 @@ var (
 )
 
 type Request struct {
-	Jsonrpc string        `json:"jsonrpc"`
-	Method  string        `json:"method"`
-	Params  []interface{} `json:"params"`
-	ID      int           `json:"id"`
+	Jsonrpc string `json:"jsonrpc"`
+	Method  string `json:"method"`
+	Params  []any  `json:"params"`
+	ID      int    `json:"id"`
 }
 
 type Response struct {
@@ -82,7 +82,7 @@ func main() {
 		HTTPClient: &http.Client{},
 	}
 	resp := client.EthGetBlockByNumber(bnUint64, false)
-	var jsonObject map[string]interface{}
+	var jsonObject map[string]any
 	if resp.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", resp.Error.Message, resp.Error.Code)
 		panic(resp.Error.Message)
@@ -92,7 +92,7 @@ func main() {
 		panic(err)
 	}
 
-	txs, ok := jsonObject["transactions"].([]interface{})
+	txs, ok := jsonObject["transactions"].([]any)
 	if !ok || len(txs) != 1 {
 		panic("Wrong number of txs")
 	}
@@ -164,7 +164,7 @@ func main() {
 		fmt.Printf("Error: %s (code %d)\n", receipt2.Error.Message, receipt2.Error.Code)
 		panic(tx.Error.Message)
 	}
-	jsonObject = make(map[string]interface{})
+	jsonObject = make(map[string]any)
 	err = json.Unmarshal(receipt2.Result, &jsonObject)
 	if err != nil {
 		panic(err)
@@ -266,7 +266,7 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 	req := &Request{
 		Jsonrpc: "2.0",
 		Method:  "eth_getBlockByNumber",
-		Params: []interface{}{
+		Params: []any{
 			hexBlockNum,
 			verbose,
 		},
@@ -309,7 +309,7 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	req := &Request{
 		Jsonrpc: "2.0",
 		Method:  "eth_getTransactionReceipt",
-		Params: []interface{}{
+		Params: []any{
 			txhash,
 		},
 		ID: 1,

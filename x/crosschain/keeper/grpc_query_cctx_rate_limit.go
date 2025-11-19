@@ -61,7 +61,7 @@ func (k Keeper) RateLimiterInput(
 		return cctx.InboundParams.ObservedExternalHeight >= uint64(leftWindowBoundary)
 	}
 
-	// if a cctx is an outgoing cctx that orginates from ZetaChain
+	// if a cctx is an outgoing cctx that originates from ZetaChain
 	// reverted incoming cctx has an external `SenderChainId` and should not be counted
 	isCCTXOutgoing := func(cctx *types.CrossChainTx) bool {
 		return chains.IsZetaChain(cctx.InboundParams.SenderChainId, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))

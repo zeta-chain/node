@@ -120,7 +120,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_VERSION }}
-        env:
           MAKE_RELEASE_TARGET: ${{ inputs.make_release_target }}
         run: |
           touch .release-env

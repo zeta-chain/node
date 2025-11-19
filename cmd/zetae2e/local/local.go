@@ -335,6 +335,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
+	// update to using higher timeouts when running stress tests
+	if testStress {
+		if deployerRunner.ReceiptTimeout == 0 {
+			deployerRunner.ReceiptTimeout = 15 * time.Minute
+		}
+		if deployerRunner.CctxTimeout == 0 {
+			deployerRunner.CctxTimeout = 15 * time.Minute
+		}
+	}
 
 	deployerRunner.PrintContractAddresses()
 
@@ -361,6 +370,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		eg.Go(rpcTestRoutine(
+			conf,
+			deployerRunner,
+			verbose,
+			e2etests.TestZEVMRPCName,
+		))
 	}
 
 	if testAdmin {
@@ -569,13 +584,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyEtherDepositAndCallRefundName,
 		))
 	}
-
-	// eg.Go(rpcTestRoutine(
-	// 	conf,
-	// 	deployerRunner,
-	// 	verbose,
-	// 	e2etests.TestZEVMRPCName,
-	// ))
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)

@@ -120,7 +120,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateTss)
 	require.NoError(r, err)
 
-	// Wait for atleast one block for the TSS to be updated
+	// Wait for at least one block for the TSS to be updated
 	time.Sleep(8 * time.Second)
 
 	currentTss, err := r.ObserverClient.TSS(r.Ctx, &observertypes.QueryGetTSSRequest{})
