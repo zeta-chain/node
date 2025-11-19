@@ -120,72 +120,46 @@ func (e *EVM) group() scheduler.Group {
 
 // scheduleKeysign schedules keysign for outbound transactions
 func (e *EVM) scheduleKeysign(ctx context.Context) error {
-	zetaBlock, _, err := scheduler.BlockFromContextWithDelay(ctx)
+	s := e.signer
+	zetaRepo := e.observer.ZetaRepo()
+
+	zetaHeight, stale, err := s.IsStaleBlockEvent(ctx, zetaRepo)
 	if err != nil {
-		return errors.Wrap(err, "unable to get block event from context")
-	}
-
-	// get real-time zeta height
-	zetaHeight, err := e.observer.ZetaRepo().GetBlockHeight(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get zeta height")
-	}
-
-	logger := e.signer.Logger().Std.With().Int64("zeta_height", zetaHeight).Logger()
-
-	// real-time zeta height are the signals to trigger TSS keysign on the exact same time,
-	// so we need to ensure the block event is up to date (not a stale one accumulated in the channel)
-	if zetaBlock.Block.Height != zetaHeight {
-		logger.Info().Int64("event_height", zetaBlock.Block.Height).Msg("skip stale block event")
+		return errors.Wrap(err, "unable to check block event")
+	} else if stale {
 		return nil
 	}
 
-	// keysign happens only when zeta height is a multiple of the schedule interval
-	scheduleInterval := e.observer.ChainParams().OutboundScheduleInterval
-	if zetaHeight%scheduleInterval != 0 {
+	// check if it's the time to perform keysign
+	interval := e.observer.ChainParams().OutboundScheduleInterval
+	shouldSign, startNonce, err := e.signer.IsTimeToSign(ctx, zetaRepo, zetaHeight, interval)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine the timing of TSS keysign")
+	} else if !shouldSign {
 		return nil
 	}
 
-	// query pending nonces and see if there is any tx to sign
-	nonceLow := uint64(0)
-	p, err := e.observer.ZetaRepo().GetPendingNonces(ctx)
-	switch {
-	case err != nil:
-		return errors.Wrapf(err, "unable to get pending nonces for chain %d", e.Chain().ChainId)
-	case p.NonceLow < 0: // never happens
-		return fmt.Errorf("negative pending nonce %d for chain %d", p.NonceLow, e.Chain().ChainId)
-	default:
-		// remove stale keysign info
-		// #nosec G115 - checked positive
-		nonceLow = uint64(p.NonceLow)
-		e.signer.RemoveKeysignInfo(nonceLow)
+	// use the first pending nonce's batch number as the starting point for keysign, please note that:
+	// 1. yhe starting point is deterministic across all TSS signers
+	// 2. gor any signed batch, there should always be >= 2/3 of signers have cached signatures for it;
+	//    so far as any one of the signers has cached signatures for a batch, txs can be processed, no worries.
+	// 3. sny signed batch is skipped during the loop, so the keysign effectively starts from the first batch
+	//    that has not been signed by >= 2/3 of signers.
+	var (
+		batchNumber = base.NonceToBatchNumber(startNonce)
+		batch       = s.GetKeysignBatch(ctx, zetaRepo, batchNumber)
+	)
 
-		// return if nothing to sign
-		if p.NonceLow >= p.NonceHigh {
-			return nil
-		}
-	}
-
-	// use the first pending nonce's batch number as the starting batch for keysign, please note that:
-	// 1. the starting batch is deterministic across all TSS signers
-	// 2. for any signed batch, there should always be >= 2/3 of signers have cached signatures for it
-	// 3. so far as any one of the signers has cached signatures for a batch, txs can be processed, no worries
-	batchNumber := base.NonceToBatchNumber(nonceLow)
-	batch := e.signer.GetKeysignBatch(batchNumber)
-	if batch == nil {
-		e.signer.Logger().Std.Info().Msg("waiting for pending cctxs to finalize")
-	}
-
-	// sign from the first to the last batch sequentially. In sequential mode,
-	// next keysign happens immediately after completing the previous one, so
-	// there is no need to wait for another interval to align the signers.
-	for batch != nil {
-		if err := e.signer.SignBatch(ctx, *batch, zetaHeight); err != nil {
+	// dign from the first to the last batch sequentially. In sequential mode, the first keysign is a handshake
+	// for the signers to be in sync, and the next keysign is scheduled immediately after completing the previous
+	// one, so there is no need to wait for another interval of time to do handshake again.
+	for batch != nil && !s.IsBatchSigned(batch) {
+		if err := s.SignBatch(ctx, *batch, zetaHeight); err != nil {
 			return errors.Wrapf(err, "break keysign loop: %d", batch.BatchNumber())
 		}
 
 		batchNumber++
-		batch = e.signer.GetKeysignBatch(batchNumber)
+		batch = s.GetKeysignBatch(ctx, zetaRepo, batchNumber)
 	}
 
 	return nil

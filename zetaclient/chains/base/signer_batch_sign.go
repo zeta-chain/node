@@ -1,0 +1,298 @@
+package base
+
+import (
+	"bytes"
+	"context"
+	"slices"
+	"time"
+
+	"github.com/cenkalti/backoff/v4"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+
+	"github.com/zeta-chain/node/pkg/retry"
+	"github.com/zeta-chain/node/pkg/scheduler"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
+	"github.com/zeta-chain/node/zetaclient/logs"
+)
+
+const (
+	// collectBatchBackoff is the backoff duration for retrying batch collection
+	collectBatchBackoff = 2 * time.Second
+
+	// collectBatchRetries is the maximum number of retries for batch collection
+	collectBatchRetries = 4
+)
+
+// IsStaleBlockEvent checks if the block event is stale and returns (zeta_height, is_stale, error).
+func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo) (int64, bool, error) {
+	zetaBlock, _, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return 0, false, errors.Wrap(err, "unable to get block event from context")
+	}
+
+	// get real-time zeta height
+	zetaHeight, err := zetaRepo.GetBlockHeight(ctx)
+	if err != nil {
+		return 0, false, errors.Wrap(err, "unable to get zeta height")
+	}
+
+	// real-time zeta height are the signals to trigger TSS keysign on the exact same time,
+	// so we need to ensure the block event is up to date (not a stale one accumulated in the channel)
+	if zetaBlock.Block.Height < zetaHeight {
+		return zetaHeight, true, nil
+	}
+
+	return zetaHeight, false, nil
+}
+
+// IsTimeToSign returns true and the starting nonce if it's time to schedule keysign.
+func (s *Signer) IsTimeToSign(
+	ctx context.Context,
+	zetaRepo *zrepo.ZetaRepo,
+	zetaHeight int64,
+	scheduleInterval int64,
+) (bool, uint64, error) {
+	// keysign happens only when zeta height is a multiple of the schedule interval
+	if zetaHeight%scheduleInterval != 0 {
+		return false, 0, nil
+	}
+
+	// query pending nonces and see if there is any tx to sign
+	p, err := zetaRepo.GetPendingNonces(ctx)
+	if err != nil {
+		return false, 0, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+	}
+
+	// remove stale keysign info to release memory
+	// #nosec G115 - always positive
+	startNonce := uint64(p.NonceLow)
+	s.removeKeysignInfo(startNonce)
+
+	// return false if no pending cctx
+	if p.NonceLow >= p.NonceHigh {
+		return false, 0, nil
+	}
+
+	return true, startNonce, nil
+}
+
+// GetKeysignBatch returns the keysign batch to for given batch number.
+func (s *Signer) GetKeysignBatch(ctx context.Context, zetaRepo *zrepo.ZetaRepo, batchNumber uint64) *TSSKeysignBatch {
+	logger := s.Logger().Std.With().Uint64("batch_num", batchNumber).Logger()
+
+	// return nil if batch number is invalid
+	valid, err := s.isValidBatchNumber(ctx, zetaRepo, batchNumber)
+	if err != nil {
+		logger.Error().Err(err).Msg("unable to check batch number validity")
+		return nil
+	} else if !valid {
+		return nil
+	}
+
+	// batch collector function
+	var batch *TSSKeysignBatch
+	fnCollect := func() error {
+		batch, err = s.collectKeysignBatch(batchNumber)
+		// force retry on error
+		return retry.Retry(err)
+	}
+
+	// collect batch with backoff
+	bo := backoff.NewConstantBackOff(collectBatchBackoff)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, collectBatchRetries)
+	if err := retry.DoWithBackoff(fnCollect, boWithMaxRetries); err != nil {
+		logger.Error().Err(err).Msg("unable to collect keysign batch")
+	}
+
+	return batch
+}
+
+// SignBatch signs a batch of digests and adds the signatures to the cache.
+func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeight int64) error {
+	var (
+		chainID      = s.Chain().ChainId
+		digests      = batch.Digests()
+		keysignNonce = batch.NonceHigh()
+		batchNumber  = batch.BatchNumber()
+
+		// it's an artificial height to uniquely identify the batch; added 1 to avoid 0 height
+		keysignHeight = batchNumber + 1
+	)
+
+	logger := s.batchLogger(zetaHeight, batch)
+	logger.Info().Msg("signing batch of digests")
+
+	sigs, err := s.TSS().SignBatch(ctx, digests, keysignHeight, keysignNonce, chainID)
+	if err != nil {
+		logger.Error().Err(err).Msg("batch keysign failed")
+		return err
+	}
+	logger.Info().Msg("signed batch of digests")
+
+	s.addBatchSignatures(batch, sigs)
+
+	return nil
+}
+
+// GetSignatureOrAddDigest returns cached signature for given nonce and digest, or adds digest to cache if not found.
+func (s *Signer) GetSignatureOrAddDigest(nonce uint64, cctxHeight uint64, digest []byte) ([65]byte, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var (
+		batchNumber = NonceToBatchNumber(nonce)
+		logger      = s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Uint64("batch_num", batchNumber).Logger()
+	)
+
+	info, found := s.tssKeysignInfoMap[nonce]
+	if !found {
+		s.tssKeysignInfoMap[nonce] = &TSSKeysignInfo{
+			digest:     digest,
+			signature:  [65]byte{},
+			cctxHeight: cctxHeight,
+		}
+		logger.Info().Msg("added digest to cache")
+
+		return [65]byte{}, false
+	}
+
+	// if digest has changed (e.g. increased gas price),
+	// it means the signature is no longer valid. Update
+	// digest and clear the old signature, then return false.
+	if !bytes.Equal(info.digest, digest) {
+		info.digest = digest
+		info.signature = [65]byte{}
+		logger.Info().Msg("updated digest in cache")
+
+		return [65]byte{}, false
+	}
+
+	return info.signature, info.signature != [65]byte{}
+}
+
+// IsBatchSigned returns true if the given batch was already signed before.
+func (s *Signer) IsBatchSigned(batch *TSSKeysignBatch) bool {
+	return s.TSS().IsSignatureCached(s.Chain().ChainId, batch.Digests())
+}
+
+// isValidBatchNumber returns true if the given batch number is valid.
+// A valid batch should cover a range of nonces that overlaps with the pending nonces.
+func (s *Signer) isValidBatchNumber(ctx context.Context, zetaRepo *zrepo.ZetaRepo, batchNumber uint64) (bool, error) {
+	p, err := zetaRepo.GetPendingNonces(ctx)
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+	}
+
+	// return false if no pending cctx
+	if p.NonceLow >= p.NonceHigh {
+		return false, nil
+	}
+
+	// #nosec G115 - always positive
+	cctxNonceLow, cctxNonceHigh := uint64(p.NonceLow), uint64(p.NonceHigh)-1
+	batchNonceLow, batchNonceHigh := BatchNumberToRange(batchNumber)
+
+	// overlap check
+	return cctxNonceLow <= batchNonceHigh && batchNonceLow <= cctxNonceHigh, nil
+}
+
+// collectKeysignBatch collects keysign batch for the given batch number.
+func (s *Signer) collectKeysignBatch(batchNumber uint64) (*TSSKeysignBatch, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var (
+		batch                         = NewTSSKeysignBatch()
+		batchNonceLow, batchNonceHigh = BatchNumberToRange(batchNumber)
+	)
+
+	// sort all nonces in ascending order
+	allNonces := make([]uint64, 0, len(s.tssKeysignInfoMap))
+	for nonce := range s.tssKeysignInfoMap {
+		allNonces = append(allNonces, nonce)
+	}
+	slices.Sort(allNonces)
+
+	// collect digests within the batch's range
+	for _, nonce := range allNonces {
+		if nonce < batchNonceLow {
+			continue
+		} else if nonce > batchNonceHigh {
+			break
+		}
+
+		info := s.tssKeysignInfoMap[nonce]
+		batch.AddKeysignInfo(nonce, *info)
+	}
+
+	switch {
+	case batch.IsEmpty():
+		return nil, errors.New("waiting for digests")
+	case !batch.IsSequential():
+		// if batch contains gaps, wait for the digests to be added to cache
+		return nil, errors.New("waiting for digests sequential")
+	default:
+		return batch, nil
+	}
+}
+
+// addBatchSignatures adds TSS signatures to the cache.
+func (s *Signer) addBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var (
+		nonceLow    = batch.NonceLow()
+		nonceHigh   = batch.NonceHigh()
+		batchNumber = batch.BatchNumber()
+		logger      = s.Logger().Std.With().Uint64("batch_num", batchNumber).Logger()
+	)
+
+	for nonce := nonceLow; nonce <= nonceHigh; nonce++ {
+		info, found := s.tssKeysignInfoMap[nonce]
+		if !found {
+			continue
+		}
+
+		// TSS service ensures the order of signatures matches the order of digests
+		sigIndex := nonce - nonceLow
+
+		// skip signature if digest has changed (e.g. increased gas price)
+		if !bytes.Equal(info.digest, batch.Digests()[sigIndex]) {
+			continue
+		}
+
+		// log it, then add or update signature
+		if info.signature == [65]byte{} {
+			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("add signature to cache")
+		} else if info.signature != sigs[sigIndex] {
+			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("update signature in cache")
+		}
+		info.signature = sigs[sigIndex]
+	}
+}
+
+// removeKeysignInfo removes keysign info for all nonces before the given nonce.
+// This function is used to clean up stale keysign info in the cache.
+func (s *Signer) removeKeysignInfo(beforeNonce uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for nonce := range s.tssKeysignInfoMap {
+		if nonce < beforeNonce {
+			delete(s.tssKeysignInfoMap, nonce)
+		}
+	}
+}
+
+// keysignLogger returns the logger for keysign.
+func (s *Signer) batchLogger(zetaHeight int64, batch TSSKeysignBatch) zerolog.Logger {
+	return s.Logger().
+		Std.With().
+		Int64("height", zetaHeight).
+		Uint64("batch_num", batch.BatchNumber()).
+		Uint64("nonce_low", batch.NonceLow()).
+		Uint64("nonce_high", batch.NonceHigh()).
+		Logger()
+}
