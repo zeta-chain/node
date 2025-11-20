@@ -184,19 +184,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
-	// determine test timeouts based on test type
-	var timeouts TestTimeouts
+	timeouts := RegularTestTimeouts(cmd)
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
 		timeouts = StressTestTimeouts(cmd, iterations)
-
-	} else {
-		// for regular tests, get timeouts from flags (which have defaults)
-		timeouts = RegularTestTimeouts(cmd)
 	}
 
-	// log the timeout values being used
 	logger.Print("⏱️  Test timeouts: TestTimeout=%s, ReceiptTimeout=%s, CctxTimeout=%s",
 		timeouts.TestTimeout, timeouts.ReceiptTimeout, timeouts.CctxTimeout)
 
@@ -346,7 +340,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
-	// apply timeouts to deployer runner
+
 	if deployerRunner.ReceiptTimeout == 0 {
 		deployerRunner.ReceiptTimeout = timeouts.ReceiptTimeout
 	}
