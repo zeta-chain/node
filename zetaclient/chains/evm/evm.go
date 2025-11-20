@@ -151,11 +151,19 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 	)
 
 	// dign from the first to the last batch sequentially. In sequential mode, the first keysign is a handshake
-	// for the signers to be in sync, and the next keysign is scheduled immediately after completing the previous
+	// for the signers to get in sync, and the next keysign is scheduled immediately after completing the previous
 	// one, so there is no need to wait for another interval of time to do handshake again.
-	for batch != nil && !s.IsBatchSigned(batch) {
-		if err := s.SignBatch(ctx, *batch, zetaHeight); err != nil {
-			return errors.Wrapf(err, "break keysign loop: %d", batch.BatchNumber())
+	for batch != nil {
+		if !s.IsBatchSigned(batch) {
+			if err := s.SignBatch(ctx, *batch, zetaHeight); err != nil {
+				return errors.Wrapf(err, "break keysign batch: %d", batch.BatchNumber())
+			}
+		}
+
+		// now that signed, move to next batch only if this batch is ending
+		// we don't want to leave a batch partially signed and jump to next
+		if !batch.IsEnding() {
+			break
 		}
 
 		batchNumber++
@@ -200,6 +208,11 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 	}
 
 	for idx, cctx := range cctxList {
+		// only look at 'lookahead' cctxs per chain
+		if int64(idx) >= lookahead {
+			break
+		}
+
 		var (
 			params     = cctx.GetCurrentOutboundParam()
 			outboundID = base.OutboundIDFromCCTX(cctx)
@@ -207,8 +220,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 
 		switch {
 		case params.ReceiverChainId != chainID:
-			e.outboundLogger(outboundID).Error().Msg("chain id mismatch")
-			continue
+			return fmt.Errorf("chain id mismatch: want %d, got %d", chainID, params.ReceiverChainId)
 		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookBack:
 			return fmt.Errorf(
 				"nonce %d is too high (%s). Earliest nonce %d",
@@ -218,37 +230,23 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			)
 		}
 
-		// if next nonce is higher than cctx's nonce, it means the outbound is already processed
-		// vote outbound if it's already confirmed
+		// if cctx's nonce is lower than next nonce, it means the outbound was already processed;
+		// in this case, we just need to check its confirmations and post vote if it's confirmed.
 		if params.TssNonce < nextNonce {
-			// vote outbound if it's already confirmed
-			continueKeysign, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx)
-			switch {
-			case err != nil:
-				e.outboundLogger(outboundID).Error().
-					Err(err).
-					Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
-				continue
-			case !continueKeysign:
-				e.outboundLogger(outboundID).Debug().Msg("schedule CCTX: outbound already processed")
-				continue
-			case e.signer.IsOutboundActive(outboundID):
-				// outbound is already being processed
-				continue
+			if _, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx); err != nil {
+				e.outboundLogger(outboundID).Error().Err(err).Msg("call to VoteOutboundIfConfirmed failed")
 			}
+			continue
 		}
 
 		// process this CCTX
-		go e.signer.TryProcessOutbound(
-			ctx,
-			cctx,
-			e.observer.ZetaRepo(),
-			zetaHeight,
-		)
-
-		// only look at 'lookahead' cctxs per chain
-		if int64(idx) >= lookahead-1 {
-			break
+		if !e.signer.IsOutboundActive(outboundID) {
+			go e.signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				e.observer.ZetaRepo(),
+				zetaHeight,
+			)
 		}
 	}
 

@@ -18,10 +18,10 @@ import (
 
 const (
 	// collectBatchBackoff is the backoff duration for retrying batch collection
-	collectBatchBackoff = 2 * time.Second
+	collectBatchBackoff = 4 * time.Second
 
 	// collectBatchRetries is the maximum number of retries for batch collection
-	collectBatchRetries = 4
+	collectBatchRetries = 2
 )
 
 // IsStaleBlockEvent checks if the block event is stale and returns (zeta_height, is_stale, error).
@@ -81,24 +81,24 @@ func (s *Signer) IsTimeToSign(
 func (s *Signer) GetKeysignBatch(ctx context.Context, zetaRepo *zrepo.ZetaRepo, batchNumber uint64) *TSSKeysignBatch {
 	logger := s.Logger().Std.With().Uint64("batch_num", batchNumber).Logger()
 
-	// return nil if batch number is invalid
-	valid, err := s.isValidBatchNumber(ctx, zetaRepo, batchNumber)
+	// return nil if batch number is not ready to sign
+	ready, untilNonce, err := s.isBatchReadyToSign(ctx, zetaRepo, batchNumber)
 	if err != nil {
-		logger.Error().Err(err).Msg("unable to check batch number validity")
+		logger.Error().Err(err).Msg("unable to check batch readiness")
 		return nil
-	} else if !valid {
+	} else if !ready {
 		return nil
 	}
 
 	// batch collector function
 	var batch *TSSKeysignBatch
 	fnCollect := func() error {
-		batch, err = s.collectKeysignBatch(batchNumber)
+		batch, err = s.collectKeysignBatch(batchNumber, untilNonce)
 		// force retry on error
 		return retry.Retry(err)
 	}
 
-	// collect batch with backoff
+	// collect batch with retries
 	bo := backoff.NewConstantBackOff(collectBatchBackoff)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, collectBatchRetries)
 	if err := retry.DoWithBackoff(fnCollect, boWithMaxRetries); err != nil {
@@ -176,29 +176,39 @@ func (s *Signer) IsBatchSigned(batch *TSSKeysignBatch) bool {
 	return s.TSS().IsSignatureCached(s.Chain().ChainId, batch.Digests())
 }
 
-// isValidBatchNumber returns true if the given batch number is valid.
-// A valid batch should cover a range of nonces that overlaps with the pending nonces.
-func (s *Signer) isValidBatchNumber(ctx context.Context, zetaRepo *zrepo.ZetaRepo, batchNumber uint64) (bool, error) {
+// isBatchReadyToSign returns (true, untilNonce) if the given batch number is ready to sign.
+// A batch is ready when it covers a range of nonces that overlaps with the pending nonces.
+func (s *Signer) isBatchReadyToSign(
+	ctx context.Context,
+	zetaRepo *zrepo.ZetaRepo,
+	batchNumber uint64,
+) (bool, uint64, error) {
 	p, err := zetaRepo.GetPendingNonces(ctx)
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+		return false, 0, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
 	}
 
 	// return false if no pending cctx
 	if p.NonceLow >= p.NonceHigh {
-		return false, nil
+		return false, 0, nil
 	}
 
 	// #nosec G115 - always positive
 	cctxNonceLow, cctxNonceHigh := uint64(p.NonceLow), uint64(p.NonceHigh)-1
 	batchNonceLow, batchNonceHigh := BatchNumberToRange(batchNumber)
 
-	// overlap check
-	return cctxNonceLow <= batchNonceHigh && batchNonceLow <= cctxNonceHigh, nil
+	// calculate the overlap range
+	overlap := cctxNonceLow <= batchNonceHigh && batchNonceLow <= cctxNonceHigh
+	if !overlap {
+		return false, 0, nil
+	}
+	untilNonce := min(cctxNonceHigh, batchNonceHigh)
+
+	return true, untilNonce, nil
 }
 
-// collectKeysignBatch collects keysign batch for the given batch number.
-func (s *Signer) collectKeysignBatch(batchNumber uint64) (*TSSKeysignBatch, error) {
+// collectKeysignBatch collects keysign batch for the given batch number until the given nonce.
+func (s *Signer) collectKeysignBatch(batchNumber uint64, untilNonce uint64) (*TSSKeysignBatch, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -231,7 +241,10 @@ func (s *Signer) collectKeysignBatch(batchNumber uint64) (*TSSKeysignBatch, erro
 		return nil, errors.New("waiting for digests")
 	case !batch.IsSequential():
 		// if batch contains gaps, wait for the digests to be added to cache
-		return nil, errors.New("waiting for digests sequential")
+		return nil, errors.New("waiting for digests gaps")
+	case !batch.ContainsNonce(untilNonce):
+		// wait for all nonces until the given nonce to be added to cache
+		return nil, errors.Errorf("waiting for digests until nonce %d", untilNonce)
 	default:
 		return batch, nil
 	}

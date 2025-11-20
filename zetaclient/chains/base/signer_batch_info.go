@@ -107,6 +107,18 @@ func (b *TSSKeysignBatch) IsSequential() bool {
 	return uint64(len(b.digests)) == b.nonceHigh-b.nonceLow+1
 }
 
+// IsEnding returns true if the batch hits the end of the batch.
+// For example: [6,7,8,9] is ending of batch 0, [18,19] is ending of batch 1, ...
+func (b *TSSKeysignBatch) IsEnding() bool {
+	_, batchNonceHigh := BatchNumberToRange(b.BatchNumber())
+	return b.nonceHigh == batchNonceHigh
+}
+
+// ContainsNonce returns true if the batch contains the given nonce.
+func (b *TSSKeysignBatch) ContainsNonce(nonce uint64) bool {
+	return nonce >= b.nonceLow && nonce <= b.nonceHigh
+}
+
 // KeysignHeight calculates an artificial keysign height tweaked with chainID.
 func (b *TSSKeysignBatch) KeysignHeight(chainID int64, height uint64) uint64 {
 	// #nosec G115 e2eTest - always in range

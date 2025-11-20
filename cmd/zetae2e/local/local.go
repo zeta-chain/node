@@ -726,15 +726,15 @@ func runE2EStressTests(
 	}
 
 	if testEthStress {
-		// eg.Go(
-		// 	ethereumDepositPerformanceRoutine(
-		// 		conf,
-		// 		deployerRunner,
-		// 		verbose,
-		// 		[]string{e2etests.TestStressEtherDepositName},
-		// 		iterations,
-		// 	),
-		// )
+		eg.Go(
+			ethereumDepositPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherDepositName},
+				iterations,
+			),
+		)
 		eg.Go(
 			ethereumWithdrawPerformanceRoutine(
 				conf,

@@ -93,6 +93,20 @@ func (self *chaosZetacoreClient) GetBallotByID(
 	return
 }
 
+func (self *chaosZetacoreClient) GetBlockHeight(
+	in0 m2.Context,
+) (
+	out0 int64,
+	out1 error,
+) {
+	if err := self.shouldFail("ZetacoreClient", "GetBlockHeight"); err != nil {
+		out1 = err
+	} else {
+		out0, out1 = self.client.GetBlockHeight(in0)
+	}
+	return
+}
+
 func (self *chaosZetacoreClient) GetCctxByHash(
 	in0 m2.Context,
 	in1 string,
@@ -1632,6 +1646,16 @@ var _ m34.TSSClient = &chaosTSSClient{}
 
 func (source *Source) WrapTSSClient(client m34.TSSClient) *chaosTSSClient {
 	return &chaosTSSClient{Source: source, client: client}
+}
+
+func (self *chaosTSSClient) IsSignatureCached(
+	in0 int64,
+	in1 [][]uint8,
+) (
+	out0 bool,
+) {
+	// Functions that do not return errors cannot fail.
+	return self.client.IsSignatureCached(in0, in1)
 }
 
 func (self *chaosTSSClient) PubKey() (
