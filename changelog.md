@@ -11,6 +11,7 @@
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
 * [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
+* [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
 
 ## v37.0.0
 
@@ -78,7 +79,6 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
 * [4395](https://github.com/zeta-chain/node/pull/4395) - update e2e to set higher timeouts when running stress test
 * [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
-
 
 ### Refactor
 

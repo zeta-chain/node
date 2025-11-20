@@ -41,7 +41,7 @@ func (addr Address) String() string {
 	return string(addr)
 }
 
-func ConvertRecoverToError(r interface{}) error {
+func ConvertRecoverToError(r any) error {
 	switch x := r.(type) {
 	case string:
 		return errors.New(x)

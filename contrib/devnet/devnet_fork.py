@@ -6,11 +6,12 @@ This script downloads testnet state, syncs for a period, then converts it to a l
 single-validator devnet for testing purposes.
 
 Run from the root zeta-node directory:
-    python3 contrib/devnet/devnet_fork.py
+    python3 contrib/devnet/devnet_fork.py [--node-version VERSION]
 Or:
     make devnet-fork
 """
 
+import argparse
 import os
 import subprocess
 import sys
@@ -23,14 +24,11 @@ from pathlib import Path
 # Configuration Constants
 # ============================================================================
 
-# Node version to build
-NODE_VERSION = "36.0.1"
-
-# Devnet configuration (forked from Athens3 testnet)
+# Devnet configuration
 DEVNET_CHAIN_ID = "devnet_70000-1"
 OPERATOR_ADDRESS = "zeta13l7ladn2crrdcl9nupqn5kzyajcn03lkzgnrze"
 
-# Athens3 testnet config URLs (source network for fork)
+# Athens3 testnet config URLs
 ATHENS3_CONFIG_BASE = "https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3"
 ATHENS3_GENESIS_URL = f"{ATHENS3_CONFIG_BASE}/genesis.json"
 ATHENS3_CLIENT_URL = f"{ATHENS3_CONFIG_BASE}/client.toml"
@@ -113,70 +111,183 @@ def replace_in_file(file_path, search, replace):
         print(f"Error updating {file_path}: {e}")
         sys.exit(1)
 
+def extract_major_version(version):
+    """Extract major version from a version string (e.g., 'v36.0.4' -> 'v36')."""
+    # Remove 'v' prefix if present
+    if version.startswith('v'):
+        version_without_v = version[1:]
+    else:
+        version_without_v = version
+
+    # Split by '.' and take first part
+    major = version_without_v.split('.')[0]
+
+    # Return with 'v' prefix
+    return f"v{major}"
+
+def setup_cosmovisor(node_version, upgrade_version=None):
+    """Set up Cosmovisor directory structure and binaries."""
+    print("\n[Setting up Cosmovisor]")
+
+    # Create cosmovisor directory structure
+    cosmovisor_dir = ZETACORED_DIR / "cosmovisor"
+    genesis_bin_dir = cosmovisor_dir / "genesis" / "bin"
+
+    print(f"Creating genesis bin directory: {genesis_bin_dir}")
+    genesis_bin_dir.mkdir(parents=True, exist_ok=True)
+
+    # Install genesis version (node_version) and copy to genesis bin
+    print(f"\nInstalling genesis version: {node_version}")
+    run_command(f"NODE_VERSION={node_version} make install")
+
+    # Find the zetacored binary path
+    zetacored_path = run_command("which zetacored", capture_output=True)
+    print(f"Found zetacored at: {zetacored_path}")
+
+    # Copy to genesis bin
+    genesis_binary = genesis_bin_dir / "zetacored"
+    print(f"Copying binary to: {genesis_binary}")
+    run_command(f"cp {zetacored_path} {genesis_binary}")
+    run_command(f"chmod +x {genesis_binary}")
+
+    print(f"\nCosmovisor genesis setup complete!")
+    print(f"  Genesis binary: {genesis_binary}")
+
+    # Only set up upgrade directory if upgrade_version is provided
+    if upgrade_version:
+        # Create upgrade directory
+        upgrade_handler_version = extract_major_version(upgrade_version)
+        upgrade_bin_dir = cosmovisor_dir / "upgrades" / upgrade_handler_version / "bin"
+        print(f"\nCreating upgrade bin directory: {upgrade_bin_dir}")
+        upgrade_bin_dir.mkdir(parents=True, exist_ok=True)
+
+        # Install upgrade version and copy to upgrade bin
+        print(f"Installing upgrade version: {upgrade_version}")
+        run_command(f"NODE_VERSION={upgrade_version} make install")
+
+        # Find the upgraded zetacored binary path
+        zetacored_path = run_command("which zetacored", capture_output=True)
+        print(f"Found upgraded zetacored at: {zetacored_path}")
+
+        # Copy to upgrade bin
+        upgrade_binary = upgrade_bin_dir / "zetacored"
+        print(f"Copying binary to: {upgrade_binary}")
+        run_command(f"cp {zetacored_path} {upgrade_binary}")
+        run_command(f"chmod +x {upgrade_binary}")
+
+        print(f"\nCosmovisor upgrade setup complete!")
+        print(f"  Upgrade binary: {upgrade_binary}")
+        print(f"  Upgrade handler: {upgrade_handler_version}")
+
+    # Set environment variables for Cosmovisor
+    print("\nSetting up Cosmovisor environment variables...")
+    env_vars = {
+        "DAEMON_HOME": str(ZETACORED_DIR),
+        "DAEMON_NAME": "zetacored",
+        "DAEMON_ALLOW_DOWNLOAD_BINARIES": "true",
+        "DAEMON_RESTART_AFTER_UPGRADE": "true",
+        "CLIENT_DAEMON_NAME": "zetaclientd",
+        "CLIENT_DAEMON_ARGS": "-enable-chains,GOERLI,-val,operator",
+        "DAEMON_DATA_BACKUP_DIR": str(ZETACORED_DIR),
+        "CLIENT_SKIP_UPGRADE": "true",
+        "CLIENT_START_PROCESS": "false",
+        "UNSAFE_SKIP_BACKUP": "true"
+    }
+
+    for key, value in env_vars.items():
+        os.environ[key] = value
+        print(f"  export {key}={value}")
+
 # ============================================================================
 # Main Script
 # ============================================================================
 
-def main():
+def main(node_version, upgrade_version=None):
     print("=" * 80)
     print("ZetaChain Devnet Fork Script")
     print("=" * 80)
+    print(f"Using node version: {node_version}")
+    if upgrade_version:
+        print(f"Upgrade version: {upgrade_version}")
+    print("=" * 80)
 
     # Step 1: Clean and build
-    print("\n[1/9] Cleaning and building zetacored...")
+    print("\n[1/10] Cleaning and building zetacored...")
     run_command("make clean")
-    run_command(f"NODE_VERSION={NODE_VERSION} make install")
+    run_command(f"NODE_VERSION={node_version} make install")
 
     # Step 2: Initialize node
-    print("\n[2/9] Initializing zetacored...")
+    print("\n[2/10] Initializing zetacored...")
     run_command("zetacored init test --chain-id=athens_7001-1")
 
     # Step 3: Download config files
-    print("\n[3/9] Downloading Athens3 configuration...")
+    print("\n[3/10] Downloading Athens3 testnet configuration...")
     download_file(ATHENS3_GENESIS_URL, ZETACORED_CONFIG_DIR / "genesis.json")
     download_file(ATHENS3_CLIENT_URL, ZETACORED_CONFIG_DIR / "client.toml")
     download_file(ATHENS3_CONFIG_URL, ZETACORED_CONFIG_DIR / "config.toml")
     download_file(ATHENS3_APP_URL, ZETACORED_CONFIG_DIR / "app.toml")
 
     # Step 4: Update config with external IP and moniker
-    print("\n[4/9] Updating configuration with external IP...")
+    print("\n[4/10] Updating configuration with external IP...")
     external_ip = get_external_ip()
     config_file = ZETACORED_CONFIG_DIR / "config.toml"
     replace_in_file(config_file, "{YOUR_EXTERNAL_IP_ADDRESS_HERE}", external_ip)
-    replace_in_file(config_file, "{MONIKER}", "devNode")
+    replace_in_file(config_file, "{MONIKER}", "testNode")
 
     # Step 5: Download and extract snapshot
-    print("\n[5/9] Downloading snapshot...")
-    try:
-        snapshot_json = requests.get(SNAPSHOT_JSON_URL, timeout=30).json()
-        snapshot_link = snapshot_json['snapshots'][0]['link']
-        snapshot_filename = snapshot_json['snapshots'][0]['filename']
-        print(f"Snapshot: {snapshot_filename}")
-        print(f"Link: {snapshot_link}")
-    except Exception as e:
-        print(f"Error fetching snapshot info: {e}")
-        sys.exit(1)
+    print("\n[5/10] Loading testnet snapshot...")
 
-    snapshot_path = HOME_DIR / snapshot_filename
+    # Check for local snapshot cache
+    snapshot_cache_dir = HOME_DIR / "zetacored_snapshot_testnet"
+    use_cache = False
 
-    # Download snapshot
-    print(f"Downloading snapshot to {snapshot_path}...")
-    run_command(f'curl "{snapshot_link}" -o "{snapshot_path}"')
+    if snapshot_cache_dir.exists() and any(snapshot_cache_dir.iterdir()):
+        print(f"Found cached snapshot at: {snapshot_cache_dir}")
+        print("Using cached snapshot instead of downloading...")
+        use_cache = True
+    else:
+        print("No cached snapshot found, will download from remote...")
 
-    # Extract snapshot
-    print("Extracting snapshot...")
-    run_command(f'lz4 -dc "{snapshot_path}" | tar -C "{ZETACORED_DIR}/" -xvf -')
+    if use_cache:
+        # Copy from cache
+        print(f"Copying cached snapshot data to {ZETACORED_DIR}/data...")
+        data_dir = ZETACORED_DIR / "data"
+        if data_dir.exists():
+            run_command(f'rm -rf "{data_dir}"')
+        run_command(f'cp -r "{snapshot_cache_dir}" "{data_dir}"')
+        print("Cached snapshot copied successfully!")
+    else:
+        # Download snapshot
+        try:
+            snapshot_json = requests.get(SNAPSHOT_JSON_URL, timeout=30).json()
+            snapshot_link = snapshot_json['snapshots'][0]['link']
+            snapshot_filename = snapshot_json['snapshots'][0]['filename']
+            print(f"Snapshot: {snapshot_filename}")
+            print(f"Link: {snapshot_link}")
+        except Exception as e:
+            print(f"Error fetching snapshot info: {e}")
+            sys.exit(1)
 
-    # Remove snapshot file
-    print("Cleaning up snapshot file...")
-    snapshot_path.unlink()
+        snapshot_path = HOME_DIR / snapshot_filename
+
+        # Download snapshot
+        print(f"Downloading snapshot to {snapshot_path}...")
+        run_command(f'curl "{snapshot_link}" -o "{snapshot_path}"')
+
+        # Extract snapshot
+        print("Extracting snapshot...")
+        run_command(f'lz4 -dc "{snapshot_path}" | tar -C "{ZETACORED_DIR}/" -xvf -')
+
+        # Remove snapshot file
+        print("Cleaning up snapshot file...")
+        snapshot_path.unlink()
 
     # Step 6: Initial sleep
-    print("\n[6/9] Waiting 10 seconds before starting node...")
+    print("\n[6/10] Waiting 10 seconds before starting node...")
     time.sleep(10)
 
     # Step 7: Start zetacored in background
-    print("\n[7/9] Starting zetacored in background...")
+    print("\n[7/10] Starting zetacored in background...")
     # Open log file for writing
     log_file = open(ZETACORED_LOG_FILE, 'w')
     process = subprocess.Popen(
@@ -241,7 +352,7 @@ def main():
     time.sleep(30)
 
     # Step 8: Stop zetacored
-    print("\n[8/9] Stopping zetacored...")
+    print("\n[8/10] Stopping zetacored...")
     process.terminate()
     try:
         process.wait(timeout=SHUTDOWN_WAIT_SECONDS)
@@ -259,13 +370,64 @@ def main():
     time.sleep(SHUTDOWN_WAIT_SECONDS)
 
     # Step 9: Run devnet command
-    print("\n[9/9] Running devnet command to modify state and start the network")
-    devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
-    run_command(devnet_cmd)
+    print("\n[9/10] Running devnet command to modify state...")
+    if upgrade_version:
+        # Extract major version (e.g., v36.0.4 -> v36) to match handler name
+        upgrade_handler_version = extract_major_version(upgrade_version)
+        devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} {upgrade_handler_version} --skip-confirmation"
+        print(f"Scheduling upgrade to version: {upgrade_version} (handler: {upgrade_handler_version})")
+    else:
+        devnet_cmd = f"zetacored devnet {DEVNET_CHAIN_ID} {OPERATOR_ADDRESS} --skip-confirmation"
+
+
+    print(f"Running: {devnet_cmd}")
+    test_log_file = open(HOME_DIR / "zetacored_devnet.log", 'w')
+    test_process = subprocess.Popen(
+        devnet_cmd,
+        shell=True,
+        stdout=test_log_file,
+        stderr=subprocess.STDOUT
+    )
+    print(f"Started zetacored devnet with PID: {test_process.pid}")
+    print("Waiting 30 seconds...")
+    time.sleep(30)
+
+    print("Killing devnet node...")
+    test_process.kill()
+    test_process.wait()
+    test_log_file.close()
+    print(f"Devnet logs: {HOME_DIR / 'zetacored_devnet.log'}")
+
+    # Step 10: Set up Cosmovisor and start
+    print("\n[10/10] Setting up Cosmovisor and starting node...")
+    setup_cosmovisor(node_version, upgrade_version)
+
+    # Run cosmovisor start in foreground
+    print("\nStarting Cosmovisor...")
+    cosmovisor_cmd = "cosmovisor start"
+    print(f"Running: {cosmovisor_cmd}")
+    print("Note: Cosmovisor is running in foreground. Press Ctrl+C to stop.")
+    run_command(cosmovisor_cmd)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Fork testnet state to create a local single-validator devnet",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--node-version",
+        required=True,
+        help="Node version to build (e.g., 36.0.1)"
+    )
+    parser.add_argument(
+        "--upgrade-version",
+        default=None,
+        help="Schedule an upgrade to this version (e.g., v36.0.4). If not provided, no upgrade is scheduled."
+    )
+    args = parser.parse_args()
+
     try:
-        main()
+        main(args.node_version, args.upgrade_version)
     except KeyboardInterrupt:
         print("\n\nScript interrupted by user. Exiting...")
         sys.exit(1)
