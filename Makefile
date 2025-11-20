@@ -372,7 +372,8 @@ chaos-all: stop-localnet
 	@CHAOS_PROFILE=1 $(MAKE) start-e2e-test
 
 chaos-inbound: stop-localnet
-	@CHAOS_PROFILE=2 $(MAKE) start-e2e-test
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=15m --receipt-timeout=15m --cctx-timeout=30m" && \
+	CHAOS_PROFILE=2 $(MAKE) start-e2e-test
 
 chaos-outbound: stop-localnet
 	@CHAOS_PROFILE=3 $(MAKE) start-e2e-test
@@ -390,7 +391,7 @@ chaos-sui: stop-localnet
 	@CHAOS_PROFILE=7 $(MAKE) start-sui-test
 
 chaos-ton: stop-localnet
-	@CHAOS_PROFILE=8 $(MAKE) start-ton-test
+	CHAOS_PROFILE=8 $(MAKE) start-ton-test
 
 ###############################################################################
 ###                         Upgrade Tests              						###

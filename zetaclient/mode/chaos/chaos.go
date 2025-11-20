@@ -106,3 +106,7 @@ func (self *chaosZetacoreClient) SetSelf(queryTxResulter interface{}) {
 		setter.SetSelf(queryTxResulter)
 	}
 }
+
+func (self *chaosSolanaClient) UnwrapClient() interface{} {
+	return self.client
+}

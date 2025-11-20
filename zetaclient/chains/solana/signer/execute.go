@@ -110,9 +110,14 @@ func (signer *Signer) prepareExecuteMsgParams(
 
 	client, ok := signer.solanaClient.(*rpc.Client)
 	if !ok {
-		return nil, nil, stderrors.New(
-			"solana AddressLookupTable requires *rpc.Client; got different SolanaClient implementation",
-		)
+		if wrapper, wrapOk := signer.solanaClient.(interface{ UnwrapClient() interface{} }); wrapOk {
+			client, ok = wrapper.UnwrapClient().(*rpc.Client)
+		}
+		if !ok {
+			return nil, nil, stderrors.New(
+				"solana AddressLookupTable requires *rpc.Client; got different SolanaClient implementation",
+			)
+		}
 	}
 	alt, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
 		ctx,
