@@ -27,15 +27,6 @@ type TestTimeouts struct {
 	CctxTimeout time.Duration
 }
 
-// DefaultTimeouts returns the default timeout values for regular E2E tests
-func DefaultTimeouts() TestTimeouts {
-	return TestTimeouts{
-		TestTimeout:    DefaultTestTimeout,
-		ReceiptTimeout: DefaultReceiptTimeout,
-		CctxTimeout:    DefaultCctxTimeout,
-	}
-}
-
 // RegularTestTimeouts returns timeout values for regular tests from command flags
 func RegularTestTimeouts(cmd *cobra.Command) TestTimeouts {
 	return TestTimeouts{
@@ -47,6 +38,7 @@ func RegularTestTimeouts(cmd *cobra.Command) TestTimeouts {
 
 // StressTestTimeouts returns timeout values for stress tests.
 // It adjusts the overall TestTimeout based on the number of iterations.
+// Can be overridden by command flags.
 func StressTestTimeouts(cmd *cobra.Command, iterations int) TestTimeouts {
 	timeouts := TestTimeouts{
 		TestTimeout:    DefaultTestTimeout,
@@ -54,12 +46,10 @@ func StressTestTimeouts(cmd *cobra.Command, iterations int) TestTimeouts {
 		CctxTimeout:    StressCctxTimeout,
 	}
 
-	// Increase overall test timeout for high iteration counts
 	if iterations > 100 {
 		timeouts.TestTimeout = time.Hour
 	}
 
-	// override with custom timeout flags if provided
 	if cmd.Flags().Changed(flagTestTimeout) {
 		timeouts.TestTimeout = must(cmd.Flags().GetDuration(flagTestTimeout))
 	}

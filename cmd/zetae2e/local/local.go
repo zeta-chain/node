@@ -116,9 +116,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 	cmd.Flags().
 		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
-	cmd.Flags().Duration(flagTestTimeout, DefaultTestTimeout, "overall timeout for the test suite")
+	cmd.Flags().Duration(flagTestTimeout, DefaultTestTimeout, "overall timeout for the e2e tests")
 	cmd.Flags().Duration(flagReceiptTimeout, DefaultReceiptTimeout, "timeout for waiting for transaction receipts")
-	cmd.Flags().Duration(flagCctxTimeout, DefaultCctxTimeout, "timeout for waiting for cross-chain transactions")
+	cmd.Flags().Duration(flagCctxTimeout, DefaultCctxTimeout, "timeout for waiting for CCTX to reach desired status")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -184,19 +184,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
-	// determine test timeouts based on test type
-	var timeouts TestTimeouts
+	timeouts := RegularTestTimeouts(cmd)
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
 		timeouts = StressTestTimeouts(cmd, iterations)
-
-	} else {
-		// for regular tests, get timeouts from flags (which have defaults)
-		timeouts = RegularTestTimeouts(cmd)
 	}
 
-	// log the timeout values being used
 	logger.Print("⏱️  Test timeouts: TestTimeout=%s, ReceiptTimeout=%s, CctxTimeout=%s",
 		timeouts.TestTimeout, timeouts.ReceiptTimeout, timeouts.CctxTimeout)
 
@@ -346,7 +340,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
-	// apply timeouts to deployer runner
+
 	if deployerRunner.ReceiptTimeout == 0 {
 		deployerRunner.ReceiptTimeout = timeouts.ReceiptTimeout
 	}

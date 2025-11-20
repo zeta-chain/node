@@ -102,37 +102,12 @@ func WaitCctxsMinedByInboundHash(
 	startTime := time.Now()
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
 
-	// fetch cctxs by inboundHash
-	var lastErr error
-	var lastRes *crosschaintypes.QueryInboundHashToCctxDataResponse
 	for i := 0; ; i++ {
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
 
-		elapsed := time.Since(startTime)
-		timedOut := elapsed > timeout
-		if timedOut {
-			logger.Info("❌ CCTX timeout debugging info:")
-			logger.Info("  Inbound hash: %s", inboundHash)
-			logger.Info("  Elapsed time: %s", elapsed)
-			logger.Info("  Configured timeout: %s", timeout)
-			logger.Info("  Query attempts: %d", i)
-			if lastErr != nil {
-				logger.Info("  Last InTxHashToCctxData error: %s", lastErr.Error())
-			}
-			if lastRes != nil {
-				logger.Info("  Last InTxHashToCctxData response: %d cctxs found", len(lastRes.CrossChainTxs))
-				for j, cctx := range lastRes.CrossChainTxs {
-					logger.Info("    CCTX[%d]: index=%s, status=%s, message=%s",
-						j, cctx.Index, cctx.CctxStatus.Status.String(), cctx.CctxStatus.StatusMessage)
-				}
-			} else {
-				logger.Info("  Last InTxHashToCctxData response: none")
-			}
-		}
-		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s, elapsed: %s, timeout: %s",
-			inboundHash, elapsed, timeout)
-
+		timedOut := time.Since(startTime) > timeout
+		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 		require.NoError(t, ctx.Err())
 
 		time.Sleep(500 * time.Millisecond)
@@ -142,8 +117,6 @@ func WaitCctxsMinedByInboundHash(
 		// TODO: replace with InboundHashToCctxData once removed
 		// https://github.com/zeta-chain/node/issues/2200
 		res, err := client.InTxHashToCctxData(ctx, in)
-		lastErr = err
-		lastRes = res
 		if err != nil {
 			// prevent spamming logs
 			if i%20 == 0 {
