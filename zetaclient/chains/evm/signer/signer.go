@@ -23,7 +23,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -161,14 +160,16 @@ func (signer *Signer) GetGatewayAddress() string {
 	return signer.gatewayAddress.String()
 }
 
-// NextNonce returns the next outbound's nonce of the TSS account
-func (signer *Signer) NextNonce(ctx context.Context) (uint64, error) {
+// NextTSSNonce returns the next nonce of the TSS account
+func (signer *Signer) NextTSSNonce(ctx context.Context) (uint64, error) {
 	nextNonce, err := signer.evmClient.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get TSS account nonce")
 	}
 
-	metrics.NextTSSNonce.WithLabelValues(signer.Chain().Name).Set(float64(nextNonce))
+	// update next TSS nonce metrics
+	signer.SetNextTSSNonce(nextNonce)
+
 	return nextNonce, nil
 }
 

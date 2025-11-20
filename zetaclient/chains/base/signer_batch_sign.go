@@ -46,35 +46,44 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 	return zetaHeight, false, nil
 }
 
-// IsTimeToSign returns true and the starting nonce if it's time to schedule keysign.
+// IsTimeToSign returns true if it's time to schedule keysign.
 func (s *Signer) IsTimeToSign(
 	ctx context.Context,
 	zetaRepo *zrepo.ZetaRepo,
+	nextTSSNonce uint64,
 	zetaHeight int64,
 	scheduleInterval int64,
-) (bool, uint64, error) {
+) (bool, error) {
 	// keysign happens only when zeta height is a multiple of the schedule interval
 	if zetaHeight%scheduleInterval != 0 {
-		return false, 0, nil
+		return false, nil
 	}
 
 	// query pending nonces and see if there is any tx to sign
 	p, err := zetaRepo.GetPendingNonces(ctx)
 	if err != nil {
-		return false, 0, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+		return false, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
 	}
+
+	// #nosec G115 - always positive
+	nonceLow := uint64(p.NonceLow)
+	nonceHigh := uint64(p.NonceHigh)
 
 	// remove stale keysign info to release memory
-	// #nosec G115 - always positive
-	startNonce := uint64(p.NonceLow)
-	s.removeKeysignInfo(startNonce)
+	s.removeKeysignInfo(nonceLow)
 
-	// return false if no pending cctx
-	if p.NonceLow >= p.NonceHigh {
-		return false, 0, nil
+	// return false if no pending cctx to sign
+	if nonceLow >= nonceHigh {
+		return false, nil
 	}
 
-	return true, startNonce, nil
+	// return false if TSS nonce is already ahead, it means that outbounds
+	// were processed by external chain but don't have enough confirmations
+	if nextTSSNonce >= nonceHigh {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // GetKeysignBatch returns the keysign batch to for given batch number.
