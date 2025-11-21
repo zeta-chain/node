@@ -219,7 +219,6 @@ func NewRPCTransaction(
 		result.ChainID = (*hexutil.Big)(tx.ChainId())
 		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
 		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
-		// Compute effective gas price for mined transactions
 		if blockHash != (common.Hash{}) {
 			result.GasPrice = (*hexutil.Big)(EffectiveGasPrice(tx, baseFee))
 		} else {
