@@ -46,8 +46,8 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 	return zetaHeight, false, nil
 }
 
-// IsTimeToSign returns true if it's time to schedule keysign.
-func (s *Signer) IsTimeToSign(
+// PrepareForKeysign checks if it's time to sign and clean up stale keysign information.
+func (s *Signer) PrepareForKeysign(
 	ctx context.Context,
 	zetaRepo *zrepo.ZetaRepo,
 	nextTSSNonce uint64,

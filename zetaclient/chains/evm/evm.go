@@ -215,7 +215,7 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 
 	// check if it's the time to perform keysign
 	interval := e.observer.ChainParams().OutboundScheduleInterval
-	shouldSign, err := e.signer.IsTimeToSign(ctx, zetaRepo, nextTSSNonce, zetaHeight, interval)
+	shouldSign, err := e.signer.PrepareForKeysign(ctx, zetaRepo, nextTSSNonce, zetaHeight, interval)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine the timing of TSS keysign")
 	} else if !shouldSign {
@@ -237,7 +237,8 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 	//    signers can continue signing the batches ahead without waiting.
 	//
 	// Why signing in batches?
-	// - Batching multiple digests in one request is efficient and avoids TSS service spamming.
+	// - Batching multiple digests in one request is efficient.
+	// - Reduce parallel keysign requests and avoid spamming the TSS service.
 	//
 	// Why signing sequentially?
 	// - EVM chain processes txs by nonce sequentially; if tx with nonce N is not processed, it blocks tx with nonce N+1.

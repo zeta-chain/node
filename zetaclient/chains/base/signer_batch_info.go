@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	// batchSize is the maximum number of digests in a keysign batch
-	// signing a 10-digest batch takes about 3~4 seconds on average
-	// increasing batch size won't make much difference in performance
+	// batchSize is the maximum number of digests in a keysign batch.
+	// signing a 10-digest batch takes about 3~4 seconds on average, and
+	// increasing batch size won't result in significant performance boost
 	batchSize = 10
 )
 
