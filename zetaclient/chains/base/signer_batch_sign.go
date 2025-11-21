@@ -148,7 +148,7 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 }
 
 // GetSignatureOrAddDigest returns cached signature for given nonce and digest, or adds digest to cache if not found.
-func (s *Signer) GetSignatureOrAddDigest(nonce uint64, cctxHeight uint64, digest []byte) ([65]byte, bool) {
+func (s *Signer) GetSignatureOrAddDigest(nonce uint64, digest []byte) ([65]byte, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -160,9 +160,8 @@ func (s *Signer) GetSignatureOrAddDigest(nonce uint64, cctxHeight uint64, digest
 	info, found := s.tssKeysignInfoMap[nonce]
 	if !found {
 		s.tssKeysignInfoMap[nonce] = &TSSKeysignInfo{
-			digest:     digest,
-			signature:  [65]byte{},
-			cctxHeight: cctxHeight,
+			digest:    digest,
+			signature: [65]byte{},
 		}
 		logger.Info().Msg("added digest to cache")
 

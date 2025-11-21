@@ -9,16 +9,14 @@ import (
 )
 
 const (
-	// batchSize is the number of digests in a keysign batch
+	// batchSize is the maximum number of digests in a keysign batch
 	// signing a 10-digest batch takes about 3~4 seconds on average
+	// increasing batch size won't make much difference in performance
 	batchSize = 10
 )
 
 // TSSKeysignInfo represents a record of TSS keysign information.
 type TSSKeysignInfo struct {
-	// cctxHeight is the zeta block height when the cctx was created
-	cctxHeight uint64
-
 	// digest is the digest of the outbound transaction
 	digest []byte
 
@@ -36,12 +34,6 @@ type TSSKeysignBatch struct {
 
 	// nonceHigh is the highest cctx nonce in the batch
 	nonceHigh uint64
-
-	// heightLow is the lowest cctx height in the batch
-	heightLow uint64
-
-	// heightHigh is the highest cctx height in the batch
-	heightHigh uint64
 }
 
 // NewTSSKeysignBatch creates a new TSS keysign batch.
@@ -71,7 +63,7 @@ func (b *TSSKeysignBatch) NonceHigh() uint64 {
 	return b.nonceHigh
 }
 
-// AddKeysignInfo adds one TSS keysign info to the batch and updates the nonce and height.
+// AddKeysignInfo adds one TSS keysign information to the batch.
 func (b *TSSKeysignBatch) AddKeysignInfo(nonce uint64, info TSSKeysignInfo) {
 	b.digests = append(b.digests, info.digest)
 
@@ -79,8 +71,6 @@ func (b *TSSKeysignBatch) AddKeysignInfo(nonce uint64, info TSSKeysignInfo) {
 	if len(b.digests) == 1 {
 		b.nonceLow = nonce
 		b.nonceHigh = nonce
-		b.heightLow = info.cctxHeight
-		b.heightHigh = info.cctxHeight
 		return
 	}
 
@@ -89,13 +79,6 @@ func (b *TSSKeysignBatch) AddKeysignInfo(nonce uint64, info TSSKeysignInfo) {
 		b.nonceLow = nonce
 	} else if nonce > b.nonceHigh {
 		b.nonceHigh = nonce
-	}
-
-	// update heightLow and heightHigh
-	if info.cctxHeight > b.heightLow {
-		b.heightLow = info.cctxHeight
-	} else if info.cctxHeight > b.heightHigh {
-		b.heightHigh = info.cctxHeight
 	}
 }
 

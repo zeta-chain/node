@@ -182,7 +182,6 @@ func (signer *Signer) Sign(
 	amount *big.Int,
 	gas Gas,
 	nonce uint64,
-	height uint64,
 ) (*eth.Transaction, []byte, []byte, error) {
 	chainID := big.NewInt(signer.Chain().ChainId)
 	tx, err := newTx(chainID, data, to, amount, gas, nonce)
@@ -193,7 +192,7 @@ func (signer *Signer) Sign(
 	hashBytes := signer.evmClient.Signer().Hash(tx).Bytes()
 
 	// get cached signature if available, otherwise add digest and wait for keysign
-	sig, found := signer.GetSignatureOrAddDigest(nonce, height, hashBytes)
+	sig, found := signer.GetSignatureOrAddDigest(nonce, hashBytes)
 	if !found {
 		return nil, nil, nil, ErrWaitForSignature
 	}

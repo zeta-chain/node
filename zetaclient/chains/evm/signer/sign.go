@@ -49,7 +49,6 @@ func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *Outbou
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign onReceive error")
@@ -96,7 +95,7 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height)
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign onRevert error")
 	}
@@ -113,7 +112,6 @@ func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*et
 		zeroValue, // zero out the amount to cancel the tx
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignCancel error")
@@ -131,7 +129,6 @@ func (signer *Signer) SignGasWithdraw(ctx context.Context, txData *OutboundData)
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignGasWithdraw error")
@@ -167,7 +164,6 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdraw error")
@@ -201,7 +197,6 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign whitelist error")
@@ -218,7 +213,6 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignMigrateTssFundsCmd error")
