@@ -6,8 +6,8 @@
     "TONClient": {},
     "TSSClient": {},
     "ZetacoreClient": {
-        "PostVoteGasPrice": 10,
-        "PostVoteInbound": 10,
+        "PostVoteGasPrice": 30,
+        "PostVoteInbound": 30,
         "QueryTxResult": 10
     }
 }

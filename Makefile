@@ -372,7 +372,7 @@ chaos-all: stop-localnet
 	@CHAOS_PROFILE=1 $(MAKE) start-e2e-test
 
 chaos-inbound: stop-localnet
-	@export E2E_ARGS="${E2E_ARGS} --test-timeout=15m --receipt-timeout=15m --cctx-timeout=30m" && \
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=60m --receipt-timeout=20m --cctx-timeout=20m" && \
 	CHAOS_PROFILE=2 $(MAKE) start-e2e-test
 
 chaos-outbound: stop-localnet
