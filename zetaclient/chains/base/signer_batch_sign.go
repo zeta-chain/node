@@ -123,15 +123,17 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 		chainID      = s.Chain().ChainId
 		digests      = batch.Digests()
 		keysignNonce = batch.NonceHigh()
-		batchNumber  = batch.BatchNumber()
-
-		// it's an artificial height to uniquely identify the batch; added 1 to avoid 0 height
-		keysignHeight = batchNumber + 1
+		logger       = s.batchLogger(zetaHeight, batch)
 	)
 
-	logger := s.batchLogger(zetaHeight, batch)
-	logger.Info().Msg("signing batch of digests")
+	// calculate keysign height
+	keysignHeight, err := batch.KeysignHeight(chainID)
+	if err != nil {
+		return errors.Wrap(err, "unable to calculate keysign height")
+	}
 
+	// sign batch
+	logger.Info().Msg("signing batch of digests")
 	sigs, err := s.TSS().SignBatch(ctx, digests, keysignHeight, keysignNonce, chainID)
 	if err != nil {
 		logger.Error().Err(err).Msg("batch keysign failed")
@@ -139,6 +141,7 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 	}
 	logger.Info().Msg("signed batch of digests")
 
+	// add signatures to cache
 	s.addBatchSignatures(batch, sigs)
 
 	return nil
@@ -287,9 +290,9 @@ func (s *Signer) addBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 
 		// log it, then add or update signature
 		if info.signature == [65]byte{} {
-			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("add signature to cache")
+			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("adding signature to cache")
 		} else if info.signature != sigs[sigIndex] {
-			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("update signature in cache")
+			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("updating signature in cache")
 		}
 		info.signature = sigs[sigIndex]
 	}

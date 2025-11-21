@@ -1,6 +1,14 @@
 package math
 
-import "math"
+import (
+	"math"
+	"math/big"
+)
+
+const (
+	// MaxPairValue is the maximum supported value for a pair of numbers
+	MaxPairValue = math.MaxUint32 / 2 // 2147483647
+)
 
 // CantorPair maps two numbers to a single number
 // see: https://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function
@@ -10,11 +18,29 @@ func CantorPair(x, y uint32) uint64 {
 }
 
 // CantorUnpair maps a single number to two numbers
+// Note: this is currently only used for unit tests
 func CantorUnpair(z uint64) (uint32, uint32) {
-	w := uint64((math.Sqrt(float64(8*z+1)) - 1) / 2)
-	t := w * (w + 1) / 2
-	y := z - t
-	x := uint32(w - y)
+	zBig := new(big.Int).SetUint64(z)
 
-	return x, uint32(y)
+	// w = (sqrt(8*z + 1) - 1) / 2
+	eightZ := new(big.Int).Mul(big.NewInt(8), zBig)
+	eightZ1 := new(big.Int).Add(eightZ, big.NewInt(1))
+
+	// Calculate integer square root
+	w := new(big.Int).Sqrt(eightZ1)
+	w.Sub(w, big.NewInt(1))
+	w.Div(w, big.NewInt(2))
+
+	// t = w * (w + 1) / 2
+	w1 := new(big.Int).Add(w, big.NewInt(1))
+	t := new(big.Int).Mul(w, w1)
+	t.Div(t, big.NewInt(2))
+
+	// y = z - t
+	y := new(big.Int).Sub(zBig, t)
+
+	// x = w - y
+	x := new(big.Int).Sub(w, y)
+
+	return uint32(x.Uint64()), uint32(y.Uint64())
 }

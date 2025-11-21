@@ -1,6 +1,12 @@
 package base
 
-import mathpkg "github.com/zeta-chain/node/pkg/math"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+
+	mathpkg "github.com/zeta-chain/node/pkg/math"
+)
 
 const (
 	// batchSize is the number of digests in a keysign batch
@@ -119,15 +125,26 @@ func (b *TSSKeysignBatch) ContainsNonce(nonce uint64) bool {
 	return nonce >= b.nonceLow && nonce <= b.nonceHigh
 }
 
-// KeysignHeight calculates an artificial keysign height tweaked with chainID.
-func (b *TSSKeysignBatch) KeysignHeight(chainID int64, height uint64) uint64 {
-	// #nosec G115 e2eTest - always in range
-	zetaHeight32 := uint32(height)
+// KeysignHeight calculates an artificial keysign height tweaked by chainID.
+// This is used to uniquely identify TSS keysign request across all chains.
+func (b *TSSKeysignBatch) KeysignHeight(chainID int64) (uint64, error) {
+	batchNumber := b.BatchNumber()
+	if batchNumber >= mathpkg.MaxPairValue {
+		return 0, errors.New("batch number is too large")
+	}
 
-	// #nosec G115 e2eTest - always in range
+	if chainID <= 0 || chainID > mathpkg.MaxPairValue {
+		return 0, fmt.Errorf("invalid chain ID: %d", chainID)
+	}
+
+	// use batch number as unique identifier, added 1 to avoid 0
+	// #nosec G115 - checked in range
+	identifier := uint32(batchNumber + 1)
+
+	// #nosec G115 - checked in range
 	chainID32 := uint32(chainID)
 
-	return mathpkg.CantorPair(zetaHeight32, chainID32)
+	return mathpkg.CantorPair(identifier, chainID32), nil
 }
 
 // NonceToBatchNumber maps a nonce to a batch number.

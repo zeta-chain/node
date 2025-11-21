@@ -17,6 +17,7 @@ func Test_CantorPair_Unpair(t *testing.T) {
 		{name: "test 2", x: 32767, y: 32767, z: 2147418112},
 		{name: "test 3", x: 512628174, y: 6154648, z: 134567808466687901},
 		{name: "test 4", x: 925478314, y: 91456237, z: 517077941108709313},
+		{name: "test 5", x: MaxPairValue, y: MaxPairValue, z: 9223372032559808512},
 	}
 
 	for _, tt := range tests {
