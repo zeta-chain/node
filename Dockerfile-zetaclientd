@@ -1,0 +1,39 @@
+FROM golang:1.23.8-bookworm AS build
+
+ENV GOPATH=/go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
+
+RUN apt update && apt install -yq libusb-dev
+
+WORKDIR /go/src/github.com/zeta-chain/node
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+ARG NODE_VERSION
+ARG NODE_COMMIT
+
+RUN make install-zetacore install-zetaclient
+
+FROM debian:bookworm-slim
+
+RUN apt update && apt install -yq ca-certificates jq curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /go/bin/zetaclientd /usr/local/bin/zetaclientd
+COPY --from=build /go/bin/zetacored /usr/local/bin/zetacored
+
+# Copy and set up entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Create zetachain user and home directory
+RUN useradd -m -s /bin/sh zetachain && \
+    mkdir -p /home/zetachain/.zetacored && \
+    mkdir -p /var/log/zetaclient && \
+    chown -R zetachain:zetachain /home/zetachain /var/log/zetaclient
+
+USER zetachain
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
