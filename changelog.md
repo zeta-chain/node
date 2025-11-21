@@ -12,6 +12,7 @@
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
 * [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
 * [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
+* [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
 
 ## v37.0.0
 
