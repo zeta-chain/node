@@ -219,15 +219,11 @@ func NewRPCTransaction(
 		result.ChainID = (*hexutil.Big)(tx.ChainId())
 		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
 		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
-		// if the transaction has been mined, compute the effective gas price
-		if baseFee != nil && blockHash != (common.Hash{}) {
-			// price = min(tip, gasFeeCap - baseFee) + baseFee
-			price := new(big.Int).Add(tx.GasTipCap(), baseFee)
-			if price.Cmp(tx.GasFeeCap()) > 0 {
-				price = tx.GasFeeCap()
-			}
-			result.GasPrice = (*hexutil.Big)(price)
+		// Compute effective gas price for mined transactions
+		if blockHash != (common.Hash{}) {
+			result.GasPrice = (*hexutil.Big)(EffectiveGasPrice(tx, baseFee))
 		} else {
+			// For pending transactions, use gasFeeCap as placeholder
 			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
 		}
 	}
@@ -290,6 +286,41 @@ func BaseFeeFromEvents(events []abci.Event) *big.Int {
 		}
 	}
 	return nil
+}
+
+// EffectiveGasPrice computes the transaction gas fee, based on the given baseFee value.
+//
+// For EIP-1559 transactions:
+//
+//	price = min(gasTipCap + baseFee, gasFeeCap)
+//
+// For legacy transactions:
+//
+//	price = gasPrice
+//
+// This method is based on go-ethereum's internal effectiveGasPrice calculation.
+// (https://github.com/ethereum/go-ethereum/blob/d818a9af7bd5919808df78f31580f59382c53150/internal/ethapi/api.go#L1083-L1093)
+func EffectiveGasPrice(tx *ethtypes.Transaction, baseFee *big.Int) *big.Int {
+	if tx == nil {
+		return big.NewInt(0)
+	}
+
+	// For legacy and access list transactions, return the gas price directly
+	if tx.Type() != ethtypes.DynamicFeeTxType {
+		return tx.GasPrice()
+	}
+
+	// For EIP-1559 transactions, calculate effective gas price
+	// If baseFee is not available, return gasFeeCap as fallback
+	if baseFee == nil {
+		return tx.GasFeeCap()
+	}
+
+	price := new(big.Int).Add(tx.GasTipCap(), baseFee)
+	if price.Cmp(tx.GasFeeCap()) > 0 {
+		return tx.GasFeeCap()
+	}
+	return price
 }
 
 // CheckTxFee is an internal function used to check whether the fee of

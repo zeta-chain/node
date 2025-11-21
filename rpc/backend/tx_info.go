@@ -280,6 +280,15 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txType uint8
 	var effectiveGasPrice *hexutil.Big
 
+	// Get baseFee for effective gas price calculation
+	baseFee, err := b.BaseFee(blockRes)
+	if err != nil {
+		b.Logger.Debug("failed to get base fee", "height", res.Height, "error", err.Error())
+		// Setting to nil is fine here , the price calculation will fallback to fee cap
+		// Note this will still not work for blocks that have been pruned
+		baseFee = nil
+	}
+
 	if txData == nil {
 		// #nosec G115 always in range
 		txType = uint8(additional.Type)
@@ -287,7 +296,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		txType = ethMsg.AsTransaction().Type()
 		to = txData.GetTo()
-		effectiveGasPrice = (*hexutil.Big)(txData.GetGasPrice())
+		effectiveGasPrice = (*hexutil.Big)(rpctypes.EffectiveGasPrice(ethMsg.AsTransaction(), baseFee))
 	}
 
 	// create the logs bloom
