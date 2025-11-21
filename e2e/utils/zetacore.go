@@ -106,8 +106,11 @@ func WaitCctxsMinedByInboundHash(
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
 
+		elapsed := time.Since(startTime)
 		timedOut := time.Since(startTime) > timeout
-		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
+		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s, elapsed: %s",
+			inboundHash, elapsed)
+
 		require.NoError(t, ctx.Err())
 
 		time.Sleep(500 * time.Millisecond)
