@@ -142,7 +142,7 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 	logger.Info().Msg("signed batch of digests")
 
 	// add signatures to cache
-	s.addBatchSignatures(batch, sigs)
+	s.AddBatchSignatures(batch, sigs)
 
 	return nil
 }
@@ -159,10 +159,7 @@ func (s *Signer) GetSignatureOrAddDigest(nonce uint64, digest []byte) ([65]byte,
 
 	info, found := s.tssKeysignInfoMap[nonce]
 	if !found {
-		s.tssKeysignInfoMap[nonce] = &TSSKeysignInfo{
-			digest:    digest,
-			signature: [65]byte{},
-		}
+		s.tssKeysignInfoMap[nonce] = NewTSSKeysignInfo(digest, [65]byte{})
 		logger.Info().Msg("added digest to cache")
 
 		return [65]byte{}, false
@@ -261,8 +258,8 @@ func (s *Signer) collectKeysignBatch(batchNumber uint64, untilNonce uint64) (*TS
 	}
 }
 
-// addBatchSignatures adds TSS signatures to the cache.
-func (s *Signer) addBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
+// AddBatchSignatures adds TSS signatures to the cache.
+func (s *Signer) AddBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

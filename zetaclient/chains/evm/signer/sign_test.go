@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"context"
 	"math/big"
 	"testing"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	connectorevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.base.sol"
 )
 
 func TestSigner_SignConnectorOnReceive(t *testing.T) {
@@ -17,11 +21,14 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 	evmSigner := newTestSuite(t)
 
 	// Setup txData struct
-
 	cctx := getCCTX(t)
 	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
+
+	// Mock the digest to be signed
+	digest := getConnectorOnReceiveDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 	t.Run("SignConnectorOnReceive - should successfully sign", func(t *testing.T) {
 		// Call SignConnectorOnReceive
@@ -31,15 +38,16 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		// Verify Signature
 		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
 	})
-	t.Run("SignConnectorOnReceive - should fail if keysign fails", func(t *testing.T) {
-		// Pause tss to make keysign fail
-		evmSigner.tss.Pause()
+
+	t.Run("SignConnectorOnReceive - should fail if signature is not available", func(t *testing.T) {
+		// use txData with a different nonce, digest will change
+		txDataOther := *txData
+		txDataOther.nonce++
 
 		// Call SignConnectorOnReceive
-		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
-		require.ErrorContains(t, err, "sign onReceive error")
+		tx, err := evmSigner.SignConnectorOnReceive(ctx, &txDataOther)
+		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
-		evmSigner.tss.Unpause()
 	})
 
 	t.Run("SignOutbound - should successfully sign LegacyTx", func(t *testing.T) {
@@ -104,6 +112,10 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
+	// Mock the digest to be signed
+	digest := getConnectorOnRevertDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
 	t.Run("SignConnectorOnRevert - should successfully sign", func(t *testing.T) {
 		// Call SignConnectorOnRevert
 		tx, err := evmSigner.SignConnectorOnRevert(ctx, txData)
@@ -116,13 +128,14 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 		// Note: Revert tx calls connector contract with 0 gas token
 		verifyTxBodyBasics(t, tx, evmSigner.zetaConnectorAddress, txData.nonce, big.NewInt(0))
 	})
-	t.Run("SignConnectorOnRevert - should fail if keysign fails", func(t *testing.T) {
-		// Pause tss to make keysign fail
-		evmSigner.tss.Pause()
+	t.Run("SignConnectorOnRevert - should fail if signature is not available", func(t *testing.T) {
+		// use txData with a different nonce, digest will change
+		txDataOther := *txData
+		txDataOther.nonce++
 
 		// Call SignConnectorOnRevert
-		tx, err := evmSigner.SignConnectorOnRevert(ctx, txData)
-		require.ErrorContains(t, err, "sign onRevert error")
+		tx, err := evmSigner.SignConnectorOnRevert(ctx, &txDataOther)
+		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
 }
@@ -139,8 +152,12 @@ func TestSigner_SignCancel(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
+	// Mock the digest to be signed
+	digest := getCancelDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
 	t.Run("SignCancel - should successfully sign", func(t *testing.T) {
-		// Call SignConnectorOnRevert
+		// Call SignCancel
 		tx, err := evmSigner.SignCancel(ctx, txData)
 		require.NoError(t, err)
 
@@ -151,13 +168,14 @@ func TestSigner_SignCancel(t *testing.T) {
 		// Note: Cancel tx sends 0 gas token to TSS self address
 		verifyTxBodyBasics(t, tx, evmSigner.tss.PubKey().AddressEVM(), txData.nonce, big.NewInt(0))
 	})
-	t.Run("SignCancel - should fail if keysign fails", func(t *testing.T) {
-		// Pause tss to make keysign fail
-		evmSigner.tss.Pause()
+	t.Run("SignCancel - should fail if signature is not available", func(t *testing.T) {
+		// use txData with a different nonce, digest will change
+		txDataOther := *txData
+		txDataOther.nonce++
 
 		// Call SignCancel
-		tx, err := evmSigner.SignCancel(ctx, txData)
-		require.ErrorContains(t, err, "SignCancel error")
+		tx, err := evmSigner.SignCancel(ctx, &txDataOther)
+		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
 }
@@ -174,6 +192,10 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
+	// Mock the digest to be signed
+	digest := getGasWithdrawDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
 	t.Run("SignGasWithdraw - should successfully sign", func(t *testing.T) {
 		// Call SignGasWithdraw
 		tx, err := evmSigner.SignGasWithdraw(ctx, txData)
@@ -185,13 +207,14 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
 	})
-	t.Run("SignGasWithdraw - should fail if keysign fails", func(t *testing.T) {
-		// Pause tss to make keysign fail
-		evmSigner.tss.Pause()
+	t.Run("SignGasWithdraw - should fail if signature is not available", func(t *testing.T) {
+		// use txData with a different nonce, digest will change
+		txDataOther := *txData
+		txDataOther.nonce++
 
 		// Call SignGasWithdraw
-		tx, err := evmSigner.SignGasWithdraw(ctx, txData)
-		require.ErrorContains(t, err, "SignGasWithdraw error")
+		tx, err := evmSigner.SignGasWithdraw(ctx, &txDataOther)
+		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
 }
@@ -208,6 +231,10 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
+	// Mock the digest to be signed
+	digest := getERC20WithdrawDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
 	t.Run("SignERC20WithdrawTx - should successfully sign", func(t *testing.T) {
 		// Call SignERC20WithdrawTx
 		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
@@ -221,13 +248,129 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 		verifyTxBodyBasics(t, tx, evmSigner.er20CustodyAddress, txData.nonce, big.NewInt(0))
 	})
 
-	t.Run("SignERC20WithdrawTx - should fail if keysign fails", func(t *testing.T) {
-		// pause tss to make keysign fail
-		evmSigner.tss.Pause()
+	t.Run("SignERC20WithdrawTx - should fail if signature is not available", func(t *testing.T) {
+		// use txData with a different nonce, digest will change
+		txDataOther := *txData
+		txDataOther.nonce++
 
 		// Call SignERC20WithdrawTx
-		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
-		require.ErrorContains(t, err, "sign withdraw error")
+		tx, err := evmSigner.SignERC20Withdraw(ctx, &txDataOther)
+		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
+}
+
+func getGasWithdrawDigest(t *testing.T, signer *Signer, txData *OutboundData) []byte {
+	var (
+		chainID = big.NewInt(signer.Chain().ChainId)
+		to      = txData.to
+		amount  = txData.amount
+	)
+
+	tx, err := newTx(chainID, nil, to, amount, txData.gas, txData.nonce)
+	require.NoError(t, err)
+
+	return signer.evmClient.Signer().Hash(tx).Bytes()
+}
+
+func getERC20WithdrawDigest(t *testing.T, signer *Signer, txData *OutboundData) []byte {
+	erc20CustodyV1ABI, err := erc20custody.ERC20CustodyMetaData.GetAbi()
+	require.NoError(t, err)
+
+	data, err := erc20CustodyV1ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
+	require.NoError(t, err)
+
+	var (
+		chainID = big.NewInt(txData.toChainID.Int64())
+		to      = signer.er20CustodyAddress
+		amount  = zeroValue
+	)
+
+	tx, err := newTx(chainID, data, to, amount, txData.gas, txData.nonce)
+	require.NoError(t, err)
+
+	return signer.evmClient.Signer().Hash(tx).Bytes()
+}
+
+func getConnectorOnReceiveDigest(t *testing.T, signer *Signer, txData *OutboundData) []byte {
+	zetaConnectorABI, err := connectorevm.ZetaConnectorBaseMetaData.GetAbi()
+	require.NoError(t, err)
+
+	data, err := zetaConnectorABI.Pack("onReceive",
+		txData.sender.Bytes(),
+		txData.srcChainID,
+		txData.to,
+		txData.amount,
+		txData.message,
+		txData.cctxIndex)
+	require.NoError(t, err)
+
+	var (
+		chainID = big.NewInt(signer.Chain().ChainId)
+		to      = signer.zetaConnectorAddress
+		amount  = zeroValue
+	)
+
+	tx, err := newTx(chainID, data, to, amount, txData.gas, txData.nonce)
+	require.NoError(t, err)
+
+	return signer.evmClient.Signer().Hash(tx).Bytes()
+}
+
+func getConnectorOnRevertDigest(t *testing.T, signer *Signer, txData *OutboundData) []byte {
+	zetaConnectorABI, err := connectorevm.ZetaConnectorBaseMetaData.GetAbi()
+	require.NoError(t, err)
+
+	data, err := zetaConnectorABI.Pack("onRevert",
+		txData.sender,
+		txData.srcChainID,
+		txData.to.Bytes(),
+		txData.toChainID,
+		txData.amount,
+		txData.message,
+		txData.cctxIndex)
+	require.NoError(t, err)
+
+	var (
+		chainID = big.NewInt(signer.Chain().ChainId)
+		to      = signer.zetaConnectorAddress
+		amount  = zeroValue
+	)
+
+	tx, err := newTx(chainID, data, to, amount, txData.gas, txData.nonce)
+	require.NoError(t, err)
+
+	return signer.evmClient.Signer().Hash(tx).Bytes()
+}
+
+func getCancelDigest(t *testing.T, signer *Signer, txData *OutboundData) []byte {
+	var (
+		chainID = big.NewInt(signer.Chain().ChainId)
+		to      = signer.TSS().PubKey().AddressEVM()
+		amount  = zeroValue
+	)
+
+	tx, err := newTx(chainID, nil, to, amount, txData.gas, txData.nonce)
+	require.NoError(t, err)
+
+	return signer.evmClient.Signer().Hash(tx).Bytes()
+}
+
+func mockSignature(t *testing.T, signer *Signer, nonce uint64, digest []byte) {
+	ctx := context.Background()
+	chainID := signer.Chain().ChainId
+
+	// add digest to cache
+	signer.GetSignatureOrAddDigest(nonce, digest)
+
+	// mock a batch that contains the digest
+	batch := base.NewTSSKeysignBatch()
+	batch.AddKeysignInfo(nonce, *base.NewTSSKeysignInfo(digest, [65]byte{}))
+
+	// sign
+	sigs, err := signer.TSS().SignBatch(ctx, batch.Digests(), 1, nonce, chainID)
+	require.NoError(t, err)
+
+	// add signatures to cache
+	signer.AddBatchSignatures(*batch, sigs)
 }

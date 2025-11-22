@@ -24,6 +24,14 @@ type TSSKeysignInfo struct {
 	signature [65]byte
 }
 
+// NewTSSKeysignInfo creates a new TSS keysign information.
+func NewTSSKeysignInfo(digest []byte, signature [65]byte) *TSSKeysignInfo {
+	return &TSSKeysignInfo{
+		digest:    digest,
+		signature: signature,
+	}
+}
+
 // TSSKeysignBatch contains a batch of TSS keysign information.
 type TSSKeysignBatch struct {
 	// digests is a list of digests to sign

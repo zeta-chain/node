@@ -43,8 +43,8 @@ var (
 	// zeroValue is for outbounds that carry no ETH (gas token) value
 	zeroValue = big.NewInt(0)
 
-	// ErrWaitForSignature is the error returned when waiting for signature of a tx
-	ErrWaitForSignature = errors.New("waiting for signature of a tx")
+	// ErrWaitForSignature is the error returned when waiting for transaction signature
+	ErrWaitForSignature = errors.New("waiting for transaction signature")
 )
 
 type EVMClient interface {
