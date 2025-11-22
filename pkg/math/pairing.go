@@ -42,5 +42,6 @@ func CantorUnpair(z uint64) (uint32, uint32) {
 	// x = w - y
 	x := new(big.Int).Sub(w, y)
 
+	// #nosec G115 e2e - always in range
 	return uint32(x.Uint64()), uint32(y.Uint64())
 }

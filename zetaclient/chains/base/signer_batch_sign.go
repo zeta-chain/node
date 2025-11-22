@@ -67,6 +67,7 @@ func (s *Signer) PrepareForKeysign(
 
 	// #nosec G115 - always positive
 	nonceLow := uint64(p.NonceLow)
+	// #nosec G115 - always positive
 	nonceHigh := uint64(p.NonceHigh)
 
 	// remove stale keysign info to release memory

@@ -110,7 +110,7 @@ func (tss *TSS) SignBatch(_ context.Context, digests [][]byte, _, _ uint64, _ in
 	return sigs, nil
 }
 
-func (tss *TSS) IsSignatureCached(chainID int64, digests [][]byte) bool {
+func (tss *TSS) IsSignatureCached(_ int64, _ [][]byte) bool {
 	return false
 }
 
