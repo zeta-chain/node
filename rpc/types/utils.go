@@ -304,22 +304,23 @@ func EffectiveGasPrice(tx *ethtypes.Transaction, baseFee *big.Int) *big.Int {
 		return big.NewInt(0)
 	}
 
-	// For legacy and access list transactions, return the gas price directly
-	if tx.Type() != ethtypes.DynamicFeeTxType {
+	// For legacy (0x00) and access list (0x01) transactions, return the gas price directly
+	// For EIP-1559 (0x02), Blob (0x03), and SetCode (0x04) transactions, calculate effective gas price
+	switch tx.Type() {
+	case ethtypes.LegacyTxType, ethtypes.AccessListTxType:
+		return tx.GasPrice()
+	case ethtypes.DynamicFeeTxType, ethtypes.BlobTxType, ethtypes.SetCodeTxType:
+		if baseFee == nil {
+			return tx.GasFeeCap()
+		}
+		price := new(big.Int).Add(tx.GasTipCap(), baseFee)
+		if price.Cmp(tx.GasFeeCap()) > 0 {
+			return tx.GasFeeCap()
+		}
+		return price
+	default:
 		return tx.GasPrice()
 	}
-
-	// For EIP-1559 transactions, calculate effective gas price
-	// If baseFee is not available, return gasFeeCap as fallback
-	if baseFee == nil {
-		return tx.GasFeeCap()
-	}
-
-	price := new(big.Int).Add(tx.GasTipCap(), baseFee)
-	if price.Cmp(tx.GasFeeCap()) > 0 {
-		return tx.GasFeeCap()
-	}
-	return price
 }
 
 // CheckTxFee is an internal function used to check whether the fee of
