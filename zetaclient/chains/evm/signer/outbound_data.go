@@ -29,9 +29,8 @@ type OutboundData struct {
 	asset  ethcommon.Address
 	amount *big.Int
 
-	gas    Gas
-	nonce  uint64
-	height uint64
+	gas   Gas
+	nonce uint64
 
 	message []byte
 
@@ -138,9 +137,8 @@ func NewOutboundData(
 		asset:  ethcommon.HexToAddress(cctx.InboundParams.Asset),
 		amount: outboundParams.Amount.BigInt(),
 
-		gas:    gas,
-		nonce:  outboundParams.TssNonce,
-		height: cctx.InboundParams.ObservedExternalHeight,
+		gas:   gas,
+		nonce: outboundParams.TssNonce,
 
 		message: message,
 

@@ -36,7 +36,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
+		tx, err := evmSigner.SignAdminTx(txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -61,7 +61,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
+		tx, err := evmSigner.SignAdminTx(txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -81,7 +81,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
+		tx, err := evmSigner.SignAdminTx(txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -100,7 +100,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, "")
+		tx, err := evmSigner.SignAdminTx(txData, cmd, "")
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -132,7 +132,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call signWhitelistERC20Cmd
-		tx, err := evmSigner.signWhitelistERC20Cmd(ctx, txData, params)
+		tx, err := evmSigner.signWhitelistERC20Cmd(txData, params)
 		require.NoError(t, err)
 		require.NotNil(t, tx)
 
@@ -144,7 +144,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	})
 
 	t.Run("signWhitelistERC20Cmd - should fail on invalid erc20 address", func(t *testing.T) {
-		tx, err := evmSigner.signWhitelistERC20Cmd(ctx, txData, "")
+		tx, err := evmSigner.signWhitelistERC20Cmd(txData, "")
 		require.Nil(t, tx)
 		require.ErrorContains(t, err, "invalid erc20 address")
 	})
@@ -155,7 +155,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call signWhitelistERC20Cmd
-		tx, err := evmSigner.signWhitelistERC20Cmd(ctx, &txDataOther, params)
+		tx, err := evmSigner.signWhitelistERC20Cmd(&txDataOther, params)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -188,7 +188,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 		digest := getMigrateERC20CustodyFundsDigest(t, evmSigner.Signer, txData, params)
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
-		tx, err := evmSigner.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		tx, err := evmSigner.signMigrateERC20CustodyFundsCmd(txData, params)
 		require.NoError(t, err)
 		require.NotNil(t, tx)
 
@@ -202,7 +202,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 	t.Run("signMigrateERC20CustodyFundsCmd - should fail on invalid params", func(t *testing.T) {
 		params := fmt.Sprintf("%s,%s", sample.EthAddress().Hex(), sample.EthAddress().Hex())
 
-		_, err := evmSigner.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		_, err := evmSigner.signMigrateERC20CustodyFundsCmd(txData, params)
 		require.ErrorContains(t, err, "invalid params")
 	})
 
@@ -219,7 +219,7 @@ func TestSigner_SignMigrateERC20CustodyFundsCmd(t *testing.T) {
 		)
 
 		// Call signWhitelistERC20Cmd
-		tx, err := evmSigner.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		tx, err := evmSigner.signMigrateERC20CustodyFundsCmd(txData, params)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -247,7 +247,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		digest := getUpdateERC20CustodyPauseStatusDigest(t, evmSigner.Signer, txData, params)
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
-		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(txData, params)
 		require.NoError(t, err)
 		require.NotNil(t, tx)
 
@@ -266,7 +266,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		digest := getUpdateERC20CustodyPauseStatusDigest(t, evmSigner.Signer, txData, params)
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
-		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(txData, params)
 		require.NoError(t, err)
 		require.NotNil(t, tx)
 
@@ -280,14 +280,14 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail on invalid params", func(t *testing.T) {
 		params := "invalid"
 
-		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(txData, params)
 		require.ErrorContains(t, err, "invalid params")
 	})
 
 	t.Run("signUpdateERC20CustodyPauseStatusCmd - should fail on empty params", func(t *testing.T) {
 		params := ""
 
-		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		_, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(txData, params)
 		require.ErrorContains(t, err, "invalid params")
 	})
 
@@ -299,7 +299,7 @@ func TestSigner_SignUpdateERC20CustodyPauseStatusCmd(t *testing.T) {
 		params := constant.OptionPause
 
 		// Call signWhitelistERC20Cmd
-		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(ctx, &txDataOther, params)
+		tx, err := evmSigner.signUpdateERC20CustodyPauseStatusCmd(&txDataOther, params)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -325,7 +325,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
 		// Call signMigrateTssFundsCmd
-		tx, err := evmSigner.signMigrateTssFundsCmd(ctx, txData)
+		tx, err := evmSigner.signMigrateTssFundsCmd(txData)
 		require.NoError(t, err)
 		require.NotNil(t, tx)
 
@@ -342,7 +342,7 @@ func TestSigner_SignMigrateTssFundsCmd(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call signMigrateTssFundsCmd
-		tx, err := evmSigner.signMigrateTssFundsCmd(ctx, &txDataOther)
+		tx, err := evmSigner.signMigrateTssFundsCmd(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})

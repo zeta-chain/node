@@ -176,7 +176,6 @@ func (signer *Signer) NextTSSNonce(ctx context.Context) (uint64, error) {
 // Sign given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
 func (signer *Signer) Sign(
-	_ context.Context,
 	data []byte,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -337,7 +336,6 @@ func (signer *Signer) TryProcessOutbound(
 
 	// sign outbound
 	tx, err := signer.SignOutboundFromCCTX(
-		ctx,
 		logger,
 		cctx,
 		txData,
@@ -362,7 +360,6 @@ func (signer *Signer) TryProcessOutbound(
 // TODO: simplify logic with all if else
 // https://github.com/zeta-chain/node/issues/2050
 func (signer *Signer) SignOutboundFromCCTX(
-	ctx context.Context,
 	logger zerolog.Logger,
 	cctx *crosschaintypes.CrossChainTx,
 	outboundData *OutboundData,
@@ -372,7 +369,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	switch {
 	case !signer.PassesCompliance(cctx):
 		// restricted cctx
-		return signer.SignCancel(ctx, outboundData)
+		return signer.SignCancel(outboundData)
 	case cctx.InboundParams.CoinType == coin.CoinType_Cmd:
 		// admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
@@ -389,21 +386,21 @@ func (signer *Signer) SignOutboundFromCCTX(
 		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
 		// contract address when a whitelist command is requested
 		params := msg[1]
-		return signer.SignAdminTx(ctx, outboundData, cmd, params)
+		return signer.SignAdminTx(outboundData, cmd, params)
 	case cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2:
 		// call sign outbound from cctx for v2 protocol contracts
-		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
+		return signer.SignOutboundFromCCTXV2(cctx, outboundData)
 	case IsPendingOutboundFromZetaChain(cctx, zetaRepo):
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msg("calling SignGasWithdraw")
-			return signer.SignGasWithdraw(ctx, outboundData)
+			return signer.SignGasWithdraw(outboundData)
 		case coin.CoinType_ERC20:
 			logger.Info().Msg("calling SignERC20Withdraw")
-			return signer.SignERC20Withdraw(ctx, outboundData)
+			return signer.SignERC20Withdraw(outboundData)
 		case coin.CoinType_Zeta:
 			logger.Info().Msg("calling SignConnectorOnReceive")
-			return signer.SignConnectorOnReceive(ctx, outboundData)
+			return signer.SignConnectorOnReceive(outboundData)
 		}
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert && cctx.OutboundParams[0].ReceiverChainId == zetaRepo.ZetaChain().ChainId:
 		switch cctx.InboundParams.CoinType {
@@ -411,22 +408,22 @@ func (signer *Signer) SignOutboundFromCCTX(
 			logger.Info().Msg("calling SignConnectorOnRevert")
 			outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 			outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-			return signer.SignConnectorOnRevert(ctx, outboundData)
+			return signer.SignConnectorOnRevert(outboundData)
 		case coin.CoinType_Gas:
 			logger.Info().Msg("calling SignGasWithdraw")
-			return signer.SignGasWithdraw(ctx, outboundData)
+			return signer.SignGasWithdraw(outboundData)
 		case coin.CoinType_ERC20:
 			logger.Info().Msg("calling SignERC20Withdraw")
-			return signer.SignERC20Withdraw(ctx, outboundData)
+			return signer.SignERC20Withdraw(outboundData)
 		}
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingRevert:
 		logger.Info().Msg("calling SignConnectorOnRevert")
 		outboundData.srcChainID = big.NewInt(cctx.OutboundParams[0].ReceiverChainId)
 		outboundData.toChainID = big.NewInt(cctx.GetCurrentOutboundParam().ReceiverChainId)
-		return signer.SignConnectorOnRevert(ctx, outboundData)
+		return signer.SignConnectorOnRevert(outboundData)
 	case cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound:
 		logger.Info().Msg("calling SignConnectorOnReceive")
-		return signer.SignConnectorOnReceive(ctx, outboundData)
+		return signer.SignConnectorOnReceive(outboundData)
 	}
 
 	return nil, fmt.Errorf("unknown signing method for cctx %s", cctx.String())

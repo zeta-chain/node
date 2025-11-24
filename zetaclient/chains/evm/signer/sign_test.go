@@ -32,7 +32,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 
 	t.Run("SignConnectorOnReceive - should successfully sign", func(t *testing.T) {
 		// Call SignConnectorOnReceive
-		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
+		tx, err := evmSigner.SignConnectorOnReceive(txData)
 		require.NoError(t, err)
 
 		// Verify Signature
@@ -45,14 +45,14 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call SignConnectorOnReceive
-		tx, err := evmSigner.SignConnectorOnReceive(ctx, &txDataOther)
+		tx, err := evmSigner.SignConnectorOnReceive(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
 
 	t.Run("SignOutbound - should successfully sign LegacyTx", func(t *testing.T) {
 		// Call SignOutbound
-		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
+		tx, err := evmSigner.SignConnectorOnReceive(txData)
 		require.NoError(t, err)
 
 		// Verify Signature
@@ -85,7 +85,7 @@ func TestSigner_SignConnectorOnReceive(t *testing.T) {
 		evmSigner.tss.Unpause()
 
 		// ACT
-		tx, err := evmSigner.SignConnectorOnReceive(ctx, txData)
+		tx, err := evmSigner.SignConnectorOnReceive(txData)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -118,7 +118,7 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 
 	t.Run("SignConnectorOnRevert - should successfully sign", func(t *testing.T) {
 		// Call SignConnectorOnRevert
-		tx, err := evmSigner.SignConnectorOnRevert(ctx, txData)
+		tx, err := evmSigner.SignConnectorOnRevert(txData)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -134,7 +134,7 @@ func TestSigner_SignConnectorOnRevert(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call SignConnectorOnRevert
-		tx, err := evmSigner.SignConnectorOnRevert(ctx, &txDataOther)
+		tx, err := evmSigner.SignConnectorOnRevert(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -158,7 +158,7 @@ func TestSigner_SignCancel(t *testing.T) {
 
 	t.Run("SignCancel - should successfully sign", func(t *testing.T) {
 		// Call SignCancel
-		tx, err := evmSigner.SignCancel(ctx, txData)
+		tx, err := evmSigner.SignCancel(txData)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -174,7 +174,7 @@ func TestSigner_SignCancel(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call SignCancel
-		tx, err := evmSigner.SignCancel(ctx, &txDataOther)
+		tx, err := evmSigner.SignCancel(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -198,7 +198,7 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 
 	t.Run("SignGasWithdraw - should successfully sign", func(t *testing.T) {
 		// Call SignGasWithdraw
-		tx, err := evmSigner.SignGasWithdraw(ctx, txData)
+		tx, err := evmSigner.SignGasWithdraw(txData)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -213,7 +213,7 @@ func TestSigner_SignGasWithdraw(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call SignGasWithdraw
-		tx, err := evmSigner.SignGasWithdraw(ctx, &txDataOther)
+		tx, err := evmSigner.SignGasWithdraw(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})
@@ -237,7 +237,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 
 	t.Run("SignERC20WithdrawTx - should successfully sign", func(t *testing.T) {
 		// Call SignERC20WithdrawTx
-		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
+		tx, err := evmSigner.SignERC20Withdraw(txData)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -254,7 +254,7 @@ func TestSigner_SignERC20Withdraw(t *testing.T) {
 		txDataOther.nonce++
 
 		// Call SignERC20WithdrawTx
-		tx, err := evmSigner.SignERC20Withdraw(ctx, &txDataOther)
+		tx, err := evmSigner.SignERC20Withdraw(&txDataOther)
 		require.ErrorIs(t, err, ErrWaitForSignature)
 		require.Nil(t, tx)
 	})

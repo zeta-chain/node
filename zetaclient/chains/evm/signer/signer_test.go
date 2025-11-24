@@ -223,7 +223,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
-		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
+		tx, err := evmSigner.SignERC20Withdraw(txData)
 		require.NoError(t, err)
 
 		evmSigner.BroadcastOutbound(

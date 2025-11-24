@@ -1,7 +1,6 @@
 package signer
 
 import (
-	"context"
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -22,7 +21,7 @@ import (
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignConnectorOnReceive(txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -43,7 +42,6 @@ func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *Outbou
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
@@ -67,7 +65,7 @@ func (signer *Signer) SignConnectorOnReceive(ctx context.Context, txData *Outbou
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignConnectorOnRevert(txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -89,7 +87,6 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
@@ -104,9 +101,8 @@ func (signer *Signer) SignConnectorOnRevert(ctx context.Context, txData *Outboun
 }
 
 // SignCancel signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
-func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignCancel(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
-		ctx,
 		nil,
 		signer.TSS().PubKey().AddressEVM(),
 		zeroValue, // zero out the amount to cancel the tx
@@ -121,9 +117,8 @@ func (signer *Signer) SignCancel(ctx context.Context, txData *OutboundData) (*et
 }
 
 // SignGasWithdraw signs a withdrawal transaction sent from the TSS address to the destination
-func (signer *Signer) SignGasWithdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignGasWithdraw(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
-		ctx,
 		nil,
 		txData.to,
 		txData.amount,
@@ -143,7 +138,7 @@ func (signer *Signer) SignGasWithdraw(ctx context.Context, txData *OutboundData)
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20Withdraw(txData *OutboundData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -158,7 +153,6 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
@@ -173,11 +167,7 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 }
 
 // SignWhitelistERC20Cmd signs a whitelist command for ERC20 token
-func (signer *Signer) SignWhitelistERC20Cmd(
-	ctx context.Context,
-	txData *OutboundData,
-	params string,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignWhitelistERC20Cmd(txData *OutboundData, params string) (*ethtypes.Transaction, error) {
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
 		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
@@ -191,7 +181,6 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 		return nil, errors.Wrap(err, "whitelist pack error")
 	}
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		txData.to,
 		zeroValue,
@@ -205,9 +194,8 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 }
 
 // SignMigrateTssFundsCmd signs a migrate TSS funds command
-func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
-		ctx,
 		nil,
 		txData.to,
 		txData.amount,
