@@ -110,7 +110,7 @@ func (signer *Signer) prepareExecuteMsgParams(
 
 	client, ok := signer.solanaClient.(*rpc.Client)
 	if !ok {
-		if wrapper, wrapOk := signer.solanaClient.(interface{ UnwrapClient() interface{} }); wrapOk {
+		if wrapper, wrapOk := signer.solanaClient.(interface{ UnwrapClient() any }); wrapOk {
 			client, ok = wrapper.UnwrapClient().(*rpc.Client)
 		}
 		if !ok {
