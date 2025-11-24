@@ -281,6 +281,18 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txType uint8
 	var effectiveGasPrice *hexutil.Big
 
+	isPrunedBlock := false
+	effectiveGasPrice = nil
+	// Get baseFee for effective gas price calculation
+	baseFee, err := b.BaseFee(blockRes)
+	if err != nil {
+		b.Logger.Debug("failed to get base fee", "height", res.Height, "error", err.Error())
+		// Setting to nil is fine here , the price calculation will fallback to fee cap
+		// Note this will still not work for blocks that have been pruned
+		isPrunedBlock = true
+	}
+
+	// Set transaction type and recipient (required for all blocks, including pruned)
 	if txData == nil {
 		// #nosec G115 always in range
 		txType = uint8(additional.Type)
@@ -288,7 +300,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		txType = ethMsg.AsTransaction().Type()
 		to = txData.GetTo()
-		effectiveGasPrice = (*hexutil.Big)(txData.GetGasPrice())
+		// Only calculate effectiveGasPrice for non-pruned blocks with transaction data
+		if !isPrunedBlock {
+			effectiveGasPrice = (*hexutil.Big)(rpctypes.EffectiveGasPrice(ethMsg.AsTransaction(), baseFee))
+		}
 	}
 
 	// create the logs bloom
@@ -320,13 +335,13 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		"blockNumber":      hexutil.Uint64(res.Height),     //#nosec G115 won't exceed uint64
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex), //#nosec G115 no int overflow expected here
 
-		// https://github.com/foundry-rs/foundry/issues/7640
-		"effectiveGasPrice": effectiveGasPrice,
-
 		// sender and receiver (contract or EOA) addreses
 		"from": from,
 		"to":   to,
 		"type": hexutil.Uint(txType),
+
+		// https://github.com/foundry-rs/foundry/issues/7640
+		"effectiveGasPrice": effectiveGasPrice,
 	}
 
 	if logs == nil {
@@ -337,16 +352,6 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		// If the ContractAddress is 20 0x0 bytes, assume it is not a contract creation
 		if txData.GetTo() == nil {
 			receipt["contractAddress"] = crypto.CreateAddress(from, txData.GetNonce())
-		}
-
-		if dynamicTx, ok := txData.(*evmtypes.DynamicFeeTx); ok {
-			baseFee, err := b.BaseFee(blockRes)
-			if err != nil {
-				// tolerate the error for pruned node.
-				b.Logger.Error("fetch basefee failed, node is pruned?", "height", res.Height, "error", err)
-			} else {
-				receipt["effectiveGasPrice"] = hexutil.Big(*dynamicTx.EffectiveGasPrice(baseFee))
-			}
 		}
 	}
 
