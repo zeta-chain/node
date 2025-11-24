@@ -11,7 +11,7 @@ const (
 	DefaultTestTimeout    = 20 * time.Minute
 	DefaultReceiptTimeout = 8 * time.Minute
 	DefaultCctxTimeout    = 8 * time.Minute
-	StressReceiptTimeOut  = 15 * time.Minute
+	StressReceiptTimeout  = 15 * time.Minute
 	StressCctxTimeout     = 15 * time.Minute
 )
 
@@ -42,7 +42,7 @@ func RegularTestTimeouts(cmd *cobra.Command) TestTimeouts {
 func StressTestTimeouts(cmd *cobra.Command, iterations int) TestTimeouts {
 	timeouts := TestTimeouts{
 		TestTimeout:    DefaultTestTimeout,
-		ReceiptTimeout: StressReceiptTimeOut,
+		ReceiptTimeout: StressReceiptTimeout,
 		CctxTimeout:    StressCctxTimeout,
 	}
 
