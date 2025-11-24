@@ -281,15 +281,11 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txType uint8
 	var effectiveGasPrice *hexutil.Big
 
-	isPrunedBlock := false
-	effectiveGasPrice = nil
 	// Get baseFee for effective gas price calculation
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		b.Logger.Debug("failed to get base fee", "height", res.Height, "error", err.Error())
-		// Setting to nil is fine here , the price calculation will fallback to fee cap
-		// Note this will still not work for blocks that have been pruned
-		isPrunedBlock = true
+		baseFee = nil
 	}
 
 	// Set transaction type and recipient (required for all blocks, including pruned)
@@ -300,10 +296,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		txType = ethMsg.AsTransaction().Type()
 		to = txData.GetTo()
-		// Only calculate effectiveGasPrice for non-pruned blocks with transaction data
-		if !isPrunedBlock {
-			effectiveGasPrice = (*hexutil.Big)(rpctypes.EffectiveGasPrice(ethMsg.AsTransaction(), baseFee))
-		}
+		effectiveGasPrice = (*hexutil.Big)(rpctypes.EffectiveGasPrice(ethMsg.AsTransaction(), baseFee))
 	}
 
 	// create the logs bloom
