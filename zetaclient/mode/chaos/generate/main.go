@@ -14,7 +14,7 @@ import (
 
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
-	"github.com/zeta-chain/node/zetaclient/chains/solana"
+	solana "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"

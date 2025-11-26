@@ -5,18 +5,19 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/gagliardetto/solana-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+
 	"github.com/zeta-chain/node/pkg/constant"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
+
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -68,6 +69,10 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	ob, err := observer.New(baseObserver, nil, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
+	// given gateway ID
+	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
+	require.NoError(t, err)
+
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
 		// expected result
 		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
@@ -86,12 +91,11 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 			IsCrossChainCall: false,
 		}
 
-		events, err := observer.FilterInboundEvents(
-			txResult,
-			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
-			chain.ChainId,
-			zerolog.Nop(),
-		)
+		// solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
+		// chain.ChainId,
+		// zerolog.Nop(),
+
+		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
 		require.NoError(t, err)
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
@@ -165,6 +169,8 @@ func Test_FilterInboundEvents(t *testing.T) {
 			IsCrossChainCall: false,
 		}
 
+		// TODO: gatewayID, chain.ChainId, zerolog.Nop()
+
 		// ACT
 		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop())
 		require.NoError(t, err)
@@ -175,6 +181,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	})
 
 	t.Run("should not filter reverted inbound deposit SOL", func(t *testing.T) {
+		// TODO: gatewayID, chain.ChainId, zerolog.Nop()
 		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop())
 		require.Error(t, err)
 	})

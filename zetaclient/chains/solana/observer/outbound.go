@@ -238,12 +238,9 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// query transaction using "finalized" commitment to avoid re-org
-	txResult, err := ob.solanaClient.GetTransaction(ctx, sig, &rpc.GetTransactionOpts{
-		Commitment:                     rpc.CommitmentFinalized,
-		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
-	})
+	txResult, err := ob.solanaRepo.GetTransaction(ctx, sig, rpc.CommitmentFinalized)
 	if err != nil {
-		logger.Error().Err(err).Msg("error calling GetTransaction")
+		logger.Error().Err(err).Send()
 		return nil, false
 	}
 
@@ -321,7 +318,7 @@ func ParseGatewayInstruction(
 		}
 
 		// Skip non-Gateway program instructions
-		if !programID.Equals(gatewayID) {
+		if !programID.Equals(solana.PublicKey(gatewayID)) {
 			continue
 		}
 

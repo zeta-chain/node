@@ -27,7 +27,7 @@ import (
 	m15 "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	m18 "github.com/zeta-chain/node/zetaclient/chains/evm"
 	m20 "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	m23 "github.com/zeta-chain/node/zetaclient/chains/solana"
+	m23 "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	m26 "github.com/zeta-chain/node/zetaclient/chains/sui"
 	m29 "github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	m30 "github.com/zeta-chain/node/zetaclient/chains/ton"
@@ -1100,36 +1100,6 @@ func (self *chaosSolanaClient) GetBlockTime(
 	return
 }
 
-func (self *chaosSolanaClient) GetConfirmedTransactionWithOpts(
-	in0 m2.Context,
-	in1 m24.Signature,
-	in2 *m25.GetTransactionOpts,
-) (
-	out0 *m25.TransactionWithMeta,
-	out1 error,
-) {
-	if err := self.shouldFail("SolanaClient", "GetConfirmedTransactionWithOpts"); err != nil {
-		out1 = err
-	} else {
-		out0, out1 = self.client.GetConfirmedTransactionWithOpts(in0, in1, in2)
-	}
-	return
-}
-
-func (self *chaosSolanaClient) GetHealth(
-	in0 m2.Context,
-) (
-	out0 string,
-	out1 error,
-) {
-	if err := self.shouldFail("SolanaClient", "GetHealth"); err != nil {
-		out1 = err
-	} else {
-		out0, out1 = self.client.GetHealth(in0)
-	}
-	return
-}
-
 func (self *chaosSolanaClient) GetLatestBlockhash(
 	in0 m2.Context,
 	in1 m25.CommitmentType,
@@ -1203,20 +1173,6 @@ func (self *chaosSolanaClient) GetTransaction(
 		out1 = err
 	} else {
 		out0, out1 = self.client.GetTransaction(in0, in1, in2)
-	}
-	return
-}
-
-func (self *chaosSolanaClient) GetVersion(
-	in0 m2.Context,
-) (
-	out0 *m25.GetVersionResult,
-	out1 error,
-) {
-	if err := self.shouldFail("SolanaClient", "GetVersion"); err != nil {
-		out1 = err
-	} else {
-		out0, out1 = self.client.GetVersion(in0)
 	}
 	return
 }

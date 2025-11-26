@@ -49,14 +49,11 @@
         "GetAccountInfoWithOpts": 50,
         "GetBalance": 50,
         "GetBlockTime": 50,
-        "GetConfirmedTransactionWithOpts": 50,
-        "GetHealth": 50,
         "GetLatestBlockhash": 50,
         "GetRecentPrioritizationFees": 50,
         "GetSignaturesForAddressWithOpts": 50,
         "GetSlot": 50,
         "GetTransaction": 50,
-        "GetVersion": 50,
         "SendTransactionWithOpts": 50
     },
     "SuiClient": {

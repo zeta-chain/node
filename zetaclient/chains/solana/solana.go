@@ -18,10 +18,12 @@ import (
 )
 
 const (
-	// outboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
-	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
-	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
-	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
+	// outboundLookbackFactor determines how many nonces to look back for pending CCTXs.
+	// For example, given an OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor
+	// of 1.0, the scheduler need to be able to pick up and schedule any pending CCTXs with
+	// nonce < 880 (1000 - 120 * 1.0).
+	//
+	// NOTE: 1.0 means look back the same number of CCTXs as we look ahead.
 	outboundLookbackFactor = 1.0
 )
 

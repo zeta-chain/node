@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/errors"
 	sol "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/rs/zerolog"
 
@@ -148,7 +149,7 @@ func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string
 		return token.Mint{}, err
 	}
 
-	info, err := signer.solanaClient.GetAccountInfo(ctx, mintPk)
+	info, err := signer.solanaRepo.GetAccountInfo(ctx, mintPk, solrpc.CommitmentFinalized)
 	if err != nil {
 		return token.Mint{}, err
 	}

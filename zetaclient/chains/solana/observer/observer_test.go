@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -22,7 +23,7 @@ import (
 func MockSolanaObserver(
 	t *testing.T,
 	chain chains.Chain,
-	solanaClient observer.SolanaClient,
+	solanaClient repo.SolanaClient,
 	chainParams observertypes.ChainParams,
 	zetacoreClient zrepo.ZetacoreClient,
 	tssSigner tssrepo.TSSClient,

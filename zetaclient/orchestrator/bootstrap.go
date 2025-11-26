@@ -22,8 +22,9 @@ import (
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
-	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
-	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	solobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
+	solsigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
 	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
@@ -188,7 +189,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 	if standardSolanaClient == nil {
 		return nil, errors.New("unable to create RPC client")
 	}
-	var solanaClient solana.SolanaClient = standardSolanaClient
+	var solanaClient solrepo.SolanaClient = standardSolanaClient
 	if clientMode.IsChaosMode() {
 		solanaClient = oc.chaosSource.WrapSolanaClient(solanaClient)
 	}
@@ -196,7 +197,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 		solanaClient = dry.WrapSolanaClient(solanaClient)
 	}
 
-	observer, err := solbserver.New(baseObserver, solanaClient, gwAddress)
+	observer, err := solobserver.New(baseObserver, solanaClient, gwAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
@@ -212,7 +213,7 @@ func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (
 	baseSigner := oc.newBaseSigner(chain, clientMode)
 
 	// create Solana signer
-	signer, err := solanasigner.New(baseSigner, solanaClient, gwAddress, relayerKey)
+	signer, err := solsigner.New(baseSigner, solanaClient, gwAddress, relayerKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create signer")
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -39,6 +40,8 @@ func (ob *Observer) observeInboundTrackers(
 	trackers []types.InboundTracker,
 	isInternal bool,
 ) error {
+	logger := ob.Logger().Inbound
+
 	chainID := ob.Chain().ChainId
 
 	// take at most MaxInternalTrackersPerScan for each scan
@@ -49,10 +52,10 @@ func (ob *Observer) observeInboundTrackers(
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
-		txResult, err := ob.solanaRepo.GetTransaction(ctx, signature)
+		txResult, err := ob.solanaRepo.GetTransaction(ctx, signature, rpc.CommitmentFinalized)
 		switch {
 		case errors.Is(err, repo.ErrUnsupportedTxVersion):
-			ob.Logger().Inbound.Warn().
+			logger.Warn().
 				Stringer(logs.FieldTx, signature).
 				Bool("is_internal", isInternal).
 				Msg("skip inbound tracker hash")
@@ -62,7 +65,7 @@ func (ob *Observer) observeInboundTrackers(
 		}
 
 		// filter inbound events
-		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, logger)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEvents for chain %d sig %s", chainID, signature)
 		}

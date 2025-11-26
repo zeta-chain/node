@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	sol "github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -145,12 +146,12 @@ func reportPreflightMetricsSolana(ctx context.Context, app *zctx.AppContext, cha
 	}
 
 	// TODO: The Solana repository should be injected as a dependency into this function. We
-	// should not have to instantiate the Solana client here.
-	blockTime, err := solrepo.New(rpcClient).HealthCheck(ctx)
+	// should not have to instantiate the Solana client here, nor provide the gatewayID.
+	blockTime, err := solrepo.New(rpcClient, sol.PublicKey{} /* unused */).HealthCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get solana last block time")
+		return errors.Wrap(err, "unable to check solana's health")
 	}
-	metrics.ReportBlockLatency(chain.Name, blockTime)
+	metrics.ReportBlockLatency(chain.Name, *blockTime)
 
 	return nil
 }
