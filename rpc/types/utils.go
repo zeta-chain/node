@@ -231,15 +231,10 @@ func NewRPCTransaction(
 		result.ChainID = (*hexutil.Big)(tx.ChainId())
 		result.GasFeeCap = (*hexutil.Big)(tx.GasFeeCap())
 		result.GasTipCap = (*hexutil.Big)(tx.GasTipCap())
-		// if the transaction has been mined, compute the effective gas price
-		if baseFee != nil && blockHash != (common.Hash{}) {
-			// price = min(tip, gasFeeCap - baseFee) + baseFee
-			price := new(big.Int).Add(tx.GasTipCap(), baseFee)
-			if price.Cmp(tx.GasFeeCap()) > 0 {
-				price = tx.GasFeeCap()
-			}
-			result.GasPrice = (*hexutil.Big)(price)
+		if blockHash != (common.Hash{}) {
+			result.GasPrice = (*hexutil.Big)(EffectiveGasPrice(tx, baseFee))
 		} else {
+			// For pending transactions, use gasFeeCap as placeholder
 			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
 		}
 	}
@@ -302,6 +297,42 @@ func BaseFeeFromEvents(events []abci.Event) *big.Int {
 		}
 	}
 	return nil
+}
+
+// EffectiveGasPrice computes the transaction gas fee, based on the given baseFee value.
+//
+// For EIP-1559 transactions:
+//
+//	price = min(gasTipCap + baseFee, gasFeeCap)
+//
+// For legacy transactions:
+//
+//	price = gasPrice
+//
+// This method is based on go-ethereum's internal effectiveGasPrice calculation.
+// (https://github.com/ethereum/go-ethereum/blob/d818a9af7bd5919808df78f31580f59382c53150/internal/ethapi/api.go#L1083-L1093)
+func EffectiveGasPrice(tx *ethtypes.Transaction, baseFee *big.Int) *big.Int {
+	if tx == nil {
+		return big.NewInt(0)
+	}
+
+	// For legacy (0x00) and access list (0x01) transactions, return the gas price directly
+	// For EIP-1559 (0x02), Blob (0x03), and SetCode (0x04) transactions, calculate effective gas price
+	switch tx.Type() {
+	case ethtypes.LegacyTxType, ethtypes.AccessListTxType:
+		return tx.GasPrice()
+	case ethtypes.DynamicFeeTxType, ethtypes.BlobTxType, ethtypes.SetCodeTxType:
+		if baseFee == nil {
+			return tx.GasFeeCap()
+		}
+		price := new(big.Int).Add(tx.GasTipCap(), baseFee)
+		if price.Cmp(tx.GasFeeCap()) > 0 {
+			return tx.GasFeeCap()
+		}
+		return price
+	default:
+		return tx.GasPrice()
+	}
 }
 
 // CheckTxFee is an internal function used to check whether the fee of
