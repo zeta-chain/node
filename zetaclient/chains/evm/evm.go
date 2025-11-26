@@ -246,7 +246,7 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 	//   request will contain the digests of the txs that we immediately need to send out.
 	//
 	// Why signing adjacent batches in loop without waiting for another interval?
-	// - the keysign interval in chain params is used as a timeing signal to trigger first keysign handshake.
+	// - the keysign interval in chain params is used as a timing signal to trigger first keysign handshake.
 	// - at the moment when the first keysign is completed, it means the TSS signers are strictly in sync on:
 	//   1. the timestamp, regardless of timezones, system time, or Zeta height.
 	//   2. which batch number to sign next.

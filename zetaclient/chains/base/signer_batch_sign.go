@@ -285,13 +285,9 @@ func (s *Signer) AddBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 			continue
 		}
 
-		// log it, then add or update signature
-		if info.signature == [65]byte{} {
-			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("adding signature to cache")
-		} else if info.signature != sigs[sigIndex] {
-			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("updating signature in cache")
-		}
+		// set signature
 		info.signature = sigs[sigIndex]
+		logger.Info().Uint64(logs.FieldNonce, nonce).Msg("added signature to cache")
 	}
 }
 
