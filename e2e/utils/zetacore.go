@@ -141,7 +141,6 @@ func WaitCctxsMinedByInboundHash(
 		cctxs = make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
-			cctx := cctx
 			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
 				if i%20 == 0 {

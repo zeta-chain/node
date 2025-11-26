@@ -44,7 +44,6 @@ func TestLastBlockHeightQuerySingle(t *testing.T) {
 			err:  status.Error(codes.InvalidArgument, "invalid request"),
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := k.LastBlockHeight(wctx, tc.request)
 			if tc.err != nil {

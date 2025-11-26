@@ -39,7 +39,6 @@ func TestResolveHome(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			pathOut, err := zetaos.ExpandHomeDir(tc.pathIn)
 			require.NoError(t, err)
@@ -74,7 +73,6 @@ func TestFileExists(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			exists := zetaos.FileExists(tc.file)
 			require.Equal(t, tc.expected, exists)
