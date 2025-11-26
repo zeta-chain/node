@@ -43,14 +43,36 @@ print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-# Check if zetaclientd is installed
-check_zetaclientd() {
+# Check if required binaries are installed
+check_required_binaries() {
+    local missing_binaries=()
+
+    # Check for zetaclientd
     if ! command -v zetaclientd &> /dev/null; then
-        print_error "zetaclientd not found in PATH!"
-        print_info "Please install zetaclientd first: make install-zetaclient"
+        missing_binaries+=("zetaclientd")
+    else
+        print_info "Found zetaclientd at: $(which zetaclientd)"
+    fi
+
+    # Check for zetacored
+    if ! command -v zetacored &> /dev/null; then
+        missing_binaries+=("zetacored")
+    else
+        print_info "Found zetacored at: $(which zetacored)"
+    fi
+
+    # If any binaries are missing, provide installation instructions
+    if [ ${#missing_binaries[@]} -gt 0 ]; then
+        print_error "Missing required binaries: ${missing_binaries[*]}"
+        print_info "Please install them by running:"
+        echo ""
+        echo "  make install"
+        echo ""
+        print_info "This will build and install both zetacored and zetaclientd"
         exit 1
     fi
-    print_info "Found zetaclientd at: $(which zetaclientd)"
+
+    print_info "All required binaries are installed"
 }
 
 # Check if Docker is running and containers are up
@@ -79,13 +101,6 @@ fetch_operator_address() {
     fi
 
     print_info "Fetching operator address from observer set..."
-
-    # Check if zetacored is available
-    if ! command -v zetacored &> /dev/null; then
-        print_error "zetacored not found in PATH!"
-        print_info "Please install zetacored first: make install-zetacore"
-        exit 1
-    fi
 
     # Try to fetch observer set
     OBSERVERS=$(zetacored q observer list-observer-set --output json 2>/dev/null | jq -r '.observers[]' 2>/dev/null)
@@ -203,13 +218,6 @@ create_restricted_addresses() {
 setup_hotkey() {
     print_info "Setting up hotkey in keyring..."
 
-    # Check if zetacored is installed
-    if ! command -v zetacored &> /dev/null; then
-        print_warning "zetacored not found, skipping hotkey setup"
-        print_info "To add hotkey manually later, run: zetacored keys add hotkey --algo=secp256k1 --keyring-backend=test"
-        return
-    fi
-
     # Check if hotkey already exists
     if zetacored keys show hotkey --keyring-backend=test &> /dev/null; then
         print_info "Hotkey already exists in keyring"
@@ -320,7 +328,7 @@ main() {
     echo ""
 
     # Run all setup steps
-    check_zetaclientd
+    check_required_binaries
     check_docker
     fetch_operator_address
     check_preparams
