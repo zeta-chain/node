@@ -76,6 +76,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
+
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -86,6 +87,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err = ob.checkTSSVout(params, []btcjson.Vout{{}, {}, {}, {}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
+
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -95,6 +97,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.Error(t, err)
 	})
+
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -104,6 +107,17 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
+
+	t.Run("should fail if unable to decode receiver address", func(t *testing.T) {
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
+		params := cctx.GetCurrentOutboundParam()
+
+		// invalid receiver address (testnet address, not mainnet)
+		params.Receiver = "tb1q6rufg6myrxurdn0h57d2qhtm9zfmjw2mzcm05q"
+		err := ob.checkTSSVout(params, rawResult.Vout)
+		require.ErrorContains(t, err, "error decoding receiver")
+	})
+
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -113,6 +127,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
+
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -122,6 +137,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params receiver")
 	})
+
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()
@@ -131,6 +147,7 @@ func TestCheckTSSVout(t *testing.T) {
 		err := ob.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params amount")
 	})
+
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, TestDataDir, chainID, nonce)
 		params := cctx.GetCurrentOutboundParam()

@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 
@@ -460,41 +461,52 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
 	}
 
-	nonce := params.TssNonce
-	tssAddress := ob.TSSAddressString()
+	// decode cctx receiver address
+	cctxReceiver, err := chains.DecodeBtcAddress(params.Receiver, ob.Chain().ChainId)
+	if err != nil {
+		return errors.Wrapf(err, "error decoding receiver %s", params.Receiver)
+	}
+
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
+	if err != nil {
+		return errors.Wrapf(err, "error getting TSS address")
+	}
+
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverExpected := tssAddress
+		var receiverExpected btcutil.Address = tssAddress
 		if vout.N == 1 {
-			// the 2nd output is the payment to recipient
-			receiverExpected = params.Receiver
+			receiverExpected = cctxReceiver
 		}
+
+		// decode receiver and amount from vout
 		receiverVout, amount, err := common.DecodeTSSVout(vout, receiverExpected, ob.Chain())
 		if err != nil {
 			return err
 		}
+
 		switch vout.N {
 		case 0: // 1st vout: nonce-mark
-			if receiverVout != tssAddress {
+			if receiverVout != tssAddress.EncodeAddress() {
 				return fmt.Errorf(
 					"checkTSSVout: nonce-mark address %s not match TSS address %s",
 					receiverVout,
-					tssAddress,
+					tssAddress.EncodeAddress(),
 				)
 			}
-			if amount != chains.NonceMarkAmount(nonce) {
+			if amount != chains.NonceMarkAmount(params.TssNonce) {
 				return fmt.Errorf(
 					"checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d",
 					amount,
-					chains.NonceMarkAmount(nonce),
+					chains.NonceMarkAmount(params.TssNonce),
 				)
 			}
 		case 1: // 2nd vout: payment to recipient
-			if receiverVout != params.Receiver {
+			if receiverVout != cctxReceiver.EncodeAddress() {
 				return fmt.Errorf(
 					"checkTSSVout: output address %s not match params receiver %s",
 					receiverVout,
-					params.Receiver,
+					cctxReceiver.EncodeAddress(),
 				)
 			}
 			// #nosec G115 always positive
@@ -502,8 +514,12 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
 			}
 		case 2: // 3rd vout: change to TSS (optional)
-			if receiverVout != tssAddress {
-				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", receiverVout, tssAddress)
+			if receiverVout != tssAddress.EncodeAddress() {
+				return fmt.Errorf(
+					"checkTSSVout: change address %s not match TSS address %s",
+					receiverVout,
+					tssAddress.EncodeAddress(),
+				)
 			}
 		}
 	}
@@ -519,8 +535,12 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
 	}
 
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
+	if err != nil {
+		return errors.Wrapf(err, "error getting TSS address")
+	}
+
 	nonce := params.TssNonce
-	tssAddress := ob.TSSAddressString()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
 		receiverVout, amount, err := common.DecodeTSSVout(vout, tssAddress, ob.Chain())
@@ -529,11 +549,11 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 		}
 		switch vout.N {
 		case 0: // 1st vout: nonce-mark
-			if receiverVout != tssAddress {
+			if receiverVout != tssAddress.EncodeAddress() {
 				return fmt.Errorf(
 					"checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s",
 					receiverVout,
-					tssAddress,
+					tssAddress.EncodeAddress(),
 				)
 			}
 			if amount != chains.NonceMarkAmount(nonce) {
@@ -544,11 +564,11 @@ func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams
 				)
 			}
 		case 1: // 2nd vout: change to TSS (optional)
-			if receiverVout != tssAddress {
+			if receiverVout != tssAddress.EncodeAddress() {
 				return fmt.Errorf(
 					"checkTSSVoutCancelled: change address %s not match TSS address %s",
 					receiverVout,
-					tssAddress,
+					tssAddress.EncodeAddress(),
 				)
 			}
 		}
