@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -252,10 +253,20 @@ func (r *E2ERunner) WithdrawBTC(
 		r.ApproveBTCZRC20(r.GatewayZEVMAddr)
 	}
 
+	// convert P2WPKH/P2WSH addresses to uppercase, it should work without issue
+	var receiverStr string
+	switch to.(type) {
+	case *btcutil.AddressWitnessPubKeyHash,
+		*btcutil.AddressWitnessScriptHash:
+		receiverStr = strings.ToUpper(to.EncodeAddress())
+	default:
+		receiverStr = to.EncodeAddress()
+	}
+
 	// withdraw 'amount' of BTC through ZEVM gateway
 	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
-		[]byte(to.EncodeAddress()),
+		[]byte(receiverStr),
 		amount,
 		r.BTCZRC20Addr,
 		revertOptions,

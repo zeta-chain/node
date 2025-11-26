@@ -2,6 +2,7 @@ package chains
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -156,7 +157,7 @@ func Test_IsBtcAddressSupported_P2TR(t *testing.T) {
 		{
 			// https://mempool.space/tx/259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7
 			name:      "mainnet taproot address",
-			addr:      "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9",
+			addr:      strings.ToUpper("bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9"),
 			chainId:   BitcoinMainnet.ChainId,
 			supported: true,
 		},
@@ -207,7 +208,7 @@ func Test_IsBtcAddressSupported_P2WSH(t *testing.T) {
 		{
 			// https://mempool.space/testnet/tx/78fac3f0d4c0174c88d21c4bb1e23a8f007e890c6d2cfa64c97389ead16c51ed
 			name:      "testnet P2WSH address",
-			addr:      "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
+			addr:      strings.ToUpper("tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu"),
 			chainId:   BitcoinTestnet.ChainId,
 			supported: true,
 		},
@@ -256,7 +257,7 @@ func Test_IsBtcAddressSupported_P2WPKH(t *testing.T) {
 		},
 		{
 			name:      "regtest P2WPKH address",
-			addr:      "bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2",
+			addr:      strings.ToUpper("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2"),
 			chainId:   BitcoinRegtest.ChainId,
 			supported: true,
 		},
