@@ -11,9 +11,9 @@ DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
+#OLD VERSION is used for upgrade tests and devnet fork script, this is the version that we will be upgrading from in upgrade tests, it should be the version currently running on testnet or mainnet
 OLD_VERSION := v36.0.1
-#UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
-DEVNET_UPGRADE_VERSION := v37.0.0
+#OLD_VERSION_MAJOR v36.0.1 -> v36
 OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
@@ -156,6 +156,8 @@ devnet-fork:
 	@echo "--> Running devnet fork script..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%)
 
+# We creatre a sample version for testing the devnet fork
+DEVNET_UPGRADE_VERSION := v37.0.0
 devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
@@ -269,23 +271,25 @@ clear-localnet-persistence:
 ###                         Testnet Node             						###
 ###############################################################################
 
-build-testnet-node:
-	@echo "--> Building testnet node image with NODE_VERSION=$(OLD_VERSION:v%=%)"
-	$(DOCKER) build -f Dockerfile.testnet --build-arg NODE_VERSION=$(OLD_VERSION:v%=%) -t testnet-node:latest .
-	@echo "--> Testnet node image built successfully"
-
 # Start testnet node with cached snapshot (if available)
-testnet-node: build-testnet-node
-	@echo "--> Starting testnet node (using cached snapshot if available)"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile testnet up -d testnet-node
-	@echo "--> Testnet node started. View logs: docker compose -f contrib/localnet/docker-compose.yml logs -f testnet-node"
+# Uses OLD_VERSION for testnet compatibility
+testnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
 
 # Start testnet node with forced snapshot download
-testnet-node-force: build-testnet-node
-	@echo "--> Starting testnet node (forcing snapshot download)"
-	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER_COMPOSE) --profile testnet up -d testnet-node
-	@echo "--> Testnet node started with fresh snapshot. View logs: docker compose -f contrib/localnet/docker-compose.yml logs -f testnet-node"
+testnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
 
+# Stop and remove testnet node
+testnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down testnet-node
+
+
+# Start zetaclient-dry connected to testnet-node
+testnet-zetaclient-dry:
+	cd contrib/localnet/ && ZETACORE_HOST=testnet-node $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
 
 ###############################################################################
 ###                         E2E tests               						###
@@ -303,6 +307,7 @@ zetanode:
 	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --target latest-runtime -f ./Dockerfile-localnet .
 .PHONY: zetanode
 endif
+
 
 orchestrator:
 	@echo "Building e2e orchestrator"

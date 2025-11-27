@@ -254,10 +254,11 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.26
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: python3 -u /root/start-zetaclient-dry.py
     environment:
+      - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
       - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
+      - HOTKEY_PASSWORD=password
       - PPROF_ADDR=0.0.0.0:6066
     ports:
       - "6066:6066" # pprof
@@ -265,19 +266,13 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./scripts/start-zetaclient-dry.py:/root/start-zetaclient-dry.py:ro
 
   testnet-node:
-    build:
-      context: ../..
-      dockerfile: Dockerfile.testnet
-      args:
-        NODE_VERSION: ${NODE_VERSION:-36.0.1}
-    image: testnet-node:latest
+    image: zetanode:latest
     container_name: testnet-node
     hostname: testnet-node
-    profiles:
-      - testnet
-      - all
+    entrypoint: python3 -u /root/start-testnet-node.py
     networks:
       mynetwork:
         ipv4_address: 172.20.0.40
@@ -296,6 +291,8 @@ services:
       - testnet_data:/root/.zetacored
       # Shared snapshot cache on host (devnet script uses hardcoded path)
       - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
+      # Python entrypoint script
+      - ./scripts/start-testnet-node.py:/root/start-testnet-node.py:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
       interval: 30s
