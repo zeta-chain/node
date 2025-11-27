@@ -3,6 +3,7 @@ package base
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"slices"
 	"time"
 
@@ -129,7 +130,7 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 		chainID      = s.Chain().ChainId
 		digests      = batch.Digests()
 		keysignNonce = batch.NonceHigh()
-		logger       = s.batchLogger(zetaHeight, batch)
+		logger       = s.batchLogger(batch)
 	)
 
 	// calculate keysign height
@@ -138,8 +139,10 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 		return errors.Wrap(err, "unable to calculate keysign height")
 	}
 
-	// sign batch
+	logger = logger.With().Int64("height", zetaHeight).Uint64("keysign_height", keysignHeight).Logger()
 	logger.Info().Msg("signing batch of digests")
+
+	// sign batch
 	sigs, err := s.TSS().SignBatch(ctx, digests, keysignHeight, keysignNonce, chainID)
 	if err != nil {
 		logger.Error().Err(err).Msg("batch keysign failed")
@@ -160,7 +163,13 @@ func (s *Signer) GetSignatureOrAddDigest(nonce uint64, digest []byte) ([65]byte,
 
 	var (
 		batchNumber = NonceToBatchNumber(nonce)
-		logger      = s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Uint64("batch_num", batchNumber).Logger()
+		digestHex   = hex.EncodeToString(digest)
+		logger      = s.Logger().
+				Std.With().
+				Uint64("batch_num", batchNumber).
+				Uint64(logs.FieldNonce, nonce).
+				Str("digest", digestHex).
+				Logger()
 	)
 
 	info, found := s.tssKeysignInfoMap[nonce]
@@ -175,9 +184,10 @@ func (s *Signer) GetSignatureOrAddDigest(nonce uint64, digest []byte) ([65]byte,
 	// it means the signature is no longer valid. Update
 	// digest and clear the old signature, then return false.
 	if !bytes.Equal(info.digest, digest) {
+		oldDigestHex := hex.EncodeToString(info.digest)
 		info.digest = digest
 		info.signature = [65]byte{}
-		logger.Info().Msg("updated digest in cache")
+		logger.Info().Str("old_digest", oldDigestHex).Msg("updated digest in cache")
 
 		return [65]byte{}, false
 	}
@@ -280,10 +290,9 @@ func (s *Signer) AddBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 	defer s.mu.Unlock()
 
 	var (
-		nonceLow    = batch.NonceLow()
-		nonceHigh   = batch.NonceHigh()
-		batchNumber = batch.BatchNumber()
-		logger      = s.Logger().Std.With().Uint64("batch_num", batchNumber).Logger()
+		nonceLow  = batch.NonceLow()
+		nonceHigh = batch.NonceHigh()
+		logger    = s.batchLogger(batch)
 	)
 
 	for nonce := nonceLow; nonce <= nonceHigh; nonce++ {
@@ -320,11 +329,10 @@ func (s *Signer) removeKeysignInfo(beforeNonce uint64) {
 	}
 }
 
-// keysignLogger returns the logger for keysign.
-func (s *Signer) batchLogger(zetaHeight int64, batch TSSKeysignBatch) zerolog.Logger {
+// keysignLogger returns the logger for keysign batch.
+func (s *Signer) batchLogger(batch TSSKeysignBatch) zerolog.Logger {
 	return s.Logger().
 		Std.With().
-		Int64("height", zetaHeight).
 		Uint64("batch_num", batch.BatchNumber()).
 		Uint64("nonce_low", batch.NonceLow()).
 		Uint64("nonce_high", batch.NonceHigh()).
