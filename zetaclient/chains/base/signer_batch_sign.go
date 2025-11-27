@@ -40,6 +40,11 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 	// real-time zeta height are the signals to trigger TSS keysign on the exact same time,
 	// so we need to ensure the block event is up to date (not a stale one accumulated in the channel)
 	if zetaBlock.Block.Height < zetaHeight {
+		s.Logger().
+			Std.Info().
+			Int64("zeta_height", zetaHeight).
+			Int64("event_block", zetaBlock.Block.Height).
+			Msg("stale block event")
 		return zetaHeight, true, nil
 	}
 
@@ -197,8 +202,17 @@ func (s *Signer) isBatchReadyToSign(
 		return false, 0, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
 	}
 
+	// prepare logger
+	logger := s.Logger().
+		Std.With().
+		Uint64("batch_num", batchNumber).
+		Int64("nonce_low", p.NonceLow).
+		Int64("nonce_high", p.NonceHigh).
+		Logger()
+
 	// return false if no pending cctx
 	if p.NonceLow >= p.NonceHigh {
+		logger.Info().Msg("no pending cctx to sign")
 		return false, 0, nil
 	}
 
@@ -209,6 +223,7 @@ func (s *Signer) isBatchReadyToSign(
 	// calculate the overlap range
 	overlap := cctxNonceLow <= batchNonceHigh && batchNonceLow <= cctxNonceHigh
 	if !overlap {
+		logger.Info().Msg("batch is not ready to sign")
 		return false, 0, nil
 	}
 	untilNonce := min(cctxNonceHigh, batchNonceHigh)
@@ -282,6 +297,7 @@ func (s *Signer) AddBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 
 		// skip signature if digest has changed (e.g. increased gas price)
 		if !bytes.Equal(info.digest, batch.Digests()[sigIndex]) {
+			logger.Info().Uint64(logs.FieldNonce, nonce).Msg("skipping signature")
 			continue
 		}
 
