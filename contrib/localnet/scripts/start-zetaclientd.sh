@@ -150,7 +150,6 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
     if [[ $HOSTNAME != "zetaclient-dry" ]]; then
         import_relayer_key "${num}"
     fi
-
     # Add feature flags to existing config.
     enable_multiple_calls
 

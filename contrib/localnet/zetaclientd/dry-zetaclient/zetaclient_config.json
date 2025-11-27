@@ -1,0 +1,61 @@
+{
+  "ClientMode": 1,
+  "ChaosSeed": 0,
+  "ChaosProfilePath": "",
+  "Peer": "",
+  "PublicIP": "127.0.0.1",
+  "PublicDNS": "",
+  "LogFormat": "text",
+  "LogLevel": 1,
+  "LogSampler": false,
+  "PreParamsPath": "/Users/tanmay/IdeaProjects/kingpinXD/zeta-node/contrib/localnet/preparams/zetaclient-dry.json",
+  "ZetaCoreHome": "",
+  "ChainID": "athens_101-1",
+  "ZetaCoreURL": "127.0.0.1",
+  "AuthzGranter": "zeta1q0scmu63a8efravfrjpzgh5ylptxy58rvx59cw",
+  "AuthzHotkey": "hotkey",
+  "ConfigUpdateTicker": 5,
+  "TssPath": "~/.tss",
+  "TSSMaxPendingSignatures": 0,
+  "TestTssKeysign": false,
+  "KeyringBackend": "test",
+  "RelayerKeyPath": "~/.zetacored/relayer-keys",
+  "MaxBaseFee": 0,
+  "MempoolCongestionThreshold": 2100,
+  "EVMChainConfigs": {
+    "1337": {
+      "Endpoint": "http://127.0.0.1:8545"
+    }
+  },
+  "BTCChainConfigs": {
+    "18444": {
+      "RPCUsername": "smoketest",
+      "RPCPassword": "123",
+      "RPCHost": "127.0.0.1:18443",
+      "RPCParams": "regtest"
+    }
+  },
+  "SolanaConfig": {
+    "Endpoint": "http://127.0.0.1:8899"
+  },
+  "SuiConfig": {
+    "Endpoint": "http://127.0.0.1:9000"
+  },
+  "TONConfig": {
+    "Endpoint": "http://127.0.0.1:8081"
+  },
+  "ComplianceConfig": {
+    "LogPath": "",
+    "RestrictedAddresses": [
+      "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6",
+      "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp",
+      "9fA4vYZfCa9k9UHjnvYCk4YoipsooapGciKMgaTBw9UH",
+      "0x14454c46e2ac4603adaa15df30e5dbf7662c3177db4b83c326bed5663d25d1bd",
+      "0:fffffbd865df68188ea84d6615086c26a7b5912a60bc55fded2cdb029b67cdef"
+    ]
+  },
+  "FeatureFlags": {
+    "EnableMultipleCalls": true,
+    "EnableSolanaAddressLookupTable": true
+  }
+}

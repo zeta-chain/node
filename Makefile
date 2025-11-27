@@ -1,7 +1,7 @@
 .PHONY: build
 
 PACKAGE_NAME := github.com/zeta-chain/node
-NODE_VERSION := $(shell ./version.sh)
+NODE_VERSION ?= $(shell ./version.sh)
 NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
@@ -264,6 +264,28 @@ stop-localnet:
 # delete any volume ending in persist
 clear-localnet-persistence:
 	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
+
+###############################################################################
+###                         Testnet Node             						###
+###############################################################################
+
+build-testnet-node:
+	@echo "--> Building testnet node image with NODE_VERSION=$(OLD_VERSION:v%=%)"
+	$(DOCKER) build -f Dockerfile.testnet --build-arg NODE_VERSION=$(OLD_VERSION:v%=%) -t testnet-node:latest .
+	@echo "--> Testnet node image built successfully"
+
+# Start testnet node with cached snapshot (if available)
+testnet-node: build-testnet-node
+	@echo "--> Starting testnet node (using cached snapshot if available)"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile testnet up -d testnet-node
+	@echo "--> Testnet node started. View logs: docker compose -f contrib/localnet/docker-compose.yml logs -f testnet-node"
+
+# Start testnet node with forced snapshot download
+testnet-node-force: build-testnet-node
+	@echo "--> Starting testnet node (forcing snapshot download)"
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER_COMPOSE) --profile testnet up -d testnet-node
+	@echo "--> Testnet node started with fresh snapshot. View logs: docker compose -f contrib/localnet/docker-compose.yml logs -f testnet-node"
+
 
 ###############################################################################
 ###                         E2E tests               						###

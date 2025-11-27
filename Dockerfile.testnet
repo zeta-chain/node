@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1.4
+FROM golang:1.23.8-bookworm AS builder
+
+ENV GOPATH=/go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
+ENV GOCACHE=/root/.cache/go-build
+
+RUN apt-get update && \
+    apt-get install -y libusb-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /go/src/github.com/zeta-chain/node
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+ARG NODE_VERSION
+ARG NODE_COMMIT=""
+
+ENV NODE_VERSION=${NODE_VERSION}
+ENV NODE_COMMIT=${NODE_COMMIT}
+
+RUN echo '#!/bin/bash' > version.sh && \
+    echo "echo ${NODE_VERSION}" >> version.sh && \
+    chmod +x version.sh
+
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    make install
+FROM ubuntu:22.04
+
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    wget \
+    jq \
+    lz4 \
+    python3 \
+    python3-pip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir requests
+
+COPY --from=builder /go/bin/zetacored /usr/local/bin/zetacored
+COPY contrib/localnet/scripts/start-testnet-node.sh /root/entrypoint.sh
+COPY contrib/devnet/download_snapshot.py /root/download_snapshot.py
+
+RUN chmod +x /root/entrypoint.sh
+
+WORKDIR /root
+
+EXPOSE 26656 26657 1317 9090 8545 9091
+
+ENTRYPOINT ["/root/entrypoint.sh"]

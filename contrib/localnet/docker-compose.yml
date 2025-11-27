@@ -266,6 +266,43 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  testnet-node:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.testnet
+      args:
+        NODE_VERSION: ${NODE_VERSION:-36.0.1}
+    image: testnet-node:latest
+    container_name: testnet-node
+    hostname: testnet-node
+    profiles:
+      - testnet
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.40
+    ports:
+      - "26756:26656" # P2P
+      - "26757:26657" # RPC
+      - "1417:1317"   # REST API
+      - "9190:9090"   # gRPC
+      - "8645:8545"   # EVM RPC
+      - "26760:26660" # Prometheus
+    environment:
+      - MONIKER=${TESTNET_MONIKER:-testNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+    volumes:
+      # Persistent blockchain data
+      - testnet_data:/root/.zetacored
+      # Shared snapshot cache on host (devnet script uses hardcoded path)
+      - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   eth:
     image: ethereum/client-go:v1.14.0
     container_name: eth
@@ -568,3 +605,4 @@ volumes:
   preparams:
   grafana_storage:
   redis_data:
+  testnet_data:
