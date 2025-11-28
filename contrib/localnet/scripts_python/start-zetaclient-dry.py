@@ -6,6 +6,7 @@ This script initializes and configures zetaclientd for read-only observation of 
 
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -247,7 +248,6 @@ def setup_hotkey():
     # Clean up the entire keyring directory to avoid corruption issues
     keyring_path = "/root/.zetacored/keyring-test"
     if os.path.exists(keyring_path):
-        import shutil
         shutil.rmtree(keyring_path)
 
     run_command(

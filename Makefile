@@ -156,7 +156,6 @@ devnet-fork:
 	@echo "--> Running devnet fork script..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%)
 
-# We creatre a sample version for testing the devnet fork
 DEVNET_UPGRADE_VERSION := v37.0.0
 devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
@@ -267,7 +266,6 @@ stop-localnet:
 clear-localnet-persistence:
 	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
 
-
 ###############################################################################
 ###                         E2E tests               						###
 ###############################################################################
@@ -284,7 +282,6 @@ zetanode:
 	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --target latest-runtime -f ./Dockerfile-localnet .
 .PHONY: zetanode
 endif
-
 
 orchestrator:
 	@echo "Building e2e orchestrator"

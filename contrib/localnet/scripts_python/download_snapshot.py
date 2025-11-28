@@ -15,6 +15,7 @@ Examples:
 
 import argparse
 import hashlib
+import os
 import subprocess
 import sys
 import requests
@@ -186,25 +187,27 @@ def get_network_config(chain_id):
 # Main Script
 # ============================================================================
 
-def main(chain_id):
+def main(chain_id, force=False):
     config = get_network_config(chain_id)
     snapshot_url = config["snapshot_url"]
     snapshot_cache_dir = config["cache_dir"]
     network_name = config["name"]
+
+    force = force or os.environ.get('FORCE_DOWNLOAD', '').lower() == 'true'
 
     print("=" * 60)
     print(f"  ZetaChain {network_name} Snapshot Download")
     print(f"  Chain ID: {chain_id}")
     print("=" * 60)
 
-    # Check if cache already exists
     snapshot_data_dir = snapshot_cache_dir / "data"
     if snapshot_data_dir.exists() and any(snapshot_data_dir.iterdir()):
-        print(f"\nWarning: Cached snapshot already exists at {snapshot_cache_dir}")
-        response = input("Do you want to re-download and overwrite? (yes/no): ")
-        if response.lower() not in ['yes', 'y']:
-            print("Aborted. Using existing cache.")
-            sys.exit(0)
+        if not force:
+            print(f"\nWarning: Cached snapshot already exists at {snapshot_cache_dir}")
+            response = input("Do you want to re-download and overwrite? (yes/no): ")
+            if response.lower() not in ['yes', 'y']:
+                print("Aborted. Using existing cache.")
+                sys.exit(0)
         print("Removing existing cache...")
         run_command(f'rm -rf "{snapshot_cache_dir}"/*', silent=True)
 
@@ -287,6 +290,11 @@ if __name__ == "__main__":
         default=DEFAULT_CHAIN_ID,
         help=f"Chain ID to download snapshot for (default: {DEFAULT_CHAIN_ID})"
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force re-download even if cache exists"
+    )
     args = parser.parse_args()
 
-    main(args.chain_id)
+    main(args.chain_id, args.force)
