@@ -78,6 +78,7 @@ func (suite *TestSuite) TestGetSyntheticTransactionReceiptByHash() {
 
 	suite.backend.Indexer = nil
 	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 	query := fmt.Sprintf(
 		"%s.%s='%s'",
 		evmtypes.TypeMsgEthereumTx,
@@ -87,6 +88,7 @@ func (suite *TestSuite) TestGetSyntheticTransactionReceiptByHash() {
 	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
 	RegisterBlock(client, 1, nil)
 	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1000000000))
 
 	res, err := suite.backend.GetTransactionReceipt(common.HexToHash(hash))
 	suite.Require().NoError(err)
@@ -105,6 +107,8 @@ func (suite *TestSuite) TestGetSyntheticTransactionReceiptByHash() {
 	suite.Require().Equal(uint64(88), txType)
 	txIndex, _ := hexutil.DecodeUint64(res["transactionIndex"].(hexutil.Uint64).String())
 	suite.Require().Equal(uint64(8888), txIndex)
+	// effectiveGasPrice should be nil for synthetic transactions since they don't have transaction data
+	suite.Require().Nil(res["effectiveGasPrice"], "effectiveGasPrice should be nil for synthetic transactions")
 }
 
 func (suite *TestSuite) TestGetSyntheticTransactionByBlockNumberAndIndex() {
@@ -828,6 +832,8 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)
 				s.Require().NoError(err)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterBaseFee(queryClient, sdkmath.NewInt(1000000000))
 			},
 			msgEthereumTx,
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
