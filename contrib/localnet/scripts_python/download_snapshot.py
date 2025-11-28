@@ -28,14 +28,13 @@ from pathlib import Path
 HOME_DIR = Path.home()
 TEMP_EXTRACT_DIR = HOME_DIR / "zetacored_snapshot_temp"
 
-# Snapshot URLs and cache directories for each network
 NETWORK_CONFIGS = {
-    "athens_7001-1": {  # testnet
+    "athens_7001-1": {
         "snapshot_url": "https://snapshots.rpc.zetachain.com/testnet/fullnode/latest.json",
         "cache_dir": HOME_DIR / "zetacored_snapshot_testnet",
         "name": "Testnet",
     },
-    "zetachain_7000-1": {  # mainnet
+    "zetachain_7000-1": {
         "snapshot_url": "https://snapshots.rpc.zetachain.com/mainnet/fullnode/latest.json",
         "cache_dir": HOME_DIR / "zetacored_snapshot_mainnet",
         "name": "Mainnet",
@@ -61,108 +60,41 @@ def run_command(cmd, shell=True, check=True, silent=False):
         sys.exit(1)
 
 
-def format_size(size_bytes):
-    """Format bytes to human readable size."""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_bytes < 1024:
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024
-    return f"{size_bytes:.1f} TB"
-
-
-def download_with_progress(url, dest_path):
-    """Download file with progress indicator."""
+def download_file(url, dest_path):
+    """Download file."""
     response = requests.get(url, stream=True, timeout=30)
     response.raise_for_status()
 
-    total_size = int(response.headers.get('content-length', 0))
-    downloaded = 0
-    chunk_size = 8192 * 128  # 1MB chunks
-    last_percent_printed = -10
-
     with open(dest_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=chunk_size):
+        for chunk in response.iter_content(chunk_size=8192 * 128):
             if chunk:
                 f.write(chunk)
-                downloaded += len(chunk)
-
-                if total_size > 0:
-                    percent = int((downloaded / total_size) * 100)
-                    # Print every 10%
-                    if percent >= last_percent_printed + 10:
-                        last_percent_printed = (percent // 10) * 10
-                        print(f"  {percent}% ({format_size(downloaded)}/{format_size(total_size)})")
 
 
-def extract_with_progress(archive_path, dest_dir):
-    """Extract lz4 archive with progress indication."""
-    # Get archive size for progress estimation
-    archive_size = archive_path.stat().st_size
-
-    # Use pv if available for progress, otherwise show spinner
-    pv_check = subprocess.run("which pv", shell=True, capture_output=True)
-
-    if pv_check.returncode == 0:
-        # pv is available - use it for progress
-        cmd = f'pv -p -e "{archive_path}" | lz4 -dc | tar -C "{dest_dir}/" -xf -'
-        subprocess.run(cmd, shell=True, check=True)
-    else:
-        # No pv - show a simple progress indicator
-        print(f"  Extracting {format_size(archive_size)} archive...")
-
-        # Run extraction in background and show spinner
-        process = subprocess.Popen(
-            f'lz4 -dc "{archive_path}" | tar -C "{dest_dir}/" -xf -',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-        i = 0
-        while process.poll() is None:
-            print(f"\r  {spinner[i % len(spinner)]} Extracting...", end='', flush=True)
-            i += 1
-            try:
-                process.wait(timeout=0.1)
-            except subprocess.TimeoutExpired:
-                pass
-
-        if process.returncode != 0:
-            print("\r  ✗ Extraction failed!")
-            stderr = process.stderr.read().decode() if process.stderr else ""
-            if stderr:
-                print(f"  Error: {stderr}")
-            sys.exit(1)
-
-        print("\r  ✓ Extraction complete!    ")
+def extract_archive(archive_path, dest_dir):
+    """Extract lz4 archive."""
+    print(f"  Extracting archive...")
+    subprocess.run(
+        f'lz4 -dc "{archive_path}" | tar -C "{dest_dir}/" -xf -',
+        shell=True,
+        check=True
+    )
+    print(f"  Extraction complete.")
 
 
-def compute_md5_with_progress(file_path, chunk_size=8192 * 128):
-    """Compute MD5 checksum with progress indicator."""
+def compute_md5(file_path):
+    """Compute MD5 checksum."""
     md5_hash = hashlib.md5()
-    file_size = file_path.stat().st_size
-    processed = 0
-    last_percent_printed = -10
-
     with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(chunk_size), b""):
+        for chunk in iter(lambda: f.read(8192 * 128), b""):
             md5_hash.update(chunk)
-            processed += len(chunk)
-
-            percent = int((processed / file_size) * 100)
-            # Print every 10%
-            if percent >= last_percent_printed + 10:
-                last_percent_printed = (percent // 10) * 10
-                print(f"  {percent}%")
-
     return md5_hash.hexdigest()
 
 
 def verify_checksum(file_path, expected_md5):
     """Verify MD5 checksum of downloaded file."""
     print("  Computing MD5 checksum...")
-    computed_md5 = compute_md5_with_progress(file_path)
+    computed_md5 = compute_md5(file_path)
 
     if computed_md5 == expected_md5:
         print("  ✓ Checksum verification passed!")
@@ -232,7 +164,7 @@ def main(chain_id, force=False):
     # Download snapshot
     print("\n[2/5] Downloading snapshot...")
     try:
-        download_with_progress(snapshot_link, snapshot_path)
+        download_file(snapshot_link, snapshot_path)
         print("  ✓ Download complete!")
     except Exception as e:
         print(f"\n  Error downloading snapshot: {e}")
@@ -254,7 +186,7 @@ def main(chain_id, force=False):
         run_command(f'rm -rf "{TEMP_EXTRACT_DIR}"', silent=True)
     TEMP_EXTRACT_DIR.mkdir(parents=True, exist_ok=True)
 
-    extract_with_progress(snapshot_path, TEMP_EXTRACT_DIR)
+    extract_archive(snapshot_path, TEMP_EXTRACT_DIR)
 
     # Move data directory to cache location
     print("\n[5/5] Moving snapshot to cache...")
