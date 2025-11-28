@@ -266,13 +266,13 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
-      - ./scripts/start-zetaclient-dry.py:/root/start-zetaclient-dry.py:ro
+      - ./scripts_python/start-zetaclient-dry.py:/root/start-zetaclient-dry.py:ro
 
   testnet-node:
     image: zetanode:latest
     container_name: testnet-node
     hostname: testnet-node
-    entrypoint: python3 -u /root/start-testnet-node.py
+    entrypoint: python3 -u /root/start-zetacored-livenode.py
     networks:
       mynetwork:
         ipv4_address: 172.20.0.40
@@ -286,13 +286,43 @@ services:
     environment:
       - MONIKER=${TESTNET_MONIKER:-testNode}
       - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=athens_7001-1
     volumes:
-      # Persistent blockchain data
       - testnet_data:/root/.zetacored
-      # Shared snapshot cache on host (devnet script uses hardcoded path)
       - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
-      # Python entrypoint script
-      - ./scripts/start-testnet-node.py:/root/start-testnet-node.py:ro
+      - ./scripts_python/start-zetacored-livenode.py:/root/start-zetacored-livenode.py:ro
+      - ./scripts_python/download_snapshot.py:/root/download_snapshot.py:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mainnet-node:
+    image: zetanode:latest
+    container_name: mainnet-node
+    hostname: mainnet-node
+    entrypoint: python3 -u /root/start-zetacored-livenode.py
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.41
+    ports:
+      - "26856:26656" # P2P
+      - "26857:26657" # RPC
+      - "1517:1317"   # REST API
+      - "9290:9090"   # gRPC
+      - "8745:8545"   # EVM RPC
+      - "26860:26660" # Prometheus
+    environment:
+      - MONIKER=${MAINNET_MONIKER:-mainnetNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=zetachain_7000-1
+    volumes:
+      - mainnet_data:/root/.zetacored
+      - ~/zetacored_snapshot_mainnet:/root/zetacored_snapshot_mainnet:rw
+      - ./scripts_python/start-zetacored-livenode.py:/root/start-zetacored-livenode.py:ro
+      - ./scripts_python/download_snapshot.py:/root/download_snapshot.py:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
       interval: 30s
@@ -603,3 +633,4 @@ volumes:
   grafana_storage:
   redis_data:
   testnet_data:
+  mainnet_data:

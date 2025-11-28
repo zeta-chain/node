@@ -54,7 +54,7 @@ COPY contrib/localnet/ssh_config /etc/ssh/ssh_config.d/localnet.conf
 COPY contrib/localnet/zetacored /root/zetacored
 COPY contrib/localnet/preparams /root/static-preparams
 COPY cmd/zetae2e/config/localnet.yml /root/config.yml
-COPY contrib/devnet/download_snapshot.py /root/download_snapshot.py
+COPY contrib/localnet/scripts_python/download_snapshot.py /root/download_snapshot.py
 
 RUN chmod 755 /root/*.sh /root/*.py && \
     chmod 644 /etc/ssh/ssh_config.d/localnet.conf

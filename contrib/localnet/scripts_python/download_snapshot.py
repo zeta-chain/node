@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-Download Testnet Snapshot Script
-==================================
-This script downloads the latest testnet snapshot and caches it locally
+Download Snapshot Script
+========================
+This script downloads the latest snapshot for a ZetaChain network and caches it locally
 for reuse in multiple devnet fork runs.
 
-The cached snapshot is stored in ~/zetacored_snapshot_testnet/
+Usage:
+    python3 contrib/localnet/scripts_python/download_snapshot.py [--chain-id CHAIN_ID]
 
-Run from the root zeta-node directory:
-    python3 contrib/devnet/download_snapshot.py
+Examples:
+    python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id athens_7001-1
+    python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id zetachain_7000-1
 """
 
-import os
+import argparse
+import hashlib
 import subprocess
 import sys
-import hashlib
 import requests
 from pathlib import Path
 
@@ -22,13 +24,25 @@ from pathlib import Path
 # Configuration Constants
 # ============================================================================
 
-# Snapshot configuration
-SNAPSHOT_JSON_URL = "https://snapshots.rpc.zetachain.com/testnet/fullnode/latest.json"
-
-# Paths
 HOME_DIR = Path.home()
-SNAPSHOT_CACHE_DIR = HOME_DIR / "zetacored_snapshot_testnet"
 TEMP_EXTRACT_DIR = HOME_DIR / "zetacored_snapshot_temp"
+
+# Snapshot URLs and cache directories for each network
+NETWORK_CONFIGS = {
+    "athens_7001-1": {  # testnet
+        "snapshot_url": "https://snapshots.rpc.zetachain.com/testnet/fullnode/latest.json",
+        "cache_dir": HOME_DIR / "zetacored_snapshot_testnet",
+        "name": "Testnet",
+    },
+    "zetachain_7000-1": {  # mainnet
+        "snapshot_url": "https://snapshots.rpc.zetachain.com/mainnet/fullnode/latest.json",
+        "cache_dir": HOME_DIR / "zetacored_snapshot_mainnet",
+        "name": "Mainnet",
+    },
+}
+
+# Default chain ID
+DEFAULT_CHAIN_ID = "athens_7001-1"
 
 # ============================================================================
 # Helper Functions
@@ -146,7 +160,7 @@ def compute_md5_with_progress(file_path, chunk_size=8192 * 128):
 
 def verify_checksum(file_path, expected_md5):
     """Verify MD5 checksum of downloaded file."""
-    print(f"  Computing MD5 checksum...")
+    print("  Computing MD5 checksum...")
     computed_md5 = compute_md5_with_progress(file_path)
 
     if computed_md5 == expected_md5:
@@ -158,29 +172,49 @@ def verify_checksum(file_path, expected_md5):
         print(f"    Got:      {computed_md5}")
         return False
 
+
+def get_network_config(chain_id):
+    """Get network configuration for the given chain ID."""
+    if chain_id not in NETWORK_CONFIGS:
+        print(f"Error: Unknown chain ID: {chain_id}")
+        print(f"Supported chain IDs: {', '.join(NETWORK_CONFIGS.keys())}")
+        sys.exit(1)
+    return NETWORK_CONFIGS[chain_id]
+
+
 # ============================================================================
 # Main Script
 # ============================================================================
 
-def main():
+def main(chain_id):
+    config = get_network_config(chain_id)
+    snapshot_url = config["snapshot_url"]
+    snapshot_cache_dir = config["cache_dir"]
+    network_name = config["name"]
+
     print("=" * 60)
-    print("  ZetaChain Testnet Snapshot Download")
+    print(f"  ZetaChain {network_name} Snapshot Download")
+    print(f"  Chain ID: {chain_id}")
     print("=" * 60)
 
     # Check if cache already exists
-    if SNAPSHOT_CACHE_DIR.exists() and any(SNAPSHOT_CACHE_DIR.iterdir()):
-        print(f"\nWarning: Cached snapshot already exists at {SNAPSHOT_CACHE_DIR}")
+    snapshot_data_dir = snapshot_cache_dir / "data"
+    if snapshot_data_dir.exists() and any(snapshot_data_dir.iterdir()):
+        print(f"\nWarning: Cached snapshot already exists at {snapshot_cache_dir}")
         response = input("Do you want to re-download and overwrite? (yes/no): ")
         if response.lower() not in ['yes', 'y']:
             print("Aborted. Using existing cache.")
             sys.exit(0)
         print("Removing existing cache...")
-        run_command(f'rm -rf "{SNAPSHOT_CACHE_DIR}"', silent=True)
+        run_command(f'rm -rf "{snapshot_cache_dir}"/*', silent=True)
+
+    # Create cache directory if it doesn't exist
+    snapshot_cache_dir.mkdir(parents=True, exist_ok=True)
 
     # Fetch snapshot info
     print("\n[1/5] Fetching snapshot information...")
     try:
-        snapshot_json = requests.get(SNAPSHOT_JSON_URL, timeout=30).json()
+        snapshot_json = requests.get(snapshot_url, timeout=30).json()
         snapshot_data = snapshot_json['snapshots'][0]
         snapshot_link = snapshot_data['link']
         snapshot_filename = snapshot_data['filename']
@@ -193,7 +227,7 @@ def main():
     snapshot_path = HOME_DIR / snapshot_filename
 
     # Download snapshot
-    print(f"\n[2/5] Downloading snapshot...")
+    print("\n[2/5] Downloading snapshot...")
     try:
         download_with_progress(snapshot_link, snapshot_path)
         print("  ✓ Download complete!")
@@ -202,7 +236,7 @@ def main():
         sys.exit(1)
 
     # Verify checksum
-    print(f"\n[3/5] Verifying snapshot integrity...")
+    print("\n[3/5] Verifying snapshot integrity...")
     if expected_md5:
         if not verify_checksum(snapshot_path, expected_md5):
             print("\n  Checksum verification failed. Aborting...")
@@ -212,7 +246,7 @@ def main():
         print("  Skipping checksum verification (no checksum available)")
 
     # Create temp directory and extract
-    print(f"\n[4/5] Extracting snapshot...")
+    print("\n[4/5] Extracting snapshot...")
     if TEMP_EXTRACT_DIR.exists():
         run_command(f'rm -rf "{TEMP_EXTRACT_DIR}"', silent=True)
     TEMP_EXTRACT_DIR.mkdir(parents=True, exist_ok=True)
@@ -220,14 +254,17 @@ def main():
     extract_with_progress(snapshot_path, TEMP_EXTRACT_DIR)
 
     # Move data directory to cache location
-    print(f"\n[5/5] Moving snapshot to cache...")
+    print("\n[5/5] Moving snapshot to cache...")
     temp_data_dir = TEMP_EXTRACT_DIR / "data"
     if not temp_data_dir.exists():
         print(f"  Error: Expected data directory not found at {temp_data_dir}")
         sys.exit(1)
 
-    # Move the data directory to the cache location
-    run_command(f'mv "{temp_data_dir}" "{SNAPSHOT_CACHE_DIR}"', silent=True)
+    # Move the data directory INTO the cache location (cache_dir/data/)
+    target_data_dir = snapshot_cache_dir / "data"
+    if target_data_dir.exists():
+        run_command(f'rm -rf "{target_data_dir}"', silent=True)
+    run_command(f'mv "{temp_data_dir}" "{target_data_dir}"', silent=True)
 
     # Cleanup
     print("  Cleaning up temporary files...")
@@ -236,8 +273,20 @@ def main():
 
     print("\n" + "=" * 60)
     print("  ✓ Snapshot cached successfully!")
-    print(f"  Location: {SNAPSHOT_CACHE_DIR}")
+    print(f"  Location: {snapshot_cache_dir}")
     print("=" * 60)
 
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description="Download and cache ZetaChain snapshot",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--chain-id",
+        default=DEFAULT_CHAIN_ID,
+        help=f"Chain ID to download snapshot for (default: {DEFAULT_CHAIN_ID})"
+    )
+    args = parser.parse_args()
+
+    main(args.chain_id)

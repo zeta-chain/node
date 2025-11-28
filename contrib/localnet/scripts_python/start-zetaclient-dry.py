@@ -19,7 +19,6 @@ CHAIN_ID = None
 
 # Validate required environment variables
 def validate_env_vars():
-    """Validate that required environment variables are set."""
     if not ZETACORE_HOST:
         print("Error: Required environment variable not set: ZETACORE_HOST")
         print("Please set the following environment variable:")
@@ -34,6 +33,10 @@ RESTRICTED_ADDR_FILE = f"{ZETACLIENT_HOME}/config/zetaclient_restricted_addresse
 PREPARAMS_PATH = "/root/preparams/zetaclient-dry.json"
 CLIENT_MODE = 1  # Dry mode (read-only)
 
+# Hotkey mnemonic for dry mode client
+# Address: zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax (0x8E3C1898776e80A19a37546920AcE1935cCEE08E)
+HOTKEY_MNEMONIC = "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow"
+
 # Required ports for zetaclient to connect to zetacore
 REQUIRED_PORTS = {
     1317: "Cosmos REST API",
@@ -42,10 +45,8 @@ REQUIRED_PORTS = {
 }
 
 # Chain-specific configurations for external chain RPC endpoints
-# Dry mode doesn't need external chains, so testnet/mainnet configs are empty
-# Localnet uses Docker network hostnames to reach other containers
 CHAIN_CONFIGS = {
-    "athens_101-1": {  # localnet - use Docker network hostnames
+    "athens_101-1": {
         "EVMChainConfigs": {
             "1337": {"Endpoint": "http://eth:8545"},
         },
@@ -61,15 +62,28 @@ CHAIN_CONFIGS = {
         "SuiConfig": {"Endpoint": "http://sui:9000"},
         "TONConfig": {"Endpoint": "http://ton:8081"},
     },
-    "athens_7001-1": {  # testnet
-        "EVMChainConfigs": {},
+    "athens_7001-1": {
+        "EVMChainConfigs": {
+            "11155111": {"Endpoint": "https://ethereum-sepolia-rpc.publicnode.com"},
+            "97": {"Endpoint": "https://bsc-testnet-rpc.publicnode.com"},
+            "80002": {"Endpoint": "https://rpc-amoy.polygon.technology"},
+            "84532": {"Endpoint": "https://base-sepolia-rpc.publicnode.com"},
+            "421614": {"Endpoint": "https://arbitrum-sepolia-rpc.publicnode.com"},
+        },
         "BTCChainConfigs": {},
         "SolanaConfig": {},
         "SuiConfig": {},
         "TONConfig": {},
     },
     "zetachain_7000-1": {  # mainnet
-        "EVMChainConfigs": {},
+        "EVMChainConfigs": {
+            "1": {"Endpoint": "https://eth-mainnet.public.blastapi.io"},        # Ethereum
+            "56": {"Endpoint": "https://bsc-mainnet.public.blastapi.io"},       # BSC
+            "137": {"Endpoint": "https://polygon-bor-rpc.publicnode.com"},      # Polygon
+            "8453": {"Endpoint": "https://base-mainnet.public.blastapi.io"},    # Base
+            "42161": {"Endpoint": "https://arbitrum-one.public.blastapi.io"},   # Arbitrum
+            "10": {"Endpoint": "https://optimism-mainnet.public.blastapi.io"},  # Optimism
+        },
         "BTCChainConfigs": {},
         "SolanaConfig": {},
         "SuiConfig": {},
@@ -79,7 +93,6 @@ CHAIN_CONFIGS = {
 
 
 def get_chain_config():
-    """Get chain-specific configuration or error if chain ID is unknown."""
     if CHAIN_ID not in CHAIN_CONFIGS:
         print(f"Error: Unknown chain ID: {CHAIN_ID}")
         print(f"Supported chain IDs: {', '.join(CHAIN_CONFIGS.keys())}")
@@ -88,7 +101,6 @@ def get_chain_config():
 
 
 def check_port(host, port, timeout=2):
-    """Check if a port is open on the given host."""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
@@ -100,9 +112,6 @@ def check_port(host, port, timeout=2):
 
 
 def check_required_ports():
-    """Check that all required ports are accessible on testnet-node."""
-    print("Checking required ports on zetacore")
-
     all_ports_open = True
     for port, description in REQUIRED_PORTS.items():
         if check_port(ZETACORE_HOST, port):
@@ -118,7 +127,6 @@ def check_required_ports():
 
 
 def run_command(cmd, capture_output=True, check=True, input_data=None):
-    """Run a shell command and return the result."""
     try:
         result = subprocess.run(
             cmd,
@@ -136,9 +144,8 @@ def run_command(cmd, capture_output=True, check=True, input_data=None):
 
 
 def wait_for_zetacore():
-    """Wait for zetacore node to be ready and fetch chain ID."""
     global CHAIN_ID
-    print(f"Waiting for {ZETACORE_HOST} to be ready...")
+    print(f"Waiting for {ZETACORE_HOST} to be ready")
 
     while True:
         try:
@@ -168,10 +175,6 @@ def wait_for_zetacore():
 
 
 def fetch_operator_address():
-    """Fetch operator address from observer set."""
-    print(f"Fetching operator address from {ZETACORE_HOST}...")
-
-    # Try to fetch observer set from zetacore node
     try:
         result = run_command(
             f"zetacored q observer list-observer-set --node tcp://{ZETACORE_HOST}:26657 --output json",
@@ -193,9 +196,7 @@ def fetch_operator_address():
 
 
 def init_zetaclient(operator_address):
-    """Initialize zetaclient if config doesn't exist."""
     if not os.path.exists(CONFIG_FILE):
-        print("Initializing zetaclient for testnet...")
         run_command(
             f'zetaclientd init '
             f'--zetacore-url "{ZETACORE_HOST}" '
@@ -207,12 +208,11 @@ def init_zetaclient(operator_address):
             f'--pre-params "{PREPARAMS_PATH}"'
         )
     else:
-        print("Config already exists, updating...")
+        print("Config already exists, updating")
 
 
 def update_config(operator_address):
-    """Update config for zetacore connection."""
-    print("Updating zetaclient config...")
+    print("Updating zetaclient config")
 
     # Get chain-specific configuration
     chain_config = get_chain_config()
@@ -242,7 +242,7 @@ def update_config(operator_address):
 
 def setup_hotkey():
     """Setup hotkey from mnemonic."""
-    print("Setting up hotkey...")
+    print("Setting up hotkey from mnemonic")
 
     # Clean up the entire keyring directory to avoid corruption issues
     keyring_path = "/root/.zetacored/keyring-test"
@@ -250,10 +250,8 @@ def setup_hotkey():
         import shutil
         shutil.rmtree(keyring_path)
 
-    print("Creating hotkey from mnemonic...")
-    mnemonic = "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow"
     run_command(
-        f'echo "{mnemonic}" | zetacored keys add hotkey --algo=secp256k1 --recover --keyring-backend=test --output json > /dev/null 2>&1',
+        f'echo "{HOTKEY_MNEMONIC}" | zetacored keys add hotkey --algo=secp256k1 --recover --keyring-backend=test --output json > /dev/null 2>&1',
         capture_output=False,
         check=False
     )
@@ -275,16 +273,11 @@ def setup_hotkey():
 
 
 def create_restricted_addresses():
-    """Create restricted addresses config."""
-    print("Creating restricted addresses config...")
     with open(RESTRICTED_ADDR_FILE, 'w') as f:
         json.dump([], f)
 
 
 def wait_for_tss():
-    """Wait for TSS to be initialized before starting dry mode client."""
-    print("Waiting for TSS to be initialized...")
-
     while True:
         result = run_command(
             f"zetacored q observer get-tss-address --node tcp://{ZETACORE_HOST}:26657 --output json",
@@ -301,25 +294,14 @@ def wait_for_tss():
             except json.JSONDecodeError:
                 pass
 
-        print("Waiting for TSS...")
+        print("Waiting for TSS")
         time.sleep(5)
 
 
 def start_zetaclientd():
-    """Start zetaclientd with proper parameters."""
-    print("Starting zetaclientd in dry mode for testnet...")
-
-    # Create password file with empty values
-    # Hotkey uses test keyring (no password), TSS and Solana not used in dry mode
     passwords = "\n\n\n"
-
     with open("/root/password.file", 'w') as f:
         f.write(passwords)
-
-    # Start zetaclientd with passwords piped from file
-    print("Starting zetaclientd...")
-
-    # Use exec to replace the current process
     os.execlp(
         "bash", "bash", "-c",
         "exec zetaclientd start < /root/password.file"
@@ -327,17 +309,13 @@ def start_zetaclientd():
 
 
 def main():
-    """Main execution."""
     print("========================================")
     print("  Starting ZetaClient Dry Mode         ")
     print("========================================")
 
-    # Validate required environment variables first
     validate_env_vars()
 
     print(f"Zetacore Host: {ZETACORE_HOST}")
-
-    # Wait for zetacore and fetch chain ID from node status
     wait_for_zetacore()
     check_required_ports()
     operator_address = fetch_operator_address()
@@ -345,11 +323,9 @@ def main():
     setup_hotkey()
     update_config(operator_address)
     create_restricted_addresses()
-
-    # Wait for TSS to be initialized before starting dry mode client
     wait_for_tss()
 
-    print("Configuration complete, starting zetaclientd...")
+    print("Configuration complete, starting zetaclientd")
     start_zetaclientd()
 
 
