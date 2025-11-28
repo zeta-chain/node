@@ -1,0 +1,31 @@
+{
+    "BitcoinClient": {},
+    "EVMClient": {
+        "BlockByNumberCustom": 10,
+        "BlockNumber": 10,
+        "CallContract": 10,
+        "CodeAt": 10,
+        "EstimateGas": 10,
+        "FilterLogs": 10,
+        "HeaderByNumber": 10,
+        "HealthCheck": 30,
+        "IsTxConfirmed": 10,
+        "NonceAt": 10,
+        "PendingCodeAt": 10,
+        "PendingNonceAt": 10,
+        "SendTransaction": 20,
+        "SubscribeFilterLogs": 10,
+        "SuggestGasPrice": 20,
+        "SuggestGasTipCap": 20,
+        "TransactionByHash": 10,
+        "TransactionByHashCustom": 20,
+        "TransactionReceipt": 20
+    },
+    "SolanaClient": {},
+    "SuiClient": {},
+    "TONClient": {
+
+    },
+    "TSSClient": {},
+    "ZetacoreClient": {}
+}

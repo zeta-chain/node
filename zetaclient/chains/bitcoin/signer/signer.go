@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -218,10 +219,19 @@ func (signer *Signer) BroadcastOutbound(
 		logger.Error().Err(err).Msg("unable to save broadcasted Bitcoin outbound")
 	}
 
-	// add tx to outbound tracker so that all observers know about it
-	_, _ = ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, txHash)
+	deadline := time.Now().Add(4 * constant.ZetaBlockTime)
+	trackerBo := backoff.NewConstantBackOff(constant.ZetaBlockTime)
 
-	// try including this outbound as early as possible, no need to wait for outbound tracker
+	call := func() error {
+		_, err := ob.ZetaRepo().PostOutboundTracker(ctx, logger, nonce, txHash)
+		return err
+	}
+
+	// Block the post outbound tracker call to make sure it gets posted before proceeding.
+	if err := retry.DoWithDeadline(call, trackerBo, deadline); err != nil {
+		logger.Error().Err(err).Msg("failed to post outbound tracker")
+	}
+
 	_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)
 	if included {
 		logger.Info().Msg("included newly broadcasted Bitcoin outbound")

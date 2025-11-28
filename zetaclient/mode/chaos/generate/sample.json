@@ -108,6 +108,7 @@
         "PostVoteGasPrice": 50,
         "PostVoteInbound": 50,
         "PostVoteOutbound": 50,
-        "PostVoteTSS": 50
+        "PostVoteTSS": 50,
+        "QueryTxResult": 50
     }
 }

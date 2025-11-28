@@ -378,6 +378,38 @@ start-legacy-test: e2e-images
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
+###                         Chaos Tests              						###
+###############################################################################
+chaos-all: stop-localnet
+	@CHAOS_PROFILE=1 $(MAKE) start-e2e-test
+
+chaos-stress-eth: stop-localnet
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=90m --receipt-timeout=30m --cctx-timeout=30m" && \
+	CHAOS_PROFILE=9 $(MAKE) start-stress-test-eth
+
+chaos-inbound: stop-localnet
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=60m --receipt-timeout=20m --cctx-timeout=20m" && \
+	CHAOS_PROFILE=2 $(MAKE) start-e2e-test
+
+chaos-outbound: stop-localnet
+	@CHAOS_PROFILE=3 $(MAKE) start-e2e-test
+
+chaos-btc: stop-localnet
+	@CHAOS_PROFILE=4 $(MAKE) start-e2e-test
+
+chaos-eth: stop-localnet
+	@CHAOS_PROFILE=5 $(MAKE) start-e2e-test
+
+chaos-solana: stop-localnet
+	@CHAOS_PROFILE=6 $(MAKE) start-solana-test
+
+chaos-sui: stop-localnet
+	@CHAOS_PROFILE=7 $(MAKE) start-sui-test
+
+chaos-ton: stop-localnet
+	CHAOS_PROFILE=8 $(MAKE) start-ton-test
+
+###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################
 
