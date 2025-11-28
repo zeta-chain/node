@@ -6,11 +6,11 @@ This script initializes and configures zetaclientd for read-only observation of 
 
 import json
 import os
-import shutil
 import socket
 import subprocess
 import sys
 import time
+import shutil
 
 # Configuration from environment variables
 ZETACORE_HOST = os.environ.get('ZETACORE_HOST')
@@ -31,8 +31,8 @@ def validate_env_vars():
 ZETACLIENT_HOME = "/root/.zetacored"
 CONFIG_FILE = f"{ZETACLIENT_HOME}/config/zetaclient_config.json"
 RESTRICTED_ADDR_FILE = f"{ZETACLIENT_HOME}/config/zetaclient_restricted_addresses.json"
-PREPARAMS_PATH = "/root/preparams/zetaclient-dry.json"
-CLIENT_MODE = 1  # Dry mode (read-only)
+PREPARAMS_PATH = "/root/static-preparams/zetaclient-dry.json"
+CLIENT_MODE = 1  # Dry mode
 
 # Hotkey mnemonic for dry mode client
 # Address: zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax (0x8E3C1898776e80A19a37546920AcE1935cCEE08E)
@@ -123,8 +123,6 @@ def check_required_ports():
 
     if not all_ports_open:
         sys.exit(1)
-
-    print("All required ports are accessible.")
 
 
 def run_command(cmd, capture_output=True, check=True, input_data=None):
@@ -242,8 +240,6 @@ def update_config(operator_address):
 
 def setup_hotkey():
     """Setup hotkey from mnemonic."""
-    print("Setting up hotkey from mnemonic")
-
     # Clean up the entire keyring directory to avoid corruption issues
     keyring_path = "/root/.zetacored/keyring-test"
     if os.path.exists(keyring_path):
@@ -285,7 +281,6 @@ def wait_for_tss():
         if result:
             try:
                 data = json.loads(result)
-                # Check if we got a valid TSS address
                 tss_address = data.get('eth') or data.get('btc')
                 if tss_address:
                     print(f"TSS is ready (eth: {data.get('eth', 'N/A')})")
@@ -298,9 +293,8 @@ def wait_for_tss():
 
 
 def start_zetaclientd():
-    passwords = "\n\n\n"
     with open("/root/password.file", 'w') as f:
-        f.write(passwords)
+        f.write("\n\n\n")
     os.execlp(
         "bash", "bash", "-c",
         "exec zetaclientd start < /root/password.file"
@@ -324,7 +318,6 @@ def main():
     create_restricted_addresses()
     wait_for_tss()
 
-    print("Configuration complete, starting zetaclientd")
     start_zetaclientd()
 
 

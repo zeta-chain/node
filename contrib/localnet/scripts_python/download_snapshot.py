@@ -15,9 +15,9 @@ Examples:
 
 import argparse
 import hashlib
-import os
 import subprocess
 import sys
+
 import requests
 from pathlib import Path
 
@@ -125,7 +125,6 @@ def main(chain_id, force=False):
     snapshot_cache_dir = config["cache_dir"]
     network_name = config["name"]
 
-    force = force or os.environ.get('FORCE_DOWNLOAD', '').lower() == 'true'
 
     print("=" * 60)
     print(f"  ZetaChain {network_name} Snapshot Download")

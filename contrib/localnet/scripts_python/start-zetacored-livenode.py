@@ -5,7 +5,6 @@ import json
 import os
 import subprocess
 import sys
-
 import toml
 
 MONIKER = os.environ.get('MONIKER', 'testNode')
@@ -34,8 +33,7 @@ def run(cmd, check=True):
 
 
 def download(url, dest):
-    if subprocess.run(f'wget -q "{url}" -O "{dest}"', shell=True).returncode != 0:
-        sys.exit(1)
+    subprocess.run(f'wget -q "{url}" -O "{dest}"', shell=True, check=True)
 
 
 def initialize_node(config):
@@ -46,27 +44,24 @@ def initialize_node(config):
             download(f"{config['config_base']}/{f}", f"{ZETACORED_CONFIG}/{f}")
 
 
+def copy_snapshot_data(snapshot_data, data_dir):
+    """Copy snapshot data to zetacored home if not already present."""
+    has_snapshot = os.path.isdir(f"{data_dir}/application.db")
+    if not has_snapshot and os.path.isdir(snapshot_data) and os.listdir(snapshot_data):
+        if os.path.isdir(data_dir):
+            run(f'rm -rf "{data_dir}"')
+        run(f'cp -r "{snapshot_data}" "{ZETACORED_HOME}/"')
+
+
 def setup_snapshot(config):
     snapshot_data = f"{config['snapshot_cache']}/data"
     data_dir = f"{ZETACORED_HOME}/data"
 
-    if FORCE_DOWNLOAD:
-        run(f'rm -rf "{config["snapshot_cache"]}"/*', check=False)
+    # Download snapshot if not cached (--force will clear and re-download)
+    force_flag = "--force" if FORCE_DOWNLOAD else ""
+    run(f"python3 -u /root/download_snapshot.py --chain-id {CHAIN_ID} {force_flag}")
 
-    # Check if snapshot data exists (application.db indicates real snapshot, not just init)
-    has_snapshot = os.path.isdir(f"{data_dir}/application.db")
-
-    if os.path.isdir(snapshot_data) and os.listdir(snapshot_data):
-        if not has_snapshot:
-            if os.path.isdir(data_dir):
-                run(f'rm -rf "{data_dir}"')
-            run(f'cp -r "{snapshot_data}" "{ZETACORED_HOME}/"')
-    else:
-        run(f"python3 -u /root/download_snapshot.py --chain-id {CHAIN_ID}")
-        if os.path.isdir(snapshot_data) and os.listdir(snapshot_data):
-            if os.path.isdir(data_dir):
-                run(f'rm -rf "{data_dir}"')
-            run(f'cp -r "{snapshot_data}" "{ZETACORED_HOME}/"')
+    copy_snapshot_data(snapshot_data, data_dir)
 
     # Create priv_validator_state.json if missing
     pvs = f"{data_dir}/priv_validator_state.json"
@@ -81,19 +76,14 @@ def get_external_ip():
 
 
 def update_configs():
-    p2p_port = 26656
-    rpc_port = 26657
-    api_port = 1317
-    grpc_port = 9090
-
     external_ip = get_external_ip()
 
     # Update config.toml
     config_path = f"{ZETACORED_CONFIG}/config.toml"
     config = toml.load(config_path)
     config["moniker"] = MONIKER
-    config["p2p"]["external_address"] = f"{external_ip}:{p2p_port}"
-    config["rpc"]["laddr"] = f"tcp://0.0.0.0:{rpc_port}"
+    config["p2p"]["external_address"] = f"{external_ip}:26656"
+    config["rpc"]["laddr"] = "tcp://0.0.0.0:26657"
     config["instrumentation"]["prometheus"] = True
     with open(config_path, "w") as f:
         toml.dump(config, f)
@@ -102,8 +92,8 @@ def update_configs():
     app_path = f"{ZETACORED_CONFIG}/app.toml"
     app = toml.load(app_path)
     app["api"]["enable"] = True
-    app["api"]["address"] = f"tcp://0.0.0.0:{api_port}"
-    app["grpc"]["address"] = f"0.0.0.0:{grpc_port}"
+    app["api"]["address"] = "tcp://0.0.0.0:1317"
+    app["grpc"]["address"] = "0.0.0.0:9090"
     with open(app_path, "w") as f:
         toml.dump(app, f)
 
