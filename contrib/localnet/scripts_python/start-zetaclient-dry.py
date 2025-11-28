@@ -191,7 +191,6 @@ def fetch_operator_address():
     except (json.JSONDecodeError, Exception):
         pass
 
-    # If no observers, use a default address for testnet
     print("No observers found, using default testnet operator address")
     sys.exit(1)
 

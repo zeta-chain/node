@@ -135,12 +135,8 @@ def main(chain_id, force=False):
     snapshot_data_dir = snapshot_cache_dir / "data"
     if snapshot_data_dir.exists() and any(snapshot_data_dir.iterdir()):
         if not force:
-            print(f"\nWarning: Cached snapshot already exists at {snapshot_cache_dir}")
-            response = input("Do you want to re-download and overwrite? (yes/no): ")
-            if response.lower() not in ['yes', 'y']:
-                print("Aborted. Using existing cache.")
-                sys.exit(0)
-        print("Removing existing cache...")
+            print(f"Cached snapshot already exists at {snapshot_cache_dir}. Use --force to re-download.")
+            sys.exit(0)
         run_command(f'rm -rf "{snapshot_cache_dir}"/*', silent=True)
 
     # Create cache directory if it doesn't exist

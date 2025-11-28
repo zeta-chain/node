@@ -6,6 +6,8 @@ import os
 import subprocess
 import sys
 
+import toml
+
 MONIKER = os.environ.get('MONIKER', 'testNode')
 FORCE_DOWNLOAD = os.environ.get('FORCE_DOWNLOAD', 'false').lower() == 'true'
 CHAIN_ID = os.environ.get('CHAIN_ID', 'athens_7001-1')
@@ -73,27 +75,37 @@ def setup_snapshot(config):
             json.dump({"height": "0", "round": 0, "step": 0}, f)
 
 
+def get_external_ip():
+    result = subprocess.run(["curl", "-4", "-s", "icanhazip.com"], capture_output=True, text=True)
+    return result.stdout.strip() if result.returncode == 0 else "127.0.0.1"
+
+
 def update_configs():
-    ip = subprocess.run("curl -4 -s icanhazip.com", shell=True, capture_output=True, text=True)
-    external_ip = ip.stdout.strip() if ip.returncode == 0 else "127.0.0.1"
+    p2p_port = 26656
+    rpc_port = 26657
+    api_port = 1317
+    grpc_port = 9090
 
-    config_toml = f"{ZETACORED_CONFIG}/config.toml"
-    app_toml = f"{ZETACORED_CONFIG}/app.toml"
+    external_ip = get_external_ip()
 
-    for pattern, repl in [
-        ("{YOUR_EXTERNAL_IP_ADDRESS_HERE}", external_ip),
-        ("{MONIKER}", MONIKER),
-        ('laddr = "tcp:\\/\\/127.0.0.1:26657"', 'laddr = "tcp:\\/\\/0.0.0.0:26657"'),
-        ("prometheus = false", "prometheus = true"),
-    ]:
-        run(f"sed -i 's/{pattern}/{repl}/' \"{config_toml}\"")
+    # Update config.toml
+    config_path = f"{ZETACORED_CONFIG}/config.toml"
+    config = toml.load(config_path)
+    config["moniker"] = MONIKER
+    config["p2p"]["external_address"] = f"{external_ip}:{p2p_port}"
+    config["rpc"]["laddr"] = f"tcp://0.0.0.0:{rpc_port}"
+    config["instrumentation"]["prometheus"] = True
+    with open(config_path, "w") as f:
+        toml.dump(config, f)
 
-    for pattern, repl in [
-        ("enable = false", "enable = true"),
-        ('address = "tcp:\\/\\/localhost:1317"', 'address = "tcp:\\/\\/0.0.0.0:1317"'),
-        ('address = "localhost:9090"', 'address = "0.0.0.0:9090"'),
-    ]:
-        run(f"sed -i 's/{pattern}/{repl}/' \"{app_toml}\"")
+    # Update app.toml
+    app_path = f"{ZETACORED_CONFIG}/app.toml"
+    app = toml.load(app_path)
+    app["api"]["enable"] = True
+    app["api"]["address"] = f"tcp://0.0.0.0:{api_port}"
+    app["grpc"]["address"] = f"0.0.0.0:{grpc_port}"
+    with open(app_path, "w") as f:
+        toml.dump(app, f)
 
 
 def main():
