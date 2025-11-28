@@ -162,8 +162,6 @@ devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
 
-# Download snapshot for a chain (defaults to testnet)
-# Example: make download-snapshot CHAIN_ID=zetachain_7000-1
 download-snapshot:
 	@echo "--> Downloading and caching snapshot..."
 	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1)
@@ -592,6 +590,19 @@ stop-eth-node-mainnet:
 clean-eth-node-mainnet:
 	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
+# Start mainnet node with cached snapshot (if available)
+mainnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Start mainnet node with forced snapshot download
+mainnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Stop and remove mainnet node
+mainnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down mainnet-node
 
 ###############################################################################
 ###                         Local Testnet Development             			###
@@ -611,27 +622,14 @@ testnet-node-force:
 testnet-node-stop:
 	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down testnet-node
 
-# Start mainnet node with cached snapshot (if available)
-mainnet-node:
-	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
-	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
-
-# Start mainnet node with forced snapshot download
-mainnet-node-force:
-	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
-	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
-
-# Stop and remove mainnet node
-mainnet-node-stop:
-	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down mainnet-node
+###############################################################################
+###                               Debug Tools                               ###
+###############################################################################
 
 # Start dry run zetaclientd in dry mode
 zetaclient-dry:
 	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
 
-###############################################################################
-###                               Debug Tools                               ###
-###############################################################################
 
 filter-missed-btc: install-zetatool
 	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json

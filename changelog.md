@@ -4,6 +4,8 @@
 
 ### Features
 
+* [4453](https://github.com/zeta-chain/node/pull/4453/) - add an option to create dry zetaclients to connect to live networks
+
 ### Tests
 
 ### Fixes
