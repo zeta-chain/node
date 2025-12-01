@@ -88,7 +88,7 @@ func (g *Group) Go(f func() error) {
 //			err := fromPanicValue(recover())
 //			// log or otherwise use err
 //		}()
-func fromPanicValue(i interface{}) error {
+func fromPanicValue(i any) error {
 	switch value := i.(type) {
 	case nil:
 		return nil

@@ -575,7 +575,7 @@ type ExecuteSPLRevertInstructionParams struct {
 	// Amount is the lamports amount for the withdraw
 	Amount uint64
 
-	// Sender that initated cctx
+	// Sender that initiated cctx
 	Sender solana.PublicKey
 
 	// Data for connected program

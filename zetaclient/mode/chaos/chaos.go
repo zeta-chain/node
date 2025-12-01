@@ -96,3 +96,17 @@ func (source *Source) shouldFail(itfc, mthd string) error {
 	}
 	return nil
 }
+
+// SetSelf forwards the call to the underlying client if it has the method to enable chaos mode to intercept internal calls
+func (c *chaosZetacoreClient) SetSelf(queryTxResulter interface{}) {
+	type selfSetter interface {
+		SetSelf(interface{})
+	}
+	if setter, ok := c.client.(selfSetter); ok {
+		setter.SetSelf(queryTxResulter)
+	}
+}
+
+func (c *chaosSolanaClient) UnwrapClient() interface{} {
+	return c.client
+}

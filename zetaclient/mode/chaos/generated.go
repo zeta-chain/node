@@ -3,41 +3,42 @@ package chaos
 
 import (
 	m2 "context"
-	m27 "github.com/block-vision/sui-go-sdk/models"
-	m12 "github.com/btcsuite/btcd/btcjson"
-	m16 "github.com/btcsuite/btcd/btcutil"
-	m13 "github.com/btcsuite/btcd/chaincfg/chainhash"
-	m14 "github.com/btcsuite/btcd/wire"
+	m28 "github.com/block-vision/sui-go-sdk/models"
+	m13 "github.com/btcsuite/btcd/btcjson"
+	m17 "github.com/btcsuite/btcd/btcutil"
+	m14 "github.com/btcsuite/btcd/chaincfg/chainhash"
+	m15 "github.com/btcsuite/btcd/wire"
 	m8 "github.com/cometbft/cometbft/types"
-	m21 "github.com/ethereum/go-ethereum"
+	m11 "github.com/cosmos/cosmos-sdk/types"
+	m22 "github.com/ethereum/go-ethereum"
 	m5 "github.com/ethereum/go-ethereum/common"
-	m22 "github.com/ethereum/go-ethereum/core/types"
-	m24 "github.com/gagliardetto/solana-go"
-	m25 "github.com/gagliardetto/solana-go/rpc"
-	m28 "github.com/pattonkan/sui-go/sui"
-	m33 "github.com/tonkeeper/tongo/boc"
-	m31 "github.com/tonkeeper/tongo/ton"
+	m23 "github.com/ethereum/go-ethereum/core/types"
+	m25 "github.com/gagliardetto/solana-go"
+	m26 "github.com/gagliardetto/solana-go/rpc"
+	m29 "github.com/pattonkan/sui-go/sui"
+	m34 "github.com/tonkeeper/tongo/boc"
+	m32 "github.com/tonkeeper/tongo/ton"
 	m9 "github.com/zeta-chain/go-tss/blame"
 	m1 "github.com/zeta-chain/node/pkg/chains"
 	m10 "github.com/zeta-chain/node/pkg/errors"
 	m4 "github.com/zeta-chain/node/x/crosschain/types"
 	m6 "github.com/zeta-chain/node/x/fungible/types"
 	m3 "github.com/zeta-chain/node/x/observer/types"
-	m11 "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
-	m15 "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	m18 "github.com/zeta-chain/node/zetaclient/chains/evm"
-	m20 "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	m23 "github.com/zeta-chain/node/zetaclient/chains/solana"
-	m26 "github.com/zeta-chain/node/zetaclient/chains/sui"
-	m29 "github.com/zeta-chain/node/zetaclient/chains/sui/client"
-	m30 "github.com/zeta-chain/node/zetaclient/chains/ton"
-	m32 "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
-	m34 "github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	m12 "github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	m16 "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	m19 "github.com/zeta-chain/node/zetaclient/chains/evm"
+	m21 "github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	m24 "github.com/zeta-chain/node/zetaclient/chains/solana"
+	m27 "github.com/zeta-chain/node/zetaclient/chains/sui"
+	m30 "github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	m31 "github.com/zeta-chain/node/zetaclient/chains/ton"
+	m33 "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	m35 "github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	m0 "github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	m7 "github.com/zeta-chain/node/zetaclient/keys/interfaces"
-	m35 "github.com/zeta-chain/node/zetaclient/tss"
-	m19 "math/big"
-	m17 "time"
+	m36 "github.com/zeta-chain/node/zetaclient/tss"
+	m20 "math/big"
+	m18 "time"
 )
 
 // ------------------------------------------------------------------------------------------------
@@ -360,28 +361,42 @@ func (self *chaosZetacoreClient) PostVoteTSS(
 	return
 }
 
+func (self *chaosZetacoreClient) QueryTxResult(
+	in0 string,
+) (
+	out0 *m11.TxResponse,
+	out1 error,
+) {
+	if err := self.shouldFail("ZetacoreClient", "QueryTxResult"); err != nil {
+		out1 = err
+	} else {
+		out0, out1 = self.client.QueryTxResult(in0)
+	}
+	return
+}
+
 // ------------------------------------------------------------------------------------------------
 // BitcoinClient
 // ------------------------------------------------------------------------------------------------
 
 type chaosBitcoinClient struct {
 	*Source
-	client m11.BitcoinClient
+	client m12.BitcoinClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m11.BitcoinClient = &chaosBitcoinClient{}
+var _ m12.BitcoinClient = &chaosBitcoinClient{}
 
-func (source *Source) WrapBitcoinClient(client m11.BitcoinClient) *chaosBitcoinClient {
+func (source *Source) WrapBitcoinClient(client m12.BitcoinClient) *chaosBitcoinClient {
 	return &chaosBitcoinClient{Source: source, client: client}
 }
 
 func (self *chaosBitcoinClient) EstimateSmartFee(
 	in0 m2.Context,
 	in1 int64,
-	in2 *m12.EstimateSmartFeeMode,
+	in2 *m13.EstimateSmartFeeMode,
 ) (
-	out0 *m12.EstimateSmartFeeResult,
+	out0 *m13.EstimateSmartFeeResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "EstimateSmartFee"); err != nil {
@@ -410,7 +425,7 @@ func (self *chaosBitcoinClient) GetBlockHash(
 	in0 m2.Context,
 	in1 int64,
 ) (
-	out0 *m13.Hash,
+	out0 *m14.Hash,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetBlockHash"); err != nil {
@@ -423,9 +438,9 @@ func (self *chaosBitcoinClient) GetBlockHash(
 
 func (self *chaosBitcoinClient) GetBlockHeader(
 	in0 m2.Context,
-	in1 *m13.Hash,
+	in1 *m14.Hash,
 ) (
-	out0 *m14.BlockHeader,
+	out0 *m15.BlockHeader,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetBlockHeader"); err != nil {
@@ -453,9 +468,9 @@ func (self *chaosBitcoinClient) GetBlockHeightByStr(
 
 func (self *chaosBitcoinClient) GetBlockVerbose(
 	in0 m2.Context,
-	in1 *m13.Hash,
+	in1 *m14.Hash,
 ) (
-	out0 *m12.GetBlockVerboseTxResult,
+	out0 *m13.GetBlockVerboseTxResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetBlockVerbose"); err != nil {
@@ -485,7 +500,7 @@ func (self *chaosBitcoinClient) GetMempoolEntry(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 *m12.GetMempoolEntryResult,
+	out0 *m13.GetMempoolEntryResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetMempoolEntry"); err != nil {
@@ -500,7 +515,7 @@ func (self *chaosBitcoinClient) GetMempoolTxsAndFees(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 m15.MempoolTxsAndFees,
+	out0 m16.MempoolTxsAndFees,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetMempoolTxsAndFees"); err != nil {
@@ -514,7 +529,7 @@ func (self *chaosBitcoinClient) GetMempoolTxsAndFees(
 func (self *chaosBitcoinClient) GetNetworkInfo(
 	in0 m2.Context,
 ) (
-	out0 *m12.GetNetworkInfoResult,
+	out0 *m13.GetNetworkInfoResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetNetworkInfo"); err != nil {
@@ -527,9 +542,9 @@ func (self *chaosBitcoinClient) GetNetworkInfo(
 
 func (self *chaosBitcoinClient) GetRawTransaction(
 	in0 m2.Context,
-	in1 *m13.Hash,
+	in1 *m14.Hash,
 ) (
-	out0 *m16.Tx,
+	out0 *m17.Tx,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetRawTransaction"); err != nil {
@@ -544,7 +559,7 @@ func (self *chaosBitcoinClient) GetRawTransactionByStr(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 *m16.Tx,
+	out0 *m17.Tx,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetRawTransactionByStr"); err != nil {
@@ -557,10 +572,10 @@ func (self *chaosBitcoinClient) GetRawTransactionByStr(
 
 func (self *chaosBitcoinClient) GetRawTransactionResult(
 	in0 m2.Context,
-	in1 *m13.Hash,
-	in2 *m12.GetTransactionResult,
+	in1 *m14.Hash,
+	in2 *m13.GetTransactionResult,
 ) (
-	out0 m12.TxRawResult,
+	out0 m13.TxRawResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetRawTransactionResult"); err != nil {
@@ -573,9 +588,9 @@ func (self *chaosBitcoinClient) GetRawTransactionResult(
 
 func (self *chaosBitcoinClient) GetRawTransactionVerbose(
 	in0 m2.Context,
-	in1 *m13.Hash,
+	in1 *m14.Hash,
 ) (
-	out0 *m12.TxRawResult,
+	out0 *m13.TxRawResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetRawTransactionVerbose"); err != nil {
@@ -590,8 +605,8 @@ func (self *chaosBitcoinClient) GetTransactionByStr(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 *m13.Hash,
-	out1 *m12.GetTransactionResult,
+	out0 *m14.Hash,
+	out1 *m13.GetTransactionResult,
 	out2 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "GetTransactionByStr"); err != nil {
@@ -604,7 +619,7 @@ func (self *chaosBitcoinClient) GetTransactionByStr(
 
 func (self *chaosBitcoinClient) GetTransactionFeeAndRate(
 	in0 m2.Context,
-	in1 *m12.TxRawResult,
+	in1 *m13.TxRawResult,
 ) (
 	out0 int64,
 	out1 int64,
@@ -652,7 +667,7 @@ func (self *chaosBitcoinClient) GetTransactionInputSpender(
 func (self *chaosBitcoinClient) Healthcheck(
 	in0 m2.Context,
 ) (
-	out0 m17.Time,
+	out0 m18.Time,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "Healthcheck"); err != nil {
@@ -669,7 +684,7 @@ func (self *chaosBitcoinClient) IsTxStuckInMempool(
 	in2 int64,
 ) (
 	out0 bool,
-	out1 m17.Duration,
+	out1 m18.Duration,
 	out2 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "IsTxStuckInMempool"); err != nil {
@@ -684,9 +699,9 @@ func (self *chaosBitcoinClient) ListUnspentMinMaxAddresses(
 	in0 m2.Context,
 	in1 int,
 	in2 int,
-	in3 []m16.Address,
+	in3 []m17.Address,
 ) (
-	out0 []m12.ListUnspentResult,
+	out0 []m13.ListUnspentResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "ListUnspentMinMaxAddresses"); err != nil {
@@ -699,10 +714,10 @@ func (self *chaosBitcoinClient) ListUnspentMinMaxAddresses(
 
 func (self *chaosBitcoinClient) SendRawTransaction(
 	in0 m2.Context,
-	in1 *m14.MsgTx,
+	in1 *m15.MsgTx,
 	in2 bool,
 ) (
-	out0 *m13.Hash,
+	out0 *m14.Hash,
 	out1 error,
 ) {
 	if err := self.shouldFail("BitcoinClient", "SendRawTransaction"); err != nil {
@@ -719,21 +734,21 @@ func (self *chaosBitcoinClient) SendRawTransaction(
 
 type chaosEVMClient struct {
 	*Source
-	client m18.EVMClient
+	client m19.EVMClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m18.EVMClient = &chaosEVMClient{}
+var _ m19.EVMClient = &chaosEVMClient{}
 
-func (source *Source) WrapEVMClient(client m18.EVMClient) *chaosEVMClient {
+func (source *Source) WrapEVMClient(client m19.EVMClient) *chaosEVMClient {
 	return &chaosEVMClient{Source: source, client: client}
 }
 
 func (self *chaosEVMClient) BlockByNumberCustom(
 	in0 m2.Context,
-	in1 *m19.Int,
+	in1 *m20.Int,
 ) (
-	out0 *m20.Block,
+	out0 *m21.Block,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "BlockByNumberCustom"); err != nil {
@@ -760,8 +775,8 @@ func (self *chaosEVMClient) BlockNumber(
 
 func (self *chaosEVMClient) CallContract(
 	in0 m2.Context,
-	in1 m21.CallMsg,
-	in2 *m19.Int,
+	in1 m22.CallMsg,
+	in2 *m20.Int,
 ) (
 	out0 []uint8,
 	out1 error,
@@ -777,7 +792,7 @@ func (self *chaosEVMClient) CallContract(
 func (self *chaosEVMClient) CodeAt(
 	in0 m2.Context,
 	in1 m5.Address,
-	in2 *m19.Int,
+	in2 *m20.Int,
 ) (
 	out0 []uint8,
 	out1 error,
@@ -792,7 +807,7 @@ func (self *chaosEVMClient) CodeAt(
 
 func (self *chaosEVMClient) EstimateGas(
 	in0 m2.Context,
-	in1 m21.CallMsg,
+	in1 m22.CallMsg,
 ) (
 	out0 uint64,
 	out1 error,
@@ -807,9 +822,9 @@ func (self *chaosEVMClient) EstimateGas(
 
 func (self *chaosEVMClient) FilterLogs(
 	in0 m2.Context,
-	in1 m21.FilterQuery,
+	in1 m22.FilterQuery,
 ) (
-	out0 []m22.Log,
+	out0 []m23.Log,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "FilterLogs"); err != nil {
@@ -822,9 +837,9 @@ func (self *chaosEVMClient) FilterLogs(
 
 func (self *chaosEVMClient) HeaderByNumber(
 	in0 m2.Context,
-	in1 *m19.Int,
+	in1 *m20.Int,
 ) (
-	out0 *m22.Header,
+	out0 *m23.Header,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "HeaderByNumber"); err != nil {
@@ -838,7 +853,7 @@ func (self *chaosEVMClient) HeaderByNumber(
 func (self *chaosEVMClient) HealthCheck(
 	in0 m2.Context,
 ) (
-	out0 m17.Time,
+	out0 m18.Time,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "HealthCheck"); err != nil {
@@ -868,7 +883,7 @@ func (self *chaosEVMClient) IsTxConfirmed(
 func (self *chaosEVMClient) NonceAt(
 	in0 m2.Context,
 	in1 m5.Address,
-	in2 *m19.Int,
+	in2 *m20.Int,
 ) (
 	out0 uint64,
 	out1 error,
@@ -913,7 +928,7 @@ func (self *chaosEVMClient) PendingNonceAt(
 
 func (self *chaosEVMClient) SendTransaction(
 	in0 m2.Context,
-	in1 *m22.Transaction,
+	in1 *m23.Transaction,
 ) (
 	out0 error,
 ) {
@@ -926,7 +941,7 @@ func (self *chaosEVMClient) SendTransaction(
 }
 
 func (self *chaosEVMClient) Signer() (
-	out0 m22.Signer,
+	out0 m23.Signer,
 ) {
 	// Functions that do not return errors cannot fail.
 	return self.client.Signer()
@@ -934,10 +949,10 @@ func (self *chaosEVMClient) Signer() (
 
 func (self *chaosEVMClient) SubscribeFilterLogs(
 	in0 m2.Context,
-	in1 m21.FilterQuery,
-	in2 chan<- m22.Log,
+	in1 m22.FilterQuery,
+	in2 chan<- m23.Log,
 ) (
-	out0 m21.Subscription,
+	out0 m22.Subscription,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "SubscribeFilterLogs"); err != nil {
@@ -951,7 +966,7 @@ func (self *chaosEVMClient) SubscribeFilterLogs(
 func (self *chaosEVMClient) SuggestGasPrice(
 	in0 m2.Context,
 ) (
-	out0 *m19.Int,
+	out0 *m20.Int,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "SuggestGasPrice"); err != nil {
@@ -965,7 +980,7 @@ func (self *chaosEVMClient) SuggestGasPrice(
 func (self *chaosEVMClient) SuggestGasTipCap(
 	in0 m2.Context,
 ) (
-	out0 *m19.Int,
+	out0 *m20.Int,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "SuggestGasTipCap"); err != nil {
@@ -980,7 +995,7 @@ func (self *chaosEVMClient) TransactionByHash(
 	in0 m2.Context,
 	in1 m5.Hash,
 ) (
-	out0 *m22.Transaction,
+	out0 *m23.Transaction,
 	out1 bool,
 	out2 error,
 ) {
@@ -996,7 +1011,7 @@ func (self *chaosEVMClient) TransactionByHashCustom(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 *m20.Transaction,
+	out0 *m21.Transaction,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "TransactionByHashCustom"); err != nil {
@@ -1011,7 +1026,7 @@ func (self *chaosEVMClient) TransactionReceipt(
 	in0 m2.Context,
 	in1 m5.Hash,
 ) (
-	out0 *m22.Receipt,
+	out0 *m23.Receipt,
 	out1 error,
 ) {
 	if err := self.shouldFail("EVMClient", "TransactionReceipt"); err != nil {
@@ -1028,21 +1043,21 @@ func (self *chaosEVMClient) TransactionReceipt(
 
 type chaosSolanaClient struct {
 	*Source
-	client m23.SolanaClient
+	client m24.SolanaClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m23.SolanaClient = &chaosSolanaClient{}
+var _ m24.SolanaClient = &chaosSolanaClient{}
 
-func (source *Source) WrapSolanaClient(client m23.SolanaClient) *chaosSolanaClient {
+func (source *Source) WrapSolanaClient(client m24.SolanaClient) *chaosSolanaClient {
 	return &chaosSolanaClient{Source: source, client: client}
 }
 
 func (self *chaosSolanaClient) GetAccountInfo(
 	in0 m2.Context,
-	in1 m24.PublicKey,
+	in1 m25.PublicKey,
 ) (
-	out0 *m25.GetAccountInfoResult,
+	out0 *m26.GetAccountInfoResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetAccountInfo"); err != nil {
@@ -1055,10 +1070,10 @@ func (self *chaosSolanaClient) GetAccountInfo(
 
 func (self *chaosSolanaClient) GetAccountInfoWithOpts(
 	in0 m2.Context,
-	in1 m24.PublicKey,
-	in2 *m25.GetAccountInfoOpts,
+	in1 m25.PublicKey,
+	in2 *m26.GetAccountInfoOpts,
 ) (
-	out0 *m25.GetAccountInfoResult,
+	out0 *m26.GetAccountInfoResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetAccountInfoWithOpts"); err != nil {
@@ -1071,10 +1086,10 @@ func (self *chaosSolanaClient) GetAccountInfoWithOpts(
 
 func (self *chaosSolanaClient) GetBalance(
 	in0 m2.Context,
-	in1 m24.PublicKey,
-	in2 m25.CommitmentType,
+	in1 m25.PublicKey,
+	in2 m26.CommitmentType,
 ) (
-	out0 *m25.GetBalanceResult,
+	out0 *m26.GetBalanceResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetBalance"); err != nil {
@@ -1089,7 +1104,7 @@ func (self *chaosSolanaClient) GetBlockTime(
 	in0 m2.Context,
 	in1 uint64,
 ) (
-	out0 *m24.UnixTimeSeconds,
+	out0 *m25.UnixTimeSeconds,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetBlockTime"); err != nil {
@@ -1102,10 +1117,10 @@ func (self *chaosSolanaClient) GetBlockTime(
 
 func (self *chaosSolanaClient) GetConfirmedTransactionWithOpts(
 	in0 m2.Context,
-	in1 m24.Signature,
-	in2 *m25.GetTransactionOpts,
+	in1 m25.Signature,
+	in2 *m26.GetTransactionOpts,
 ) (
-	out0 *m25.TransactionWithMeta,
+	out0 *m26.TransactionWithMeta,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetConfirmedTransactionWithOpts"); err != nil {
@@ -1132,9 +1147,9 @@ func (self *chaosSolanaClient) GetHealth(
 
 func (self *chaosSolanaClient) GetLatestBlockhash(
 	in0 m2.Context,
-	in1 m25.CommitmentType,
+	in1 m26.CommitmentType,
 ) (
-	out0 *m25.GetLatestBlockhashResult,
+	out0 *m26.GetLatestBlockhashResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetLatestBlockhash"); err != nil {
@@ -1147,9 +1162,9 @@ func (self *chaosSolanaClient) GetLatestBlockhash(
 
 func (self *chaosSolanaClient) GetRecentPrioritizationFees(
 	in0 m2.Context,
-	in1 m24.PublicKeySlice,
+	in1 m25.PublicKeySlice,
 ) (
-	out0 []m25.PriorizationFeeResult,
+	out0 []m26.PriorizationFeeResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetRecentPrioritizationFees"); err != nil {
@@ -1162,10 +1177,10 @@ func (self *chaosSolanaClient) GetRecentPrioritizationFees(
 
 func (self *chaosSolanaClient) GetSignaturesForAddressWithOpts(
 	in0 m2.Context,
-	in1 m24.PublicKey,
-	in2 *m25.GetSignaturesForAddressOpts,
+	in1 m25.PublicKey,
+	in2 *m26.GetSignaturesForAddressOpts,
 ) (
-	out0 []*m25.TransactionSignature,
+	out0 []*m26.TransactionSignature,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetSignaturesForAddressWithOpts"); err != nil {
@@ -1178,7 +1193,7 @@ func (self *chaosSolanaClient) GetSignaturesForAddressWithOpts(
 
 func (self *chaosSolanaClient) GetSlot(
 	in0 m2.Context,
-	in1 m25.CommitmentType,
+	in1 m26.CommitmentType,
 ) (
 	out0 uint64,
 	out1 error,
@@ -1193,10 +1208,10 @@ func (self *chaosSolanaClient) GetSlot(
 
 func (self *chaosSolanaClient) GetTransaction(
 	in0 m2.Context,
-	in1 m24.Signature,
-	in2 *m25.GetTransactionOpts,
+	in1 m25.Signature,
+	in2 *m26.GetTransactionOpts,
 ) (
-	out0 *m25.GetTransactionResult,
+	out0 *m26.GetTransactionResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetTransaction"); err != nil {
@@ -1210,7 +1225,7 @@ func (self *chaosSolanaClient) GetTransaction(
 func (self *chaosSolanaClient) GetVersion(
 	in0 m2.Context,
 ) (
-	out0 *m25.GetVersionResult,
+	out0 *m26.GetVersionResult,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "GetVersion"); err != nil {
@@ -1223,10 +1238,10 @@ func (self *chaosSolanaClient) GetVersion(
 
 func (self *chaosSolanaClient) SendTransactionWithOpts(
 	in0 m2.Context,
-	in1 *m24.Transaction,
-	in2 m25.TransactionOpts,
+	in1 *m25.Transaction,
+	in2 m26.TransactionOpts,
 ) (
-	out0 m24.Signature,
+	out0 m25.Signature,
 	out1 error,
 ) {
 	if err := self.shouldFail("SolanaClient", "SendTransactionWithOpts"); err != nil {
@@ -1243,20 +1258,20 @@ func (self *chaosSolanaClient) SendTransactionWithOpts(
 
 type chaosSuiClient struct {
 	*Source
-	client m26.SuiClient
+	client m27.SuiClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m26.SuiClient = &chaosSuiClient{}
+var _ m27.SuiClient = &chaosSuiClient{}
 
-func (source *Source) WrapSuiClient(client m26.SuiClient) *chaosSuiClient {
+func (source *Source) WrapSuiClient(client m27.SuiClient) *chaosSuiClient {
 	return &chaosSuiClient{Source: source, client: client}
 }
 
 func (self *chaosSuiClient) GetLatestCheckpoint(
 	in0 m2.Context,
 ) (
-	out0 m27.CheckpointResponse,
+	out0 m28.CheckpointResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "GetLatestCheckpoint"); err != nil {
@@ -1271,7 +1286,7 @@ func (self *chaosSuiClient) GetObjectParsedData(
 	in0 m2.Context,
 	in1 string,
 ) (
-	out0 m27.SuiParsedData,
+	out0 m28.SuiParsedData,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "GetObjectParsedData"); err != nil {
@@ -1303,7 +1318,7 @@ func (self *chaosSuiClient) GetSuiCoinObjectRefs(
 	in1 string,
 	in2 uint64,
 ) (
-	out0 []*m28.ObjectRef,
+	out0 []*m29.ObjectRef,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "GetSuiCoinObjectRefs"); err != nil {
@@ -1317,7 +1332,7 @@ func (self *chaosSuiClient) GetSuiCoinObjectRefs(
 func (self *chaosSuiClient) HealthCheck(
 	in0 m2.Context,
 ) (
-	out0 m17.Time,
+	out0 m18.Time,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "HealthCheck"); err != nil {
@@ -1330,9 +1345,9 @@ func (self *chaosSuiClient) HealthCheck(
 
 func (self *chaosSuiClient) InspectTransactionBlock(
 	in0 m2.Context,
-	in1 m27.SuiDevInspectTransactionBlockRequest,
+	in1 m28.SuiDevInspectTransactionBlockRequest,
 ) (
-	out0 m27.SuiTransactionBlockResponse,
+	out0 m28.SuiTransactionBlockResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "InspectTransactionBlock"); err != nil {
@@ -1345,9 +1360,9 @@ func (self *chaosSuiClient) InspectTransactionBlock(
 
 func (self *chaosSuiClient) MoveCall(
 	in0 m2.Context,
-	in1 m27.MoveCallRequest,
+	in1 m28.MoveCallRequest,
 ) (
-	out0 m27.TxnMetaData,
+	out0 m28.TxnMetaData,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "MoveCall"); err != nil {
@@ -1360,9 +1375,9 @@ func (self *chaosSuiClient) MoveCall(
 
 func (self *chaosSuiClient) QueryModuleEvents(
 	in0 m2.Context,
-	in1 m29.EventQuery,
+	in1 m30.EventQuery,
 ) (
-	out0 []m27.SuiEventResponse,
+	out0 []m28.SuiEventResponse,
 	out1 string,
 	out2 error,
 ) {
@@ -1376,9 +1391,9 @@ func (self *chaosSuiClient) QueryModuleEvents(
 
 func (self *chaosSuiClient) SuiExecuteTransactionBlock(
 	in0 m2.Context,
-	in1 m27.SuiExecuteTransactionBlockRequest,
+	in1 m28.SuiExecuteTransactionBlockRequest,
 ) (
-	out0 m27.SuiTransactionBlockResponse,
+	out0 m28.SuiTransactionBlockResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "SuiExecuteTransactionBlock"); err != nil {
@@ -1391,9 +1406,9 @@ func (self *chaosSuiClient) SuiExecuteTransactionBlock(
 
 func (self *chaosSuiClient) SuiGetTransactionBlock(
 	in0 m2.Context,
-	in1 m27.SuiGetTransactionBlockRequest,
+	in1 m28.SuiGetTransactionBlockRequest,
 ) (
-	out0 m27.SuiTransactionBlockResponse,
+	out0 m28.SuiTransactionBlockResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "SuiGetTransactionBlock"); err != nil {
@@ -1406,9 +1421,9 @@ func (self *chaosSuiClient) SuiGetTransactionBlock(
 
 func (self *chaosSuiClient) SuiMultiGetObjects(
 	in0 m2.Context,
-	in1 m27.SuiMultiGetObjectsRequest,
+	in1 m28.SuiMultiGetObjectsRequest,
 ) (
-	out0 []*m27.SuiObjectResponse,
+	out0 []*m28.SuiObjectResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "SuiMultiGetObjects"); err != nil {
@@ -1421,9 +1436,9 @@ func (self *chaosSuiClient) SuiMultiGetObjects(
 
 func (self *chaosSuiClient) SuiXGetDynamicFieldObject(
 	in0 m2.Context,
-	in1 m27.SuiXGetDynamicFieldObjectRequest,
+	in1 m28.SuiXGetDynamicFieldObjectRequest,
 ) (
-	out0 m27.SuiObjectResponse,
+	out0 m28.SuiObjectResponse,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "SuiXGetDynamicFieldObject"); err != nil {
@@ -1437,7 +1452,7 @@ func (self *chaosSuiClient) SuiXGetDynamicFieldObject(
 func (self *chaosSuiClient) SuiXGetLatestSuiSystemState(
 	in0 m2.Context,
 ) (
-	out0 m27.SuiSystemStateSummary,
+	out0 m28.SuiSystemStateSummary,
 	out1 error,
 ) {
 	if err := self.shouldFail("SuiClient", "SuiXGetLatestSuiSystemState"); err != nil {
@@ -1468,21 +1483,21 @@ func (self *chaosSuiClient) SuiXGetReferenceGasPrice(
 
 type chaosTONClient struct {
 	*Source
-	client m30.TONClient
+	client m31.TONClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m30.TONClient = &chaosTONClient{}
+var _ m31.TONClient = &chaosTONClient{}
 
-func (source *Source) WrapTONClient(client m30.TONClient) *chaosTONClient {
+func (source *Source) WrapTONClient(client m31.TONClient) *chaosTONClient {
 	return &chaosTONClient{Source: source, client: client}
 }
 
 func (self *chaosTONClient) GetAccountState(
 	in0 m2.Context,
-	in1 m31.AccountID,
+	in1 m32.AccountID,
 ) (
-	out0 m32.Account,
+	out0 m33.Account,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetAccountState"); err != nil {
@@ -1495,9 +1510,9 @@ func (self *chaosTONClient) GetAccountState(
 
 func (self *chaosTONClient) GetBlockHeader(
 	in0 m2.Context,
-	in1 m32.BlockIDExt,
+	in1 m33.BlockIDExt,
 ) (
-	out0 m32.BlockHeader,
+	out0 m33.BlockHeader,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetBlockHeader"); err != nil {
@@ -1512,7 +1527,7 @@ func (self *chaosTONClient) GetConfigParam(
 	in0 m2.Context,
 	in1 uint32,
 ) (
-	out0 *m33.Cell,
+	out0 *m34.Cell,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetConfigParam"); err != nil {
@@ -1526,7 +1541,7 @@ func (self *chaosTONClient) GetConfigParam(
 func (self *chaosTONClient) GetMasterchainInfo(
 	in0 m2.Context,
 ) (
-	out0 m32.MasterchainInfo,
+	out0 m33.MasterchainInfo,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetMasterchainInfo"); err != nil {
@@ -1539,11 +1554,11 @@ func (self *chaosTONClient) GetMasterchainInfo(
 
 func (self *chaosTONClient) GetTransaction(
 	in0 m2.Context,
-	in1 m31.AccountID,
+	in1 m32.AccountID,
 	in2 uint64,
-	in3 m31.Bits256,
+	in3 m32.Bits256,
 ) (
-	out0 m31.Transaction,
+	out0 m32.Transaction,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetTransaction"); err != nil {
@@ -1557,11 +1572,11 @@ func (self *chaosTONClient) GetTransaction(
 func (self *chaosTONClient) GetTransactions(
 	in0 m2.Context,
 	in1 uint32,
-	in2 m31.AccountID,
+	in2 m32.AccountID,
 	in3 uint64,
-	in4 m31.Bits256,
+	in4 m32.Bits256,
 ) (
-	out0 []m31.Transaction,
+	out0 []m32.Transaction,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetTransactions"); err != nil {
@@ -1574,11 +1589,11 @@ func (self *chaosTONClient) GetTransactions(
 
 func (self *chaosTONClient) GetTransactionsSince(
 	in0 m2.Context,
-	in1 m31.AccountID,
+	in1 m32.AccountID,
 	in2 uint64,
-	in3 m31.Bits256,
+	in3 m32.Bits256,
 ) (
-	out0 []m31.Transaction,
+	out0 []m32.Transaction,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "GetTransactionsSince"); err != nil {
@@ -1592,7 +1607,7 @@ func (self *chaosTONClient) GetTransactionsSince(
 func (self *chaosTONClient) HealthCheck(
 	in0 m2.Context,
 ) (
-	out0 m17.Time,
+	out0 m18.Time,
 	out1 error,
 ) {
 	if err := self.shouldFail("TONClient", "HealthCheck"); err != nil {
@@ -1624,18 +1639,18 @@ func (self *chaosTONClient) SendMessage(
 
 type chaosTSSClient struct {
 	*Source
-	client m34.TSSClient
+	client m35.TSSClient
 }
 
 // If you are getting a error in this line you should probably run "make generate".
-var _ m34.TSSClient = &chaosTSSClient{}
+var _ m35.TSSClient = &chaosTSSClient{}
 
-func (source *Source) WrapTSSClient(client m34.TSSClient) *chaosTSSClient {
+func (source *Source) WrapTSSClient(client m35.TSSClient) *chaosTSSClient {
 	return &chaosTSSClient{Source: source, client: client}
 }
 
 func (self *chaosTSSClient) PubKey() (
-	out0 m35.PubKey,
+	out0 m36.PubKey,
 ) {
 	// Functions that do not return errors cannot fail.
 	return self.client.PubKey()

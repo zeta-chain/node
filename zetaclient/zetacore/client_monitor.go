@@ -119,29 +119,42 @@ func (c *Client) MonitorVoteInboundResult(
 		}
 	}()
 
-	call := func() error {
-		return c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
-	}
-
-	// extract the deadline (always provided) that is used by error monitor goroutine
-	deadline := time.Now().Add(defaultInboundVoteMonitorTimeout)
-	if ctxDeadline, ok := ctx.Deadline(); ok {
-		deadline = ctxDeadline
-	}
-
-	// query tx result with the same deadline used by the upstream error monitor goroutine
-	start := time.Now()
-	bo := backoff.NewConstantBackOff(monitorInterval)
-	err := retry.DoWithDeadline(call, bo, deadline)
+	// Use 1 iteration for chaos error checks to fail instantly
+	err := c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
 	if err != nil {
-		// we only return an error if the tx result cannot be queried
-		logger.Error().
-			Err(err).
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallotIndex, msg.Digest()).
-			Stringer("timeout", deadline.Sub(start)).
-			Msg("tx result query timed out")
-		return err
+		if strings.Contains(err.Error(), "chaos error") {
+			logger.Warn().
+				Err(err).
+				Str(logs.FieldZetaTx, zetaTxHash).
+				Str(logs.FieldBallotIndex, msg.Digest()).
+				Msg("chaos error simulating mempool congestion, skipping retries for inbound vote to trigger add internal tracker")
+			return err
+		}
+
+		call := func() error {
+			return c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg, monitorErrCh)
+		}
+
+		// extract the deadline (always provided) that is used by error monitor goroutine
+		deadline := time.Now().Add(defaultInboundVoteMonitorTimeout)
+		if ctxDeadline, ok := ctx.Deadline(); ok {
+			deadline = ctxDeadline
+		}
+
+		// query tx result with the same deadline used by the upstream error monitor goroutine
+		start := time.Now()
+		bo := backoff.NewConstantBackOff(monitorInterval)
+		err = retry.DoWithDeadline(call, bo, deadline)
+		if err != nil {
+			// we only return an error if the tx result cannot be queried
+			logger.Error().
+				Err(err).
+				Str(logs.FieldZetaTx, zetaTxHash).
+				Str(logs.FieldBallotIndex, msg.Digest()).
+				Stringer("timeout", deadline.Sub(start)).
+				Msg("tx result query timed out")
+			return err
+		}
 	}
 
 	return nil
@@ -154,8 +167,7 @@ func (c *Client) monitorVoteInboundResult(
 	msg *types.MsgVoteInbound,
 	monitorErrCh chan<- zetaerrors.ErrTxMonitor,
 ) error {
-	// query tx result from ZetaChain
-	txResult, err := c.QueryTxResult(zetaTxHash)
+	txResult, err := c.self.QueryTxResult(zetaTxHash)
 	if err != nil {
 		return errors.Wrap(err, "failed to query tx result")
 	}

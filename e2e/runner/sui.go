@@ -282,7 +282,7 @@ func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
 }
 
 // SuiMonitorCCTXByInboundHash monitors a CCTX by inbound hash until it gets mined
-// This function wrapps WaitCctxMinedByInboundHash and prints additional logs needed in stress test
+// This function wraps WaitCctxMinedByInboundHash and prints additional logs needed in stress test
 func (r *E2ERunner) SuiMonitorCCTXByInboundHash(inboundHash string, index int) (time.Duration, error) {
 	startTime := time.Now()
 
