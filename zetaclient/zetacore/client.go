@@ -10,6 +10,7 @@ import (
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
@@ -53,7 +54,15 @@ type Client struct {
 	// these ballots are pending and waiting for the finalizing vote to come in and trigger the execution
 	readyToExecuteInboundBallots map[string]uint64
 
+	// self holds a reference to the wrapped interface for chaos wrapped calls
+	self QueryTxResulter
+
 	mu sync.RWMutex
+}
+
+// QueryTxResulter is an interface for calling QueryTxResult, allowing it to be wrapped by chaos mode
+type QueryTxResulter interface {
+	QueryTxResult(hash string) (*sdktypes.TxResponse, error)
 }
 
 var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
@@ -162,7 +171,7 @@ func NewClient(
 	accountsMap[authz.ZetaClientGranteeKey] = accN
 	seqMap[authz.ZetaClientGranteeKey] = seq
 
-	return &Client{
+	client := &Client{
 		Clients: zetacoreClients,
 
 		logger: logger.With().Str(logs.FieldModule, logs.ModNameZetaCoreClient).Logger(),
@@ -180,7 +189,17 @@ func NewClient(
 		chain:       zetaChain,
 
 		readyToExecuteInboundBallots: make(map[string]uint64),
-	}, nil
+	}
+	client.self = client
+
+	return client, nil
+}
+
+// SetSelf allows external wrappers to set self reference
+func (c *Client) SetSelf(self interface{}) {
+	if queryTxResulter, ok := self.(QueryTxResulter); ok {
+		c.self = queryTxResulter
+	}
 }
 
 // buildCosmosClientContext constructs a valid context with all relevant values set

@@ -16,6 +16,10 @@
 * [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
 * [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
 
+### Tests
+
+* [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+
 ## v37.0.0
 
 ### Breaking Changes

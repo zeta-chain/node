@@ -31,7 +31,7 @@ func initTestRunner(
 	}
 
 	// copy timeouts from deployer runner
-	testRunner.CctxTimeout = deployerRunner.ReceiptTimeout
+	testRunner.CctxTimeout = deployerRunner.CctxTimeout
 	testRunner.ReceiptTimeout = deployerRunner.ReceiptTimeout
 	testRunner.TestFilter = deployerRunner.TestFilter
 
