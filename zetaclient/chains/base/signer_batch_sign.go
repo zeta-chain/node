@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"slices"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -251,23 +250,12 @@ func (s *Signer) collectKeysignBatch(batchNumber uint64, untilNonce uint64) (*TS
 		batchNonceLow, batchNonceHigh = BatchNumberToRange(batchNumber)
 	)
 
-	// sort all nonces in ascending order
-	allNonces := make([]uint64, 0, len(s.tssKeysignInfoMap))
-	for nonce := range s.tssKeysignInfoMap {
-		allNonces = append(allNonces, nonce)
-	}
-	slices.Sort(allNonces)
-
 	// collect digests within the batch's range
-	for _, nonce := range allNonces {
-		if nonce < batchNonceLow {
-			continue
-		} else if nonce > batchNonceHigh {
-			break
+	for nonce := batchNonceLow; nonce <= batchNonceHigh; nonce++ {
+		info, found := s.tssKeysignInfoMap[nonce]
+		if found {
+			batch.AddKeysignInfo(nonce, *info)
 		}
-
-		info := s.tssKeysignInfoMap[nonce]
-		batch.AddKeysignInfo(nonce, *info)
 	}
 
 	switch {
