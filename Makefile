@@ -624,8 +624,9 @@ testnet-node-stop:
 ###############################################################################
 
 # Start dry run zetaclientd in dry mode
+# Usage: make zetaclient-dry ZETACORE_HOST=mainnet-node RPC_API_KEY_ALLTHATNODE=<your-api-key>
 zetaclient-dry:
-	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
+	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) RPC_API_KEY_ALLTHATNODE=$(RPC_API_KEY_ALLTHATNODE) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
 
 
 filter-missed-btc: install-zetatool

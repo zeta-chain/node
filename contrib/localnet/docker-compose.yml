@@ -257,6 +257,7 @@ services:
     entrypoint: python3 -u /root/start-zetaclient-dry.py
     environment:
       - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
+      - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE}
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password
       - PPROF_ADDR=0.0.0.0:6066

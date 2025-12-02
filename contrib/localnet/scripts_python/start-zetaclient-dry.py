@@ -14,16 +14,24 @@ import shutil
 
 # Configuration from environment variables
 ZETACORE_HOST = os.environ.get('ZETACORE_HOST')
+RPC_API_KEY_ALLTHATNODE = os.environ.get('RPC_API_KEY_ALLTHATNODE')
 
 # Chain ID will be fetched from zetacore node
 CHAIN_ID = None
 
 # Validate required environment variables
 def validate_env_vars():
+    missing_vars = []
     if not ZETACORE_HOST:
-        print("Error: Required environment variable not set: ZETACORE_HOST")
-        print("Please set the following environment variable:")
-        print("  ZETACORE_HOST - Hostname of the zetacore node (e.g., zetacore0, testnet-node)")
+        missing_vars.append("ZETACORE_HOST")
+    if not RPC_API_KEY_ALLTHATNODE:
+        missing_vars.append("RPC_API_KEY_ALLTHATNODE")
+
+    if missing_vars:
+        print(f"Error: Required environment variable(s) not set: {', '.join(missing_vars)}")
+        print("Please set the following environment variables:")
+        print("  ZETACORE_HOST          - Hostname of the zetacore node (e.g., zetacore0, testnet-node)")
+        print("  RPC_API_KEY_ALLTHATNODE - API key for AllThatNode RPC endpoints")
         sys.exit(1)
 
 
@@ -65,30 +73,27 @@ CHAIN_CONFIGS = {
     },
     "athens_7001-1": {
         "EVMChainConfigs": {
-            "11155111": {"Endpoint": "https://ethereum-sepolia-rpc.publicnode.com"},
-            "97": {"Endpoint": "https://bsc-testnet-rpc.publicnode.com"},
-            "80002": {"Endpoint": "https://rpc-amoy.polygon.technology"},
-            "84532": {"Endpoint": "https://base-sepolia-rpc.publicnode.com"},
-            "421614": {"Endpoint": "https://arbitrum-sepolia-rpc.publicnode.com"},
+            "11155111": {"Endpoint": f"https://ethereum-sepolia.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},  # Ethereum Sepolia
+            "97": {"Endpoint": f"https://bsc-testnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},              # BSC Testnet
+            "80002": {"Endpoint": f"https://polygon-amoy.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},          # Polygon Amoy
+            "84532": {"Endpoint": f"https://base-sepolia.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},          # Base Sepolia
+            "421614": {"Endpoint": f"https://arbitrum-sepolia.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},     # Arbitrum Sepolia
+            "43113": {"Endpoint": f"https://avalanche-fuji.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}/ext/bc/C/rpc"},  # Avalanche Fuji
         },
         "BTCChainConfigs": {},
-        "SolanaConfig": {},
-        "SuiConfig": {},
-        "TONConfig": {},
+        "SolanaConfig": {"Endpoint": f"https://solana-devnet.g.allthatnode.com/archive/json_rpc/{RPC_API_KEY_ALLTHATNODE}"},
     },
     "zetachain_7000-1": {  # mainnet
         "EVMChainConfigs": {
-            "1": {"Endpoint": "https://eth-mainnet.public.blastapi.io"},        # Ethereum
-            "56": {"Endpoint": "https://bsc-mainnet.public.blastapi.io"},       # BSC
-            "137": {"Endpoint": "https://polygon-bor-rpc.publicnode.com"},      # Polygon
-            "8453": {"Endpoint": "https://base-mainnet.public.blastapi.io"},    # Base
-            "42161": {"Endpoint": "https://arbitrum-one.public.blastapi.io"},   # Arbitrum
-            "10": {"Endpoint": "https://optimism-mainnet.public.blastapi.io"},  # Optimism
+            "1": {"Endpoint": f"https://ethereum-mainnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},    # Ethereum
+            "56": {"Endpoint": f"https://bsc-mainnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},        # BSC
+            "137": {"Endpoint": f"https://polygon-mainnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},   # Polygon
+            "8453": {"Endpoint": f"https://base-mainnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},     # Base
+            "42161": {"Endpoint": f"https://arbitrum-one.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}"},    # Arbitrum
+            "43114": {"Endpoint": f"https://avalanche-mainnet.g.allthatnode.com/full/evm/{RPC_API_KEY_ALLTHATNODE}/ext/bc/C/rpc"},  # Avalanche
         },
         "BTCChainConfigs": {},
-        "SolanaConfig": {},
-        "SuiConfig": {},
-        "TONConfig": {},
+        "SolanaConfig": {"Endpoint": f"https://solana-mainnet.g.allthatnode.com/full/json_rpc/{RPC_API_KEY_ALLTHATNODE}"},
     },
 }
 
@@ -229,9 +234,9 @@ def update_config(operator_address):
     # Apply chain-specific external chain configs
     config['EVMChainConfigs'] = chain_config['EVMChainConfigs']
     config['BTCChainConfigs'] = chain_config['BTCChainConfigs']
-    config['SolanaConfig'] = chain_config['SolanaConfig']
-    config['SuiConfig'] = chain_config['SuiConfig']
-    config['TONConfig'] = chain_config['TONConfig']
+    config['SolanaConfig'] = chain_config.get('SolanaConfig', {})
+    config['SuiConfig'] = chain_config.get('SuiConfig', {})
+    config['TONConfig'] = chain_config.get('TONConfig', {})
 
     # Write updated config
     with open(CONFIG_FILE, 'w') as f:
