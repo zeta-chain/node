@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
 	types "github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
@@ -51,6 +53,53 @@ func TestClientLive(t *testing.T) {
 		RPCHost:   os.Getenv(common.EnvBtcRPCTestnet4),
 		RPCParams: "testnet4",
 	}
+
+	t.Run("Get TSS top-20 UTXOs balance", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, mainnetConfig)
+
+		// set chain
+		chain := chains.BitcoinMainnet
+		tssAddrStr := testutils.TSSAddressBTCMainnet
+		tssAddress, err := chains.DecodeBtcAddress(tssAddrStr, chain.ChainId)
+		require.NoError(t, err)
+
+		// ACT
+		ctx := context.Background()
+		utxos, err := ts.Client.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddress})
+		require.NoError(t, err)
+
+		// sort utxos by amount, txid, vout descending
+		sort.SliceStable(utxos, func(i, j int) bool {
+			if utxos[i].Amount == utxos[j].Amount {
+				if utxos[i].TxID == utxos[j].TxID {
+					return utxos[i].Vout > utxos[j].Vout
+				}
+				return utxos[i].TxID > utxos[j].TxID
+			}
+			return utxos[i].Amount > utxos[j].Amount
+		})
+
+		// sum up utxos
+		var (
+			total      = 0.0
+			totalTop20 = 0.0
+			totalCount = len(utxos)
+		)
+
+		for i := range totalCount {
+			total += utxos[i].Amount
+			if i < 20 {
+				totalTop20 += utxos[i].Amount
+			}
+		}
+
+		// DISPLAY
+		fmt.Printf("utxos: %d\n", len(utxos))
+		fmt.Printf("total: %f BTC\n", total)
+		fmt.Printf("top20: %f BTC\n", totalTop20)
+		fmt.Printf("address: %s\n", tssAddress.EncodeAddress())
+	})
 
 	t.Run("Healthcheck", func(t *testing.T) {
 		t.Skip("most rpc won't allow private methods e.g. listUnspentMinMaxAddresses")
