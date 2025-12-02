@@ -76,9 +76,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 		require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxBTC.CctxStatus.Status)
 
 		cctxBTCAmount = cctxBTCAmount.Add(cctxBTC.GetCurrentOutboundParam().Amount)
-
 	}
-
 	// ETH migration
 	// Fetch balance of ETH TSS address
 	tssBalance, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
