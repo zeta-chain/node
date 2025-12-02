@@ -18,6 +18,7 @@
 ### Tests
 
 * [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+* [4460](https://github.com/zeta-chain/node/pull/4460) - add Bitcoin live test to display top-20 UTXOs' value
 
 ## v37.0.0
 
