@@ -164,12 +164,12 @@ func ethereumWithdrawPerformanceRoutine(
 			r.CctxTimeout = 15 * time.Minute
 		}
 
-		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")
-		startTime := time.Now()
-
 		// depositing the necessary tokens on ZetaChain
 		txEtherDeposit := r.DepositEtherDeployer()
 		r.WaitForMinedCCTX(txEtherDeposit)
+
+		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")
+		startTime := time.Now()
 
 		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
