@@ -111,7 +111,7 @@ func Test_IsStaleBlockEvent(t *testing.T) {
 	}
 }
 
-func Test_PrepareForKeysign(t *testing.T) {
+func Test_IsTimeToKeysign(t *testing.T) {
 	tests := []struct {
 		name               string
 		nextTSSNonce       uint64
@@ -170,61 +170,24 @@ func Test_PrepareForKeysign(t *testing.T) {
 			staleNonces: []uint64{1, 2, 3, 4},
 			shouldSign:  false,
 		},
-		{
-			name:             "error getting pending nonces",
-			nextTSSNonce:     0,
-			zetaHeight:       100,
-			scheduleInterval: 10,
-			pendingNonces: observertypes.PendingNonces{
-				NonceLow:  0,
-				NonceHigh: 5,
-			},
-			pendingNoncesError: errors.New("rpc error"),
-			errorMsg:           "unable to get pending nonces",
-		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// ARRANGE
 			signer := newSignerTestSuite(t)
-			zetacore := mocks.NewZetacoreClient(t)
-			zetaRepo := zrepo.New(zetacore, chains.Ethereum, mode.StandardMode)
 
-			// Mock pending nonces
-			zetacore.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).
-				Maybe().Return(tc.pendingNonces, tc.pendingNoncesError)
-
-			// Mock pending keysign info in cache
+			// mock pending keysign info in cache
 			// #nosec G115 - always positive
 			for nonce := uint64(tc.pendingNonces.NonceLow); nonce < uint64(tc.pendingNonces.NonceHigh); nonce++ {
 				signer.GetSignatureOrAddDigest(nonce, sample.Digest32B(t))
 			}
 
-			// Mock stale keysign info in cache
-			for _, nonce := range tc.staleNonces {
-				signer.GetSignatureOrAddDigest(nonce, sample.Digest32B(t))
-			}
-
 			// ACT
-			ctx := goctx.Background()
-			shouldSign, err := signer.PrepareForKeysign(ctx, zetaRepo, tc.nextTSSNonce, tc.zetaHeight, tc.scheduleInterval)
+			shouldSign := signer.IsTimeToKeysign(tc.pendingNonces, tc.nextTSSNonce, tc.zetaHeight, tc.scheduleInterval)
 
 			// ASSERT
-			if tc.errorMsg != "" {
-				require.Contains(t, err.Error(), tc.errorMsg)
-				require.False(t, shouldSign)
-				return
-			}
-
-			require.NoError(t, err)
 			require.Equal(t, tc.shouldSign, shouldSign)
-
-			// verify cleanup happened
-			for _, nonce := range tc.staleNonces {
-				_, found := signer.tssKeysignInfoMap[nonce]
-				require.False(t, found)
-			}
 		})
 	}
 }
@@ -466,6 +429,30 @@ func Test_GetSignatureOrAddDigest(t *testing.T) {
 		sig, found := signer.GetSignatureOrAddDigest(nonce, newInfos[nonce].digest)
 		require.True(t, found)
 		require.Equal(t, newSigs[nonce], sig)
+	}
+}
+
+func Test_RemoveKeysignInfo(t *testing.T) {
+	// ARRANGE
+	signer := newSignerTestSuite(t)
+
+	// mock pending keysign info in cache
+	for nonce := range uint64(10) {
+		signer.GetSignatureOrAddDigest(nonce, sample.Digest32B(t))
+	}
+
+	// ACT
+	signer.RemoveKeysignInfo(5)
+
+	// ASSERT
+	// verify cleanup happened
+	for nonce := range uint64(10) {
+		_, found := signer.tssKeysignInfoMap[nonce]
+		if nonce < 5 {
+			require.False(t, found)
+		} else {
+			require.True(t, found)
+		}
 	}
 }
 

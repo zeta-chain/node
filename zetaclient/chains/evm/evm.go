@@ -213,12 +213,20 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get next tss nonce")
 	}
 
+	// query pending nonces and see if there is any tx to sign
+	p, err := zetaRepo.GetPendingNonces(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+	}
+
+	// remove stale keysign info to release memory
+	// #nosec G115 - always positive
+	s.RemoveKeysignInfo(uint64(p.NonceLow))
+
 	// check if it's the time to perform keysign
 	interval := e.observer.ChainParams().OutboundScheduleInterval
-	shouldSign, err := e.signer.PrepareForKeysign(ctx, zetaRepo, nextTSSNonce, zetaHeight, interval)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine the timing of TSS keysign")
-	} else if !shouldSign {
+	shouldSign := e.signer.IsTimeToKeysign(*p, nextTSSNonce, zetaHeight, interval)
+	if !shouldSign {
 		return nil
 	}
 

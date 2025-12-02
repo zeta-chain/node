@@ -12,6 +12,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/pkg/scheduler"
+	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -51,45 +52,31 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 	return zetaHeight, false, nil
 }
 
-// PrepareForKeysign checks if it's time to sign and clean up stale keysign information.
-func (s *Signer) PrepareForKeysign(
-	ctx context.Context,
-	zetaRepo *zrepo.ZetaRepo,
+// IsTimeToKeysign checks if it's time to perform keysign.
+func (s *Signer) IsTimeToKeysign(
+	p types.PendingNonces,
 	nextTSSNonce uint64,
 	zetaHeight int64,
 	scheduleInterval int64,
-) (bool, error) {
+) bool {
 	// keysign happens only when zeta height is a multiple of the schedule interval
 	if zetaHeight%scheduleInterval != 0 {
-		return false, nil
+		return false
 	}
-
-	// query pending nonces and see if there is any tx to sign
-	p, err := zetaRepo.GetPendingNonces(ctx)
-	if err != nil {
-		return false, errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
-	}
-
-	// #nosec G115 - always positive
-	nonceLow := uint64(p.NonceLow)
-	// #nosec G115 - always positive
-	nonceHigh := uint64(p.NonceHigh)
-
-	// remove stale keysign info to release memory
-	s.removeKeysignInfo(nonceLow)
 
 	// return false if no pending cctx to sign
-	if nonceLow >= nonceHigh {
-		return false, nil
+	if p.NonceLow >= p.NonceHigh {
+		return false
 	}
 
 	// return false if TSS nonce is already ahead, it means that outbounds
 	// were processed by external chain but don't have enough confirmations
-	if nextTSSNonce >= nonceHigh {
-		return false, nil
+	// #nosec G115 - always positive
+	if nextTSSNonce >= uint64(p.NonceHigh) {
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // GetKeysignBatch returns the keysign batch to for given batch number.
@@ -304,9 +291,9 @@ func (s *Signer) AddBatchSignatures(batch TSSKeysignBatch, sigs [][65]byte) {
 	}
 }
 
-// removeKeysignInfo removes keysign info for all nonces before the given nonce.
+// RemoveKeysignInfo removes keysign info for all nonces before the given nonce.
 // This function is used to clean up stale keysign info in the cache.
-func (s *Signer) removeKeysignInfo(beforeNonce uint64) {
+func (s *Signer) RemoveKeysignInfo(beforeNonce uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
