@@ -144,7 +144,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	nodeAccounts := make([]*types.NodeAccount, len(nodeAccountList))
 	for i, elem := range nodeAccountList {
-		elem := elem
 		nodeAccounts[i] = &elem
 	}
 

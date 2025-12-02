@@ -272,6 +272,21 @@ func (s *Service) SignBatch(
 	return sigs, nil
 }
 
+// IsSignatureCached returns true if the signature is cached for given chainID and message ID.
+func (s *Service) IsSignatureCached(chainID int64, digests [][]byte) bool {
+	digestsBase64 := make([]string, len(digests))
+	for i, digest := range digests {
+		digestsBase64[i] = base64EncodeString(digest)
+	}
+
+	// create a dummy request to query the cache (blockHeight doesn't matter here).
+	// #nosec G115 always in range
+	req := keysign.NewRequest(s.PubKey().Bech32String(), digestsBase64, 1, nil, Version)
+
+	_, found := s.getSignatureCached(chainID, req)
+	return found
+}
+
 func (s *Service) Stop() {
 	s.logger.Info().Msg("stopping TSS service")
 	s.tss.Stop()

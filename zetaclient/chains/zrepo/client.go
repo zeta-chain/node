@@ -4,6 +4,7 @@ import (
 	"context"
 
 	cometbft "github.com/cometbft/cometbft/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/go-tss/blame"
 
@@ -31,6 +32,8 @@ type ZetacoreReaderClient interface {
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 
+	GetBlockHeight(context.Context) (int64, error)
+
 	HasVoted(_ context.Context, ballotIndex string, voterAddress string) (bool, error)
 
 	ListPendingCCTX(context.Context, chains.Chain) ([]*crosschain.CrossChainTx, uint64, error)
@@ -54,6 +57,8 @@ type ZetacoreReaderClient interface {
 	GetBallotByID(context.Context, string) (*observer.QueryBallotByIdentifierResponse, error)
 
 	GetBTCTSSAddress(context.Context, ChainID) (string, error)
+
+	QueryTxResult(hash string) (*sdktypes.TxResponse, error)
 }
 
 // ZetacoreReaderClient contains the zetacore client functions used by ZetaRepo that do mutate

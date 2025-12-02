@@ -70,21 +70,18 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	// Get all gas prices
 	gasPriceList := k.GetAllGasPrice(ctx)
 	for _, elem := range gasPriceList {
-		elem := elem
 		genesis.GasPriceList = append(genesis.GasPriceList, &elem)
 	}
 
 	// Get all last block heights
 	lastBlockHeightList := k.GetAllLastBlockHeight(ctx)
 	for _, elem := range lastBlockHeightList {
-		elem := elem
 		genesis.LastBlockHeightList = append(genesis.LastBlockHeightList, &elem)
 	}
 
 	// Get all send
 	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
-		elem := elem
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &elem)
 	}
 

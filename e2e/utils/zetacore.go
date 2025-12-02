@@ -102,13 +102,14 @@ func WaitCctxsMinedByInboundHash(
 	startTime := time.Now()
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
 
-	// fetch cctxs by inboundHash
 	for i := 0; ; i++ {
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
 
+		elapsed := time.Since(startTime)
 		timedOut := time.Since(startTime) > timeout
-		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
+		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s, elapsed: %s",
+			inboundHash, elapsed)
 
 		require.NoError(t, ctx.Err())
 
@@ -141,7 +142,6 @@ func WaitCctxsMinedByInboundHash(
 		cctxs = make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
-			cctx := cctx
 			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
 				if i%20 == 0 {
