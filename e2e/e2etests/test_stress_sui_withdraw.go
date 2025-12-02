@@ -44,7 +44,6 @@ func TestStressSuiWithdraw(r *runner.E2ERunner, args []string) {
 	revertOptions := gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
 	for i := range numWithdrawals {
 		// each goroutine captures its own copy of i
-		i := i
 		tx := r.SuiWithdraw(signer.Address(), amount, r.SUIZRC20Addr, revertOptions)
 
 		// wait for receipt before next withdrawal to avoid race condition
