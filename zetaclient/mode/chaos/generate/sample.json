@@ -93,6 +93,7 @@
     "ZetacoreClient": {
         "GetBTCTSSAddress": 50,
         "GetBallotByID": 50,
+        "GetBlockHeight": 50,
         "GetCctxByHash": 50,
         "GetCctxByNonce": 50,
         "GetForeignCoinsFromAsset": 50,
