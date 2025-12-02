@@ -133,6 +133,7 @@ func (ob *Observer) postVoteOutbound(
 }
 
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
+// Note: EVM chain is now using batch keysign, so the 'continueKeysign' flag is no longer used.
 func (ob *Observer) VoteOutboundIfConfirmed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,

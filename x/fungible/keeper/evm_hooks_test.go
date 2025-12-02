@@ -96,7 +96,6 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx, _, _ := keepertest.FungibleKeeper(t)
 

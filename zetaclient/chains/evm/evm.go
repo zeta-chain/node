@@ -55,7 +55,12 @@ func (e *EVM) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := e.observer.ZetaRepo().WatchNewBlocks(ctx)
+	cctxBlockChan, err := e.observer.ZetaRepo().WatchNewBlocks(ctx)
+	if err != nil {
+		return err
+	}
+
+	keysignBlockChan, err := e.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
 		return err
 	}
@@ -94,7 +99,10 @@ func (e *EVM) Start(ctx context.Context) error {
 	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
-	register(e.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
+	register(e.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(cctxBlockChan), optOutboundSkipper)
+
+	// TSS keysign scheduler
+	register(e.scheduleKeysign, "schedule_keysign", scheduler.BlockTicker(keysignBlockChan), optOutboundSkipper)
 
 	return nil
 }
@@ -110,37 +118,22 @@ func (e *EVM) group() scheduler.Group {
 	)
 }
 
-// scheduleCCTX schedules outbound transactions on each zeta block.
+// scheduleCCTX schedules outbound transactions on each ZetaChain block.
 func (e *EVM) scheduleCCTX(ctx context.Context) error {
+	// skip stale block event if any
+	if _, stale, err := e.signer.IsStaleBlockEvent(ctx, e.observer.ZetaRepo()); err != nil {
+		return errors.Wrap(err, "unable to check block event")
+	} else if stale {
+		return nil
+	}
+
 	if err := e.updateChainParams(ctx); err != nil {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get zeta block from context")
-	}
-
-	time.Sleep(delay)
-
 	var (
-		chain   = e.observer.Chain()
-		chainID = chain.ChainId
-
-		// #nosec G115 always in range
-		zetaHeight = uint64(zetaBlock.Block.Height)
-
+		chainID   = e.observer.Chain().ChainId
 		lookahead = e.observer.ChainParams().OutboundScheduleLookahead
-
-		// #nosec G115 positive
-		scheduleInterval = uint64(e.observer.ChainParams().OutboundScheduleInterval)
-
-		// for critical pending outbound we reduce re-try interval
-		criticalInterval = uint64(10)
-
-		// for non-critical pending outbound we increase re-try interval
-		nonCriticalInterval = scheduleInterval * 2
-
 		// #nosec G115 always in range
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
 	)
@@ -150,22 +143,25 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		return err
 	}
 
-	trackerSet, err := e.getTrackerSet(ctx)
+	nextTSSNonce, err := e.signer.NextTSSNonce(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get tracker set")
+		return errors.Wrap(err, "unable to get next tss nonce")
 	}
 
 	for idx, cctx := range cctxList {
+		// only look at 'lookahead' cctxs per chain
+		if int64(idx) >= lookahead {
+			break
+		}
+
 		var (
 			params     = cctx.GetCurrentOutboundParam()
-			nonce      = params.TssNonce
 			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		switch {
 		case params.ReceiverChainId != chainID:
-			e.outboundLogger(outboundID).Error().Msg("chain id mismatch")
-			continue
+			return fmt.Errorf("chain id mismatch: want %d, got %d", chainID, params.ReceiverChainId)
 		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookBack:
 			return fmt.Errorf(
 				"nonce %d is too high (%s). Earliest nonce %d",
@@ -175,57 +171,108 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 			)
 		}
 
-		// vote outbound if it's already confirmed
-		continueKeysign, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx)
-		switch {
-		case err != nil:
-			e.outboundLogger(outboundID).Error().
-				Err(err).
-				Msg("schedule CCTX: call to VoteOutboundIfConfirmed failed")
-			continue
-		case !continueKeysign:
-			e.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
-			continue
-		case e.signer.IsOutboundActive(outboundID):
-			// outbound is already being processed
-			continue
-		}
-
-		// determining critical outbound; if it satisfies following criteria
-		// 1. it's the first pending outbound for this chain
-		// 2. the following 5 nonces have been in tracker
-		if nonce%criticalInterval == zetaHeight%criticalInterval {
-			count := 0
-			for i := nonce + 1; i <= nonce+10; i++ {
-				if _, found := trackerSet[i]; found {
-					count++
-				}
+		// if cctx's nonce is lower than next nonce, it means the outbound was already processed;
+		// in this case, we just need to check its confirmations and post vote if it's confirmed.
+		if params.TssNonce < nextTSSNonce {
+			if _, err := e.observer.VoteOutboundIfConfirmed(ctx, cctx); err != nil {
+				e.outboundLogger(outboundID).Error().Err(err).Msg("call to VoteOutboundIfConfirmed failed")
 			}
-			if count >= 5 {
-				scheduleInterval = criticalInterval
-			}
+			continue
 		}
 
-		// if it's already in tracker, we increase re-try interval
-		if _, ok := trackerSet[nonce]; ok {
-			scheduleInterval = nonCriticalInterval
-		}
-
-		// otherwise, the normal interval is used
-		if nonce%scheduleInterval == zetaHeight%scheduleInterval {
+		// process this CCTX
+		if !e.signer.IsOutboundActive(outboundID) {
 			go e.signer.TryProcessOutbound(
 				ctx,
 				cctx,
 				e.observer.ZetaRepo(),
-				zetaHeight,
+				0,
 			)
 		}
+	}
 
-		// #nosec G115 always in range
-		// only look at 'lookahead' cctxs per chain
-		if int64(idx) >= lookahead-1 {
+	return nil
+}
+
+// scheduleKeysign schedules keysign for outbound transactions
+func (e *EVM) scheduleKeysign(ctx context.Context) error {
+	s := e.signer
+	zetaRepo := e.observer.ZetaRepo()
+
+	// skip stale block event if any
+	zetaHeight, stale, err := s.IsStaleBlockEvent(ctx, zetaRepo)
+	if err != nil {
+		return errors.Wrap(err, "unable to check block event")
+	} else if stale {
+		return nil
+	}
+
+	// next tss nonce is the starting point to start keysign
+	nextTSSNonce, err := s.NextTSSNonce(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get next tss nonce")
+	}
+
+	// query pending nonces and see if there is any tx to sign
+	p, err := zetaRepo.GetPendingNonces(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "unable to get pending nonces for chain %d", s.Chain().ChainId)
+	}
+
+	// remove stale keysign info to release memory
+	// #nosec G115 - always positive
+	s.RemoveKeysignInfo(uint64(p.NonceLow))
+
+	// check if it's the time to perform keysign
+	interval := e.observer.ChainParams().OutboundScheduleInterval
+	shouldSign := e.signer.IsTimeToKeysign(*p, nextTSSNonce, zetaHeight, interval)
+	if !shouldSign {
+		return nil
+	}
+
+	var (
+		batchNumber = base.NonceToBatchNumber(nextTSSNonce)
+		batch       = s.GetKeysignBatch(ctx, zetaRepo, batchNumber)
+	)
+
+	// The following are basic prerequisites for TSS batch keysign to work in a sequential way:
+	// 1. the starting batch is determined by 'nextTSSNonce', which is deterministic across all TSS signers.
+	// 2. the TSS signers ALWAYS fully sign batch N (e.g. nonce 0~9) before signing batch N+1 (e.g. nonce 10~19).
+	// 3. for any signed tx, there should be always >= 2/3 of signers have cached signature for it.
+	//    so far as any one of the signers has signature for a tx, the tx can be processed, no worries;
+	//    the TSS signers will ALWAYS be in sync again on what to sign next once signed txs get processed.
+	// 4. any signed batch is skipped when looping forward, as we know they will be processed soon; the TSS
+	//    signers can continue signing the batches ahead without waiting.
+	//
+	// Why signing in batches?
+	// - Batching multiple digests in one request is efficient.
+	// - Reduce parallel keysign requests and avoid spamming the TSS service.
+	//
+	// Why signing sequentially?
+	// - EVM chain processes txs by nonce sequentially; if tx with nonce N is not processed, it blocks tx with nonce N+1.
+	// - For each EVM chain at any time, the TSS signers only need to schedule one single batch keysign request, and this
+	//   request will contain the digests of the txs that we immediately need to send out.
+	//
+	// Why signing adjacent batches in loop without waiting for another interval?
+	// - the keysign interval in chain params is used as a timing signal to trigger first keysign handshake.
+	// - at the moment when the first keysign is completed, it means the TSS signers are strictly in sync on:
+	//   1. the timestamp, regardless of timezones, system time, or Zeta height.
+	//   2. which batch number to sign next.
+	for batch != nil {
+		if !s.IsBatchSigned(batch) {
+			if err := s.SignBatch(ctx, *batch, zetaHeight); err != nil {
+				return errors.Wrapf(err, "break keysign batch: %d", batch.BatchNumber())
+			}
+		}
+
+		// now that signed, move to next batch only if this batch is the end
+		// we don't want to leave a batch partially signed and jump to next
+		if !batch.IsEnd() {
 			break
 		}
+
+		batchNumber++
+		batch = s.GetKeysignBatch(ctx, zetaRepo, batchNumber)
 	}
 
 	return nil
@@ -253,21 +300,6 @@ func (e *EVM) updateChainParams(ctx context.Context) error {
 	e.signer.SetGatewayAddress(params.GatewayAddress)
 
 	return nil
-}
-
-func (e *EVM) getTrackerSet(ctx context.Context) (map[uint64]struct{}, error) {
-	trackers, err := e.observer.ZetaRepo().GetOutboundTrackers(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	set := make(map[uint64]struct{})
-
-	for _, tracker := range trackers {
-		set[tracker.Nonce] = struct{}{}
-	}
-
-	return set, nil
 }
 
 func (e *EVM) outboundLogger(id string) *zerolog.Logger {

@@ -170,9 +170,9 @@ func (_m *ZetacoreClient) GetBaseGasPrice(ctx context.Context) (int64, error) {
 	return r0, r1
 }
 
-// GetBlockHeight provides a mock function with given fields: ctx
-func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
-	ret := _m.Called(ctx)
+// GetBlockHeight provides a mock function with given fields: _a0
+func (_m *ZetacoreClient) GetBlockHeight(_a0 context.Context) (int64, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBlockHeight")
@@ -181,16 +181,16 @@ func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 	var r0 int64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
-		return rf(ctx)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
-		r0 = rf(ctx)
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
