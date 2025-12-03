@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/errors"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"golang.org/x/mod/semver"
 
@@ -200,16 +200,19 @@ func (o *ShutdownListener) handleNewFlags(ctx context.Context, f observertypes.O
 }
 
 func (o *ShutdownListener) checkMinimumVersion(f observertypes.OperationalFlags) error {
-	if f.MinimumVersion != "" {
-		currentVersion := o.getVersion()
-		if semver.Compare(currentVersion, f.MinimumVersion) == -1 {
-			return fmt.Errorf(
-				"current version (%s) is less than minimum version (%s)",
-				currentVersion,
-				f.MinimumVersion,
-			)
-		}
+	if f.MinimumVersion == "" {
+		return errors.New("minimum version is required")
 	}
+
+	currentVersion := o.getVersion()
+	if semver.Compare(currentVersion, f.MinimumVersion) == -1 {
+		return fmt.Errorf(
+			"current version (%s) is less than minimum version (%s)",
+			currentVersion,
+			f.MinimumVersion,
+		)
+	}
+
 	return nil
 }
 
