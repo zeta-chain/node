@@ -40,11 +40,9 @@ func TestShutdownListener(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
 
 		listener := NewShutdownListener(client, logger)
-		listener.getVersion = func() string { return "v1.1.1" }
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
-			RestartHeight:  10,
-			MinimumVersion: "v1.1.1",
+			RestartHeight: 10,
 		}, nil)
 		client.Mock.On("GetBlockHeight", ctx).Return(int64(8), nil)
 		blockChan := make(chan cometbfttypes.EventDataNewBlock)
@@ -68,11 +66,8 @@ func TestShutdownListener(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
 
 		listener := NewShutdownListener(client, logger)
-		listener.getVersion = func() string { return "v1.1.1" }
 
-		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
-			MinimumVersion: "v1.1.1",
-		}, nil)
+		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
 		// GetBlockHeight is not mocked because we want the test to panic if it's called
 		// NewBlockSubscriber is not mocked because we want the test to panic if it's called
 		complete := make(chan interface{})
@@ -130,14 +125,13 @@ func TestShutdownListener(t *testing.T) {
 		listener := &ShutdownListener{
 			client:                client,
 			logger:                logger,
-			getVersion:            func() string { return "v1.1.1" },
+			getVersion:            getVersionDefault,
 			restartListenerTicker: testRestartListenerTicker,
 			waitForSyncing:        testWaitForSyncing,
 		}
 
 		client.Mock.On("GetOperationalFlags", testCtx).Return(observertypes.OperationalFlags{
-			RestartHeight:  2,
-			MinimumVersion: "v1.1.1",
+			RestartHeight: 2,
 		}, nil).Maybe()
 		client.Mock.On("GetBlockHeight", testCtx).Return(int64(3), nil).Maybe()
 		client.Mock.On("GetSyncStatus", testCtx).Return(true, nil).Once()
@@ -168,11 +162,9 @@ func TestShutdownListener(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
 
 		listener := NewShutdownListener(client, logger)
-		listener.getVersion = func() string { return "v1.1.1" }
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
-			RestartHeight:  10,
-			MinimumVersion: "v1.1.1",
+			RestartHeight: 10,
 		}, nil)
 		client.Mock.On("GetBlockHeight", ctx).Return(int64(11), nil)
 
@@ -195,7 +187,9 @@ func TestShutdownListener(t *testing.T) {
 		client := mocks.NewZetacoreClient(t)
 
 		listener := NewShutdownListener(client, logger)
-		listener.getVersion = func() string { return "v1.1.1" }
+		listener.getVersion = func() string {
+			return "v1.1.2"
+		}
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
 			MinimumVersion: "v1.1.1",
@@ -218,20 +212,6 @@ func TestShutdownListener(t *testing.T) {
 			return len(client.Calls) == 2
 		}, time.Second, time.Millisecond)
 		assertChannelNotClosed(t, complete)
-	})
-
-	t.Run("minimum version missing", func(t *testing.T) {
-		client := mocks.NewZetacoreClient(t)
-
-		// mock zetaclient self version
-		listener := NewShutdownListener(client, logger)
-		listener.getVersion = func() string { return "v1.1.1" }
-
-		// mock empty minimum version
-		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{}, nil)
-
-		err := listener.RunPreStartCheck(ctx)
-		require.Error(t, err)
 	})
 
 	t.Run("minimum version failed", func(t *testing.T) {
