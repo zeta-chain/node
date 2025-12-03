@@ -20,6 +20,7 @@
 ### Tests
 
 * [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+* [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
 
 ## v37.0.0
 
