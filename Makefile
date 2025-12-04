@@ -12,7 +12,6 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 OLD_VERSION := v36.0.1
-OLD_ZETACORED_VERSION := v36.0.1
 OLD_ZETACLIENTD_VERSION := zetaclient_v37.0.3
 #UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
 DEVNET_UPGRADE_VERSION := v37.0.0
@@ -430,7 +429,6 @@ zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
 	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_VERSION)' \
-	--build-arg OLD_ZETACORED_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACORED_VERSION)' \
 	--build-arg OLD_ZETACLIENTD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACLIENTD_VERSION)' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \

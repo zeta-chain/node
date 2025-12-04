@@ -90,13 +90,12 @@ COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 FROM zetanode:latest AS old-runtime
 
 ARG OLD_VERSION
-ARG OLD_ZETACORED_VERSION=${OLD_VERSION}
 ARG OLD_ZETACLIENTD_VERSION=${OLD_VERSION}
 ARG BUILDARCH
 
-RUN curl -Lo /usr/local/bin/zetacored ${OLD_ZETACORED_VERSION}/zetacored-linux-${BUILDARCH} && \
+RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
     curl -Lo /usr/local/bin/zetaclientd ${OLD_ZETACLIENTD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetaclientd && \
-    curl -Lo /usr/local/bin/zetae2e ${OLD_ZETACORED_VERSION}/zetae2e-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/zetae2e ${OLD_VERSION}/zetae2e-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetae2e;
