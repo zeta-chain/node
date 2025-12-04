@@ -57,6 +57,9 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	//migrate btc funds
 	// #nosec G701 e2eTest - always in range
 	cctxBTCAmount := sdkmath.ZeroUint()
+
+	// Migrate funds in two separate migrations to simulate a live network better
+	// BTC outbounds have a utxo limit of 20,therefor it is highly likely a fund migration would need to be done via two separate outbounds
 	for i := 0; i < 2; i++ {
 		migrationAmountBTC := sdkmath.NewUint(uint64(halfBtcBalance * 1e8))
 		msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
