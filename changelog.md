@@ -8,6 +8,8 @@
 
 ### Tests
 
+*[4476](https://github.com/zeta-chain/node/pull/4476) - add a separate zetaclient version when building images for upgrade e2e tests
+
 ### Fixes
 
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
