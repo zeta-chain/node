@@ -44,32 +44,42 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	}
 
 	btcTSSBalanceOld := btcBalance
+	halfBtcBalance := btcBalance / 2
 	// Use fixed fee of 0.02 for migration
 	// Code links for reference to calculate fee:
 	// https://github.com/zeta-chain/node/blob/5c73a45b6096ed7f7387ae8f7ccc7d5e2c668e0d/zetaclient/chains/bitcoin/signer/sign.go#L54
 	// https://github.com/zeta-chain/node/blob/5c73a45b6096ed7f7387ae8f7ccc7d5e2c668e0d/zetaclient/chains/bitcoin/signer/sign.go#L32
-	btcBalance = btcBalance - 0.02
+	halfBtcBalance = halfBtcBalance - 0.02
 	btcChain := chains.BitcoinRegtest.ChainId
 
 	r.WaitForTSSGeneration(2)
 
 	//migrate btc funds
 	// #nosec G701 e2eTest - always in range
-	migrationAmountBTC := sdkmath.NewUint(uint64(btcBalance * 1e8))
-	msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
-		btcChain,
-		migrationAmountBTC,
-	)
-	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateFunds)
-	require.NoError(r, err)
+	cctxBTCAmount := sdkmath.ZeroUint()
 
-	// Fetch migrator cctx for btc migration
-	migrator, err := r.ObserverClient.TssFundsMigratorInfo(r.Ctx, &observertypes.QueryTssFundsMigratorInfoRequest{
-		ChainId: btcChain})
-	require.NoError(r, err)
-	cctxBTCMigration := migrator.TssFundsMigrator.MigrationCctxIndex
+	// Migrate funds in two separate migrations to simulate a live network better
+	// BTC outbounds have a utxo limit of 20,therefor it is highly likely a fund migration would need to be done via two separate outbounds
+	for i := 0; i < 2; i++ {
+		migrationAmountBTC := sdkmath.NewUint(uint64(halfBtcBalance * 1e8))
+		msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
+			r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
+			btcChain,
+			migrationAmountBTC,
+		)
+		_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateFunds)
+		require.NoError(r, err)
 
+		// Fetch migrator cctx for btc migration
+		migrator, err := r.ObserverClient.TssFundsMigratorInfo(r.Ctx, &observertypes.QueryTssFundsMigratorInfoRequest{
+			ChainId: btcChain})
+		require.NoError(r, err)
+		cctxBTCMigration := migrator.TssFundsMigrator.MigrationCctxIndex
+		cctxBTC := utils.WaitCCTXMinedByIndex(r.Ctx, cctxBTCMigration, r.CctxClient, r.Logger, r.CctxTimeout)
+		require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxBTC.CctxStatus.Status)
+
+		cctxBTCAmount = cctxBTCAmount.Add(cctxBTC.GetCurrentOutboundParam().Amount)
+	}
 	// ETH migration
 	// Fetch balance of ETH TSS address
 	tssBalance, err := r.EVMClient.BalanceAt(context.Background(), r.TSSAddress, nil)
@@ -81,7 +91,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// Migrate TSS funds for the eth chain
-	msgMigrateFunds = crosschaintypes.NewMsgMigrateTssFunds(
+	msgMigrateFunds := crosschaintypes.NewMsgMigrateTssFunds(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		evmChainID.Int64(),
 		tssBalanceUint,
@@ -90,15 +100,12 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 
 	// Fetch migrator cctx for eth migration
-	migrator, err = r.ObserverClient.TssFundsMigratorInfo(
+	migrator, err := r.ObserverClient.TssFundsMigratorInfo(
 		r.Ctx,
 		&observertypes.QueryTssFundsMigratorInfoRequest{ChainId: evmChainID.Int64()},
 	)
 	require.NoError(r, err)
 	cctxETHMigration := migrator.TssFundsMigrator.MigrationCctxIndex
-
-	cctxBTC := utils.WaitCCTXMinedByIndex(r.Ctx, cctxBTCMigration, r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxBTC.CctxStatus.Status)
 
 	cctxETH := utils.WaitCCTXMinedByIndex(r.Ctx, cctxETHMigration, r.CctxClient, r.Logger, r.CctxTimeout)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxETH.CctxStatus.Status)
@@ -149,18 +156,17 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	for _, utxo := range utxos {
 		btcTSSBalanceNew += utxo.Amount
 	}
-
-	r.Logger.Info("BTC TSS Balance Old: %f", btcTSSBalanceOld*1e8)
-	r.Logger.Info("BTC TSS Balance New: %f", btcTSSBalanceNew*1e8)
-	r.Logger.Info("Migrator amount : %s", cctxBTC.GetCurrentOutboundParam().Amount)
-
-	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
-	// #nosec G701 e2eTest - always in range
 	require.Equal(
 		r,
 		strconv.FormatInt(int64(btcTSSBalanceNew*1e8), 10),
-		cctxBTC.GetCurrentOutboundParam().Amount.String(),
+		cctxBTCAmount.String(),
 	)
+	r.Logger.Info("BTC TSS Balance Old: %f", btcTSSBalanceOld*1e8)
+	r.Logger.Info("BTC TSS Balance New: %f", btcTSSBalanceNew*1e8)
+	r.Logger.Info("Total Migration amount : %s", cctxBTCAmount)
+
+	// btcTSSBalanceNew should be less than btcTSSBalanceOld as there is some loss of funds during migration
+	// #nosec G701 e2eTest - always in range
 	require.LessOrEqual(r, btcTSSBalanceNew*1e8, btcTSSBalanceOld*1e8)
 
 	// ETH
@@ -170,7 +176,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("ETH TSS Balance Old: %s", ethTSSBalanceOld.String())
 	r.Logger.Info("ETH TSS Balance New: %s", ethTSSBalanceNew.String())
-	r.Logger.Info("Migrator amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String())
+	r.Logger.Info("Total Migration amount : %s", cctxETH.GetCurrentOutboundParam().Amount.String())
 
 	// ethTSSBalanceNew should be less than ethTSSBalanceOld as there is some loss of funds during migration
 	require.Equal(r, ethTSSBalanceNew.String(), cctxETH.GetCurrentOutboundParam().Amount.String())
