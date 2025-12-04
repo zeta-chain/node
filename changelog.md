@@ -8,7 +8,7 @@
 
 ### Tests
 
-*[4476](https://github.com/zeta-chain/node/pull/4476) - add a separate zetaclient version when building images for upgrade e2e tests
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add a separate zetaclient version when building images for upgrade e2e tests
 
 ### Fixes
 
