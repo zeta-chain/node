@@ -102,7 +102,7 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
 	version := r.GetZetacoredVersion()
 	versionMajorIsZero := semver.Major(version) == "v0"
-	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_ZETACORED_VERSION"))
 
 	// run these assertions only on the second run of the upgrade
 	if !r.IsRunningUpgrade() || !versionMajorIsZero || checkVersion(assertVersion, oldVersion) {
@@ -129,7 +129,7 @@ func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()
 	if !r.IsRunningZetaclientOnlyUpgrade() {
 		version := r.GetZetacoredVersion()
 		versionMajorIsZero := semver.Major(version) == "v0"
-		oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+		oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_ZETACORED_VERSION"))
 
 		// Run the handler only if this is the second run of the upgrade tests
 		if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||

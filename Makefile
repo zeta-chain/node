@@ -11,11 +11,12 @@ DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
-OLD_VERSION := v36.0.1
+OLD_ZETACORED_VERSION := v36.0.1
 OLD_ZETACLIENTD_VERSION := zetaclient_v37.0.3
+OLD_ZETAE2E_VERSION := $(OLD_ZETACORED_VERSION)
 #UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
 DEVNET_UPGRADE_VERSION := v37.0.0
-OLD_VERSION_MAJOR := $(shell echo $(OLD_VERSION) | cut -d. -f1)
+OLD_ZETACORED_VERSION_MAJOR := $(shell echo $(OLD_ZETACORED_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
 GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
@@ -155,11 +156,11 @@ test-cctx:
 
 devnet-fork:
 	@echo "--> Running devnet fork script..."
-	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%)
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%)
 
 devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
-	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
 
 download-snapshot:
 	@echo "--> Downloading and caching testnet snapshot..."
@@ -420,7 +421,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/$(OLD_VERSION_MAJOR)' \
+		--build-arg OLD_ZETACORED_VERSION='release/$(OLD_ZETACORED_VERSION_MAJOR)' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
@@ -428,8 +429,9 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_VERSION)' \
+	--build-arg OLD_ZETACORED_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACORED_VERSION)' \
 	--build-arg OLD_ZETACLIENTD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACLIENTD_VERSION)' \
+	--build-arg OLD_ZETAE2E_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETAE2E_VERSION)' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.

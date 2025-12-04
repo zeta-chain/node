@@ -260,7 +260,7 @@ deployed_config_path=/root/state/deployed.yml
 
 ### Run zetae2e command depending on the option passed
 ACCOUNT_CONFIG="/work/config.yml"
-export OLD_VERSION=$(get_zetacored_version)
+export OLD_ZETACORED_VERSION=$(get_zetacored_version)
 # Mode migrate is used to run the e2e tests before and after the TSS migration
 # It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
 # The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
@@ -316,7 +316,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # if enabled, fetches zetae2e binary from the previous version
   # ante means "before" in Latin (used in Cosmos terminology)
   if [ "$USE_ZETAE2E_ANTE" = true ]; then
-    echo "zetae2e-ante: using the PREVIOUS binary ($OLD_VERSION)"
+    echo "zetae2e-ante: using the PREVIOUS binary"
     scp root@zetacore0:/usr/local/bin/zetae2e /usr/local/bin/zetae2e-ante
     chmod +x /usr/local/bin/zetae2e-ante
   else
@@ -350,7 +350,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # If this is a zetaclient only upgrade , update the binary and proceed , if not wait for the upgrade height
   if [ "$UPGRADE_ZETACLIENT_ONLY" = true ]; then
-    echo "Zetaclientd-only upgrade mode: updating zetaclientd to $NEW_VERSION"
+    echo "Zetaclientd-only upgrade mode: updating zetaclientd to current branch version"
     create_zetaclientd_upgrade_trigger
   else
     echo "Waiting for upgrade height..."
@@ -365,16 +365,16 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
       echo "Waiting 10 seconds for node to restart..."
       sleep 10
-    if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
+    NEW_VERSION=$(get_zetacored_version)
+    if [[ "$OLD_ZETACORED_VERSION" == "$NEW_VERSION" ]]; then
       echo "Version did not change after upgrade height, maybe the upgrade did not run?"
       exit 2
     fi
   fi
 
-  NEW_VERSION=$(get_zetacored_version)
   # wait for zevm endpoint to come up
   sleep 10
-  echo "Upgrade result zetacored version : ${OLD_VERSION} -> ${NEW_VERSION}"
+  echo "Upgrade result zetacored version : ${OLD_ZETACORED_VERSION} -> ${NEW_VERSION}"
   echo "Running E2E command to test the network after upgrade..."
 
   # Run zetae2e again
