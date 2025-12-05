@@ -30,7 +30,7 @@ The ZetaClient is a specialized client designed to act as an observer and signer
 
 In addition to the blockchain codebase, ZetaChain’s architecture includes a set of protocol contracts that serve as an interface for developers to interact with the blockchain. These smart contracts are deployed across various blockchain networks. The smart contract source code is maintained in separate repositories, depending on the network they are deployed on:
 
-* [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts)
+* [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts-evm)
 * [Solana connected chains (SVM)](https://github.com/zeta-chain/protocol-contracts-solana)
 * [TON connected chains (TVM)](https://github.com/zeta-chain/protocol-contracts-ton)
 * [Sui connected chains (Sui's MVM)](https://github.com/zeta-chain/protocol-contracts-sui)
