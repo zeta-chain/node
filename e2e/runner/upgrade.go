@@ -139,8 +139,6 @@ func checkVersion(upgradeFromm, oldVersion string) bool {
 }
 
 // GetRunNumber returns the current run number from the RUN_NUMBER environment variable.
-// Returns 1 if not set or invalid. In upgrade/migration tests, this is 1 for the first run
-// and 2 for the second run (after upgrade/migration).
 func GetRunNumber() int {
 	runNumStr := os.Getenv("RUN_NUMBER")
 	if runNumStr == "" {
