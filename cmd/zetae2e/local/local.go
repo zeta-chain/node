@@ -322,7 +322,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
-		_ = OverwriteAccountData(cmd, &conf)
+		err = OverwriteAccountData(cmd, &conf)
+		fmt.Println("Overwriting account data from file for v36.0.0 upgrade", err)
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 	})
 

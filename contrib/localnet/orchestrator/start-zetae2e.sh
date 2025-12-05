@@ -261,6 +261,7 @@ deployed_config_path=/root/state/deployed.yml
 ### Run zetae2e command depending on the option passed
 ACCOUNT_CONFIG="/work/config.yml"
 export OLD_ZETACORED_VERSION=$(get_zetacored_version)
+export RUN_NUMBER=1
 # Mode migrate is used to run the e2e tests before and after the TSS migration
 # It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
 # The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
@@ -287,6 +288,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "Waiting 10 seconds for node to restart"
   sleep 10
 
+  export RUN_NUMBER=2
   zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof
 
   ZETAE2E_EXIT_CODE=$?
@@ -381,6 +383,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
 
+  export RUN_NUMBER=2
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
     zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
   else
