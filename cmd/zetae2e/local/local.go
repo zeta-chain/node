@@ -257,7 +257,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 
 		// wait for keygen to be completed
-		// if setup is skipped, we assume that the keygen is already completed
+		//  if the setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
@@ -322,9 +322,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
-		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
-		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		noError(err)
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 	})
 
