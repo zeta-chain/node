@@ -257,7 +257,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 
 		// wait for keygen to be completed
-		// if setup is skipped, we assume that the keygen is already completed
+		//  if the setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
