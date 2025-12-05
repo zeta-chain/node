@@ -126,7 +126,9 @@ func (o *ShutdownListener) waitForUpdate(ctx context.Context) error {
 		case <-ticker.C:
 			operationalFlags, err = o.client.GetOperationalFlags(ctx)
 			if err != nil {
-				return errors.Wrap(err, "unable to get operational flags")
+				// log RPC error but continue monitoring for operational flags updates
+				o.logger.Error().Err(err).Msg("unable to get operational flags")
+				continue
 			}
 			if o.handleNewFlags(ctx, operationalFlags) {
 				return nil
