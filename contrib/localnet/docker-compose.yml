@@ -254,7 +254,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.26
-    entrypoint: python3 -u /root/start-zetaclient-dry.py
+    entrypoint: python3 -u /root/scripts_python/start-zetaclient-dry.py
     environment:
       - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
       - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE}
@@ -267,13 +267,12 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
-      - ./scripts_python/start-zetaclient-dry.py:/root/start-zetaclient-dry.py:ro
 
   testnet-node:
     image: zetanode:latest
     container_name: testnet-node
     hostname: testnet-node
-    entrypoint: python3 -u /root/start-zetacored-livenode.py
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
     networks:
       mynetwork:
         ipv4_address: 172.20.0.40
@@ -291,8 +290,6 @@ services:
     volumes:
       - testnet_data:/root/.zetacored
       - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
-      - ./scripts_python/start-zetacored-livenode.py:/root/start-zetacored-livenode.py:ro
-      - ./scripts_python/download_snapshot.py:/root/download_snapshot.py:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
       interval: 30s
@@ -304,7 +301,7 @@ services:
     image: zetanode:latest
     container_name: mainnet-node
     hostname: mainnet-node
-    entrypoint: python3 -u /root/start-zetacored-livenode.py
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
     networks:
       mynetwork:
         ipv4_address: 172.20.0.41
@@ -322,8 +319,6 @@ services:
     volumes:
       - mainnet_data:/root/.zetacored
       - ~/zetacored_snapshot_mainnet:/root/zetacored_snapshot_mainnet:rw
-      - ./scripts_python/start-zetacored-livenode.py:/root/start-zetacored-livenode.py:ro
-      - ./scripts_python/download_snapshot.py:/root/download_snapshot.py:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
       interval: 30s

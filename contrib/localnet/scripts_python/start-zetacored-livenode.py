@@ -59,7 +59,7 @@ def setup_snapshot(config):
 
     # Download snapshot if not cached (--force will clear and re-download)
     force_flag = "--force" if FORCE_DOWNLOAD else ""
-    run(f"python3 -u /root/download_snapshot.py --chain-id {CHAIN_ID} {force_flag}")
+    run(f"python3 -u /root/scripts_python/download_snapshot.py --chain-id {CHAIN_ID} {force_flag}")
 
     copy_snapshot_data(snapshot_data, data_dir)
 
