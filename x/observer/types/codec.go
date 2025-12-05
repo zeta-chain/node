@@ -9,6 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddObserver{}, "observer/AddObserver", nil)
+	cdc.RegisterConcrete(&MsgRemoveObserver{}, "observer/RemoveObserver", nil)
 	cdc.RegisterConcrete(&MsgUpdateChainParams{}, "observer/UpdateChainParams", nil)
 	cdc.RegisterConcrete(&MsgRemoveChainParams{}, "observer/RemoveChainParams", nil)
 	cdc.RegisterConcrete(&MsgVoteBlockHeader{}, "observer/VoteBlockHeader", nil)
@@ -28,6 +29,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddObserver{},
+		&MsgRemoveObserver{},
 		&MsgUpdateChainParams{},
 		&MsgRemoveChainParams{},
 		&MsgVoteBlame{},

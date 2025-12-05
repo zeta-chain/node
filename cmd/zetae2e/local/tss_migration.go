@@ -95,8 +95,8 @@ func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger
 	deployerRunner.UpdateTSSAddressForConnectorNative()
 	deployerRunner.UpdateTSSAddressForERC20custody()
 	deployerRunner.UpdateTSSAddressForGateway()
-	deployerRunner.UpdateTSSAddressSolana(
-		conf.Contracts.Solana.GatewayProgramID.String(),
-		conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	//deployerRunner.UpdateTSSAddressSolana(
+	//	conf.Contracts.Solana.GatewayProgramID.String(),
+	//	conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

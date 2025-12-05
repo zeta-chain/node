@@ -248,6 +248,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// wait for keygen to be completed
 		// if setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
+		//noError(deployerRunner.RemoveObserver())
 	}
 
 	// query and set the TSS
@@ -646,7 +647,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testTSSMigration {
-		addNewObserver(deployerRunner)
+		//addNewObserver(deployerRunner)
+		err = deployerRunner.RemoveObserver()
+		noError(err)
 		triggerTSSMigration(deployerRunner, logger, verbose, conf)
 	}
 

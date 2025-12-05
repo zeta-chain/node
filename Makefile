@@ -273,6 +273,10 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-e2e-test-4nodes: e2e-images
+	@echo "--> Starting e2e test with 4 nodes"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
 	cd contrib/localnet/ && SKIP_CONSENSUS_VALUES_OVERWRITE=true $(DOCKER_COMPOSE) up -d
@@ -327,8 +331,7 @@ start-e2e-consensus-test: e2e-images
 start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
