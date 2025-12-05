@@ -650,7 +650,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		//addNewObserver(deployerRunner)
 		err = deployerRunner.RemoveObserver()
 		noError(err)
-		triggerTSSMigration(deployerRunner, logger, verbose, conf)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
 	}
 
 	// Verify that there are no trackers left over after tests complete

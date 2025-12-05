@@ -63,7 +63,7 @@ func tssMigrationTestRoutine(
 	}
 }
 
-func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
+func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config, testSolana bool) {
 	migrationStartTime := time.Now()
 	logger.Print("🏁 starting tss migration")
 
@@ -95,8 +95,10 @@ func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger
 	deployerRunner.UpdateTSSAddressForConnectorNative()
 	deployerRunner.UpdateTSSAddressForERC20custody()
 	deployerRunner.UpdateTSSAddressForGateway()
-	//deployerRunner.UpdateTSSAddressSolana(
-	//	conf.Contracts.Solana.GatewayProgramID.String(),
-	//	conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	if testSolana {
+		deployerRunner.UpdateTSSAddressSolana(
+			conf.Contracts.Solana.GatewayProgramID.String(),
+			conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	}
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }
