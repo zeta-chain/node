@@ -659,7 +659,12 @@ testnet-node-stop:
 
 # Start dry run zetaclientd in dry mode
 # Usage: make zetaclient-dry ZETACORE_HOST=mainnet-node RPC_API_KEY_ALLTHATNODE=<your-api-key>
+# Use zetaclientd version to build images for zetaclientd-dry
+# ZETACLIENT_DRY_VERSION can be overridden
+# make zetaclient-dry ZETACORE_HOST=testnet-node RPC_API_KEY_ALLTHATNODE=<api key> ZETACLIENT_DRY_VERSION=v38.0.0
+ZETACLIENT_DRY_VERSION ?= $(subst zetaclient_,,$(OLD_ZETACLIENTD_VERSION))
 zetaclient-dry:
+	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(ZETACLIENT_DRY_VERSION) --target latest-runtime -f ./Dockerfile-localnet .
 	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) RPC_API_KEY_ALLTHATNODE=$(RPC_API_KEY_ALLTHATNODE) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
 
 
