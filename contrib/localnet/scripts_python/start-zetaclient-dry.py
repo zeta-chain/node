@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 import shutil
+from time import sleep
 
 # Configuration from environment variables
 ZETACORE_HOST = os.environ.get('ZETACORE_HOST')
@@ -21,17 +22,18 @@ CHAIN_ID = None
 
 # Validate required environment variables
 def validate_env_vars():
-    missing_vars = []
     if not ZETACORE_HOST:
-        missing_vars.append("ZETACORE_HOST")
-    if not RPC_API_KEY_ALLTHATNODE:
-        missing_vars.append("RPC_API_KEY_ALLTHATNODE")
+        print("Error: Required environment variable ZETACORE_HOST not set")
+        print("  ZETACORE_HOST - Hostname of the zetacore node (e.g., zetacore0, testnet-node)")
+        sys.exit(1)
 
-    if missing_vars:
-        print(f"Error: Required environment variable(s) not set: {', '.join(missing_vars)}")
-        print("Please set the following environment variables:")
-        print("  ZETACORE_HOST          - Hostname of the zetacore node (e.g., zetacore0, testnet-node)")
-        print("  RPC_API_KEY_ALLTHATNODE - API key for AllThatNode RPC endpoints")
+
+def validate_rpc_api_key():
+    """Validate RPC API key is set for non-localnet chains."""
+    if CHAIN_ID != "athens_101-1" and not RPC_API_KEY_ALLTHATNODE:
+        print("Error: RPC_API_KEY_ALLTHATNODE is required for non-localnet chains")
+        print(f"  Chain ID: {CHAIN_ID}")
+        print("  Please set RPC_API_KEY_ALLTHATNODE environment variable")
         sys.exit(1)
 
 
@@ -168,6 +170,7 @@ def wait_for_zetacore():
                         CHAIN_ID = network
                         print(f"{ZETACORE_HOST} is ready")
                         print(f"Detected chain ID: {CHAIN_ID}")
+                        sleep(6) # wait a bit for few block to be produced
                         return
                 except json.JSONDecodeError:
                     pass
@@ -194,7 +197,6 @@ def fetch_operator_address():
     except (json.JSONDecodeError, Exception):
         pass
 
-    print("No observers found, using default testnet operator address")
     sys.exit(1)
 
 
@@ -315,6 +317,7 @@ def main():
 
     print(f"Zetacore Host: {ZETACORE_HOST}")
     wait_for_zetacore()
+    validate_rpc_api_key()
     check_required_ports()
     operator_address = fetch_operator_address()
     init_zetaclient(operator_address)

@@ -257,7 +257,7 @@ services:
     entrypoint: python3 -u /root/scripts_python/start-zetaclient-dry.py
     environment:
       - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
-      - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE}
+      - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE:-}
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password
       - PPROF_ADDR=0.0.0.0:6066
@@ -290,6 +290,8 @@ services:
     volumes:
       - testnet_data:/root/.zetacored
       - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
+    profiles:
+      - all
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
       interval: 30s
@@ -316,6 +318,8 @@ services:
       - MONIKER=${MAINNET_MONIKER:-mainnetNode}
       - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
       - CHAIN_ID=zetachain_7000-1
+    profiles:
+      - all
     volumes:
       - mainnet_data:/root/.zetacored
       - ~/zetacored_snapshot_mainnet:/root/zetacored_snapshot_mainnet:rw
