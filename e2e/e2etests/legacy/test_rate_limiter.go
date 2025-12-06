@@ -109,7 +109,6 @@ func createAndWaitWithdraws(r *runner.E2ERunner, withdrawType withdrawType, with
 	g, ctx := errgroup.WithContext(r.Ctx)
 	for i, tx := range txs {
 		// capture the loop variables
-		tx, i := tx, i
 
 		// start a goroutine to wait for the withdraw to be mined
 		g.Go(func() error {

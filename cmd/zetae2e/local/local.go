@@ -64,11 +64,13 @@ const (
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
+	flagTestTimeout            = "test-timeout"
+	flagReceiptTimeout         = "receipt-timeout"
+	flagCctxTimeout            = "cctx-timeout"
 	previousVersion            = "v32.0.2"
 )
 
 var (
-	TestTimeout        = 20 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
 	noError            = testutil.NoError
 )
@@ -114,6 +116,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 	cmd.Flags().
 		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().Duration(flagTestTimeout, DefaultTestTimeout, "overall timeout for the e2e tests")
+	cmd.Flags().Duration(flagReceiptTimeout, DefaultReceiptTimeout, "timeout for waiting for transaction receipts")
+	cmd.Flags().Duration(flagCctxTimeout, DefaultCctxTimeout, "timeout for waiting for CCTX to reach desired status")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -179,22 +184,22 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
-	// skip regular tests if stress tests are enabled
+	timeouts := RegularTestTimeouts(cmd)
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
-
-		if iterations > 100 {
-			TestTimeout = time.Hour
-		}
+		timeouts = StressTestTimeouts(cmd, iterations)
 	}
+
+	logger.Print("⏱️  Test timeouts: TestTimeout=%s, ReceiptTimeout=%s, CctxTimeout=%s",
+		timeouts.TestTimeout, timeouts.ReceiptTimeout, timeouts.CctxTimeout)
 
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
 
 	// initialize context
-	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
+	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), timeouts.TestTimeout, ErrTopLevelTimeout)
 	defer timeoutCancel()
 	ctx, cancel := context.WithCancelCause(ctx)
 
@@ -252,7 +257,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 
 		// wait for keygen to be completed
-		// if setup is skipped, we assume that the keygen is already completed
+		//  if the setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
@@ -317,9 +322,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
-		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
-		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		noError(err)
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 	})
 
@@ -335,14 +339,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		logger.Print("✅ config file written in %s", configOut)
 	}
-	// update to using higher timeouts when running stress tests
-	if testStress {
-		if deployerRunner.ReceiptTimeout == 0 {
-			deployerRunner.ReceiptTimeout = 15 * time.Minute
-		}
-		if deployerRunner.CctxTimeout == 0 {
-			deployerRunner.CctxTimeout = 15 * time.Minute
-		}
+
+	if deployerRunner.ReceiptTimeout == 0 {
+		deployerRunner.ReceiptTimeout = timeouts.ReceiptTimeout
+	}
+	if deployerRunner.CctxTimeout == 0 {
+		deployerRunner.CctxTimeout = timeouts.CctxTimeout
 	}
 
 	deployerRunner.PrintContractAddresses()
@@ -383,6 +385,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateZRC20NameName,
 			e2etests.TestZetaclientSignerOffsetName,
 			e2etests.TestZetaclientRestartHeightName,
+			e2etests.TestZetaclientMinimumVersionName,
 			e2etests.TestWhitelistERC20Name,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,

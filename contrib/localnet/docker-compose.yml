@@ -232,6 +232,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.25
+    extra_hosts:
+      - "zetaclient-new-validator.com:172.20.0.25"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file

@@ -73,11 +73,11 @@ COPY --from=latest-build /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetaclien
 # you must have already built the latest image (which the Makefile does)
 FROM zetanode:latest AS old-build-source
 
-ARG OLD_VERSION
+ARG OLD_ZETACORED_VERSION
 RUN git clone https://github.com/zeta-chain/node.git
 RUN cd node && git fetch
 
-RUN cd node && git checkout ${OLD_VERSION}
+RUN cd node && git checkout ${OLD_ZETACORED_VERSION}
 RUN cd node && make install install-zetae2e
 
 FROM base-runtime AS old-runtime-source
@@ -91,12 +91,14 @@ COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 # you must have already built the latest image (which the Makefile does)
 FROM zetanode:latest AS old-runtime
 
-ARG OLD_VERSION
+ARG OLD_ZETACORED_VERSION
+ARG OLD_ZETACLIENTD_VERSION=${OLD_ZETACORED_VERSION}
+ARG OLD_ZETAE2E_VERSION=${OLD_ZETACORED_VERSION}
 ARG BUILDARCH
 
-RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
+RUN curl -Lo /usr/local/bin/zetacored ${OLD_ZETACORED_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
-    curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/zetaclientd ${OLD_ZETACLIENTD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetaclientd && \
-    curl -Lo /usr/local/bin/zetae2e ${OLD_VERSION}/zetae2e-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/zetae2e ${OLD_ZETAE2E_VERSION}/zetae2e-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetae2e;

@@ -192,7 +192,6 @@ func Test_CheckAndUpdateCCTXGasPrice(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
@@ -405,7 +404,6 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
@@ -572,7 +570,6 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// ARRANGE
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
@@ -747,7 +744,6 @@ func Test_IsCCTXGasPriceUpdateSupported(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			isSupported := keeper.IsCCTXGasPriceUpdateSupported(tc.chainID, []chains.Chain{})
 			require.Equal(t, tc.isSupport, isSupported)

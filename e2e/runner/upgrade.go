@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -102,7 +103,7 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
 	version := r.GetZetacoredVersion()
 	versionMajorIsZero := semver.Major(version) == "v0"
-	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_ZETACORED_VERSION"))
 
 	// run these assertions only on the second run of the upgrade
 	if !r.IsRunningUpgrade() || !versionMajorIsZero || checkVersion(assertVersion, oldVersion) {
@@ -126,22 +127,31 @@ func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) 
 // AddPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
 // Note This is handler is not related to the cosmos-sdk upgrade handler in any way
 func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()) {
-	if !r.IsRunningZetaclientOnlyUpgrade() {
-		version := r.GetZetacoredVersion()
-		versionMajorIsZero := semver.Major(version) == "v0"
-		oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
-
-		// Run the handler only if this is the second run of the upgrade tests
-		if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
-			checkVersion(upgradeFrom, oldVersion) {
-			return
-		}
+	if !IsSecondRun() {
+		return
 	}
-
 	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)
 	postHandler()
 }
 
 func checkVersion(upgradeFromm, oldVersion string) bool {
 	return semver.Major(upgradeFromm) != semver.Major(oldVersion)
+}
+
+// GetRunNumber returns the current run number from the RUN_NUMBER environment variable.
+func GetRunNumber() int {
+	runNumStr := os.Getenv("RUN_NUMBER")
+	if runNumStr == "" {
+		return 1
+	}
+	runNum, err := strconv.Atoi(runNumStr)
+	if err != nil {
+		return 1
+	}
+	return runNum
+}
+
+// IsSecondRun returns true if this is the second run of an upgrade/migration test.
+func IsSecondRun() bool {
+	return GetRunNumber() == 2
 }

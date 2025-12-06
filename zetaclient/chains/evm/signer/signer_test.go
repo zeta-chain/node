@@ -145,7 +145,12 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		// ARRANGE
 		// Setup evm signer
 		evmSigner := newTestSuite(t)
+
+		// Setup txData struct
 		cctx := getCCTX(t)
+		nonce := cctx.GetCurrentOutboundParam().TssNonce
+		txData, _, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
+		require.NoError(t, err)
 
 		// Test with mock client that has keys
 		client := mocks.NewZetacoreClient(t).
@@ -155,8 +160,11 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		zetaRepo := zrepo.New(client, chains.Ethereum, mode.StandardMode)
 
 		// mock evm client "NonceAt"
-		nonce := uint64(123)
 		evmSigner.evmServer.MockNonceAt(nonce)
+
+		// Mock the digest to be signed
+		digest := getGasWithdrawDigest(t, evmSigner.Signer, txData)
+		mockSignature(t, evmSigner.Signer, nonce, digest)
 
 		// ACT
 		evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
@@ -201,17 +209,21 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	nonce := uint64(123)
-	txData, skip, err := NewOutboundData(ctx, cctx, nonce, zerolog.Logger{})
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
+
+	// Mock the digest to be signed
+	digest := getERC20WithdrawDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, nonce, digest)
 
 	// Mock evm client "NonceAt"
 	evmSigner.evmServer.MockNonceAt(nonce)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
-		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
+		tx, err := evmSigner.SignERC20Withdraw(txData)
 		require.NoError(t, err)
 
 		evmSigner.BroadcastOutbound(

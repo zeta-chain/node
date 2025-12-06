@@ -1,8 +1,6 @@
 package signer
 
 import (
-	"context"
-
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -28,10 +26,7 @@ var erc20CustodyV2ABI = must(erc20custodyv2.ERC20CustodyMetaData.GetAbi())
 // function execute
 // address destination,
 // bytes calldata data
-func (signer *Signer) signGatewayExecute(
-	ctx context.Context,
-	txData *OutboundData,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) signGatewayExecute(txData *OutboundData) (*ethtypes.Transaction, error) {
 	messageContext, err := txData.MessageContext()
 	if err != nil {
 		return nil, err
@@ -45,13 +40,11 @@ func (signer *Signer) signGatewayExecute(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.gatewayAddress,
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign execute error")
@@ -65,7 +58,6 @@ func (signer *Signer) signGatewayExecute(
 // address destination,
 // bytes calldata data
 func (signer *Signer) signGatewayExecuteRevert(
-	ctx context.Context,
 	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
@@ -85,13 +77,11 @@ func (signer *Signer) signGatewayExecuteRevert(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.gatewayAddress,
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign executeRevert error")
@@ -105,23 +95,18 @@ func (signer *Signer) signGatewayExecuteRevert(
 // address to,
 // address token,
 // uint256 amount,
-func (signer *Signer) signERC20CustodyWithdraw(
-	ctx context.Context,
-	txData *OutboundData,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) signERC20CustodyWithdraw(txData *OutboundData) (*ethtypes.Transaction, error) {
 	data, err := erc20CustodyV2ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
 		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdraw error")
@@ -130,23 +115,18 @@ func (signer *Signer) signERC20CustodyWithdraw(
 	return tx, nil
 }
 
-func (signer *Signer) signZetaConnectorWithdraw(
-	ctx context.Context,
-	txData *OutboundData,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) signZetaConnectorWithdraw(txData *OutboundData) (*ethtypes.Transaction, error) {
 	data, err := connectorABI.Pack("withdraw", txData.to, txData.amount)
 	if err != nil {
 		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdraw error")
@@ -161,10 +141,7 @@ func (signer *Signer) signZetaConnectorWithdraw(
 // address to,
 // uint256 amount,
 // bytes calldata data
-func (signer *Signer) signERC20CustodyWithdrawAndCall(
-	ctx context.Context,
-	txData *OutboundData,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) signERC20CustodyWithdrawAndCall(txData *OutboundData) (*ethtypes.Transaction, error) {
 	messageContext, err := txData.MessageContext()
 	if err != nil {
 		return nil, err
@@ -183,13 +160,11 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndCall error")
@@ -205,7 +180,6 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 // uint256 amount,
 // bytes calldata data
 func (signer *Signer) signERC20CustodyWithdrawRevert(
-	ctx context.Context,
 	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
@@ -227,13 +201,11 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.er20CustodyAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndRevert error")
@@ -243,7 +215,6 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 }
 
 func (signer *Signer) signZetaConnectorWithdrawRevert(
-	ctx context.Context,
 	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
@@ -264,13 +235,11 @@ func (signer *Signer) signZetaConnectorWithdrawRevert(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		signer.zetaConnectorAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign withdrawAndRevert error")

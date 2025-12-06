@@ -26,4 +26,6 @@ type TSSClient interface {
 		nonce uint64,
 		chainID int64,
 	) ([][65]byte, error)
+
+	IsSignatureCached(chainID int64, digests [][]byte) bool
 }
