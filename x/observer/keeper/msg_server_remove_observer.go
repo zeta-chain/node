@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -13,6 +15,12 @@ func (k msgServer) RemoveObserver(
 	msg *types.MsgRemoveObserver,
 ) (*types.MsgRemoveObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// check permission
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
+	}
 
 	k.RemoveNodeAccount(ctx, msg.ObserverAddress)
 	k.RemoveObserverFromSet(ctx, msg.ObserverAddress)

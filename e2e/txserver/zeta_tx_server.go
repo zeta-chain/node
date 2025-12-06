@@ -702,8 +702,8 @@ func (zts *ZetaTxServer) UpdateKeygen(height int64) error {
 }
 
 func (zts *ZetaTxServer) RemoveObserver(observer string) error {
-	account := zts.MustGetAccountAddressFromName(utils.OperationalPolicyName)
-	_, err := zts.BroadcastTx(utils.OperationalPolicyName,
+	account := zts.MustGetAccountAddressFromName(utils.AdminPolicyName)
+	_, err := zts.BroadcastTx(utils.AdminPolicyName,
 		observertypes.NewMsgRemoveObserver(
 			account,
 			observer,

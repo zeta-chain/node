@@ -46,6 +46,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export TSS_MIGRATION_FLAG := $(TSS_MIGRATION_FLAG)
 export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
@@ -330,13 +331,15 @@ start-e2e-consensus-test: e2e-images
 
 start-tss-migration-add-observer: e2e-images solana
 	@echo "--> Starting tss migration test with add observer"
-	export E2E_ARGS="${E2E_ARGS} --test-solana --tss-migration-add-observer" && \
+	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+	export TSS_MIGRATION_FLAG="--tss-migration-add-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
 
 start-tss-migration-remove-observer: e2e-images solana
 	@echo "--> Starting tss migration test with remove observer"
-	export E2E_ARGS="${E2E_ARGS} --test-solana --tss-migration-remove-observer" && \
+	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+	export TSS_MIGRATION_FLAG="--tss-migration-remove-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
 
