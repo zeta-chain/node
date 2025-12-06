@@ -328,9 +328,15 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-tss-migration-test: e2e-images solana
-	@echo "--> Starting tss migration test"
-	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+start-tss-migration-add-observer: e2e-images solana
+	@echo "--> Starting tss migration test with add observer"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --tss-migration-add-observer" && \
+	export LOCALNET_MODE=tss-migrate && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
+
+start-tss-migration-remove-observer: e2e-images solana
+	@echo "--> Starting tss migration test with remove observer"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --tss-migration-remove-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
 
