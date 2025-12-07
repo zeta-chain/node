@@ -51,8 +51,6 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	btcBalance = btcBalance - 0.02
 	btcChain := chains.BitcoinRegtest.ChainId
 
-	r.WaitForTSSGeneration(2)
-
 	//migrate btc funds
 	// #nosec G701 e2eTest - always in range
 	migrationAmountBTC := sdkmath.NewUint(uint64(btcBalance * 1e8))

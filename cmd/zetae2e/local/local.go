@@ -651,7 +651,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	// TSS migration tests: either add or remove observer before migration
 	if tssMigrationAddObs {
 		addNewObserver(deployerRunner)
 		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
