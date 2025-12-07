@@ -18,7 +18,10 @@ by calling `updateAdditionalActionFee` admin function.
 * [4157](https://github.com/zeta-chain/node/pull/4157) - multiple evm calls in single tx
 * [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
 * [4218](https://github.com/zeta-chain/node/pull/4218) - enable NoAssetCall from Bitcoin chain
-* [3834](https://github.com/zeta-chain/node/pull/3734) - refund a portion of remaining unused tokens to user/
+* [3834](https://github.com/zeta-chain/node/pull/3734) - refund a portion of remaining unused tokens to user
+* [4478](https://github.com/zeta-chain/node/pull/4478) - add MsgRemoveObserver
+
+### Refactor
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 * [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
 * [4192](https://github.com/zeta-chain/node/pull/4192) - remove deprecated code in observer module, including `confirmation_count`
@@ -30,7 +33,6 @@ by calling `updateAdditionalActionFee` admin function.
 * [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
 * [4210](https://github.com/zeta-chain/node/pull/4210) - skip writing config file to the filesystem when updating consensus timeout deltas
 * [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
-* [4478](https://github.com/zeta-chain/node/pull/4478) - add MsgRemoveObserver
 
 ### Fixes
 

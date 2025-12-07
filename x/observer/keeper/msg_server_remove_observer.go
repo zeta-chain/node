@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// RemoveObserver removes an observer address from the observer set
+// RemoveObserver removes an observer address from the observer set and node account list
 func (k msgServer) RemoveObserver(
 	goCtx context.Context,
 	msg *types.MsgRemoveObserver,
@@ -23,6 +23,7 @@ func (k msgServer) RemoveObserver(
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
+	// We remove it from both the node account list and the observer set to effectively observing and signing
 	k.RemoveNodeAccount(ctx, msg.ObserverAddress)
 	k.RemoveObserverFromSet(ctx, msg.ObserverAddress)
 	k.DecrementLastObserverCount(ctx)
