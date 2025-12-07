@@ -24,14 +24,3 @@ func (k Keeper) GetLastObserverCount(ctx sdk.Context) (val types.LastObserverCou
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
-
-func (k Keeper) DecrementLastObserverCount(ctx sdk.Context) {
-	lastObserverCount, found := k.GetLastObserverCount(ctx)
-	if !found {
-		return
-	}
-	if lastObserverCount.Count > 0 {
-		lastObserverCount.Count--
-		k.SetLastObserverCount(ctx, &lastObserverCount)
-	}
-}

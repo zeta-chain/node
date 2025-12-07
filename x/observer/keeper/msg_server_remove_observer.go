@@ -25,8 +25,8 @@ func (k msgServer) RemoveObserver(
 
 	// We remove it from both the node account list and the observer set to effectively observing and signing
 	k.RemoveNodeAccount(ctx, msg.ObserverAddress)
-	k.RemoveObserverFromSet(ctx, msg.ObserverAddress)
-	k.DecrementLastObserverCount(ctx)
+	newCount := k.RemoveObserverFromSet(ctx, msg.ObserverAddress)
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(newCount)})
 
 	return &types.MsgRemoveObserverResponse{}, nil
 }

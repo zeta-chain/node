@@ -253,7 +253,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// wait for keygen to be completed
 		// if setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
-		//noError(deployerRunner.RemoveObserver())
 	}
 
 	// query and set the TSS
