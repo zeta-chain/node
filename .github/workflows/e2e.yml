@@ -282,7 +282,11 @@ jobs:
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
             timeout-minutes: 40
-          - make-target: "start-tss-migration-test"
+          - make-target: "start-tss-migration-add-observer"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            timeout-minutes: 40
+          - make-target: "start-tss-migration-remove-observer"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
             timeout-minutes: 40
