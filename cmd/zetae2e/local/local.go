@@ -55,6 +55,8 @@ const (
 	flagSetupOnly              = "setup-only"
 	flagSkipSetup              = "skip-setup"
 	flagTestTSSMigration       = "test-tss-migration"
+	flagTSSMigrationAddObs     = "tss-migration-add-observer"
+	flagTSSMigrationRemoveObs  = "tss-migration-remove-observer"
 	flagSkipBitcoinSetup       = "skip-bitcoin-setup"
 	flagSkipHeaderProof        = "skip-header-proof"
 	flagTestLegacy             = "test-legacy"
@@ -107,6 +109,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
+	cmd.Flags().Bool(flagTSSMigrationAddObs, false, "set to true to add a new observer before TSS migration")
+	cmd.Flags().Bool(flagTSSMigrationRemoveObs, false, "set to true to remove an observer before TSS migration")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().
@@ -153,7 +157,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipBitcoinSetup       = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof        = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		tssMigrationAddObs     = must(cmd.Flags().GetBool(flagTSSMigrationAddObs))
+		tssMigrationRemoveObs  = must(cmd.Flags().GetBool(flagTSSMigrationRemoveObs))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
@@ -664,9 +669,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	if testTSSMigration {
+	if tssMigrationAddObs {
 		addNewObserver(deployerRunner)
-		triggerTSSMigration(deployerRunner, logger, verbose, conf)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
+	}
+
+	if tssMigrationRemoveObs {
+		err = deployerRunner.RemoveObserver()
+		noError(err)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
 	}
 
 	// Verify that there are no trackers left over after tests complete

@@ -38,6 +38,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
 		"/zetachain.zetacore.observer.MsgAddObserver",
+		"/zetachain.zetacore.observer.MsgRemoveObserver",
 		"/zetachain.zetacore.observer.MsgRemoveChainParams",
 		"/zetachain.zetacore.authority.MsgAddAuthorization",
 		"/zetachain.zetacore.authority.MsgRemoveAuthorization",

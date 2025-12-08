@@ -52,6 +52,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export TSS_MIGRATION_FLAG := $(TSS_MIGRATION_FLAG)
 export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
@@ -300,7 +301,11 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
+start-e2e-test-4nodes: e2e-images
+	@echo "--> Starting e2e test with 4 nodes"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
@@ -353,11 +358,19 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-tss-migration-test: e2e-images solana
-	@echo "--> Starting tss migration test"
-	export LOCALNET_MODE=tss-migrate && \
+start-tss-migration-add-observer: e2e-images solana
+	@echo "--> Starting tss migration test with add observer"
 	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
+	export TSS_MIGRATION_FLAG="--tss-migration-add-observer" && \
+	export LOCALNET_MODE=tss-migrate && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
+
+start-tss-migration-remove-observer: e2e-images solana
+	@echo "--> Starting tss migration test with remove observer"
+	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+	export TSS_MIGRATION_FLAG="--tss-migration-remove-observer" && \
+	export LOCALNET_MODE=tss-migrate && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
