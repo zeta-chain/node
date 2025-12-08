@@ -21,16 +21,6 @@ func (r *E2ERunner) FundEmissionsPool() error {
 	return r.ZetaTxServer.FundEmissionsPool(e2eutils.OperationalPolicyName, EmissionsPoolFunding)
 }
 
-func (r *E2ERunner) RemoveObserver() error {
-	observerSet, err := r.ObserverClient.ObserverSet(r.Ctx, &observertypes.QueryObserverSet{})
-	if err != nil {
-		return err
-	}
-	r.Logger.Print("🏃 Removing observer from the set : %s", observerSet.Observers[len(observerSet.Observers)-1])
-	err = r.ZetaTxServer.RemoveObserver(observerSet.Observers[len(observerSet.Observers)-1])
-	return err
-}
-
 // WithdrawEmissions withdraws emissions from the emission pool on ZetaChain for all observers
 // This functions uses the UserEmissionsWithdrawName to create the withdraw tx.
 // UserEmissionsWithdraw can sign the authz transactions because the necessary permissions are granted in the genesis file
