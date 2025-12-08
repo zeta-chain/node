@@ -109,7 +109,7 @@ func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 		count := k.RemoveObserverFromSet(ctx, observerToRemove)
 
 		// ASSERT
-		require.Equal(t, 9, count)
+		require.Equal(t, uint64(9), count)
 		require.False(t, k.IsAddressPartOfObserverSet(ctx, observerToRemove))
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
@@ -124,7 +124,7 @@ func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 		count := k.RemoveObserverFromSet(ctx, sample.AccAddress())
 
 		// ASSERT
-		require.Equal(t, 0, count)
+		require.Equal(t, uint64(0), count)
 	})
 
 	t.Run("returns existing count when observer not in set", func(t *testing.T) {
@@ -138,7 +138,7 @@ func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 		count := k.RemoveObserverFromSet(ctx, nonExistentObserver)
 
 		// ASSERT
-		require.Equal(t, 5, count)
+		require.Equal(t, uint64(5), count)
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
 		require.Len(t, osNew.ObserverList, 5)
@@ -155,7 +155,7 @@ func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 		count := k.RemoveObserverFromSet(ctx, observerToRemove)
 
 		// ASSERT
-		require.Equal(t, 0, count)
+		require.Equal(t, uint64(0), count)
 		require.False(t, k.IsAddressPartOfObserverSet(ctx, observerToRemove))
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
