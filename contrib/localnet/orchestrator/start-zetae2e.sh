@@ -279,7 +279,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   fi
 
   echo "Running E2E test before migrating TSS"
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light $TSS_MIGRATION_FLAG
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light ${TSS_MIGRATION_FLAG:-}
   if [ $? -ne 0 ]; then
     echo "First E2E failed"
     exit 1
