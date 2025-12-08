@@ -78,6 +78,7 @@ func TestMsgServer_RemoveObserver(t *testing.T) {
 		loc, found = k.GetLastObserverCount(ctx)
 		require.True(t, found)
 		require.Equal(t, uint64(0), loc.Count)
+		require.Equal(t, ctx.BlockHeight(), loc.LastChangeHeight)
 	})
 
 	t.Run("should handle removing observer when observer set has multiple observers", func(t *testing.T) {
@@ -117,6 +118,7 @@ func TestMsgServer_RemoveObserver(t *testing.T) {
 		loc, found := k.GetLastObserverCount(ctx)
 		require.True(t, found)
 		require.Equal(t, uint64(1), loc.Count)
+		require.Equal(t, ctx.BlockHeight(), loc.LastChangeHeight)
 	})
 
 	t.Run("should handle removing non-existent observer gracefully", func(t *testing.T) {

@@ -170,6 +170,7 @@ services:
       - PPROF_ADDR=0.0.0.0:6063
       - CHAOS_PROFILE
       - CHAOS_SEED
+    restart: always
     ports:
       - "6063:6063" # pprof
       - "8888:8886" # metrics
@@ -197,6 +198,7 @@ services:
       - PPROF_ADDR=0.0.0.0:6064
       - CHAOS_PROFILE
       - CHAOS_SEED
+    restart: always
     ports:
       - "6064:6064" # pprof
       - "8889:8886" # metrics

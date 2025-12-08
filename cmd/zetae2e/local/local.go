@@ -54,7 +54,6 @@ const (
 	flagLight                  = "light"
 	flagSetupOnly              = "setup-only"
 	flagSkipSetup              = "skip-setup"
-	flagTestTSSMigration       = "test-tss-migration"
 	flagTSSMigrationAddObs     = "tss-migration-add-observer"
 	flagTSSMigrationRemoveObs  = "tss-migration-remove-observer"
 	flagSkipBitcoinSetup       = "skip-bitcoin-setup"
@@ -108,7 +107,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
-	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTSSMigrationAddObs, false, "set to true to add a new observer before TSS migration")
 	cmd.Flags().Bool(flagTSSMigrationRemoveObs, false, "set to true to remove an observer before TSS migration")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")

@@ -23,10 +23,13 @@ func (k msgServer) RemoveObserver(
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	// We remove it from both the node account list and the observer set to effectively observing and signing
+	// We remove it from both the node account list and the observer set to effectively remove it from observing and signing
 	k.RemoveNodeAccount(ctx, msg.ObserverAddress)
 	newCount := k.RemoveObserverFromSet(ctx, msg.ObserverAddress)
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: newCount})
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{
+		Count:            newCount,
+		LastChangeHeight: ctx.BlockHeight(),
+	})
 
 	return &types.MsgRemoveObserverResponse{}, nil
 }
