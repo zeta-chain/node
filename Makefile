@@ -301,7 +301,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
 
 start-e2e-test-4nodes: e2e-images
 	@echo "--> Starting e2e test with 4 nodes"
@@ -363,7 +363,7 @@ start-tss-migration-add-observer: e2e-images solana
 	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
 	export TSS_MIGRATION_FLAG="--tss-migration-add-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
 
 start-tss-migration-remove-observer: e2e-images solana
 	@echo "--> Starting tss migration test with remove observer"
