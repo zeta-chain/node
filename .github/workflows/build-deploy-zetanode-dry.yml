@@ -7,9 +7,7 @@ on:
         description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
         required: false
         type: string
-  pull_request:
-    branches:
-      - develop
+
 env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
   GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
@@ -33,10 +31,6 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
-      # configure docker to use the containerd snapshotter
-      # so that we can use the buildkit cache
-      - uses: depot/use-containerd-snapshotter-action@v1
-
       - name: Restore go cache
         uses: actions/cache@v4
         id: restore-go-cache
@@ -44,15 +38,6 @@ jobs:
           path: |
             go-cache
           key: cache-${{ hashFiles('go.sum') }}
-
-      - name: Inject go cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@61bd187f75f25d38e056fdd48506fac777c6ebec
-        with:
-          cache-map: |
-            {
-              "go-cache": "/root/.cache/go-build"
-            }
-          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit }}
 
       # this ensures that the version is consistent between cache build and make build
       - name: Set version
