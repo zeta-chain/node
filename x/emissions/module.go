@@ -22,7 +22,7 @@ import (
 	"github.com/zeta-chain/node/x/emissions/types"
 )
 
-const consensusVersion = 6
+const consensusVersion = 7
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -135,7 +135,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	if err := cfg.RegisterMigration(types.ModuleName, 5, m.Migrate5to6); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 6, m.Migrate6to7); err != nil {
 		panic(err)
 	}
 }
