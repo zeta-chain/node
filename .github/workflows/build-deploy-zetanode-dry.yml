@@ -1,0 +1,87 @@
+name: Build & Deploy Zetanode-Dry
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
+        required: false
+        type: string
+
+env:
+  ARTIFACT_REGISTRY: us-docker.pkg.dev
+  GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
+  ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.DEV_DOCKER_REPOSITORY_NAME }}
+  IMAGE_NAME: zetanode
+
+jobs:
+  build-and-push:
+    runs-on: gcp-athens-runners
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        shell: bash
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
+
+      # configure docker to use the containerd snapshotter
+      # so that we can use the buildkit cache
+      - uses: depot/use-containerd-snapshotter-action@v1
+
+      - name: Restore go cache
+        uses: actions/cache@v4
+        id: restore-go-cache
+        with:
+          path: |
+            go-cache
+          key: cache-${{ hashFiles('go.sum') }}
+
+      - name: Inject go cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@61bd187f75f25d38e056fdd48506fac777c6ebec
+        with:
+          cache-map: |
+            {
+              "go-cache": "/root/.cache/go-build"
+            }
+          skip-extraction: ${{ steps.restore-go-cache.outputs.cache-hit }}
+
+      # this ensures that the version is consistent between cache build and make build
+      - name: Set version
+        id: version
+        run: |
+          NODE_VERSION=$(./version.sh)
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
+          echo "version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          NODE_COMMIT=$(git log -1 --format='%H')
+          echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
+          echo "commit=$NODE_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Build and push zetanode to Artifact Registry
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile-localnet
+          push: true
+          tags: ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
+          target: latest-runtime
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            NODE_COMMIT=${{ env.NODE_COMMIT }}
+
+      - name: Output image information
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: \`${{ env.NODE_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ env.NODE_COMMIT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image successfully pushed to Google Artifact Registry." >> $GITHUB_STEP_SUMMARY
