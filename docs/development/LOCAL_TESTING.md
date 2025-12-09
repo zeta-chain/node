@@ -95,7 +95,7 @@ This allows testing the upgrade process with a populated state.
 
 Before running the upgrade tests, the old version must be specified the Makefile.
 
-NOTE: We only specify the major version for `NEW_VERSION` since we use major version only for chain upgrade. Semver is needed for `OLD_VERSION` because we use this value to fetch the release tag from the GitHub repository.
+NOTE: We only specify the major version for `NEW_VERSION` since we use major version only for chain upgrade. Semver is needed for `OLD_ZETACORED_VERSION` because we use this value to fetch the release tag from the GitHub repository.
 
 The upgrade tests can be run with the following command:
 ```bash

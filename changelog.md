@@ -4,14 +4,27 @@
 
 ### Features
 
+* [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
+* [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
+
 ### Tests
+
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
 
 ### Fixes
 
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+* [4414](https://github.com/zeta-chain/node/pull/4414) - fix example package deployment by removing gateway object reference
 * [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
 * [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
+* [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
+* [4471](https://github.com/zeta-chain/node/pull/4471) - accept uppercase receiver address in Bitcoin withdrawals
+
+### Tests
+
+* [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+* [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
 
 ## v37.0.0
 

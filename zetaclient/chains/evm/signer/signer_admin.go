@@ -1,7 +1,6 @@
 package signer
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"strings"
@@ -15,31 +14,22 @@ import (
 )
 
 // SignAdminTx signs a admin cmd transaction based on the given command
-func (signer *Signer) SignAdminTx(
-	ctx context.Context,
-	txData *OutboundData,
-	cmd string,
-	params string,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignAdminTx(txData *OutboundData, cmd string, params string) (*ethtypes.Transaction, error) {
 	switch cmd {
 	case constant.CmdWhitelistERC20:
-		return signer.signWhitelistERC20Cmd(ctx, txData, params)
+		return signer.signWhitelistERC20Cmd(txData, params)
 	case constant.CmdMigrateERC20CustodyFunds:
-		return signer.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
+		return signer.signMigrateERC20CustodyFundsCmd(txData, params)
 	case constant.CmdUpdateERC20CustodyPauseStatus:
-		return signer.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
+		return signer.signUpdateERC20CustodyPauseStatusCmd(txData, params)
 	case constant.CmdMigrateTssFunds:
-		return signer.signMigrateTssFundsCmd(ctx, txData)
+		return signer.signMigrateTssFundsCmd(txData)
 	}
 	return nil, fmt.Errorf("SignAdminTx: unknown command %s", cmd)
 }
 
 // signWhitelistERC20Cmd signs a whitelist command for ERC20 token
-func (signer *Signer) signWhitelistERC20Cmd(
-	ctx context.Context,
-	txData *OutboundData,
-	params string,
-) (*ethtypes.Transaction, error) {
+func (signer *Signer) signWhitelistERC20Cmd(txData *OutboundData, params string) (*ethtypes.Transaction, error) {
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
 		return nil, fmt.Errorf("SignAdminTx: invalid erc20 address %s", params)
@@ -54,13 +44,11 @@ func (signer *Signer) signWhitelistERC20Cmd(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		txData.to,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "sign whitelist error")
@@ -70,7 +58,6 @@ func (signer *Signer) signWhitelistERC20Cmd(
 
 // signMigrateERC20CustodyFundsCmd signs a migrate ERC20 custody funds command
 func (signer *Signer) signMigrateERC20CustodyFundsCmd(
-	ctx context.Context,
 	txData *OutboundData,
 	params string,
 ) (*ethtypes.Transaction, error) {
@@ -95,13 +82,11 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		txData.to,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signMigrateERC20CustodyFundsCmd error")
@@ -111,7 +96,6 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 
 // signUpdateERC20CustodyPauseStatusCmd signs a update ERC20 custody pause status command
 func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
-	ctx context.Context,
 	txData *OutboundData,
 	params string,
 ) (*ethtypes.Transaction, error) {
@@ -139,13 +123,11 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 	}
 
 	tx, _, _, err := signer.Sign(
-		ctx,
 		data,
 		txData.to,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signUpdateERC20CustodyPauseStatusCmd error")
@@ -154,15 +136,13 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 }
 
 // signMigrateTssFundsCmd signs a migrate TSS funds command
-func (signer *Signer) signMigrateTssFundsCmd(ctx context.Context, txData *OutboundData) (*ethtypes.Transaction, error) {
+func (signer *Signer) signMigrateTssFundsCmd(txData *OutboundData) (*ethtypes.Transaction, error) {
 	tx, _, _, err := signer.Sign(
-		ctx,
 		nil,
 		txData.to,
 		txData.amount,
 		txData.gas,
 		txData.nonce,
-		txData.height,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "signMigrateTssFundsCmd error")

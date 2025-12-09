@@ -368,6 +368,9 @@ func (oc *Orchestrator) newBaseObserver(
 	if clientMode.IsChaosMode() {
 		zetacoreClient = oc.chaosSource.WrapZetacoreClient(zetacoreClient)
 		tssClient = oc.chaosSource.WrapTSSClient(tssClient)
+		if setter, ok := zetacoreClient.(interface{ SetSelf(interface{}) }); ok {
+			setter.SetSelf(zetacoreClient)
+		}
 	}
 
 	return base.NewObserver(

@@ -79,6 +79,13 @@ var (
 		Help:      "Last scanned block number per chain",
 	}, []string{"chain"})
 
+	// NextTSSNonce is a gauge that contains the next nonce of the TSS account per chain
+	NextTSSNonce = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "next_tss_nonce",
+		Help:      "Next nonce of the TSS account per chain",
+	}, []string{"chain"})
+
 	// LatestBlockLatency is a gauge that contains the block latency for each observed chain
 	LatestBlockLatency = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,

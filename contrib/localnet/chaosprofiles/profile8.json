@@ -1,0 +1,22 @@
+{
+    "BitcoinClient": {},
+    "EVMClient": {},
+    "SolanaClient": {},
+    "SuiClient": {},
+    "TONClient": {
+        "GetAccountState": 10,
+        "GetBlockHeader": 10,
+        "GetConfigParam": 10,
+        "GetMasterchainInfo": 20,
+        "GetTransaction": 10,
+        "GetTransactions": 10,
+        "GetTransactionsSince": 10,
+        "HealthCheck": 30,
+        "SendMessage": 20
+    },
+    "TSSClient": {
+        "Sign": 5,
+        "SignBatch": 5
+    },
+    "ZetacoreClient": {}
+}

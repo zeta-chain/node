@@ -217,6 +217,7 @@ const (
 	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
+	TestZetaclientMinimumVersionName     = "zetaclient_minimum_version"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 	TestMigrateConnectorFundsName        = "migrate_connector_funds"
 	TestBurnFungibleModuleAssetName      = "burn_fungible_module_asset"
@@ -1651,6 +1652,14 @@ var AllE2ETests = []runner.E2ETest{
 		"zetaclient signer offset",
 		[]runner.ArgDefinition{},
 		TestZetaclientSignerOffset,
+	),
+	runner.NewE2ETest(
+		TestZetaclientMinimumVersionName,
+		"zetaclient minimum version",
+		[]runner.ArgDefinition{
+			{Description: "minimum version", DefaultValue: ""},
+		},
+		TestZetaclientMinimumVersion,
 	),
 	runner.NewE2ETest(
 		TestUpdateOperationalChainParamsName,

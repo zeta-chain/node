@@ -74,7 +74,6 @@ func TestMsgPauseZRC20_ValidateBasic(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.wantErr {
