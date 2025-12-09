@@ -6,6 +6,7 @@
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
 * [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
+* [4485](https://github.com/zeta-chain/node/pull/4485) - move gas price multiplier to zetacore chain parameters
 
 ### Tests
 
