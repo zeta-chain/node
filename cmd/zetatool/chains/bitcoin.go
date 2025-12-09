@@ -24,6 +24,7 @@ func BitcoinBallotIdentifier(
 	btcClient *client.Client,
 	params *chaincfg.Params,
 	tss string,
+	feeRateMultiplier float64,
 	txHash string,
 	senderChainID int64,
 	zetacoreChainID int64,
@@ -62,6 +63,7 @@ func BitcoinBallotIdentifier(
 		*tx,
 		tss,
 		uint64(blockVb.Height), // #nosec G115 always positive
+		feeRateMultiplier,
 		zerolog.New(zerolog.Nop()),
 		params,
 		common.CalcDepositorFee,

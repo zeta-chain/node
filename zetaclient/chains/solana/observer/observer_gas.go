@@ -50,12 +50,15 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 			priorityFees[i] = fee.PrioritizationFee
 		}
 	}
-	// the priority fee is in increments of 0.000001 lamports (micro lamports)
-	medianFee := zetamath.SliceMedianValue(priorityFees, true)
+
+	var (
+		// the priority fee is in increments of 0.000001 lamports (micro lamports)
+		medianFee  = zetamath.SliceMedianValue(priorityFees, true)
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
 
 	// there is no Ethereum-like gas price in Solana, we only post priority fee for now
-
-	logger := ob.Logger().Chain
-	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, 1, medianFee, slot)
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, 1, multiplier, medianFee, slot)
 	return err
 }

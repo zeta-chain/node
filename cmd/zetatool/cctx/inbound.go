@@ -130,11 +130,18 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	}
 	createConfirmationParamsIfAbsent(chainParams)
 
+	// get fee rate multiplier, fallback to default if not set in chain params
+	feeRateMultiplier := types.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
+		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
+	}
+
 	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
 		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
+		feeRateMultiplier,
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,

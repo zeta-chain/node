@@ -23,11 +23,6 @@ func (c *Client) PostVoteGasPrice(
 	chain chains.Chain,
 	gasPrice uint64, priorityFee, blockNum uint64,
 ) (string, error) {
-	// get gas price multiplier for the chain
-	multiplier := GasPriceMultiplier(chain)
-
-	// #nosec G115 always in range
-	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := c.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteGasPrice(signerAddress, chain.ChainId, gasPrice, priorityFee, blockNum)
 

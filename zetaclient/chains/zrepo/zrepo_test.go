@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschain "github.com/zeta-chain/node/x/crosschain/types"
-	observer "github.com/zeta-chain/node/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -55,10 +56,27 @@ func TestDryMode(t *testing.T) {
 		const priorityFee = 200
 		const block = 12345
 
-		zhash, err := repo.VoteGasPrice(context.Background(), logger, gasPrice, priorityFee, block)
+		multiplier := observertypes.DefaultGasPriceMultiplier
+		zhash, err := repo.VoteGasPrice(context.Background(), logger, gasPrice, multiplier, priorityFee, block)
 		require.NoError(t, err)
 		require.Empty(t, zhash)
 		require.Contains(t, buffer.String(), "skipping gas price vote")
+	})
+
+	t.Run("VoteGasPrice invalid gas price", func(t *testing.T) {
+		client := mocks.NewZetacoreClient(t)
+		repo := New(client, chains.Ethereum, mode.StandardMode)
+
+		var buffer bytes.Buffer
+		logger := zerolog.New(&buffer)
+		const gasPrice = 100000
+		const priorityFee = 200
+		const block = 12345
+
+		multiplier := sdkmath.LegacyMustNewDecFromStr("-1.0")
+		zhash, err := repo.VoteGasPrice(context.Background(), logger, gasPrice, multiplier, priorityFee, block)
+		require.ErrorContains(t, err, "invalid gas price: -100000")
+		require.Empty(t, zhash)
 	})
 
 	t.Run("VoteInbound", func(t *testing.T) {
@@ -264,7 +282,7 @@ func TestExists(t *testing.T) {
 	const invalidID1 = "this ID does not belong to a ballot, and it triggers a valid error"
 	const invalidID2 = "this ID does not belong to a ballot, and it triggers an invalid error"
 	validIDErr := grpcstatus.Error(grpccodes.NotFound, "a valid GRPC error (ID)")
-	ballot := &observer.QueryBallotByIdentifierResponse{}
+	ballot := &observertypes.QueryBallotByIdentifierResponse{}
 	client.
 		On("GetBallotByID", mock.Anything, validID1).Return(ballot, nil).
 		On("GetBallotByID", mock.Anything, validID2).Return(nil, validIDErr).

@@ -221,6 +221,11 @@ func TestChainParamsEqual(t *testing.T) {
 	cp = copyParams(params)
 	cp.DisableTssBlockScan = !params.DisableTssBlockScan
 	require.False(t, types.ChainParamsEqual(*params, *cp))
+
+	// GasPriceMultiplier matters
+	cp = copyParams(params)
+	cp.GasPriceMultiplier = params.GasPriceMultiplier.Add(sdkmath.LegacySmallestDec())
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 }
 
 func (s *UpdateChainParamsSuite) SetupTest() {
@@ -263,6 +268,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 			SafeOutboundCount: 2,
 			FastOutboundCount: 0, // zero means fast observation is disabled
 		},
+		GasPriceMultiplier: types.DefaultEVMOutboundGasPriceMultiplier,
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
@@ -285,6 +291,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 			SafeOutboundCount: 2,
 			FastOutboundCount: 1,
 		},
+		GasPriceMultiplier: types.DefaultBTCOutboundGasPriceMultiplier,
 	}
 }
 
@@ -475,6 +482,18 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.MinObserverDelegation = sdkmath.LegacyDec{}
 	require.Error(s.T(), cp.Validate())
 	cp.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
+	require.NoError(s.T(), cp.Validate())
+
+	cp = copyParams(params)
+	cp.GasPriceMultiplier = sdkmath.LegacyDec{}
+	require.Error(s.T(), cp.Validate())
+	cp.GasPriceMultiplier = sdkmath.LegacyZeroDec()
+	require.Error(s.T(), cp.Validate())
+	cp.GasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("10.1")
+	require.Error(s.T(), cp.Validate())
+	cp.GasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("0.09")
+	require.Error(s.T(), cp.Validate())
+	cp.GasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("1.5")
 	require.NoError(s.T(), cp.Validate())
 }
 
