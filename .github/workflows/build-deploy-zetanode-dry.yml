@@ -29,6 +29,10 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Verify Docker is available
+        run: |
+          docker info
+
       - name: Configure Docker for Artifact Registry
         shell: bash
         run: |
