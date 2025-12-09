@@ -24,7 +24,7 @@ func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
 	txHash, err := r.SendToTSSWithMemo(amountTotal, memo)
 	require.NoError(r, err)
 
-	// ASSERT after 6 Zeta blocks // TODO: check this
+	// ASSERT after 6 Zeta blocks
 	time.Sleep(constant.ZetaBlockTime * 6)
 	req := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: txHash.String()}
 	_, err = r.CctxClient.InTxHashToCctxData(r.Ctx, req)
