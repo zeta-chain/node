@@ -816,6 +816,17 @@ message MsgAddObserver {
 }
 ```
 
+#### MsgRemoveObserver
+
+RemoveObserver removes an observer address from the observer set and node account list
+
+```proto
+message MsgRemoveObserver {
+	string creator = 1;
+	string observer_address = 2;
+}
+```
+
 #### MsgUpdateObserver
 
 UpdateObserver handles updating an observer address
