@@ -725,6 +725,16 @@ func (zts *ZetaTxServer) UpdateKeygen(height int64) error {
 	return err
 }
 
+func (zts *ZetaTxServer) RemoveObserver(observer string) error {
+	account := zts.MustGetAccountAddressFromName(utils.AdminPolicyName)
+	_, err := zts.BroadcastTx(utils.AdminPolicyName,
+		observertypes.NewMsgRemoveObserver(
+			account,
+			observer,
+		))
+	return err
+}
+
 // SetAuthorityClient sets the authority client
 func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.QueryClient) {
 	zts.authorityClient = authorityClient

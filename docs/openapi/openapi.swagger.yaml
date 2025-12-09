@@ -55751,6 +55751,8 @@ definitions:
     type: object
   zetachain.zetacore.observer.MsgRemoveChainParamsResponse:
     type: object
+  zetachain.zetacore.observer.MsgRemoveObserverResponse:
+    type: object
   zetachain.zetacore.observer.MsgResetChainNoncesResponse:
     type: object
   zetachain.zetacore.observer.MsgUpdateChainParamsResponse:
