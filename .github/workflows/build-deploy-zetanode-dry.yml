@@ -14,7 +14,7 @@ on:
 env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
   GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
-  ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.DEV_DOCKER_REPOSITORY_NAME }}
+  ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY_NAME }}
   IMAGE_NAME: zetanode
 
 jobs:
@@ -29,10 +29,6 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Verify Docker is available
-        run: |
-          docker info
-
       - name: Configure Docker for Artifact Registry
         shell: bash
         run: |
@@ -46,18 +42,59 @@ jobs:
             go-cache
           key: cache-${{ hashFiles('go.sum') }}
 
-      # this ensures that the version is consistent between cache build and make build
-      - name: Set version
+      - name: Determine version from git tags
         id: version
         run: |
-          NODE_VERSION=$(./version.sh)
+          # Check if we're on an exact tag
+          if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
+            TAG=$(git describe --exact-match --tags HEAD)
+            # Ensure it has v prefix
+            if [[ ! $TAG =~ ^v ]]; then
+              NODE_VERSION="v${TAG}"
+            else
+              NODE_VERSION="$TAG"
+            fi
+          else
+            # Get the latest tag (fetch tags first, then get latest v*.*.* tag)
+            git fetch --tags --quiet 2>/dev/null || true
+            LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || echo "")
+            if [[ -n "$LATEST_TAG" ]]; then
+              # Extract version number (e.g., v37.0.3 -> 37.0.3)
+              VERSION_NUM=$(echo "$LATEST_TAG" | sed 's/^v//')
+              # Increment patch version (e.g., 37.0.3 -> 37.0.4)
+              MAJOR=$(echo "$VERSION_NUM" | cut -d. -f1)
+              MINOR=$(echo "$VERSION_NUM" | cut -d. -f2)
+              PATCH=$(echo "$VERSION_NUM" | cut -d. -f3)
+              PATCH=$((PATCH + 1))
+              NODE_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+            else
+              # Fallback: use version.sh but format it properly
+              BASE_VERSION=$(./version.sh)
+              # If it's a timestamp version, use a default
+              if [[ $BASE_VERSION =~ ^0\.0\. ]]; then
+                NODE_VERSION="v37.0.0"
+              else
+                # Ensure v prefix
+                if [[ ! $BASE_VERSION =~ ^v ]]; then
+                  NODE_VERSION="v${BASE_VERSION}"
+                else
+                  NODE_VERSION="$BASE_VERSION"
+                fi
+              fi
+            fi
+          fi
           echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
           echo "version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "Determined version: $NODE_VERSION"
+
+      - name: Set commit hash
+        id: commit
+        run: |
           NODE_COMMIT=$(git log -1 --format='%H')
           echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
           echo "commit=$NODE_COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Build zetanode image using Makefile
+      - name: Build zetanode image
         run: |
           make zetanode
 
