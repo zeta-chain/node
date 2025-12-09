@@ -34,14 +34,6 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
-      - name: Restore go cache
-        uses: actions/cache@v4
-        id: restore-go-cache
-        with:
-          path: |
-            go-cache
-          key: cache-${{ hashFiles('go.sum') }}
-
       - name: Determine version from git tags
         id: version
         run: |
@@ -104,7 +96,7 @@ jobs:
 
       - name: Push to Artifact Registry
         run: |
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}-test
 
       - name: Output image information
         run: |
