@@ -53,18 +53,17 @@ jobs:
           echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
           echo "commit=$NODE_COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Build and push zetanode to Artifact Registry
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile-localnet
-          push: true
-          tags: ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
-          target: latest-runtime
-          build-args: |
-            NODE_VERSION=${{ env.NODE_VERSION }}
-            NODE_COMMIT=${{ env.NODE_COMMIT }}
+      - name: Build zetanode image using Makefile
+        run: |
+          make zetanode
+
+      - name: Tag image for Artifact Registry
+        run: |
+          docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
+
+      - name: Push to Artifact Registry
+        run: |
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
 
       - name: Output image information
         run: |
