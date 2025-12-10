@@ -735,7 +735,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 // 		// https://github.com/foundry-rs/foundry/issues/7640
 // 		"effectiveGasPrice": (*hexutil.Big)(txData.GetGasPrice()),
 
-// 		// sender and receiver (contract or EOA) addreses
+// 		// sender and receiver (contract or EOA) addresses
 // 		"from": from,
 // 		"to":   txData.GetTo(),
 // 		"type": hexutil.Uint(ethMsg.AsTransaction().Type()),

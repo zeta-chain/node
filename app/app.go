@@ -724,7 +724,7 @@ func New(
 	)
 
 	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration and genesis verification.
+	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default, it is composed of all the modules from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as an argument.
 	app.mb = module.NewBasicManagerFromManager(
