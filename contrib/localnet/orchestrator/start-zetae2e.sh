@@ -226,7 +226,6 @@ fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 
 
 # unlock rpc tester accounts
 fund_eth_from_config '.additional_accounts.user_rpc.evm_address' 10000 "rpc tester"
-
 # Create the destination directory
 mkdir -p /root/.zetacored/keyring-test/
 # Copy the keys from the localnet directory to the keyring-test directory
