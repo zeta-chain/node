@@ -44,16 +44,16 @@ var (
 	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTSSRewardsPool)
 	// BlockReward is an initial block reward amount when emissions module was initialized.
 	// The current value can be obtained from by querying the params
-	BlockReward = sdkmath.LegacyMustNewDecFromStr("9620949074074074074.074070733466756687")
+	BlockReward = sdkmath.LegacyMustNewDecFromStr("3375771604938271604.938271604938271605")
 	// ObserverSlashAmount is the amount of tokens to be slashed from observer in case of incorrect vote
 	// by default it is set to 0.1 ZETA
 	ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 
 	// BallotMaturityBlocks is amount of blocks needed for ballot to mature
-	// by default is set to 100
-	BallotMaturityBlocks = 100 // approximately 9-10 minutes
+	// by default is set to 300
+	BallotMaturityBlocks = 300 // approximately 9-10 minutes
 	// PendingBallotsBufferBlocks is a buffer number of blocks
 	//(in addition to BallotMaturityBlocks)
 	// that we use only for pending ballots before deleting them
-	PendingBallotsBufferBlocks = int64(144000) // 10 days(60 * 60 * 24 * 10)
+	PendingBallotsBufferBlocks = int64(432000) // 10 days(60 * 60 * 24 * 10)
 )
