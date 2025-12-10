@@ -99,15 +99,67 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 
 func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 	t.Run("remove observer from set", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
-		k.RemoveObserverFromSet(ctx, os.ObserverList[0])
 		k.SetObserverSet(ctx, os)
-		k.RemoveObserverFromSet(ctx, os.ObserverList[0])
-		require.False(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
+		observerToRemove := os.ObserverList[0]
+
+		// ACT
+		count := k.RemoveObserverFromSet(ctx, observerToRemove)
+
+		// ASSERT
+		require.Equal(t, uint64(9), count)
+		require.False(t, k.IsAddressPartOfObserverSet(ctx, observerToRemove))
 		osNew, found := k.GetObserverSet(ctx)
 		require.True(t, found)
-		require.Len(t, osNew.ObserverList, len(os.ObserverList)-1)
+		require.Len(t, osNew.ObserverList, 9)
+	})
+
+	t.Run("returns 0 when observer set not found", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// ACT
+		count := k.RemoveObserverFromSet(ctx, sample.AccAddress())
+
+		// ASSERT
+		require.Equal(t, uint64(0), count)
+	})
+
+	t.Run("returns existing count when observer not in set", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		os := sample.ObserverSet(5)
+		k.SetObserverSet(ctx, os)
+		nonExistentObserver := sample.AccAddress()
+
+		// ACT
+		count := k.RemoveObserverFromSet(ctx, nonExistentObserver)
+
+		// ASSERT
+		require.Equal(t, uint64(5), count)
+		osNew, found := k.GetObserverSet(ctx)
+		require.True(t, found)
+		require.Len(t, osNew.ObserverList, 5)
+	})
+
+	t.Run("remove last observer from set returns 0", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		os := sample.ObserverSet(1)
+		k.SetObserverSet(ctx, os)
+		observerToRemove := os.ObserverList[0]
+
+		// ACT
+		count := k.RemoveObserverFromSet(ctx, observerToRemove)
+
+		// ASSERT
+		require.Equal(t, uint64(0), count)
+		require.False(t, k.IsAddressPartOfObserverSet(ctx, observerToRemove))
+		osNew, found := k.GetObserverSet(ctx)
+		require.True(t, found)
+		require.Len(t, osNew.ObserverList, 0)
 	})
 }
 

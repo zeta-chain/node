@@ -431,6 +431,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20Name{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
 			sdk.MsgTypeURL(&observertypes.MsgAddObserver{}),
+			sdk.MsgTypeURL(&observertypes.MsgRemoveObserver{}),
 			sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}),
 			sdk.MsgTypeURL(&types.MsgAddAuthorization{}),
 			sdk.MsgTypeURL(&types.MsgRemoveAuthorization{}),

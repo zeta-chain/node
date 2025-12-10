@@ -11,7 +11,6 @@ import (
 )
 
 func (r *E2ERunner) AddTSSToNode() {
-	r.Logger.Print("⚙️ add new tss to Bitcoin node")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))

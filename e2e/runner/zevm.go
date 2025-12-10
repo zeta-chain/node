@@ -356,6 +356,7 @@ func (r *E2ERunner) checkNumberOfTSSGenerated(tssNumber int64) error {
 	if int64(len(tssList.TssList)) < tssNumber {
 		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", tssNumber, len(tssList.TssList))
 	}
+	r.Logger.Print("Number of TSS generated: %d", len(tssList.TssList))
 	return nil
 }
 

@@ -5,6 +5,7 @@
 ### Features
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
+* [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
 * [4453](https://github.com/zeta-chain/node/pull/4453/) - add an option to create dry zetaclients to connect to live networks
 
 ### Tests
