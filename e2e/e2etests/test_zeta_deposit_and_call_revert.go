@@ -33,12 +33,16 @@ func TestZetaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	})
 
 	// wait for the cctx to be reverted
+	//cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	//r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
+	//utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	r.Logger.CCTX(*cctx, "zeta_deposit")
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+	require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
 
-	// check the balance is more than 0
-	balance, err = r.ZetaEth.BalanceOf(&bind.CallOpts{}, revertAddress)
-	require.NoError(r, err)
-	require.True(r, balance.Cmp(big.NewInt(0)) > 0)
+	//// check the balance is more than 0
+	//balance, err = r.ZetaEth.BalanceOf(&bind.CallOpts{}, revertAddress)
+	//require.NoError(r, err)
+	//require.True(r, balance.Cmp(big.NewInt(0)) > 0)
 }

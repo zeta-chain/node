@@ -24,8 +24,8 @@ func TestZetaDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	r.AssertTestDAppZEVMCalled(false, payload, sender, amount)
 
-	oldBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
-	require.NoError(r, err)
+	//oldBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
+	//require.NoError(r, err)
 
 	// perform the deposit
 	tx := r.ZetaDepositAndCall(
@@ -36,15 +36,19 @@ func TestZetaDepositAndCall(r *runner.E2ERunner, args []string) {
 	)
 
 	// wait for the cctx to be mined
+	//cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	//r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
+	//utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	r.Logger.CCTX(*cctx, "zeta_deposit")
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+	require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
 
-	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
-
-	// check the balance was updated
-	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
+	//// check the payload was received on the contract
+	//r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
+	//
+	//// check the balance was updated
+	//newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
+	//require.NoError(r, err)
+	//require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 }

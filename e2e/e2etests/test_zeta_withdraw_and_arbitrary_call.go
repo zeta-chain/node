@@ -8,22 +8,23 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	// crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TestZetaWithdrawAndArbitraryCall tests that ZETA withdraw and arbitrary call through gateway
+// is not supported in V2 - no CCTX should be created.
 func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
-	//payload := strings.ToLower(r.ZetaEthAddr.String())
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
-	r.AssertTestDAppEVMCalled(false, payload, amount)
-
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
+
+	// r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	// perform the withdraw
 	tx := r.ZETAWithdrawAndArbitraryCall(
@@ -34,10 +35,12 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	// ZETA withdraws through gateway are not supported in V2, verify no CCTX is created
+	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
 
-	r.AssertTestDAppEVMCalled(true, payload, amount)
+	// // wait for the cctx to be mined
+	// cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	// r.Logger.CCTX(*cctx, "withdraw")
+	// utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	// r.AssertTestDAppEVMCalled(true, payload, amount)
 }

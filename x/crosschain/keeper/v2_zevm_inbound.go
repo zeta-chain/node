@@ -47,26 +47,26 @@ func (k Keeper) ProcessZEVMInboundV2(
 		var zrc20 ethcommon.Address
 		var value *big.Int
 		var receiver []byte
-		var receiverChainID *big.Int
-		var callOptions gatewayzevm.CallOptions
+		//var receiverChainID *big.Int
+		//var callOptions gatewayzevm.CallOptions
 		if withdrawalEvent != nil {
 			zrc20 = withdrawalEvent.Zrc20
 			value = withdrawalEvent.Value
 			receiver = withdrawalEvent.Receiver
-			receiverChainID = withdrawalEvent.ChainId
-			callOptions = withdrawalEvent.CallOptions
+			//receiverChainID = withdrawalEvent.ChainId
+			//callOptions = withdrawalEvent.CallOptions
 		} else if callEvent != nil {
 			zrc20 = callEvent.Zrc20
 			value = big.NewInt(0)
 			receiver = callEvent.Receiver
-			callOptions = callEvent.CallOptions
-			receiverChainID = big.NewInt(0) // Receiver chain ID is only used for withdraws when coin type is ZETA.
+			//callOptions = callEvent.CallOptions
+			//receiverChainID = big.NewInt(0) // Receiver chain ID is only used for withdraws when coin type is ZETA.
 		} else {
 			zrc20 = withdrawalAndCallEvent.Zrc20
 			value = withdrawalAndCallEvent.Value
 			receiver = withdrawalAndCallEvent.Receiver
-			receiverChainID = withdrawalAndCallEvent.ChainId
-			callOptions = withdrawalAndCallEvent.CallOptions
+			//receiverChainID = withdrawalAndCallEvent.ChainId
+			//callOptions = withdrawalAndCallEvent.CallOptions
 		}
 
 		wzetaContractAddress, err := k.fungibleKeeper.GetWZetaContractAddress(ctx)
@@ -83,7 +83,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 		// Note: NoAssetCall is not supported for ZETA
 		switch {
 		case zrc20 == wzetaContractAddress:
-			inboundDetails, err = k.getZETAInboundDetails(ctx, receiverChainID, callOptions)
+			return types.ErrZetaThroughGateway
+			//inboundDetails, err = k.getZETAInboundDetails(ctx, receiverChainID, callOptions)
 		default:
 			inboundDetails, err = k.getZRC20InboundDetails(ctx, zrc20, callEvent != nil)
 		}

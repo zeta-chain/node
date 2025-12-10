@@ -8,7 +8,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
@@ -25,7 +24,9 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	tx := r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	//cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	//r.Logger.CCTX(*cctx, "withdraw")
+	//utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
 }

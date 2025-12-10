@@ -364,6 +364,13 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
+		r.ZevmTestDAppAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ZevmTestDappAddr: %w", err)
+		}
+	}
+
 	if c := conf.Contracts.EVM.TestDAppV2Addr; c != "" {
 		r.TestDAppV2EVMAddr, err = c.AsEVMAddress()
 		if err != nil {
