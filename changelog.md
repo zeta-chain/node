@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* The hardcoded gas price multipliers will be moved to zetacore chain parameters. The `zetacored` binary must be upgraded
+  to trigger chain parameters data migration before running the new `zetaclientd` binary.
+
 ### Features
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
