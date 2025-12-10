@@ -1,7 +1,7 @@
 .PHONY: build
 
 PACKAGE_NAME := github.com/zeta-chain/node
-NODE_VERSION := $(shell ./version.sh)
+NODE_VERSION ?= $(shell ./version.sh)
 NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
@@ -159,13 +159,14 @@ devnet-fork:
 	@echo "--> Running devnet fork script..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%)
 
+DEVNET_UPGRADE_VERSION := v37.0.0
 devnet-fork-upgrade:
 	@echo "--> Running devnet fork script with upgrade..."
 	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
 
 download-snapshot:
-	@echo "--> Downloading and caching testnet snapshot..."
-	@python3 contrib/devnet/download_snapshot.py
+	@echo "--> Downloading and caching snapshot..."
+	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1)
 
 ###############################################################################
 ###                                 Linting            	                    ###
@@ -633,9 +634,52 @@ stop-eth-node-mainnet:
 clean-eth-node-mainnet:
 	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
+# Start mainnet node with cached snapshot (if available)
+mainnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Start mainnet node with forced snapshot download
+mainnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Stop and remove mainnet node
+mainnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down mainnet-node
+
+###############################################################################
+###                         Local Testnet Development             			###
+###############################################################################
+
+# Start testnet node with cached snapshot (if available)
+testnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
+
+# Start testnet node with forced snapshot download
+testnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
+
+# Stop and remove testnet node
+testnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down testnet-node
+
 ###############################################################################
 ###                               Debug Tools                               ###
 ###############################################################################
+
+# Start dry run zetaclientd in dry mode
+# Usage: make zetaclient-dry ZETACORE_HOST=mainnet-node RPC_API_KEY_ALLTHATNODE=<your-api-key>
+# Use zetaclientd version to build images for zetaclientd-dry
+# ZETACLIENT_DRY_VERSION can be overridden
+# make zetaclient-dry ZETACORE_HOST=testnet-node RPC_API_KEY_ALLTHATNODE=<api key> ZETACLIENT_DRY_VERSION=v38.0.0
+ZETACLIENT_DRY_VERSION ?= $(subst zetaclient_,,$(OLD_ZETACLIENTD_VERSION))
+zetaclient-dry:
+	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(ZETACLIENT_DRY_VERSION) --target latest-runtime -f ./Dockerfile-localnet .
+	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) RPC_API_KEY_ALLTHATNODE=$(RPC_API_KEY_ALLTHATNODE) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
+
 
 filter-missed-btc: install-zetatool
 	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json
