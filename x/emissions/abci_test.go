@@ -223,8 +223,10 @@ func TestBeginBlocker(t *testing.T) {
 		})
 
 		// Fund the emission pool to start the emission process
+		// Use Ceil() to ensure there's enough balance for the
+		// blockRewards.GT(emissionPoolBalance) check in BeginBlocker, which compares the full decimal value
 		blockRewards := emissionstypes.BlockReward
-		totalRewardAmount := blockRewards.TruncateInt().Mul(sdkmath.NewInt(int64(numberOfTestBlocks)))
+		totalRewardAmount := blockRewards.Ceil().TruncateInt().Mul(sdkmath.NewInt(int64(numberOfTestBlocks)))
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 
 		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
@@ -250,7 +252,10 @@ func TestBeginBlocker(t *testing.T) {
 		)
 
 		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
-		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
+		// Block rewards should be >= distributed rewards.
+		// They can be equal if the truncated block reward is perfectly divisible by 4 (for 50%+25%+25% split),
+		// or slightly greater if truncation causes rounding losses in the distribution.
+		require.True(t, blockRewards.TruncateInt().GTE(distributedRewards))
 
 		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), len(ballotList))
 		_, found = zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
@@ -603,7 +608,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 				Height:           0,
 				BallotsIndexList: ballotIdentifiers,
 			})
-			ctx = ctx.WithBlockHeight(100)
+			ctx = ctx.WithBlockHeight(300)
 
 			// Act
 			// Distribute the rewards and check if the rewards are distributed correctly
