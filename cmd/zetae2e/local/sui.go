@@ -57,7 +57,7 @@ func suiTestRoutine(
 			return fmt.Errorf("sui tests failed: %v", err)
 		}
 
-		suiRunner.SuiUpdateGatewayInfo()
+		suiRunner.SuiUpdateGatewayInfoAndTSS()
 
 		if err := suiRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("sui tests failed: %v", err)

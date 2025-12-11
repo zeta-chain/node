@@ -106,8 +106,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// SuiUpdateGatewayInfo updates the gateway and TSS information from chain params and observer module
-func (r *E2ERunner) SuiUpdateGatewayInfo() {
+// SuiUpdateGatewayInfoAndTSS updates the gateway and TSS information from chain params and observer module
+func (r *E2ERunner) SuiUpdateGatewayInfoAndTSS() {
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
 
 	// query chain params
@@ -621,7 +621,7 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	require.NotEmpty(r, newMessageContextID, "new MessageContext not found in transaction response")
 	r.suiTransferObjectToTSS(deployerSigner, newMessageContextID)
 
-	// Preserve the existing originalPackageIDto use for emitted events
+	// Preserve the existing originalPackage ID to use for emitted events
 	packageID := r.SuiGateway.PackageID()
 	objectID := r.SuiGateway.ObjectID()
 	previousPackageID := ""
@@ -648,22 +648,6 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	})
 	require.NoError(r, err)
 	r.suiExecuteTx(deployerSigner, resetNonceTx)
-}
-
-// SuiGetGatewayNonce queries the gateway object and returns the current nonce
-func (r *E2ERunner) SuiGetGatewayNonce() uint64 {
-	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
-		ObjectId: r.SuiGateway.ObjectID(),
-		Options:  models.SuiObjectDataOptions{ShowContent: true},
-	})
-	require.NoError(r, err)
-	require.NotNil(r, resp.Data)
-	require.NotNil(r, resp.Data.Content)
-
-	nonce, err := zetasui.ParseGatewayNonce(*resp.Data.Content)
-	require.NoError(r, err)
-
-	return nonce
 }
 
 // SuiGetActiveMessageContextID queries the gateway's dynamic field to get the active MessageContext ID

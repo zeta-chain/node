@@ -269,13 +269,6 @@ func (gw *Gateway) WithdrawCapID() string {
 	return gw.withdrawCapID
 }
 
-// SetWithdrawCapID updates the withdraw cap ID
-func (gw *Gateway) SetWithdrawCapID(withdrawCapID string) {
-	gw.mu.Lock()
-	defer gw.mu.Unlock()
-	gw.withdrawCapID = withdrawCapID
-}
-
 // WithdrawCapType returns struct type of the WithdrawCap
 // Note: the withdraw cap was defined in the original package, so original package ID should be used
 func (gw *Gateway) WithdrawCapType() string {
