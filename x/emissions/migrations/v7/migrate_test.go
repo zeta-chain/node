@@ -15,17 +15,22 @@ func TestMigrateStore(t *testing.T) {
 		// Arrange
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
+		// Set up pre-migration (v6) values
 		currentParams := types.DefaultParams()
+		currentParams.BallotMaturityBlocks = 150
+		currentParams.PendingBallotsDeletionBufferBlocks = 216000
+		currentParams.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("6751543209876543209.876543209876543210")
 		k.SetParams(ctx, currentParams)
 
 		// Act
 		err := v7.MigrateStore(ctx, k)
 
 		// Assert
-		// only BallotMaturityBlocks and BlockRewardAmount are updated
 		require.NoError(t, err)
 		updatedParams, found := k.GetParams(ctx)
+		require.True(t, found)
 
+		// Verify migrated values changed from v6 to v7
 		require.NotEqual(t, currentParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
 		require.Equal(t, int64(300), updatedParams.BallotMaturityBlocks)
 
@@ -47,12 +52,11 @@ func TestMigrateStore(t *testing.T) {
 			updatedParams.PendingBallotsDeletionBufferBlocks,
 		)
 
-		require.True(t, found)
+		// Verify unchanged params remain the same
 		require.Equal(t, currentParams.ValidatorEmissionPercentage, updatedParams.ValidatorEmissionPercentage)
 		require.Equal(t, currentParams.ObserverEmissionPercentage, updatedParams.ObserverEmissionPercentage)
 		require.Equal(t, currentParams.TssSignerEmissionPercentage, updatedParams.TssSignerEmissionPercentage)
 		require.Equal(t, currentParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
-
 	})
 }
 
