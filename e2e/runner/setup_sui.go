@@ -106,7 +106,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// SuiUpdateGatewayInfo updates the gateway information from chain params
+// SuiUpdateGatewayInfo updates the gateway and TSS information from chain params and observer.
+// This should be called before running Sui tests to ensure the runner has up-to-date information,
+// especially after gateway upgrades or TSS migrations.
 func (r *E2ERunner) SuiUpdateGatewayInfo() {
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
 
@@ -119,7 +121,10 @@ func (r *E2ERunner) SuiUpdateGatewayInfo() {
 	r.SuiGateway, err = zetasui.NewGatewayFromPairID(resp.ChainParams.GatewayAddress)
 	require.NoError(r, err)
 
-	r.Logger.Info("current gateway package ID: %s", r.SuiGateway.PackageID())
+	// update runner's TSS address (important after TSS migration)
+	tssAddr, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
+	require.NoError(r, err)
+	r.SuiTSSAddress = tssAddr.Sui
 }
 
 // suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
@@ -558,6 +563,91 @@ func (r *E2ERunner) suiTransferObjectToTSS(signer *zetasui.SignerSecp256k1, obje
 	require.NoError(r, err)
 
 	r.suiExecuteTx(signer, tx)
+}
+
+// UpdateTSSAddressSui updates the TSS for Sui by issuing a new WithdrawCap and transferring it to the new TSS address.
+func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
+	r.Logger.Print("⚙️ updating TSS for Sui gateway")
+
+	newTss, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
+	require.NoError(r, err)
+	r.SuiTSSAddress = newTss.Sui
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
+
+	// Deployer signer (owns AdminCap)
+	deployerSigner, err := r.Account.SuiSigner()
+	require.NoError(r, err)
+	adminCapType := fmt.Sprintf("%s::gateway::AdminCap", r.SuiGateway.Original().PackageID())
+	adminCapID, found := r.suiGetOwnedObjectID(deployerSigner.Address(), adminCapType)
+	require.True(r, found, "AdminCap not found for deployer %s", deployerSigner.Address())
+
+	// Create new caps and revoke old ones
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        zetasui.FuncIssueWithdrawAndWhitelistCap,
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	resp := r.suiExecuteTx(deployerSigner, tx)
+	var newWithdrawCapID string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "WithdrawCap") {
+			newWithdrawCapID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, newWithdrawCapID, "new WithdrawCap not found in transaction response")
+	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
+
+	// Update gateway with full 5-part pair ID and update chain params
+	// Preserve the existing originalPackageID - it points to where events are emitted
+	packageID := r.SuiGateway.PackageID()
+	objectID := r.SuiGateway.ObjectID()
+	previousPackageID := ""
+	if prev := r.SuiGateway.Previous(); prev != nil {
+		previousPackageID = prev.PackageID()
+	}
+	originalPackageID := r.SuiGateway.Original().PackageID()
+	gatewayPairID := zetasui.MakePairID(packageID, objectID, newWithdrawCapID, previousPackageID, originalPackageID)
+	err = r.SuiGateway.UpdateIDs(gatewayPairID)
+	require.NoError(r, err)
+
+	// Update chain params nonces would have been reset when updating TSS
+	err = r.setSuiChainParams(false)
+	require.NoError(r, err)
+
+	resetNonceTx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        "reset_nonce",
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), "0", adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	r.suiExecuteTx(deployerSigner, resetNonceTx)
+
+	r.Logger.Print("✅ Sui TSS updated to: %s", r.SuiTSSAddress)
+}
+
+// SuiGetGatewayNonce queries the gateway object and returns the current nonce
+func (r *E2ERunner) SuiGetGatewayNonce() uint64 {
+	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
+		ObjectId: r.SuiGateway.ObjectID(),
+		Options:  models.SuiObjectDataOptions{ShowContent: true},
+	})
+	require.NoError(r, err)
+	require.NotNil(r, resp.Data)
+	require.NotNil(r, resp.Data.Content)
+
+	nonce, err := zetasui.ParseGatewayNonce(*resp.Data.Content)
+	require.NoError(r, err)
+
+	return nonce
 }
 
 // suiGetOwnedObjectID gets the first owned object ID by owner address and struct type
