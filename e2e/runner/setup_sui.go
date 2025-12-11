@@ -106,9 +106,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// SuiUpdateGatewayInfo updates the gateway and TSS information from chain params and observer.
-// This should be called before running Sui tests to ensure the runner has up-to-date information,
-// especially after gateway upgrades or TSS migrations.
+// SuiUpdateGatewayInfo updates the gateway and TSS information from chain params and observer module
 func (r *E2ERunner) SuiUpdateGatewayInfo() {
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
 
@@ -602,8 +600,7 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	require.NotEmpty(r, newWithdrawCapID, "new WithdrawCap not found in transaction response")
 	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
 
-	// Update gateway with full 5-part pair ID and update chain params
-	// Preserve the existing originalPackageID - it points to where events are emitted
+	// Preserve the existing originalPackageIDto use for emitted events
 	packageID := r.SuiGateway.PackageID()
 	objectID := r.SuiGateway.ObjectID()
 	previousPackageID := ""
