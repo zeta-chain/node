@@ -31,6 +31,8 @@ type ZetacoreReaderClient interface {
 
 	NewBlockSubscriber(context.Context) (chan cometbft.EventDataNewBlock, error)
 
+	GetBlockHeight(context.Context) (int64, error)
+
 	HasVoted(_ context.Context, ballotIndex string, voterAddress string) (bool, error)
 
 	ListPendingCCTX(context.Context, chains.Chain) ([]*crosschain.CrossChainTx, uint64, error)

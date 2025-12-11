@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	mathpkg "github.com/zeta-chain/node/pkg/math"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
@@ -177,8 +179,25 @@ func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, 
 		return "", errors.Wrap(err, "unable to get digest")
 	}
 
+	var (
+		// calculate an artificial keysign height (tweaked by chain ID) using pairing function.
+		// this height uniquely identify a keysign request across all chains without conflicts.
+		chainID = s.Chain().ChainId
+		// #nosec G115 - always in range
+		keysignHeight = mathpkg.CantorPair(uint32(nonce), uint32(chainID))
+		logger        = s.Logger().
+				Std.With().
+				Uint64(logs.FieldNonce, nonce).
+				Uint64("height", zetaHeight).
+				Uint64("keysign_height", keysignHeight).
+				Str("digest", hex.EncodeToString(digest[:])).
+				Logger()
+	)
+
+	logger.Info().Msg("signing sui transaction")
+
 	// send TSS signature request.
-	sig65B, err := s.TSS().Sign(ctx, wrapDigest(digest), zetaHeight, nonce, s.Chain().ChainId)
+	sig65B, err := s.TSS().Sign(ctx, wrapDigest(digest), keysignHeight, nonce, chainID)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to sign tx")
 	}

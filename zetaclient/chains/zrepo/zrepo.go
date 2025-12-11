@@ -65,6 +65,10 @@ func (repo *ZetaRepo) ZetaChain() chains.Chain {
 	return repo.client.Chain()
 }
 
+func (repo *ZetaRepo) GetBlockHeight(ctx context.Context) (int64, error) {
+	return repo.client.GetBlockHeight(ctx)
+}
+
 func (repo *ZetaRepo) GetCCTX(ctx context.Context, nonce uint64) (*cc.CrossChainTx, error) {
 	cctx, err := repo.client.GetCctxByNonce(ctx, repo.connectedChain.ChainId, nonce)
 	if err != nil {
