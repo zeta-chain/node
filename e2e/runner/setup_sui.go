@@ -606,6 +606,31 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
 	r.Logger.Print("  WithdrawCap transfer completed")
 
+	msgContextType := fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.Original().PackageID())
+	msgContextTx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        zetasui.FuncIssueMessageContext,
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	msgContextResp := r.suiExecuteTx(deployerSigner, msgContextTx)
+
+	var newMessageContextID string
+	for _, change := range msgContextResp.ObjectChanges {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, msgContextType) {
+			newMessageContextID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, newMessageContextID, "new MessageContext not found in transaction response")
+
+	r.Logger.Print("  transferring new MessageContext %s to TSS %s", newMessageContextID, r.SuiTSSAddress)
+	r.suiTransferObjectToTSS(deployerSigner, newMessageContextID)
+	r.Logger.Print("  MessageContext transfer completed")
+
 	// Preserve the existing originalPackageIDto use for emitted events
 	packageID := r.SuiGateway.PackageID()
 	objectID := r.SuiGateway.ObjectID()
@@ -653,6 +678,28 @@ func (r *E2ERunner) SuiGetGatewayNonce() uint64 {
 	require.NoError(r, err)
 
 	return nonce
+}
+
+// SuiGetActiveMessageContextID queries the gateway's dynamic field to get the active MessageContext ID
+func (r *E2ERunner) SuiGetActiveMessageContextID() string {
+	nameJSON, err := zetasui.ActiveMessageContextDynamicFieldName()
+	require.NoError(r, err)
+
+	response, err := r.Clients.Sui.SuiXGetDynamicFieldObject(r.Ctx, models.SuiXGetDynamicFieldObjectRequest{
+		ObjectId: r.SuiGateway.ObjectID(),
+		DynamicFieldName: models.DynamicFieldObjectName{
+			Type:  "vector<u8>",
+			Value: nameJSON,
+		},
+	})
+	require.NoError(r, err)
+	require.NotNil(r, response.Data)
+	require.NotNil(r, response.Data.Content)
+
+	messageContextID, err := zetasui.ParseDynamicFieldValueStr(*response.Data.Content)
+	require.NoError(r, err)
+
+	return messageContextID
 }
 
 // suiGetOwnedObjectID gets the first owned object ID by owner address and struct type
