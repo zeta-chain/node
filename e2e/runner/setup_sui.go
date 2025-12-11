@@ -570,9 +570,6 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	newTss, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
 	require.NoError(r, err)
 	r.SuiTSSAddress = newTss.Sui
-
-	// Fund new TSS from faucet (request twice for sufficient balance)
-	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// Deployer signer (owns AdminCap)
@@ -582,7 +579,6 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	adminCapID, found := r.suiGetOwnedObjectID(deployerSigner.Address(), adminCapType)
 	require.True(r, found, "AdminCap not found for deployer %s", deployerSigner.Address())
 
-	// Create new caps and revoke old ones
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          deployerSigner.Address(),
 		PackageObjectId: r.SuiGateway.PackageID(),
@@ -601,10 +597,7 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 		}
 	}
 	require.NotEmpty(r, newWithdrawCapID, "new WithdrawCap not found in transaction response")
-
-	r.Logger.Print("  transferring new WithdrawCap %s to TSS %s", newWithdrawCapID, r.SuiTSSAddress)
 	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
-	r.Logger.Print("  WithdrawCap transfer completed")
 
 	msgContextType := fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.Original().PackageID())
 	msgContextTx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
@@ -626,10 +619,7 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 		}
 	}
 	require.NotEmpty(r, newMessageContextID, "new MessageContext not found in transaction response")
-
-	r.Logger.Print("  transferring new MessageContext %s to TSS %s", newMessageContextID, r.SuiTSSAddress)
 	r.suiTransferObjectToTSS(deployerSigner, newMessageContextID)
-	r.Logger.Print("  MessageContext transfer completed")
 
 	// Preserve the existing originalPackageIDto use for emitted events
 	packageID := r.SuiGateway.PackageID()
@@ -642,8 +632,6 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	gatewayPairID := zetasui.MakePairID(packageID, objectID, newWithdrawCapID, previousPackageID, originalPackageID)
 	err = r.SuiGateway.UpdateIDs(gatewayPairID)
 	require.NoError(r, err)
-
-	r.Logger.Print("  updating chain params with new gateway pair ID: %s", gatewayPairID)
 
 	// Update chain params nonces would have been reset when updating TSS
 	err = r.setSuiChainParams(false)
@@ -660,8 +648,6 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	})
 	require.NoError(r, err)
 	r.suiExecuteTx(deployerSigner, resetNonceTx)
-
-	r.Logger.Print("✅ Sui TSS updated to: %s", r.SuiTSSAddress)
 }
 
 // SuiGetGatewayNonce queries the gateway object and returns the current nonce
