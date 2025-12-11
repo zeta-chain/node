@@ -180,7 +180,8 @@ func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, 
 	}
 
 	var (
-		// calculate artificial keysign height
+		// calculate an artificial keysign height (tweaked by chain ID) using pairing function.
+		// this height uniquely identify a keysign request across all chains without conflicts.
 		chainID = s.Chain().ChainId
 		// #nosec G115 - always in range
 		keysignHeight = mathpkg.CantorPair(uint32(nonce), uint32(chainID))
