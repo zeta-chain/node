@@ -1,4 +1,7 @@
-name: Build & Deploy Zetanode-Dry
+name: Publish Zetanode Image Internal
+
+# Description: Builds the zetanode Docker image using the Makefile and pushes it to Google Artifact Registry.
+# This workflow is used for internal testing and development builds.
 
 on:
   workflow_dispatch:
@@ -15,7 +18,7 @@ env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
   GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
   ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY_NAME }}
-  IMAGE_NAME: zetanode
+  IMAGE_NAME: zetanode-snapshot
 
 jobs:
   build-and-push:
@@ -90,13 +93,13 @@ jobs:
         run: |
           make zetanode
 
-      - name: Tag image for Artifact Registry
+      - name: Push zetanode image to Artifact Registry
         run: |
           docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
 
-      - name: Push to Artifact Registry
-        run: |
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}-test
+          docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Output image information
         run: |
