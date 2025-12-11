@@ -570,6 +570,9 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	newTss, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
 	require.NoError(r, err)
 	r.SuiTSSAddress = newTss.Sui
+
+	// Fund new TSS from faucet (request twice for sufficient balance)
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// Deployer signer (owns AdminCap)
@@ -598,7 +601,10 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 		}
 	}
 	require.NotEmpty(r, newWithdrawCapID, "new WithdrawCap not found in transaction response")
+
+	r.Logger.Print("  transferring new WithdrawCap %s to TSS %s", newWithdrawCapID, r.SuiTSSAddress)
 	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
+	r.Logger.Print("  WithdrawCap transfer completed")
 
 	// Preserve the existing originalPackageIDto use for emitted events
 	packageID := r.SuiGateway.PackageID()
@@ -611,6 +617,8 @@ func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
 	gatewayPairID := zetasui.MakePairID(packageID, objectID, newWithdrawCapID, previousPackageID, originalPackageID)
 	err = r.SuiGateway.UpdateIDs(gatewayPairID)
 	require.NoError(r, err)
+
+	r.Logger.Print("  updating chain params with new gateway pair ID: %s", gatewayPairID)
 
 	// Update chain params nonces would have been reset when updating TSS
 	err = r.setSuiChainParams(false)
