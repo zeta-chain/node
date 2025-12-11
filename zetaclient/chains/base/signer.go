@@ -192,7 +192,7 @@ func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
 
 // IsStaleBlockEvent checks if the block event is stale and returns (zeta_height, is_stale, error).
 func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo) (int64, bool, error) {
-	zetaBlock, _, err := scheduler.BlockFromContextWithDelay(ctx)
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
 		return 0, false, errors.Wrap(err, "unable to get block event from context")
 	}
@@ -213,6 +213,9 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 			Msg("stale block event")
 		return zetaHeight, true, nil
 	}
+
+	// adjust keysign timing if set in operational flags
+	time.Sleep(delay)
 
 	return zetaHeight, false, nil
 }
