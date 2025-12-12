@@ -24,12 +24,11 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 
 	// set new fields to the same value as 'confirmation_count'
 	for _, chainParams := range allChainParams.ChainParams {
-		chain, found := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
-		if !found {
-			return errorsmod.Wrapf(types.ErrSupportedChains, "chain %d not found", chainParams.ChainId)
-		}
-
 		if chainParams != nil {
+			chain, found := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
+			if !found {
+				return errorsmod.Wrapf(types.ErrSupportedChains, "chain %d not found", chainParams.ChainId)
+			}
 			chainParams.GasPriceMultiplier = GetGasPriceMultiplierForChain(chain)
 		}
 	}

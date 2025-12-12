@@ -19,10 +19,10 @@ var (
 	// DefaultGasPriceMultiplier is the default gas price multiplier for all chains
 	DefaultGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("1.0")
 
-	// DefaultEVMOutboundGasPriceMultiplier is the default gas price multiplier for EVM-chain outbond txs
+	// DefaultEVMOutboundGasPriceMultiplier is the default gas price multiplier for EVM-chain outbound txs
 	DefaultEVMOutboundGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("1.2")
 
-	// DefaultBTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbond txs
+	// DefaultBTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbound txs
 	DefaultBTCOutboundGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("2.0")
 )
 
@@ -156,9 +156,8 @@ func (cp ChainParams) Validate() error {
 		return fmt.Errorf("GasPriceMultiplier cannot be nil")
 	}
 
-	if !cp.GasPriceMultiplier.IsPositive() ||
-		cp.GasPriceMultiplier.GT(sdkmath.LegacyNewDec(10)) ||
-		cp.GasPriceMultiplier.LT(sdkmath.LegacyMustNewDecFromStr("0.1")) {
+	if cp.GasPriceMultiplier.GT(sdkmath.LegacyNewDec(100)) ||
+		cp.GasPriceMultiplier.LT(sdkmath.LegacyMustNewDecFromStr("0.01")) {
 		return fmt.Errorf("GasPriceMultiplier %s out of range", cp.GasPriceMultiplier.String())
 	}
 
