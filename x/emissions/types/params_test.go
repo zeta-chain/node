@@ -20,7 +20,7 @@ func TestNewParams(t *testing.T) {
 		params.ObserverSlashAmount,
 		"ObserverSlashAmount should be set to 100000000000000000",
 	)
-	require.Equal(t, int64(100), params.BallotMaturityBlocks, "BallotMaturityBlocks should be set to 100")
+	require.Equal(t, int64(300), params.BallotMaturityBlocks, "BallotMaturityBlocks should be set to 300")
 	require.Equal(t, BlockReward, params.BlockRewardAmount, "BlockRewardAmount should be set to 0")
 }
 
