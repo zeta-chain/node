@@ -14,6 +14,8 @@ on:
     branches:
       - develop
 
+      #trigger
+
 env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
   GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
