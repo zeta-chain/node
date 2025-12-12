@@ -297,13 +297,21 @@ func (s *TestSuite) TestTraceBlock() {
 			func() {
 				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
-				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
+				// convert rpctypes.TraceConfig to evmtypes.TraceConfig by marshaling the map to JSON string
+				traceConfig := &evmtypes.TraceConfig{
+					TracerJsonConfig: `{"disableCode":true}`,
+				}
+				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx}, traceConfig)
 				RegisterConsensusParams(client, 1)
 				RegisterBlockResults(client, 1)
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,
-			&rpctypes.TraceConfig{},
+			&rpctypes.TraceConfig{
+				TracerConfig: map[string]interface{}{
+					"disableCode": true,
+				},
+			},
 			false,
 		},
 	}
