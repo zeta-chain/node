@@ -16,7 +16,7 @@ import (
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
+func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
 	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
@@ -77,7 +77,10 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig = config
+		traceTxRequest.TraceConfig, err = toEVMTraceConfig(config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// minus one to get the context of block beginning
@@ -106,7 +109,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 // executes all the transactions contained within. The return value will be one item
 // per transaction, dependent on the requested tracer.
 func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
-	config *evmtypes.TraceConfig,
+	config *rpctypes.TraceConfig,
 	block *tmrpctypes.ResultBlock,
 ) ([]*evmtypes.TxTraceResult, error) {
 	txs := block.Block.Txs
@@ -132,6 +135,11 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 	ctxWithHeight := rpctypes.ContextWithHeight(int64(contextHeight))
 
+	traceConfig, err := toEVMTraceConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
 	if !ok {
 		return nil, errors.New("invalid rpc client")
@@ -144,7 +152,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     config,
+		TraceConfig:     traceConfig,
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
@@ -164,4 +172,34 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	return decodedResults, nil
+}
+
+// toEVMTraceConfig converts rpctypes.TraceConfig to evmtypes.TraceConfig
+func toEVMTraceConfig(config *rpctypes.TraceConfig) (*evmtypes.TraceConfig, error) {
+	if config == nil {
+		return nil, nil
+	}
+
+	cfg := config.TraceConfig
+
+	// if TracerConfig is an object, we need to encode it into JSON string
+	if config.TracerConfig != nil && config.TracerJsonConfig == "" {
+		switch v := config.TracerConfig.(type) {
+		case string:
+			// It's already a string, use it directly
+			cfg.TracerJsonConfig = v
+		case map[string]interface{}:
+			// this is the compliant style
+			// we need to encode it to a string before passing it to the ethermint side
+			jsonBytes, err := json.Marshal(v)
+			if err != nil {
+				return nil, fmt.Errorf("unable to encode traceConfig to JSON: %w", err)
+			}
+			cfg.TracerJsonConfig = string(jsonBytes)
+		default:
+			return nil, fmt.Errorf("unexpected traceConfig type: %T", v)
+		}
+	}
+
+	return &cfg, nil
 }

@@ -149,10 +149,10 @@ type EVMBackend interface {
 	Status() (map[string]hexutil.Uint, error)
 
 	// Tracing
-	TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error)
+	TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error)
 	TraceBlock(
 		height rpctypes.BlockNumber,
-		config *evmtypes.TraceConfig,
+		config *rpctypes.TraceConfig,
 		block *tmrpctypes.ResultBlock,
 	) ([]*evmtypes.TxTraceResult, error)
 }
