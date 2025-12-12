@@ -10,6 +10,10 @@ on:
         description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
         required: false
         type: string
+      version:
+        description: 'Version tag to apply to the image (optional). If not provided, only "latest" tag will be pushed.'
+        required: false
+        type: string
   pull_request:
     branches:
       - develop
@@ -39,50 +43,20 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
-      - name: Determine version from git tags
+      - name: Determine version
         id: version
+        shell: bash
         run: |
-          # Check if we're on an exact tag
-          if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
-            TAG=$(git describe --exact-match --tags HEAD)
-            # Ensure it has v prefix
-            if [[ ! $TAG =~ ^v ]]; then
-              NODE_VERSION="v${TAG}"
-            else
-              NODE_VERSION="$TAG"
-            fi
+          if [[ -n "${{ inputs.version }}" ]]; then
+            # Use provided version input
+            NODE_VERSION="${{ inputs.version }}"
+            echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
+            echo "version=$NODE_VERSION" >> $GITHUB_OUTPUT
+            echo "Using provided version: $NODE_VERSION"
           else
-            # Get the latest tag (fetch tags first, then get latest v*.*.* tag)
-            git fetch --tags --quiet 2>/dev/null || true
-            LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || echo "")
-            if [[ -n "$LATEST_TAG" ]]; then
-              # Extract version number (e.g., v37.0.3 -> 37.0.3)
-              VERSION_NUM=$(echo "$LATEST_TAG" | sed 's/^v//')
-              # Increment patch version (e.g., 37.0.3 -> 37.0.4)
-              MAJOR=$(echo "$VERSION_NUM" | cut -d. -f1)
-              MINOR=$(echo "$VERSION_NUM" | cut -d. -f2)
-              PATCH=$(echo "$VERSION_NUM" | cut -d. -f3)
-              PATCH=$((PATCH + 1))
-              NODE_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-            else
-              # Fallback: use version.sh but format it properly
-              BASE_VERSION=$(./version.sh)
-              # If it's a timestamp version, use a default
-              if [[ $BASE_VERSION =~ ^0\.0\. ]]; then
-                NODE_VERSION="v37.0.0"
-              else
-                # Ensure v prefix
-                if [[ ! $BASE_VERSION =~ ^v ]]; then
-                  NODE_VERSION="v${BASE_VERSION}"
-                else
-                  NODE_VERSION="$BASE_VERSION"
-                fi
-              fi
-            fi
+            echo "No version provided, will only tag as 'latest'"
+            echo "version=" >> $GITHUB_OUTPUT
           fi
-          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
-          echo "version=$NODE_VERSION" >> $GITHUB_OUTPUT
-          echo "Determined version: $NODE_VERSION"
 
       - name: Set commit hash
         id: commit
@@ -96,19 +70,32 @@ jobs:
           make zetanode
 
       - name: Push zetanode image to Artifact Registry
+        shell: bash
         run: |
-          docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}
-
+          # Always tag and push as latest
           docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
 
+          # Only tag and push version if provided
+          if [[ -n "${{ inputs.version }}" ]]; then
+            docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}
+            docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}
+            echo "Pushed version tag: ${{ inputs.version }}"
+          else
+            echo "Skipping version tag (only pushed 'latest')"
+          fi
+
       - name: Output image information
+        shell: bash
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image**: \`${{ env.IMAGE_NAME }}:${{ env.NODE_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: \`${{ env.NODE_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "**Version**: \`${{ inputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Version**: \`latest\` (no version tag provided)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "**Commit**: \`${{ env.NODE_COMMIT }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Image successfully pushed to Google Artifact Registry." >> $GITHUB_STEP_SUMMARY
