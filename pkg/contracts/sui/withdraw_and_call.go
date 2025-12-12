@@ -17,6 +17,9 @@ const (
 	// FuncIssueMessageContext is the gateway function name issue_message_context
 	FuncIssueMessageContext = "issue_message_context"
 
+	// FuncIssueWithdrawAndWhitelistCap is the gateway function to issue new withdraw/whitelist caps
+	FuncIssueWithdrawAndWhitelistCap = "issue_withdraw_and_whitelist_cap"
+
 	// FuncSetMessageContext is the gateway function name set_message_context
 	FuncSetMessageContext = "set_message_context"
 
