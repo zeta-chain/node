@@ -361,17 +361,17 @@ start-e2e-consensus-test: e2e-images
 
 start-tss-migration-add-observer: e2e-images solana
 	@echo "--> Starting tss migration test with add observer"
-	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui --test-ton" && \
 	export TSS_MIGRATION_FLAG="--tss-migration-add-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana --profile sui up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana --profile sui --profile ton up -d
 
 start-tss-migration-remove-observer: e2e-images solana
 	@echo "--> Starting tss migration test with remove observer"
-	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui --test-ton" && \
 	export TSS_MIGRATION_FLAG="--tss-migration-remove-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana --profile sui up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana --profile sui --profile ton up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
