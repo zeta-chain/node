@@ -200,7 +200,6 @@ func (r *E2ERunner) UpdateTSSAddressTON(gatewayAccountID, faucetURL string) {
 	err = gw.SendUpdateTSS(ctx, &deployer.Wallet, amount, r.TSSAddress, sendMode)
 	require.NoError(r, err, "unable to send update_tss to TON gateway")
 
-	// Wait for transaction confirmation
 	const maxWaitingTime = 30 * time.Second
 	err = r.Clients.TON.WaitForNextSeqno(ctx, deployer.GetAddress(), deployerSeqno, maxWaitingTime)
 	require.NoError(r, err, "unable to confirm update_tss transaction")

@@ -27,12 +27,8 @@ const (
 const (
 	OpWithdraw      Op = 200
 	OpIncreaseSeqno Op = 205
-)
-
-// Authority operations (admin ops sent internally)
-const (
-	OpUpdateTSS  Op = 202
-	OpResetSeqno Op = 206
+	OpUpdateTSS     Op = 202
+	OpResetSeqno    Op = 206
 )
 
 // ExitCode represents an error code. Might be TVM or custom.
