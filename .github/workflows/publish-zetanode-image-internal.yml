@@ -10,11 +10,6 @@ on:
         description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
         required: false
         type: string
-  pull_request:
-    branches:
-      - develop
-
-      #trigger
 
 env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
