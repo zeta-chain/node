@@ -11,6 +11,10 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: publish-zetanode-image-internal
+  cancel-in-progress: false
+
 env:
   ARTIFACT_REGISTRY: us-docker.pkg.dev
   GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
@@ -61,19 +65,9 @@ jobs:
               PATCH=$((PATCH + 1))
               NODE_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
             else
-              # Fallback: use version.sh but format it properly
-              BASE_VERSION=$(./version.sh)
-              # If it's a timestamp version, use a default
-              if [[ $BASE_VERSION =~ ^0\.0\. ]]; then
-                NODE_VERSION="v37.0.0"
-              else
-                # Ensure v prefix
-                if [[ ! $BASE_VERSION =~ ^v ]]; then
-                  NODE_VERSION="v${BASE_VERSION}"
-                else
-                  NODE_VERSION="$BASE_VERSION"
-                fi
-              fi
+              echo "Error: Could not determine version. No git tags found matching pattern v*.*.*"
+              echo "Please ensure the repository has at least one version tag (e.g., v37.0.0)"
+              exit 1
             fi
           fi
           echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
