@@ -8,6 +8,7 @@
 * [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
 * [4453](https://github.com/zeta-chain/node/pull/4453/) - add an option to create dry zetaclients to connect to live networks
 * [4484](https://github.com/zeta-chain/node/pull/4484) - change params for 2s block time
+* [4492](https://github.com/zeta-chain/node/pull/4492) - add migration script to set authorization for MsgAddObserver
 
 ### Tests
 
