@@ -1,16 +1,19 @@
 package chains
 
 import (
+	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"net/http"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/cmd/zetatool/context"
+	zetacontext "github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -20,7 +23,7 @@ import (
 )
 
 func BitcoinBallotIdentifier(
-	ctx *context.Context,
+	ctx *zetacontext.Context,
 	btcClient *client.Client,
 	params *chaincfg.Params,
 	tss string,
@@ -181,4 +184,93 @@ func voteFromStdMemo(
 		crosschaintypes.WithRevertOptions(revertOptions),
 		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)
+}
+
+const (
+	// Mempool.space API endpoints for address stats (balance)
+	mempoolAddressAPIMainnet = "https://mempool.space/api/address/%s"
+	mempoolAddressAPITestnet = "https://mempool.space/testnet4/api/address/%s"
+	satoshisPerBitcoin       = 100_000_000
+)
+
+// BTCAddressStats represents the response from mempool.space address API
+type BTCAddressStats struct {
+	Address    string `json:"address"`
+	ChainStats struct {
+		FundedTxoCount int   `json:"funded_txo_count"`
+		FundedTxoSum   int64 `json:"funded_txo_sum"`
+		SpentTxoCount  int   `json:"spent_txo_count"`
+		SpentTxoSum    int64 `json:"spent_txo_sum"`
+		TxCount        int   `json:"tx_count"`
+	} `json:"chain_stats"`
+	MempoolStats struct {
+		FundedTxoCount int   `json:"funded_txo_count"`
+		FundedTxoSum   int64 `json:"funded_txo_sum"`
+		SpentTxoCount  int   `json:"spent_txo_count"`
+		SpentTxoSum    int64 `json:"spent_txo_sum"`
+		TxCount        int   `json:"tx_count"`
+	} `json:"mempool_stats"`
+}
+
+// GetBTCBalance fetches the BTC balance for a given address using mempool.space API
+// Returns the balance in BTC (not satoshis)
+func GetBTCBalance(ctx context.Context, address string, network string) (float64, error) {
+	// Get the appropriate API URL based on network
+	apiURL := getMempoolAddressAPIURL(network, address)
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Execute request
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch address stats: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("mempool.space API returned status %d", resp.StatusCode)
+	}
+
+	// Decode response
+	var stats BTCAddressStats
+	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+		return 0, fmt.Errorf("failed to decode address stats: %w", err)
+	}
+
+	// Calculate confirmed balance: funded - spent
+	balanceSatoshis := stats.ChainStats.FundedTxoSum - stats.ChainStats.SpentTxoSum
+
+	// Convert satoshis to BTC
+	return float64(balanceSatoshis) / satoshisPerBitcoin, nil
+}
+
+// getMempoolAddressAPIURL returns the mempool.space address API URL for the given network
+func getMempoolAddressAPIURL(network, address string) string {
+	switch network {
+	case NetworkMainnet:
+		return fmt.Sprintf(mempoolAddressAPIMainnet, address)
+	case NetworkTestnet:
+		return fmt.Sprintf(mempoolAddressAPITestnet, address)
+	default:
+		// For localnet/devnet, default to testnet API (won't work but provides error)
+		return fmt.Sprintf(mempoolAddressAPITestnet, address)
+	}
+}
+
+// GetBTCChainID returns the Bitcoin chain ID for the given network
+func GetBTCChainID(network string) int64 {
+	switch network {
+	case NetworkMainnet:
+		return 8332 // Bitcoin mainnet
+	case NetworkTestnet:
+		return 18332 // Bitcoin testnet3
+	case NetworkLocalnet:
+		return 18444 // Bitcoin regtest
+	default:
+		return 18332 // Default to testnet
+	}
 }

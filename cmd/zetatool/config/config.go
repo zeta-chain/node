@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/spf13/afero"
@@ -28,8 +29,14 @@ func TestnetConfig() *Config {
 		BtcParams:    "",
 		SolanaRPC:    "https://api.testnet.solana.com",
 		BscRPC:       "https://bsc-testnet-rpc.publicnode.com",
-		PolygonRPC:   "https://polygon-amoy.gateway.tenderly.com",
+		PolygonRPC:   "https://rpc-amoy.polygon.technology/",
 		BaseRPC:      "https://base-sepolia-rpc.publicnode.com",
+		SuiRPC:       "https://fullnode.testnet.sui.io:443",
+		TonRPC:       "",
+		ArbitrumRPC:  "https://sepolia-rollup.arbitrum.io/rpc",
+		OptimismRPC:  "https://sepolia.optimism.io",
+		AvalancheRPC: "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+		WorldRPC:     "https://worldchain-sepolia.g.alchemy.com/public",
 	}
 }
 
@@ -46,6 +53,8 @@ func DevnetConfig() *Config {
 		BscRPC:       "",
 		PolygonRPC:   "",
 		BaseRPC:      "",
+		SuiRPC:       "",
+		TonRPC:       "",
 	}
 }
 
@@ -62,6 +71,12 @@ func MainnetConfig() *Config {
 		BaseRPC:      "https://base-mainnet.public.blastapi.io",
 		BscRPC:       "https://bsc-mainnet.public.blastapi.io",
 		PolygonRPC:   "https://polygon-bor-rpc.publicnode.com",
+		SuiRPC:       "https://fullnode.mainnet.sui.io:443",
+		TonRPC:       "",
+		ArbitrumRPC:  "https://arb1.arbitrum.io/rpc",
+		OptimismRPC:  "https://mainnet.optimism.io",
+		AvalancheRPC: "https://api.avax.network/ext/bc/C/rpc",
+		WorldRPC:     "https://worldchain-mainnet.g.alchemy.com/public",
 	}
 }
 
@@ -76,6 +91,8 @@ func PrivateNetConfig() *Config {
 		BtcHost:      "127.0.0.1:18443",
 		BtcParams:    "regtest",
 		SolanaRPC:    "http://127.0.0.1:8899",
+		SuiRPC:       "http://127.0.0.1:9000",
+		TonRPC:       "http://127.0.0.1:8081",
 	}
 }
 
@@ -92,6 +109,12 @@ type Config struct {
 	BscRPC       string `json:"bsc_rpc"`
 	PolygonRPC   string `json:"polygon_rpc"`
 	BaseRPC      string `json:"base_rpc"`
+	SuiRPC       string `json:"sui_rpc"`
+	TonRPC       string `json:"ton_rpc"`
+	ArbitrumRPC  string `json:"arbitrum_rpc"`
+	OptimismRPC  string `json:"optimism_rpc"`
+	AvalancheRPC string `json:"avalanche_rpc"`
+	WorldRPC     string `json:"world_rpc"`
 }
 
 func (c *Config) Save() error {
@@ -127,4 +150,29 @@ func GetConfig(chain chains.Chain, filename string) (*Config, error) {
 	cfg := &Config{}
 	err := cfg.Read(filename)
 	return cfg, err
+}
+
+// GetConfigByNetwork returns a config based on network name string.
+// Valid network names: "mainnet", "testnet", "localnet", "devnet"
+func GetConfigByNetwork(network, filename string) (*Config, error) {
+	// If a custom config file is specified, use it
+	if filename != "" {
+		cfg := &Config{}
+		err := cfg.Read(filename)
+		return cfg, err
+	}
+
+	// Return default config based on network name
+	switch network {
+	case "mainnet":
+		return MainnetConfig(), nil
+	case "testnet":
+		return TestnetConfig(), nil
+	case "localnet":
+		return PrivateNetConfig(), nil
+	case "devnet":
+		return DevnetConfig(), nil
+	default:
+		return nil, fmt.Errorf("unknown network: %s (valid: mainnet, testnet, localnet, devnet)", network)
+	}
 }
