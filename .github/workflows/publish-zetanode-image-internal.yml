@@ -1,0 +1,121 @@
+name: Publish Zetanode Image Internal
+
+# Description: Builds the zetanode Docker image using the Makefile and pushes it to Google Artifact Registry.
+# This workflow is used for internal testing and development builds.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit SHA to build from (optional). If not provided, will use the default branch.'
+        required: false
+        type: string
+
+concurrency:
+  group: publish-zetanode-image-internal
+  cancel-in-progress: false
+
+env:
+  ARTIFACT_REGISTRY: us-docker.pkg.dev
+  GCP_PROJECT: ${{ secrets.GCP_DEV_PROJECT }}
+  ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY_NAME }}
+  IMAGE_NAME: zetanode-snapshot
+
+jobs:
+  build-and-push:
+    runs-on: gcp-athens-runners
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        shell: bash
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
+
+      - name: Determine version from git tags
+        id: version
+        shell: bash
+        run: |
+          # Check if we're on an exact tag
+          if git describe --exact-match --tags HEAD >/dev/null 2>&1; then
+            TAG=$(git describe --exact-match --tags HEAD)
+            # Ensure it has v prefix
+            if [[ ! $TAG =~ ^v ]]; then
+              NODE_VERSION="v${TAG}"
+            else
+              NODE_VERSION="$TAG"
+            fi
+          else
+            # Get the latest tag (fetch tags first, then get latest v*.*.* tag)
+            git fetch --tags --quiet 2>/dev/null || true
+            LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || echo "")
+            if [[ -n "$LATEST_TAG" ]]; then
+              # Extract version number (e.g., v37.0.3 -> 37.0.3)
+              VERSION_NUM=$(echo "$LATEST_TAG" | sed 's/^v//')
+              # Increment patch version (e.g., 37.0.3 -> 37.0.4)
+              MAJOR=$(echo "$VERSION_NUM" | cut -d. -f1)
+              MINOR=$(echo "$VERSION_NUM" | cut -d. -f2)
+              PATCH=$(echo "$VERSION_NUM" | cut -d. -f3)
+              PATCH=$((PATCH + 1))
+              NODE_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+            else
+              echo "Error: Could not determine version. No git tags found matching pattern v*.*.*"
+              echo "Please ensure the repository has at least one version tag (e.g., v37.0.0)"
+              exit 1
+            fi
+          fi
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_ENV
+          echo "version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "Determined version: $NODE_VERSION"
+
+      - name: Set commit hash
+        id: commit
+        run: |
+          NODE_COMMIT=$(git log -1 --format='%H')
+          NODE_COMMIT_SHORT=$(git rev-parse --short HEAD)
+          echo "NODE_COMMIT=$NODE_COMMIT" >> $GITHUB_ENV
+          echo "NODE_COMMIT_SHORT=$NODE_COMMIT_SHORT" >> $GITHUB_ENV
+          echo "commit=$NODE_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Build zetanode image
+        run: |
+          make zetanode
+
+      - name: Push zetanode image to Artifact Registry
+        shell: bash
+        run: |
+          # Always tag and push as latest
+          docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+
+          # Tag and push version with git hash
+          VERSION_TAG="${{ env.NODE_VERSION }}-${{ env.NODE_COMMIT_SHORT }}"
+          docker tag zetanode:latest ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:$VERSION_TAG
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPOSITORY }}/${{ env.IMAGE_NAME }}:$VERSION_TAG
+          echo "Pushed version tag: $VERSION_TAG"
+
+      - name: Output image information
+        shell: bash
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          VERSION_TAG="${{ env.NODE_VERSION }}-${{ env.NODE_COMMIT_SHORT }}"
+          echo "**Version**: \`$VERSION_TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ env.NODE_COMMIT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image successfully pushed to Google Artifact Registry." >> $GITHUB_STEP_SUMMARY
+      - name: Clean up workspace & Docker images
+        if: always()
+        shell: bash
+        run: |
+          docker rmi zetanode:latest || true
+          docker image prune -f || true
+          sudo rm -rf * || echo "Failed to cleanup workspace"
