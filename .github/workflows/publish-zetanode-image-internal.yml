@@ -24,6 +24,7 @@ env:
 jobs:
   build-and-push:
     runs-on: gcp-athens-runners
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -111,3 +112,10 @@ jobs:
           echo "**Commit**: \`${{ env.NODE_COMMIT }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Image successfully pushed to Google Artifact Registry." >> $GITHUB_STEP_SUMMARY
+      - name: Clean up workspace & Docker images
+        if: always()
+        shell: bash
+        run: |
+          docker rmi zetanode:latest || true
+          docker image prune -f || true
+          sudo rm -rf * || echo "Failed to cleanup workspace"
