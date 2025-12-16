@@ -365,7 +365,10 @@ func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 	return res.GetCode() == 11 && strings.Contains(res.GetLog(), "no block gas left to run tx: out of gas")
 }
 
-// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response
+// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response.
+// If duplicate log indices are detected within the block, it re-indexes all logs to ensure unique
+// TxIndex and Index (log index) values.
+// If logs already have unique indices, they are returned as-is.
 func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
 	blockLogs := [][]*ethtypes.Log{}
 	for _, txResult := range blockRes.TxsResults {
@@ -373,10 +376,46 @@ func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*eth
 		if err != nil {
 			return nil, err
 		}
-
 		blockLogs = append(blockLogs, logs...)
 	}
+
+	if needsReindexing(blockLogs) {
+		reindexLogs(blockLogs)
+	}
+
 	return blockLogs, nil
+}
+
+// needsReindexing checks if any logs in the block have duplicate Index values.
+// Returns true if duplicates are found and re-indexing is needed.
+func needsReindexing(blockLogs [][]*ethtypes.Log) bool {
+	seenIndices := make(map[uint]bool)
+	for _, txLogs := range blockLogs {
+		for _, entry := range txLogs {
+			if seenIndices[entry.Index] {
+				return true
+			}
+			seenIndices[entry.Index] = true
+		}
+	}
+	return false
+}
+
+// reindexLogs assigns unique TxIndex and Index values to all logs in the block.
+// TxIndex: unique per transaction group in the block
+// Index (LogIndex): unique across ALL logs in the entire block
+func reindexLogs(blockLogs [][]*ethtypes.Log) {
+	globalTxIndex := uint(0)
+	globalLogIndex := uint(0)
+
+	for _, txLogs := range blockLogs {
+		for _, entry := range txLogs {
+			entry.TxIndex = globalTxIndex
+			entry.Index = globalLogIndex
+			globalLogIndex++
+		}
+		globalTxIndex++
+	}
 }
 
 // GetHexProofs returns list of hex data of proof op
