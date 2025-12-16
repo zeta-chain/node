@@ -7,6 +7,7 @@ import (
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -22,6 +23,60 @@ import (
 
 // MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
 const MaxSignaturesPerTicker = 100
+
+// getRPCClient attempts to extract *rpc.Client from the SolanaClient interface.
+// Returns nil if the client cannot be unwrapped to *rpc.Client.
+func getRPCClient(client SolanaClient) *rpc.Client {
+	if rpcClient, ok := client.(*rpc.Client); ok {
+		return rpcClient
+	}
+	if wrapper, ok := client.(interface{ UnwrapClient() any }); ok {
+		if rpcClient, ok := wrapper.UnwrapClient().(*rpc.Client); ok {
+			return rpcClient
+		}
+	}
+	return nil
+}
+
+// ProcessTransactionWithAddressLookups resolves address lookup tables in a versioned transaction.
+// This must be called before filtering inbound events to ensure accounts are properly resolved.
+func ProcessTransactionWithAddressLookups(ctx context.Context, tx *solana.Transaction, rpcClient *rpc.Client) error {
+	lookups := tx.Message.GetAddressTableLookups()
+	if lookups == nil || len(lookups) == 0 {
+		// No address lookup tables in this transaction
+		return nil
+	}
+
+	resolutions := make(map[solana.PublicKey]solana.PublicKeySlice)
+	for _, lookup := range lookups {
+		tableKey := lookup.AccountKey
+		altState, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
+			ctx,
+			rpcClient,
+			tableKey,
+			&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "error getting address lookup table state for %s", tableKey)
+		}
+
+		if altState == nil {
+			return errors.Errorf("address lookup table %s not found", tableKey)
+		}
+
+		resolutions[tableKey] = altState.Addresses
+	}
+
+	if err := tx.Message.SetAddressTables(resolutions); err != nil {
+		return errors.Wrap(err, "error setting address tables")
+	}
+
+	if err := tx.Message.ResolveLookups(); err != nil {
+		return errors.Wrap(err, "error resolving lookups")
+	}
+
+	return nil
+}
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
@@ -80,6 +135,19 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
+				// Process address lookup tables before filtering events
+				tx, err := txResult.Transaction.GetTransaction()
+				if err == nil {
+					if rpcClient := getRPCClient(ob.solanaClient); rpcClient != nil {
+						if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
+							ob.Logger().Inbound.Warn().
+								Err(err).
+								Str("tx_signature", sigString).
+								Msg("observe inbound: error processing address lookup tables, continuing anyway")
+						}
+					}
+				}
+
 				// filter the events
 				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 				if err != nil {
