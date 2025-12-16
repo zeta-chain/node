@@ -69,6 +69,7 @@ const (
 	 */
 	TestSolanaDepositName                                 = "solana_deposit"
 	TestSolanaDepositThroughProgramName                   = "solana_deposit_through_program"
+	TestSolanaDepositThroughProgramAddressLookupTableName = "solana_deposit_through_program_alt"
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
@@ -726,6 +727,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},
 		TestSolanaDepositThroughProgram,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositThroughProgramAddressLookupTableName,
+		"deposit SOL into ZEVM through example connected program using Address Lookup Table",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "24000000"},
+		},
+		TestSolanaDepositThroughProgramAddressLookupTable,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawName,

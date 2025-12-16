@@ -61,6 +61,20 @@ func (ob *Observer) observeInboundTrackers(
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 
+		// Process address lookup tables before filtering events
+		tx, err := txResult.Transaction.GetTransaction()
+		if err == nil {
+			if rpcClient := getRPCClient(ob.solanaClient); rpcClient != nil {
+				if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
+					ob.Logger().Inbound.Warn().
+						Err(err).
+						Stringer(logs.FieldTx, signature).
+						Bool("is_internal", isInternal).
+						Msg("error processing address lookup tables, continuing anyway")
+				}
+			}
+		}
+
 		// filter inbound events
 		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 		if err != nil {
