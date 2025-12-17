@@ -65,7 +65,13 @@ func (ob *Observer) observeInboundTrackers(
 		}
 
 		// Process address lookup tables before filtering events
-		resolvedTx := ProcessTransactionResultWithAddressLookups(ctx, txResult, rpcClient, ob.Logger().Inbound, signature)
+		resolvedTx := ProcessTransactionResultWithAddressLookups(
+			ctx,
+			txResult,
+			rpcClient,
+			ob.Logger().Inbound,
+			signature,
+		)
 
 		// filter inbound events
 		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound, resolvedTx)

@@ -176,10 +176,22 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
 				// Process address lookup tables before filtering events
-				resolvedTx := ProcessTransactionResultWithAddressLookups(ctx, txResult, rpcClient, ob.Logger().Inbound, sig.Signature)
+				resolvedTx := ProcessTransactionResultWithAddressLookups(
+					ctx,
+					txResult,
+					rpcClient,
+					ob.Logger().Inbound,
+					sig.Signature,
+				)
 
 				// filter the events
-				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound, resolvedTx)
+				events, err := FilterInboundEvents(
+					txResult,
+					ob.gatewayID,
+					ob.Chain().ChainId,
+					ob.Logger().Inbound,
+					resolvedTx,
+				)
 				if err != nil {
 					// Log the error but continue processing other transactions
 					ob.Logger().Inbound.Error().
