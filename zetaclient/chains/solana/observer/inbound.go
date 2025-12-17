@@ -42,7 +42,7 @@ func getRPCClient(client SolanaClient) *rpc.Client {
 // This must be called before filtering inbound events to ensure accounts are properly resolved.
 func ProcessTransactionWithAddressLookups(ctx context.Context, tx *solana.Transaction, rpcClient *rpc.Client) error {
 	lookups := tx.Message.GetAddressTableLookups()
-	if lookups == nil || len(lookups) == 0 {
+	if lookups == nil {
 		// No address lookup tables in this transaction
 		return nil
 	}
