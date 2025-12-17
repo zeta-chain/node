@@ -46,6 +46,9 @@ func (ob *Observer) observeInboundTrackers(
 		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
+	// get RPC client before the loop to avoid parsing in every iteration
+	rpcClient := getRPCClient(ob.solanaClient)
+
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
@@ -62,21 +65,10 @@ func (ob *Observer) observeInboundTrackers(
 		}
 
 		// Process address lookup tables before filtering events
-		tx, err := txResult.Transaction.GetTransaction()
-		if err == nil {
-			if rpcClient := getRPCClient(ob.solanaClient); rpcClient != nil {
-				if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
-					ob.Logger().Inbound.Warn().
-						Err(err).
-						Stringer(logs.FieldTx, signature).
-						Bool("is_internal", isInternal).
-						Msg("error processing address lookup tables, continuing anyway")
-				}
-			}
-		}
+		resolvedTx := ProcessTransactionResultWithAddressLookups(ctx, txResult, rpcClient, ob.Logger().Inbound, signature)
 
 		// filter inbound events
-		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound, resolvedTx)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEvents for chain %d sig %s", chainID, signature)
 		}
