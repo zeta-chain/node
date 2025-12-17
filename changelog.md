@@ -7,6 +7,7 @@
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
 * [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
 * [4453](https://github.com/zeta-chain/node/pull/4453/) - add an option to create dry zetaclients to connect to live networks
+* [4484](https://github.com/zeta-chain/node/pull/4484) - change params for 2s block time
 
 ### Tests
 
@@ -26,6 +27,7 @@
 
 * [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
 * [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
+* [4488](https://github.com/zeta-chain/node/pull/4488) - add sui to tss migration tests
 
 ## v37.0.0
 

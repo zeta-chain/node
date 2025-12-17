@@ -20,7 +20,7 @@ import (
 // EventFormat is the format version of the events.
 //
 // To fix the issue of tx exceeds block gas limit, we changed the event format in a breaking way.
-// But to avoid forcing clients to re-sync from scatch, we make json-rpc logic to be compatible with both formats.
+// But to avoid forcing clients to re-sync from scratch, we make json-rpc logic to be compatible with both formats.
 type EventFormat int
 
 const (

@@ -106,8 +106,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// SuiUpdateGatewayInfo updates the gateway information from chain params
-func (r *E2ERunner) SuiUpdateGatewayInfo() {
+// SuiUpdateGatewayInfoAndTSS updates the gateway and TSS information from chain params and observer module
+func (r *E2ERunner) SuiUpdateGatewayInfoAndTSS() {
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chains.SuiLocalnet.ChainId}
 
 	// query chain params
@@ -119,7 +119,10 @@ func (r *E2ERunner) SuiUpdateGatewayInfo() {
 	r.SuiGateway, err = zetasui.NewGatewayFromPairID(resp.ChainParams.GatewayAddress)
 	require.NoError(r, err)
 
-	r.Logger.Info("current gateway package ID: %s", r.SuiGateway.PackageID())
+	// update runner's TSS address (important after TSS migration)
+	tssAddr, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
+	require.NoError(r, err)
+	r.SuiTSSAddress = tssAddr.Sui
 }
 
 // suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
@@ -558,6 +561,115 @@ func (r *E2ERunner) suiTransferObjectToTSS(signer *zetasui.SignerSecp256k1, obje
 	require.NoError(r, err)
 
 	r.suiExecuteTx(signer, tx)
+}
+
+// UpdateTSSAddressSui updates the TSS for Sui by issuing a new WithdrawCap and transferring it to the new TSS address.
+func (r *E2ERunner) UpdateTSSAddressSui(faucetURL string) {
+	r.Logger.Print("⚙️ updating TSS for Sui gateway")
+
+	newTss, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
+	require.NoError(r, err)
+	r.SuiTSSAddress = newTss.Sui
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
+
+	// Deployer signer (owns AdminCap)
+	deployerSigner, err := r.Account.SuiSigner()
+	require.NoError(r, err)
+	adminCapType := fmt.Sprintf("%s::gateway::AdminCap", r.SuiGateway.Original().PackageID())
+	adminCapID, found := r.suiGetOwnedObjectID(deployerSigner.Address(), adminCapType)
+	require.True(r, found, "AdminCap not found for deployer %s", deployerSigner.Address())
+
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        zetasui.FuncIssueWithdrawAndWhitelistCap,
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	resp := r.suiExecuteTx(deployerSigner, tx)
+	var newWithdrawCapID string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "WithdrawCap") {
+			newWithdrawCapID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, newWithdrawCapID, "new WithdrawCap not found in transaction response")
+	r.suiTransferObjectToTSS(deployerSigner, newWithdrawCapID)
+
+	msgContextType := fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.Original().PackageID())
+	msgContextTx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        zetasui.FuncIssueMessageContext,
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	msgContextResp := r.suiExecuteTx(deployerSigner, msgContextTx)
+
+	var newMessageContextID string
+	for _, change := range msgContextResp.ObjectChanges {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, msgContextType) {
+			newMessageContextID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, newMessageContextID, "new MessageContext not found in transaction response")
+	r.suiTransferObjectToTSS(deployerSigner, newMessageContextID)
+
+	// Preserve the existing originalPackage ID to use for emitted events
+	packageID := r.SuiGateway.PackageID()
+	objectID := r.SuiGateway.ObjectID()
+	previousPackageID := ""
+	if prev := r.SuiGateway.Previous(); prev != nil {
+		previousPackageID = prev.PackageID()
+	}
+	originalPackageID := r.SuiGateway.Original().PackageID()
+	gatewayPairID := zetasui.MakePairID(packageID, objectID, newWithdrawCapID, previousPackageID, originalPackageID)
+	err = r.SuiGateway.UpdateIDs(gatewayPairID)
+	require.NoError(r, err)
+
+	// Update chain params nonces would have been reset when updating TSS
+	err = r.setSuiChainParams(false)
+	require.NoError(r, err)
+
+	resetNonceTx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          deployerSigner.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        "reset_nonce",
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), "0", adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	r.suiExecuteTx(deployerSigner, resetNonceTx)
+}
+
+// SuiGetActiveMessageContextID queries the gateway's dynamic field to get the active MessageContext ID
+func (r *E2ERunner) SuiGetActiveMessageContextID() string {
+	nameJSON, err := zetasui.ActiveMessageContextDynamicFieldName()
+	require.NoError(r, err)
+
+	response, err := r.Clients.Sui.SuiXGetDynamicFieldObject(r.Ctx, models.SuiXGetDynamicFieldObjectRequest{
+		ObjectId: r.SuiGateway.ObjectID(),
+		DynamicFieldName: models.DynamicFieldObjectName{
+			Type:  "vector<u8>",
+			Value: nameJSON,
+		},
+	})
+	require.NoError(r, err)
+	require.NotNil(r, response.Data)
+	require.NotNil(r, response.Data.Content)
+
+	messageContextID, err := zetasui.ParseDynamicFieldValueStr(*response.Data.Content)
+	require.NoError(r, err)
+
+	return messageContextID
 }
 
 // suiGetOwnedObjectID gets the first owned object ID by owner address and struct type

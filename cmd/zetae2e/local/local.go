@@ -643,7 +643,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// https://github.com/zeta-chain/node/issues/4038
 	// https://github.com/zeta-chain/node/issues/4315
 	runSuiGatewayUpgradeTests := func() bool {
-		if deployerRunner.IsRunningZetaclientOnlyUpgrade() {
+		if deployerRunner.IsRunningZetaclientOnlyUpgrade() || runner.IsSecondRun() {
 			return false
 		}
 		return testSui
@@ -670,13 +670,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if tssMigrationAddObs {
 		addNewObserver(deployerRunner)
-		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana, testSui)
 	}
 
 	if tssMigrationRemoveObs {
 		err = deployerRunner.RemoveObserver()
 		noError(err)
-		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana, testSui)
 	}
 
 	// Verify that there are no trackers left over after tests complete
