@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	cosmosmath "cosmossdk.io/math"
@@ -78,6 +79,42 @@ func ProcessTransactionWithAddressLookups(ctx context.Context, tx *solana.Transa
 	return nil
 }
 
+// ProcessTransactionResultWithAddressLookups processes address lookup tables for a transaction result.
+// This is a convenience function that extracts the transaction and processes it with the given RPC client.
+// Returns the resolved transaction if successful, or nil if rpcClient is nil or processing failed.
+// If rpcClient is nil, it logs a warning and returns nil.
+func ProcessTransactionResultWithAddressLookups(
+	ctx context.Context,
+	txResult *rpc.GetTransactionResult,
+	rpcClient *rpc.Client,
+	logger zerolog.Logger,
+	signature fmt.Stringer,
+) *solana.Transaction {
+	if rpcClient == nil {
+		logger.Warn().
+			Stringer("signature", signature).
+			Msg("RPC client is nil, skipping address lookup table processing")
+		return nil
+	}
+
+	tx, err := txResult.Transaction.GetTransaction()
+	if err != nil {
+		// If we can't get the transaction, there's nothing to process
+		return nil
+	}
+
+	if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
+		logger.Warn().
+			Err(err).
+			Stringer("signature", signature).
+			Msg("error processing address lookup tables, continuing anyway")
+		return nil
+	}
+
+	// Return the resolved transaction so it can be used by FilterInboundEvents
+	return tx
+}
+
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
@@ -117,6 +154,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Info().Int("signatures", len(signatures)).Msg("got inbound signatures")
 	}
 
+	// get RPC client before the loop to avoid parsing in every iteration
+	rpcClient := getRPCClient(ob.solanaClient)
+
 	// loop signature from oldest to latest to filter inbound events
 	for i := len(signatures) - 1; i >= 0; i-- {
 		sig := signatures[i]
@@ -136,20 +176,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
 				// Process address lookup tables before filtering events
-				tx, err := txResult.Transaction.GetTransaction()
-				if err == nil {
-					if rpcClient := getRPCClient(ob.solanaClient); rpcClient != nil {
-						if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
-							ob.Logger().Inbound.Warn().
-								Err(err).
-								Str("tx_signature", sigString).
-								Msg("observe inbound: error processing address lookup tables, continuing anyway")
-						}
-					}
-				}
+				resolvedTx := ProcessTransactionResultWithAddressLookups(ctx, txResult, rpcClient, ob.Logger().Inbound, sig.Signature)
 
 				// filter the events
-				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound, resolvedTx)
 				if err != nil {
 					// Log the error but continue processing other transactions
 					ob.Logger().Inbound.Error().
@@ -226,17 +256,21 @@ func (ob *Observer) VoteInboundEvents(
 //   - takes at most 3 events (one SOL + one SPL + one call) per transaction.
 //   - ignores exceeding events.
 //   - assigns indices based on instruction position in the transaction
+//
+// resolvedTx is an optional pre-resolved transaction (e.g., with address lookup tables resolved).
+// If provided, it will be used instead of extracting a fresh transaction from txResult.
 func FilterInboundEvents(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
 	senderChainID int64,
 	logger zerolog.Logger,
+	resolvedTx *solana.Transaction,
 ) ([]*clienttypes.InboundEvent, error) {
 	if txResult.Meta.Err != nil {
 		return nil, errors.Errorf("transaction failed with error: %v", txResult.Meta.Err)
 	}
 
-	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
+	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger, resolvedTx)
 	if err != nil {
 		return nil, err
 	}
