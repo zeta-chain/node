@@ -49,7 +49,7 @@ func (k msgServer) UpdateTssAddress(
 
 	// GetAllTssFundMigrators would return the migrators created for the current migration
 	// if any of the migrations is still pending we should not allow the tss address to be updated
-	// we can wait for all migrations to complete before updating; this includes btc and eth chains.
+	// we can wait for all migrations to complete before updating; this includes btc and evm chains.
 	for _, tssMigrator := range tssMigrators {
 		migratorTx, found := k.GetCrossChainTx(ctx, tssMigrator.MigrationCctxIndex)
 		if !found {
