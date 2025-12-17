@@ -365,7 +365,8 @@ func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 	return res.GetCode() == 11 && strings.Contains(res.GetLog(), "no block gas left to run tx: out of gas")
 }
 
-// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response
+// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response.
+// If needed, it re-indexes logs before returning
 func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
 	blockLogs := [][]*ethtypes.Log{}
 	for _, txResult := range blockRes.TxsResults {
@@ -373,10 +374,68 @@ func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*eth
 		if err != nil {
 			return nil, err
 		}
-
 		blockLogs = append(blockLogs, logs...)
 	}
+
+	if needsReindexing(blockLogs) {
+		reindexLogs(blockLogs)
+	}
+
 	return blockLogs, nil
+}
+
+// needsReindexing checks if logs in the block need re-indexing.Returns true if:
+//  1. TxIndex values are not strictly increasing across transaction groups
+//  2. Any log Index values are duplicated
+//  3. Log Index values are not monotonically increasing across all groups(transactions)
+func needsReindexing(blockLogs [][]*ethtypes.Log) bool {
+	seenLogIndices := make(map[uint]bool)
+	lastTxIndex := -1
+	lastLogIndex := -1
+
+	for _, txLogs := range blockLogs {
+		if len(txLogs) == 0 {
+			continue
+		}
+
+		groupTxIndex := int(txLogs[0].TxIndex)
+		if groupTxIndex <= lastTxIndex {
+			return true
+		}
+		lastTxIndex = groupTxIndex
+
+		for _, entry := range txLogs {
+			logIndex := int(entry.Index)
+
+			// Check for duplicates
+			if seenLogIndices[entry.Index] {
+				return true
+			}
+			seenLogIndices[entry.Index] = true
+
+			// Check monotonic ordering: each log's Index must be greater than the last across all transactions in a block
+			if logIndex <= lastLogIndex {
+				return true
+			}
+			lastLogIndex = logIndex
+		}
+	}
+	return false
+}
+
+// reindexLogs assigns unique TxIndex and Index values to all logs in the block.
+func reindexLogs(blockLogs [][]*ethtypes.Log) {
+	globalTxIndex := uint(0)
+	globalLogIndex := uint(0)
+
+	for _, txLogs := range blockLogs {
+		for _, entry := range txLogs {
+			entry.TxIndex = globalTxIndex
+			entry.Index = globalLogIndex
+			globalLogIndex++
+		}
+		globalTxIndex++
+	}
 }
 
 // GetHexProofs returns list of hex data of proof op
