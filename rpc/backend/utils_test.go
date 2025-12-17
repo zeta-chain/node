@@ -316,7 +316,7 @@ func (s *TestSuite) TestNeedsReindexing() {
 			expected: false,
 		},
 		{
-			name: "multiple logs with unique indices",
+			name: "multiple logs with unique indices and strictly increasing TxIndex",
 			logs: [][]*ethtypes.Log{
 				{createEthLog(addr, 0, 0, topic), createEthLog(addr, 0, 1, topic)},
 				{createEthLog(addr, 1, 2, topic), createEthLog(addr, 1, 3, topic)},
@@ -327,14 +327,64 @@ func (s *TestSuite) TestNeedsReindexing() {
 			name: "duplicate log indices - needs reindexing",
 			logs: [][]*ethtypes.Log{
 				{createEthLog(addr, 0, 0, topic)},
-				{createEthLog(addr, 0, 0, topic)}, // Duplicate logIndex=0
+				{createEthLog(addr, 1, 0, topic)}, // Duplicate logIndex=0, even with different TxIndex
 			},
 			expected: true,
 		},
 		{
 			name: "duplicate within same tx group",
 			logs: [][]*ethtypes.Log{
-				{createEthLog(addr, 0, 0, topic), createEthLog(addr, 0, 0, topic)}, // Duplicate
+				{createEthLog(addr, 0, 0, topic), createEthLog(addr, 0, 0, topic)}, // Duplicate logIndex
+			},
+			expected: true,
+		},
+		{
+			name: "duplicate TxIndex across groups - reported bug scenario",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 0, 0, topic)}, // First group: TxIndex=0, logIndex=0
+				{createEthLog(addr, 0, 1, topic)}, // Second group: TxIndex=0 (same!), logIndex=1 (unique)
+			},
+			expected: true, // Should trigger reindex because TxIndex is not strictly increasing
+		},
+		{
+			name: "TxIndex not strictly increasing - same TxIndex",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 0, 0, topic)},
+				{createEthLog(addr, 0, 1, topic)}, // Same TxIndex=0
+			},
+			expected: true,
+		},
+		{
+			name: "TxIndex decreasing",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 1, 0, topic)}, // TxIndex=1
+				{createEthLog(addr, 0, 1, topic)}, // TxIndex=0 (decreasing!)
+			},
+			expected: true,
+		},
+		{
+			name: "empty groups should be skipped",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 0, 0, topic)},
+				{}, // Empty group
+				{createEthLog(addr, 1, 1, topic)},
+			},
+			expected: false,
+		},
+		{
+			name: "interleaved log indices across groups - needs reindexing",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 0, 0, topic), createEthLog(addr, 0, 3, topic)}, // Group A: Index 0, 3
+				{createEthLog(addr, 1, 1, topic), createEthLog(addr, 1, 2, topic)}, // Group B: Index 1, 2
+			},
+			// All indices unique, TxIndex strictly increasing (0 < 1)
+			// But log indices are NOT monotonic: 0, 3, 1, 2 - violates ordering semantics
+			expected: true,
+		},
+		{
+			name: "log indices not monotonic within same group",
+			logs: [][]*ethtypes.Log{
+				{createEthLog(addr, 0, 2, topic), createEthLog(addr, 0, 1, topic)}, // Index 2 then 1
 			},
 			expected: true,
 		},

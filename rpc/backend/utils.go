@@ -366,9 +366,7 @@ func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 }
 
 // GetLogsFromBlockResults returns the list of event logs from the tendermint block result response.
-// If duplicate log indices are detected within the block, it re-indexes all logs to ensure unique
-// TxIndex and Index (log index) values.
-// If logs already have unique indices, they are returned as-is.
+// If needed, it re-indexes logs before returning
 func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
 	blockLogs := [][]*ethtypes.Log{}
 	for _, txResult := range blockRes.TxsResults {
@@ -386,24 +384,46 @@ func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*eth
 	return blockLogs, nil
 }
 
-// needsReindexing checks if any logs in the block have duplicate Index values.
-// Returns true if duplicates are found and re-indexing is needed.
+// needsReindexing checks if logs in the block need re-indexing.Returns true if:
+//  1. TxIndex values are not strictly increasing across transaction groups
+//  2. Any log Index values are duplicated
+//  3. Log Index values are not monotonically increasing across all groups(transactions)
 func needsReindexing(blockLogs [][]*ethtypes.Log) bool {
-	seenIndices := make(map[uint]bool)
+	seenLogIndices := make(map[uint]bool)
+	lastTxIndex := -1
+	lastLogIndex := -1
+
 	for _, txLogs := range blockLogs {
+		if len(txLogs) == 0 {
+			continue
+		}
+
+		groupTxIndex := int(txLogs[0].TxIndex)
+		if groupTxIndex <= lastTxIndex {
+			return true
+		}
+		lastTxIndex = groupTxIndex
+
 		for _, entry := range txLogs {
-			if seenIndices[entry.Index] {
+			logIndex := int(entry.Index)
+
+			// Check for duplicates
+			if seenLogIndices[entry.Index] {
 				return true
 			}
-			seenIndices[entry.Index] = true
+			seenLogIndices[entry.Index] = true
+
+			// Check monotonic ordering: each log's Index must be greater than the last across all transactions in a block
+			if logIndex <= lastLogIndex {
+				return true
+			}
+			lastLogIndex = logIndex
 		}
 	}
 	return false
 }
 
 // reindexLogs assigns unique TxIndex and Index values to all logs in the block.
-// TxIndex: unique per transaction group in the block
-// Index (LogIndex): unique across ALL logs in the entire block
 func reindexLogs(blockLogs [][]*ethtypes.Log) {
 	globalTxIndex := uint(0)
 	globalLogIndex := uint(0)
