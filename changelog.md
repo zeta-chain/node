@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Features
+
+* [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
+
+## v37.0.0
+
 ### Breaking Changes
 
 * EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
