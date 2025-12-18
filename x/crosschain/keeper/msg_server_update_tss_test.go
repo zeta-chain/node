@@ -332,7 +332,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 }
 
 func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
-	t.Run("should return only EVM and bitcoin chains", func(t *testing.T) {
+	t.Run("should return only EVM and bitcoin chains for mainnet ", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		var chainParamsList types.ChainParamsList
@@ -363,7 +363,7 @@ func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
 		}
 	})
 
-	t.Run("should return correct mainnet chains supporting TSS migration", func(t *testing.T) {
+	t.Run("should return correct mainnet chains requiring migration of TSS funds", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
 
 		// Set up all mainnet chains as supported
@@ -374,11 +374,11 @@ func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
 			chains.ZetaChainMainnet, // chain_id: 7000, Vm_evm but not external, zevm gateway (excluded)
 			chains.Polygon,          // chain_id: 137, Vm_evm
 			chains.BaseMainnet,      // chain_id: 8453, Vm_evm
-			chains.SolanaMainnet,    // chain_id: 900, Vm_svm (excluded)
+			chains.SolanaMainnet,    // chain_id: 900, Vm_svm No funds migration needed (excluded)
 			chains.ArbitrumMainnet,  // chain_id: 42161, Vm_evm
 			chains.AvalancheMainnet, // chain_id: 43114, Vm_evm
-			chains.SuiMainnet,       // chain_id: 105, Vm_mvm_sui (excluded)
-			chains.TONMainnet,       // chain_id: 2015140, Vm_tvm (excluded)
+			chains.SuiMainnet,       // chain_id: 105, Vm_mvm_sui No funds migration needed (excluded)
+			chains.TONMainnet,       // chain_id: 2015140, Vm_tvm No funds migration needed (excluded)
 		}
 
 		var chainParamsList types.ChainParamsList
@@ -393,15 +393,14 @@ func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
 		// Get chains supporting TSS migration
 		chainsSupportingMigration := k.GetChainsSupportingTSSMigration(ctx)
 
-		// Expected chains: all EVM chains (Vm_evm) + bitcoin chains, external, with observers gateway
 		expectedChainIDs := map[int64]bool{
-			chains.Ethereum.ChainId:         true, // Vm_evm
-			chains.BscMainnet.ChainId:       true, // Vm_evm
-			chains.BitcoinMainnet.ChainId:   true, // bitcoin consensus
-			chains.Polygon.ChainId:          true, // Vm_evm
-			chains.BaseMainnet.ChainId:      true, // Vm_evm
-			chains.ArbitrumMainnet.ChainId:  true, // Vm_evm
-			chains.AvalancheMainnet.ChainId: true, // Vm_evm
+			chains.Ethereum.ChainId:         true,
+			chains.BscMainnet.ChainId:       true,
+			chains.BitcoinMainnet.ChainId:   true,
+			chains.Polygon.ChainId:          true,
+			chains.BaseMainnet.ChainId:      true,
+			chains.ArbitrumMainnet.ChainId:  true,
+			chains.AvalancheMainnet.ChainId: true,
 		}
 
 		// Verify the count matches expected
@@ -427,6 +426,89 @@ func TestKeeper_GetChainsSupportingTSSMigration(t *testing.T) {
 			chains.SolanaMainnet.ChainId,    // Vm_svm
 			chains.SuiMainnet.ChainId,       // Vm_mvm_sui
 			chains.TONMainnet.ChainId,       // Vm_tvm
+		}
+
+		resultChainIDs := make(map[int64]bool)
+		for _, chain := range chainsSupportingMigration {
+			resultChainIDs[chain.ChainId] = true
+		}
+
+		for _, excludedID := range excludedChainIDs {
+			require.False(t, resultChainIDs[excludedID],
+				"chain with ID %d should be excluded from TSS migration", excludedID)
+		}
+	})
+
+	// Testnet: ensure we return the exact expected set of chains supporting migration
+	t.Run("should return correct testnet chains supporting TSS migration", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
+
+		// Set up all relevant testnet chains as supported using the same chain list used in specs
+		testnetChains := []chains.Chain{
+			chains.BscTestnet,           // chain_id: 97, Vm_evm
+			chains.Sepolia,              // chain_id: 11155111, Vm_evm
+			chains.BitcoinSignetTestnet, // chain_id: 18333, Vm_no_vm, bitcoin consensus
+			chains.BitcoinTestnet4,      // chain_id: 18334, Vm_no_vm, bitcoin consensus
+			chains.Amoy,                 // chain_id: 80002, Vm_evm
+			chains.BaseSepolia,          // chain_id: 84532, Vm_evm
+			chains.ArbitrumSepolia,      // chain_id: 421614, Vm_evm
+			chains.AvalancheTestnet,     // chain_id: 43113, Vm_evm
+			chains.WorldTestnet,         // chain_id: 4801, Vm_evm
+			// Excluded chains also marked supported to assert exclusion
+			chains.ZetaChainTestnet, // not external, zevm gateway (excluded)
+			chains.SolanaDevnet,     // Vm_svm (excluded)
+			chains.SuiTestnet,       // Vm_mvm_sui (excluded)
+			chains.TONTestnet,       // Vm_tvm (excluded)
+		}
+
+		var chainParamsList types.ChainParamsList
+		for _, chain := range testnetChains {
+			chainParamsList.ChainParams = append(
+				chainParamsList.ChainParams,
+				sample.ChainParamsSupported(chain.ChainId),
+			)
+		}
+		zk.ObserverKeeper.SetChainParamsList(ctx, chainParamsList)
+
+		// Get chains supporting TSS migration
+		chainsSupportingMigration := k.GetChainsSupportingTSSMigration(ctx)
+
+		// Expected chains are external EVM or Bitcoin testnet chains (observers gateway)
+		expectedChainIDs := map[int64]bool{
+			chains.BscTestnet.ChainId:           true,
+			chains.Sepolia.ChainId:              true,
+			chains.BitcoinSignetTestnet.ChainId: true,
+			chains.BitcoinTestnet4.ChainId:      true,
+			chains.Amoy.ChainId:                 true,
+			chains.BaseSepolia.ChainId:          true,
+			chains.ArbitrumSepolia.ChainId:      true,
+			chains.AvalancheTestnet.ChainId:     true,
+			chains.WorldTestnet.ChainId:         true,
+		}
+
+		// Verify the count matches expected
+		require.Equal(t, len(expectedChainIDs), len(chainsSupportingMigration),
+			"expected %d chains, got %d", len(expectedChainIDs), len(chainsSupportingMigration))
+
+		for _, chain := range chainsSupportingMigration {
+			require.True(t, expectedChainIDs[chain.ChainId],
+				"unexpected chain in result: %s (chain_id: %d, vm: %s)",
+				chain.Name, chain.ChainId, chain.Vm)
+
+			require.True(t, chain.IsExternal, "chain %s should be external", chain.Name)
+			require.Equal(t, chains.CCTXGateway_observers, chain.CctxGateway,
+				"chain %s should have observers gateway", chain.Name)
+			require.True(t,
+				chain.Vm == chains.Vm_evm || chain.Consensus == chains.Consensus_bitcoin,
+				"chain %s should be EVM or bitcoin, got vm=%s consensus=%s", chain.Name, chain.Vm, chain.Consensus)
+		}
+
+		// Verify excluded chains are not in the result
+		excludedChainIDs := []int64{
+			chains.ZetaChainTestnet.ChainId, // not external, zevm gateway
+			chains.SolanaDevnet.ChainId,     // Vm_svm
+			chains.SuiTestnet.ChainId,       // Vm_mvm_sui
+			chains.TONTestnet.ChainId,       // Vm_tvm
 		}
 
 		resultChainIDs := make(map[int64]bool)
