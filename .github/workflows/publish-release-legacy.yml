@@ -1,4 +1,4 @@
-name: Publish Release
+name: Publish Release Legacy
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ on:
         description: 'Only run pre-release checks'
 
 concurrency:
-  group: publish-release
+  group: publish-release-legacy
   cancel-in-progress: false
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
         run: |
           make release-snapshot
 
-  publish-release:
+  publish-release-legacy:
     permissions:
       id-token: write
       contents: write
@@ -74,8 +74,10 @@ jobs:
           cat changelog-current.md
 
       - name: Set Version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
         run: |
-          echo "GITHUB_TAG_VERSION=${{ inputs.version }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_VERSION=${VERSION_INPUT}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         shell: bash
@@ -133,6 +135,6 @@ jobs:
         run: sudo rm -rf * || echo "failed to cleanup workspace please investigate"
 
   publish-typescript:
-    needs: publish-release
+    needs: publish-release-legacy
     uses: ./.github/workflows/publish-typescript.yml
     secrets: inherit
