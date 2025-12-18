@@ -308,6 +308,17 @@ start-e2e-test-4nodes: e2e-images
 	@echo "--> Starting e2e test with 4 nodes"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
+# Run e2e tests with 4 nodes and enable the observer replacement flow at the end
+# First run performs replacement, second run verifies network works with new observer
+# OBSERVER_REPLACE_MODE=true tells zetaclient-new-validator to copy TSS/hotkey from REUSE_TSS_FROM client
+start-e2e-test-replace: e2e-images
+	@echo "--> Starting e2e test with 4 nodes and observer replacement flow"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
+	export LOCALNET_MODE=replace && \
+	export OBSERVER_REPLACE_MODE=true && \
+	export REUSE_TSS_FROM=zetaclient2 && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile replace --profile sui --profile solana up -d
+
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
 	cd contrib/localnet/ && SKIP_CONSENSUS_VALUES_OVERWRITE=true $(DOCKER_COMPOSE) up -d

@@ -24,11 +24,16 @@ copy_operator_keys() {
     mkdir -p /root/$node/
     scp -r root@$node:/root/.zetacored/keyring-test/ /root/$node/keyring-test/ || continue
     mkdir -p /root/$node/config
-    scp root@$node:/root/.zetacored/config/client.toml /root/$node/config/client.toml
+    scp root@$node:/root/.zetacored/config/client.toml /root/$node/config/client.toml || true
 
-    # Set node ID suffix
+    # Set node ID suffix uniquely for each node
     node_num=${node//[^0-9]/}
-    node_id=${node_num:-"-new-validator"}
+    node_id=""
+    if [[ -n "$node_num" ]]; then
+      node_id="$node_num"
+    elif [[ "$node" == "zetacore-new-validator" ]]; then
+      node_id="-new-validator"
+    fi
 
     # Rename and copy keys
     zetacored keys rename operator operator$node_id --home=/root/$node/ --keyring-backend=test --yes
@@ -396,6 +401,65 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
   echo "E2E failed after upgrade"
+  exit 1
+fi
+
+# Restart zetaclientd on all active nodes after observer replacement
+# The TSS topology remains the same (same keygen), only the operator address changes
+restart_zetaclients_after_replacement() {
+  # All zetaclients that need to restart after replacement
+  local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3" "zetaclient-new-validator")
+
+  for node in "${nodes[@]}"; do
+    # Skip if node is not accessible
+    ssh -q root@$node "exit" 2>/dev/null || continue
+
+    echo "Restarting zetaclientd on $node"
+    # Kill existing zetaclientd processes and let supervisor restart them
+    ssh root@$node "pkill -f zetaclientd || true" || continue
+  done
+
+  echo "Zetaclient restart completed, waiting for clients to come back up..."
+  sleep 15
+}
+
+# Mode `replace` is used to run the E2E tests with observer replacement flow.
+# It runs E2E tests with --replace-observer flag which triggers observer replacement at the end.
+# After replacement completes, it runs E2E tests again to verify the network works with the new observer.
+if [ "$LOCALNET_MODE" == "replace" ]; then
+  if [[ ! -f "$deployed_config_path" ]]; then
+    [[ -n $CI ]] && echo "::group::setup"
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "E2E setup failed"
+      exit 1
+    fi
+    [[ -n $CI ]] && echo -e "\n::endgroup::"
+  else
+    echo "Skipping E2E setup because it has already been completed"
+  fi
+
+  echo "Running E2E test before observer replacement"
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-header-proof --light --replace-observer
+  if [ $? -ne 0 ]; then
+    echo "First E2E failed"
+    exit 1
+  fi
+
+  echo "Observer replacement completed, restarting zetaclients"
+  restart_zetaclients_after_replacement
+
+  export RUN_NUMBER=2
+  echo "Running E2E test after observer replacement"
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof
+
+  ZETAE2E_EXIT_CODE=$?
+  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+    echo "E2E passed after observer replacement"
+    exit 0
+  fi
+
+  echo "E2E failed after observer replacement"
   exit 1
 fi
 

@@ -56,6 +56,7 @@ const (
 	flagSkipSetup              = "skip-setup"
 	flagTSSMigrationAddObs     = "tss-migration-add-observer"
 	flagTSSMigrationRemoveObs  = "tss-migration-remove-observer"
+	flagReplaceObserver        = "replace-observer"
 	flagSkipBitcoinSetup       = "skip-bitcoin-setup"
 	flagSkipHeaderProof        = "skip-header-proof"
 	flagTestLegacy             = "test-legacy"
@@ -109,6 +110,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
 	cmd.Flags().Bool(flagTSSMigrationAddObs, false, "set to true to add a new observer before TSS migration")
 	cmd.Flags().Bool(flagTSSMigrationRemoveObs, false, "set to true to remove an observer before TSS migration")
+	cmd.Flags().Bool(flagReplaceObserver, false, "set to true to run observer replacement flow after tests (reuse zetaclient2 hotkey/TSS)")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().
@@ -157,6 +159,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		tssMigrationAddObs     = must(cmd.Flags().GetBool(flagTSSMigrationAddObs))
 		tssMigrationRemoveObs  = must(cmd.Flags().GetBool(flagTSSMigrationRemoveObs))
+		replaceObserver        = must(cmd.Flags().GetBool(flagReplaceObserver))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
@@ -677,6 +680,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		err = deployerRunner.RemoveObserver()
 		noError(err)
 		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana, testSui)
+	}
+
+	// Run observer replacement flow if requested
+	if replaceObserver {
+		replaceObserverFlow(deployerRunner)
+		// After replacement, proceed similarly to a migration second run: ensure system continues
+		// No TSS migration is required; zetaclient2 should exit automatically on restart since it's no longer in the observer set.
 	}
 
 	// Verify that there are no trackers left over after tests complete

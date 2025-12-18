@@ -213,7 +213,9 @@ services:
     hostname: zetacore-new-validator
     profiles:
       - tss
+      - replace
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.15
@@ -221,6 +223,7 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
     volumes:
       - ssh:/root/.ssh
 
@@ -230,7 +233,9 @@ services:
     hostname: zetaclient-new-validator
     profiles:
       - tss
+      - replace
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.25
@@ -241,6 +246,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6065
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
     ports:
       - "6065:6065" # pprof
       - "8890:8886" # metrics
@@ -639,3 +646,5 @@ volumes:
   redis_data:
   testnet_data:
   mainnet_data:
+
+
