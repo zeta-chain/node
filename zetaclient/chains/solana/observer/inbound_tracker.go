@@ -46,6 +46,9 @@ func (ob *Observer) observeInboundTrackers(
 		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
+	// get RPC client before the loop to avoid parsing in every iteration
+	rpcClient := getRPCClient(ob.solanaClient)
+
 	// process inbound trackers
 	for _, tracker := range trackers {
 		signature := solana.MustSignatureFromBase58(tracker.TxHash)
@@ -61,8 +64,17 @@ func (ob *Observer) observeInboundTrackers(
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 
+		// Process address lookup tables before filtering events
+		resolvedTx := ProcessTransactionResultWithAddressLookups(
+			ctx,
+			txResult,
+			rpcClient,
+			ob.Logger().Inbound,
+			signature,
+		)
+
 		// filter inbound events
-		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound, resolvedTx)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEvents for chain %d sig %s", chainID, signature)
 		}
