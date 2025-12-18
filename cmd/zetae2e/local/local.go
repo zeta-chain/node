@@ -425,6 +425,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !deployerRunner.IsRunningUpgrade() && !light {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositThroughProgramName,
+				e2etests.TestSolanaDepositThroughProgramAddressLookupTableName,
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
 				e2etests.TestSolanaWithdrawAndCallAddressLookupTableName,
