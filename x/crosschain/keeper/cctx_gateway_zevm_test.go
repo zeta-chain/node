@@ -1,23 +1,22 @@
 package keeper_test
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"math/big"
 	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_InitiateOutboundZEVM(t *testing.T) {

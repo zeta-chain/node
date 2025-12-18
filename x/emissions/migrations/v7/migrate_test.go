@@ -59,4 +59,3 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, currentParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 	})
 }
-

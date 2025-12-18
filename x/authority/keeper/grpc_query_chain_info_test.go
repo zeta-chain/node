@@ -1,11 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/node/pkg/chains"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
+	"github.com/zeta-chain/node/pkg/chains"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/authority/types"

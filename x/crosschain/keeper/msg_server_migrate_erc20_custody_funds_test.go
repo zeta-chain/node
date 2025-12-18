@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"errors"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -12,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"testing"
 )
 
 func TestKeeper_MigrateERC20CustodyFunds(t *testing.T) {
