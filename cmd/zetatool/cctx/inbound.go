@@ -320,10 +320,14 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
+	// Process address lookup tables before filtering events
+	resolvedTx := observer.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
+
 	events, err := observer.FilterInboundEvents(txResult,
 		gatewayID,
 		inboundChain.ChainId,
 		logger,
+		resolvedTx,
 	)
 
 	if err != nil {
