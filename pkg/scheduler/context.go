@@ -13,7 +13,7 @@ import (
 
 type blockCtxKey struct{}
 
-func WithBlockEvent(ctx context.Context, event cometbft.EventDataNewBlock) context.Context {
+func withBlockEvent(ctx context.Context, event cometbft.EventDataNewBlock) context.Context {
 	return context.WithValue(ctx, blockCtxKey{}, event)
 }
 
