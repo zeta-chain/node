@@ -97,7 +97,7 @@ func (t *blockTicker) Start(ctx context.Context) error {
 				return nil
 			}
 
-			ctx := WithBlockEvent(ctx, block)
+			ctx := withBlockEvent(ctx, block)
 
 			if err := t.exec(ctx); err != nil {
 				t.logger.Error().Err(err).Msg("Task error")
