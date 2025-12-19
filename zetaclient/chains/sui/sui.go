@@ -136,20 +136,26 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		zetaHeight = uint64(zetaBlock.Block.Height)
 		chainID    = s.observer.Chain().ChainId
 
+		// #nosec G115 positive
+		interval  = uint64(s.observer.ChainParams().OutboundScheduleInterval)
 		lookahead = s.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
 		lookback = uint64(float64(lookahead) * outboundLookbackFactor)
 
-		firstNonce = cctxList[0].GetCurrentOutboundParam().TssNonce
-		maxNonce   = firstNonce + lookback
+		firstNonce         = cctxList[0].GetCurrentOutboundParam().TssNonce
+		maxNonce           = firstNonce + lookback
+		needsProcessingCtr = 0
 	)
 
 	for i, cctx := range cctxList {
 		var (
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
+			inboundParams  = cctx.GetInboundParams()
 			nonce          = outboundParams.TssNonce
 		)
+
+		logger := s.outboundLogger(outboundID)
 
 		switch {
 		case int64(i) == lookahead:
@@ -157,10 +163,23 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			return nil
 		case outboundParams.ReceiverChainId != chainID:
 			// should not happen
-			s.outboundLogger(outboundID).Error().Msg("chain id mismatch")
+			logger.Error().Msg("chain id mismatch")
 			continue
 		case nonce >= maxNonce:
 			return fmt.Errorf("nonce %d is too high (%s). Earliest nonce %d", nonce, outboundID, firstNonce)
+		}
+
+		// schedule newly created cctx right away, no need to wait for next interval
+		// 1. schedule the very first cctx (there can be multiple) created in the last Zeta block.
+		// 2. schedule new cctx only when there is no other older cctx to process
+		isCCTXNewlyCreated := inboundParams.ObservedExternalHeight == zetaHeight
+		shouldProcessCCTXImmediately := isCCTXNewlyCreated && needsProcessingCtr == 0
+
+		// even if the outbound is currently active, we should increment this counter
+		// to avoid immediate processing logic
+		needsProcessingCtr++
+
+		switch {
 		case s.signer.IsOutboundActive(outboundID):
 			// cctx is already being processed & broadcasted by signer
 			continue
@@ -168,22 +187,22 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			// ProcessOutboundTrackers HAS fetched existing Sui outbound,
 			// Let's report this by voting to zetacore
 			if err := s.observer.VoteOutbound(ctx, cctx); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling VoteOutbound")
+				logger.Error().Err(err).Msg("error calling VoteOutbound")
 			}
 			continue
 		}
 
-		// Here we have a cctx that needs to be scheduled. Let's invoke async operation.
-		// - Signer will build, sign & broadcast the tx.
-		// - It will also monitor Sui to report outbound tracker
-		//   so we'd have a pair of (tss_nonce -> sui tx hash)
-		// - Then this pair will be handled by ProcessOutboundTrackers -> OutboundCreated -> VoteOutbound
-		bg.Work(ctx, func(ctx context.Context) error {
-			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
-			}
-			return nil
-		})
+		shouldScheduleProcess := nonce%interval == zetaHeight%interval
+
+		// schedule a TSS keysign
+		if shouldProcessCCTXImmediately || shouldScheduleProcess {
+			bg.Work(ctx, func(ctx context.Context) error {
+				if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
+					logger.Error().Err(err).Msg("error calling ProcessCCTX")
+				}
+				return nil
+			})
+		}
 	}
 
 	return nil
