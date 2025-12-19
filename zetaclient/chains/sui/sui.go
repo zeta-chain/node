@@ -142,16 +142,14 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		// #nosec G115 always in range
 		lookback = uint64(float64(lookahead) * outboundLookbackFactor)
 
-		firstNonce         = cctxList[0].GetCurrentOutboundParam().TssNonce
-		maxNonce           = firstNonce + lookback
-		needsProcessingCtr = 0
+		firstNonce = cctxList[0].GetCurrentOutboundParam().TssNonce
+		maxNonce   = firstNonce + lookback
 	)
 
 	for i, cctx := range cctxList {
 		var (
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
-			inboundParams  = cctx.GetInboundParams()
 			nonce          = outboundParams.TssNonce
 		)
 
@@ -167,19 +165,6 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			continue
 		case nonce >= maxNonce:
 			return fmt.Errorf("nonce %d is too high (%s). Earliest nonce %d", nonce, outboundID, firstNonce)
-		}
-
-		// schedule newly created cctx right away, no need to wait for next interval
-		// 1. schedule the very first cctx (there can be multiple) created in the last Zeta block.
-		// 2. schedule new cctx only when there is no other older cctx to process
-		isCCTXNewlyCreated := inboundParams.ObservedExternalHeight == zetaHeight
-		shouldProcessCCTXImmediately := isCCTXNewlyCreated && needsProcessingCtr == 0
-
-		// even if the outbound is currently active, we should increment this counter
-		// to avoid immediate processing logic
-		needsProcessingCtr++
-
-		switch {
 		case s.signer.IsOutboundActive(outboundID):
 			// cctx is already being processed & broadcasted by signer
 			continue
@@ -192,10 +177,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			continue
 		}
 
-		shouldScheduleProcess := nonce%interval == zetaHeight%interval
-
-		// schedule a TSS keysign
-		if shouldProcessCCTXImmediately || shouldScheduleProcess {
+		// schedule keysign if the interval has arrived
+		if nonce%interval == zetaHeight%interval {
 			bg.Work(ctx, func(ctx context.Context) error {
 				if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
 					logger.Error().Err(err).Msg("error calling ProcessCCTX")
