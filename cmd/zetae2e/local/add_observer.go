@@ -23,7 +23,7 @@ const (
 
 // addNewObserver is a test function that adds a new observer to the network.
 func addNewObserver(r *runner.E2ERunner) {
-	fundHotkeyAccountForNonValidatorNode(r)
+	fundHotkeyAccountForNewNode(r)
 	stakeToBecomeValidator(r)
 	addNodeAccount(r)
 	addObserverAccount(r)
@@ -98,8 +98,17 @@ func addObserverAccount(r *runner.E2ERunner) {
 
 // addGrants adds the necessary grants between operator and hotkey accounts.
 func addGrants(r *runner.E2ERunner) {
-	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	addGrantsWithHotkey(r, "zetaclient-new-validator", "zetaclient-new-validator")
+}
+
+// addGrantsWithHotkey grants the necessary permissions from granter to grantee
+func addGrantsWithHotkey(r *runner.E2ERunner, granter, grantee string) {
+	granterInfo, err := utils.FetchHotkeyAddress(granter)
 	require.NoError(r, err)
+
+	granteeInfo, err := utils.FetchHotkeyAddress(grantee)
+	require.NoError(r, err)
+
 	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
 
@@ -109,8 +118,8 @@ func addGrants(r *runner.E2ERunner) {
 	operator := getNewValidatorInfo(r)
 	for _, txType := range txTypes {
 		msg, err := authz.NewMsgGrant(
-			sdk.MustAccAddressFromBech32(observerInfo.ObserverAddress),
-			sdk.MustAccAddressFromBech32(observerInfo.ZetaClientGranteeAddress),
+			sdk.MustAccAddressFromBech32(granterInfo.ObserverAddress),
+			sdk.MustAccAddressFromBech32(granteeInfo.ZetaClientGranteeAddress),
 			authz.NewGenericAuthorization(txType),
 			nil,
 		)
@@ -120,7 +129,7 @@ func addGrants(r *runner.E2ERunner) {
 	}
 
 	msg, err := authz.NewMsgGrant(
-		sdk.MustAccAddressFromBech32(observerInfo.ObserverAddress),
+		sdk.MustAccAddressFromBech32(granterInfo.ObserverAddress),
 		sdk.MustAccAddressFromBech32(r.ZetaTxServer.MustGetAccountAddressFromName(utils.UserEmissionsWithdrawName)),
 		authz.NewGenericAuthorization(sdk.MsgTypeURL(&emissionstypes.MsgWithdrawEmission{})),
 		nil,
@@ -130,12 +139,17 @@ func addGrants(r *runner.E2ERunner) {
 	require.NoError(r, err, "failed to broadcast transaction")
 }
 
-// fundHotkeyAccountForNonValidatorNode funds the hotkey address of a new validator.
-func fundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
+// fundHotkeyAccountForNewNode funds the hotkey address of a new validator.
+func fundHotkeyAccountForNewNode(r *runner.E2ERunner) {
+	fundHotkeyAccount(r, "zetaclient-new-validator")
+}
+
+// fundHotkeyAccount funds the hotkey address of the specified zetaclient.
+func fundHotkeyAccount(r *runner.E2ERunner, zetaclientName string) {
 	amount, err := sdk.ParseCoinNormalized("100000000000000000000azeta")
 	require.NoError(r, err, "failed to parse coin")
 
-	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	observerInfo, err := utils.FetchHotkeyAddress(zetaclientName)
 	require.NoError(r, err)
 
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
@@ -157,6 +171,7 @@ func fundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
 }
 
 // getNewValidatorInfo retrieves the keyring record for the new validator from the keyring.
+// operator-new-validator is created when copying the keys into the container
 func getNewValidatorInfo(r *runner.E2ERunner) *keyring.Record {
 	record, err := r.ZetaTxServer.GetValidatorsKeyring().Key("operator-new-validator")
 	require.NoError(r, err, "failed to get operator-new-validator key")

@@ -440,7 +440,11 @@ if [ "$LOCALNET_MODE" == "replace" ]; then
   fi
 
   echo "Running E2E test before observer replacement"
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-header-proof --light --replace-observer
+  REUSE_TSS_FLAG=""
+  if [[ -n "$REUSE_TSS_FROM" ]]; then
+    REUSE_TSS_FLAG="--reuse-tss-from $REUSE_TSS_FROM"
+  fi
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-header-proof --light --replace-observer $REUSE_TSS_FLAG
   if [ $? -ne 0 ]; then
     echo "First E2E failed"
     exit 1

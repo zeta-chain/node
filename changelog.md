@@ -13,6 +13,7 @@
 ### Tests
 
 * [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
+* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
 
 ### Fixes
 

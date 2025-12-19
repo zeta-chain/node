@@ -458,6 +458,7 @@ services:
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
       - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
       - UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
