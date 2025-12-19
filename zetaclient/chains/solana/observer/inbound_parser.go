@@ -29,15 +29,27 @@ type InboundEventParser struct {
 }
 
 // NewInboundEventParser creates a new InboundEventParser
+// resolvedTx is an optional pre-resolved transaction (e.g., with address lookup tables resolved).
+// If provided, it will be used instead of extracting a fresh transaction from txResult.
 func NewInboundEventParser(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
 	senderChainID int64,
 	logger zerolog.Logger,
+	resolvedTx *solana.Transaction,
 ) (*InboundEventParser, error) {
-	tx, err := txResult.Transaction.GetTransaction()
-	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling transaction")
+	var tx *solana.Transaction
+	var err error
+
+	if resolvedTx != nil {
+		// Use the pre-resolved transaction
+		tx = resolvedTx
+	} else {
+		// Extract transaction from txResult
+		tx, err = txResult.Transaction.GetTransaction()
+		if err != nil {
+			return nil, errors.Wrap(err, "error unmarshaling transaction")
+		}
 	}
 
 	return &InboundEventParser{
