@@ -210,11 +210,11 @@ func (b *Backend) ProcessBlock(
 		header.GasLimit = uint64(gasLimitUint64)
 		header.GasUsed = gasUsedBig.ToInt().Uint64()
 		ctx := types.ContextWithHeight(blockHeight)
-		params, err := b.QueryClient.FeeMarket.Params(ctx, &feemarkettypes.QueryParamsRequest{})
+		feeMarketParams, err := b.QueryClient.FeeMarket.Params(ctx, &feemarkettypes.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
-		nextBaseFee, err := CalcBaseFee(cfg, &header, params.Params)
+		nextBaseFee, err := CalcBaseFee(cfg, &header, feeMarketParams.Params)
 		if err != nil {
 			return err
 		}
@@ -222,7 +222,7 @@ func (b *Backend) ProcessBlock(
 	} else {
 		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
-	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
+	gasUsedFloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
 
 	if gasLimitUint64 <= 0 {
 		return fmt.Errorf(
@@ -232,8 +232,8 @@ func (b *Backend) ProcessBlock(
 		)
 	}
 
-	gasUsedRatio := gasusedfloat / float64(gasLimitUint64)
-	blockGasUsed := gasusedfloat
+	gasUsedRatio := gasUsedFloat / float64(gasLimitUint64)
+	blockGasUsed := gasUsedFloat
 	targetOneFeeHistory.GasUsedRatio = gasUsedRatio
 
 	rewardCount := len(rewardPercentiles)
@@ -390,34 +390,33 @@ func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*eth
 //  3. Log Index values are not monotonically increasing across all groups(transactions)
 func needsReindexing(blockLogs [][]*ethtypes.Log) bool {
 	seenLogIndices := make(map[uint]bool)
-	lastTxIndex := -1
-	lastLogIndex := -1
+	var lastTxIndex uint
+	var lastLogIndex uint
+	isFirstTx := true
+	isFirstLog := true
 
 	for _, txLogs := range blockLogs {
 		if len(txLogs) == 0 {
 			continue
 		}
 
-		groupTxIndex := int(txLogs[0].TxIndex)
-		if groupTxIndex <= lastTxIndex {
+		groupTxIndex := txLogs[0].TxIndex
+		if !isFirstTx && groupTxIndex <= lastTxIndex {
 			return true
 		}
 		lastTxIndex = groupTxIndex
+		isFirstTx = false
 
 		for _, entry := range txLogs {
-			logIndex := int(entry.Index)
-
-			// Check for duplicates
 			if seenLogIndices[entry.Index] {
 				return true
 			}
 			seenLogIndices[entry.Index] = true
-
-			// Check monotonic ordering: each log's Index must be greater than the last across all transactions in a block
-			if logIndex <= lastLogIndex {
+			if !isFirstLog && entry.Index <= lastLogIndex {
 				return true
 			}
-			lastLogIndex = logIndex
+			lastLogIndex = entry.Index
+			isFirstLog = false
 		}
 	}
 	return false
@@ -429,6 +428,9 @@ func reindexLogs(blockLogs [][]*ethtypes.Log) {
 	globalLogIndex := uint(0)
 
 	for _, txLogs := range blockLogs {
+		if len(txLogs) == 0 {
+			continue
+		}
 		for _, entry := range txLogs {
 			entry.TxIndex = globalTxIndex
 			entry.Index = globalLogIndex
