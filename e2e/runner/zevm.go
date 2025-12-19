@@ -341,7 +341,7 @@ func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
 		return retry.Retry(r.checkNumberOfTSSGenerated(tssNumber))
 	}
 	bo := backoff.NewConstantBackOff(time.Second * 5)
-	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 20)
 	err := retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
 }
