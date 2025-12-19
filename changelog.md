@@ -6,8 +6,9 @@
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
 * [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
-* [4453](https://github.com/zeta-chain/node/pull/4453/) - add an option to create dry zetaclients to connect to live networks
 * [4484](https://github.com/zeta-chain/node/pull/4484) - change params for 2s block time
+* [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
+* [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
 
 ### Tests
 
@@ -22,6 +23,7 @@
 * [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
 * [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
 * [4471](https://github.com/zeta-chain/node/pull/4471) - accept uppercase receiver address in Bitcoin withdrawals
+* [4490](https://github.com/zeta-chain/node/pull/4490) - allow object for `tracerConfig` in the zevm debug APIs
 
 ### Tests
 
