@@ -304,7 +304,7 @@ func (s *Signer) RemoveKeysignInfo(beforeNonce uint64) {
 	}
 }
 
-// keysignLogger returns the logger for keysign batch.
+// batchLogger returns the logger for keysign batch.
 func (s *Signer) batchLogger(batch TSSKeysignBatch) zerolog.Logger {
 	return s.Logger().
 		Std.With().
