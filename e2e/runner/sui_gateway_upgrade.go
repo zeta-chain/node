@@ -226,7 +226,7 @@ func (r *E2ERunner) suiVerifyDepositFromDeprecatePackage(packageID string, amoun
 	r.Logger.Info("Sui deposit tx: %s from deprecated package: %s", resp.Digest, packageID)
 
 	// wait for 2 zeta blocks
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 20*time.Second)
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 10, 100*time.Second)
 
 	// query cctx by inbound hash, no CCTX should be created
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: resp.Digest}
