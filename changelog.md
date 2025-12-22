@@ -24,6 +24,7 @@
 * [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
 * [4471](https://github.com/zeta-chain/node/pull/4471) - accept uppercase receiver address in Bitcoin withdrawals
 * [4490](https://github.com/zeta-chain/node/pull/4490) - allow object for `tracerConfig` in the zevm debug APIs
+* [4511](https://github.com/zeta-chain/node/pull/4511) - false mempool congested warning
 * [4509](https://github.com/zeta-chain/node/pull/4509) - use outbound schedule interval in sui cctx scheduling
 
 ### Tests
