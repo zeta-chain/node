@@ -13,6 +13,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/cmd/zetatool/config"
 	zetacontext "github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -187,7 +188,6 @@ func voteFromStdMemo(
 }
 
 const (
-	// Mempool.space API endpoints for address stats (balance)
 	mempoolAddressAPIMainnet = "https://mempool.space/api/address/%s"
 	mempoolAddressAPITestnet = "https://mempool.space/testnet4/api/address/%s"
 	satoshisPerBitcoin       = 100_000_000
@@ -215,16 +215,13 @@ type BTCAddressStats struct {
 // GetBTCBalance fetches the BTC balance for a given address using mempool.space API
 // Returns the balance in BTC (not satoshis)
 func GetBTCBalance(ctx context.Context, address string, network string) (float64, error) {
-	// Get the appropriate API URL based on network
 	apiURL := getMempoolAddressAPIURL(network, address)
 
-	// Create HTTP request
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Execute request
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch address stats: %w", err)
@@ -235,28 +232,24 @@ func GetBTCBalance(ctx context.Context, address string, network string) (float64
 		return 0, fmt.Errorf("mempool.space API returned status %d", resp.StatusCode)
 	}
 
-	// Decode response
 	var stats BTCAddressStats
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
 		return 0, fmt.Errorf("failed to decode address stats: %w", err)
 	}
 
-	// Calculate confirmed balance: funded - spent
 	balanceSatoshis := stats.ChainStats.FundedTxoSum - stats.ChainStats.SpentTxoSum
 
-	// Convert satoshis to BTC
 	return float64(balanceSatoshis) / satoshisPerBitcoin, nil
 }
 
 // getMempoolAddressAPIURL returns the mempool.space address API URL for the given network
 func getMempoolAddressAPIURL(network, address string) string {
 	switch network {
-	case NetworkMainnet:
+	case config.NetworkMainnet:
 		return fmt.Sprintf(mempoolAddressAPIMainnet, address)
-	case NetworkTestnet:
+	case config.NetworkTestnet:
 		return fmt.Sprintf(mempoolAddressAPITestnet, address)
 	default:
-		// For localnet/devnet, default to testnet API (won't work but provides error)
 		return fmt.Sprintf(mempoolAddressAPITestnet, address)
 	}
 }
@@ -264,13 +257,13 @@ func getMempoolAddressAPIURL(network, address string) string {
 // GetBTCChainID returns the Bitcoin chain ID for the given network
 func GetBTCChainID(network string) int64 {
 	switch network {
-	case NetworkMainnet:
-		return 8332 // Bitcoin mainnet
-	case NetworkTestnet:
-		return 18332 // Bitcoin testnet3
-	case NetworkLocalnet:
-		return 18444 // Bitcoin regtest
+	case config.NetworkMainnet:
+		return 8332
+	case config.NetworkTestnet:
+		return 18332
+	case config.NetworkLocalnet:
+		return 18444
 	default:
-		return 18332 // Default to testnet
+		panic("invalid network")
 	}
 }

@@ -92,7 +92,6 @@ func GetSolanaGatewayBalance(ctx context.Context, rpcURL string, gatewayAddress 
 
 // getSolanaBalance queries the balance of a Solana account using JSON-RPC
 func getSolanaBalance(ctx context.Context, rpcURL string, pubkey solana.PublicKey) (uint64, error) {
-	// Create JSON-RPC request
 	reqBody := solanaRPCRequest{
 		JSONRPC: "2.0",
 		ID:      1,
@@ -123,7 +122,6 @@ func getSolanaBalance(ctx context.Context, rpcURL string, pubkey solana.PublicKe
 		return 0, fmt.Errorf("RPC returned status %d", resp.StatusCode)
 	}
 
-	// Decode response
 	var rpcResp solanaRPCResponse
 	if err := json.NewDecoder(resp.Body).Decode(&rpcResp); err != nil {
 		return 0, fmt.Errorf("failed to decode response: %w", err)
@@ -140,16 +138,4 @@ func getSolanaBalance(ctx context.Context, rpcURL string, pubkey solana.PublicKe
 func FormatSolanaBalance(lamports uint64) string {
 	sol := float64(lamports) / lamportsPerSOL
 	return fmt.Sprintf("%.9f", sol)
-}
-
-// GetSolanaChainID returns the Solana chain ID for the given network
-func GetSolanaChainID(network string) int64 {
-	switch network {
-	case NetworkMainnet:
-		return 900 // Solana mainnet
-	case NetworkTestnet:
-		return 901 // Solana devnet (used as testnet)
-	default:
-		return 901 // Default to devnet for localnet/devnet
-	}
 }

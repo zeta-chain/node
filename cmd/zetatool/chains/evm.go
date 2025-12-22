@@ -270,7 +270,6 @@ func GetEVMBalance(ctx context.Context, rpcURL string, address ethcommon.Address
 	}
 	defer client.Close()
 
-	// Get balance at the latest block
 	return client.BalanceAt(ctx, address, nil)
 }
 
@@ -280,12 +279,10 @@ func FormatEVMBalance(wei *big.Int) string {
 		return "0.000000000"
 	}
 
-	// 1 ETH = 10^18 wei
 	divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
 	wholePart := new(big.Int).Div(wei, divisor)
 	remainder := new(big.Int).Mod(wei, divisor)
 
-	// Format remainder to 9 decimal places
 	remainderStr := fmt.Sprintf("%018d", remainder)
 	if len(remainderStr) > 9 {
 		remainderStr = remainderStr[:9]

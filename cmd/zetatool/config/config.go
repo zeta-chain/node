@@ -16,6 +16,11 @@ const (
 	FlagConfig         = "config"
 	defaultCfgFileName = "zetatool_config.json"
 	FlagDebug          = "debug"
+
+	// Network name constants
+	NetworkMainnet  = "mainnet"
+	NetworkTestnet  = "testnet"
+	NetworkLocalnet = "localnet"
 )
 
 func TestnetConfig() *Config {

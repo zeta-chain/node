@@ -248,7 +248,7 @@ func printTSSBalances(
 		go func(c pkgchains.Chain) {
 			defer wg.Done()
 			// Skip Bitcoin for localnet (mempool.space doesn't support regtest)
-			if network == chains.NetworkLocalnet {
+			if network == config.NetworkLocalnet {
 				results <- chainBalance{
 					Chain:   c.Name,
 					Address: btcAddr,

@@ -25,7 +25,6 @@ func GetSuiBalance(ctx context.Context, rpcURL string, address string) (uint64, 
 	)
 
 	// Query all SUI coins owned by the address
-	// There can be multiple coins, so we paginate through them
 	for {
 		resp, err := client.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
 			Owner:    address,
@@ -45,7 +44,6 @@ func GetSuiBalance(ctx context.Context, rpcURL string, address string) (uint64, 
 			totalBalance += balance
 		}
 
-		// Check if there are more pages
 		if !resp.HasNextPage {
 			break
 		}
