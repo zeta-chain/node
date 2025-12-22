@@ -209,8 +209,8 @@ func printTSSBalances(
 
 	// EVM chains - use TSS EVM address
 	for _, chain := range evmChains {
-		rpc := getRPCForChain(cfg, chain)
-		if rpc == "" {
+		chainRpc := getRPCForChain(cfg, chain)
+		if chainRpc == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: evmAddr.Hex(),
@@ -239,7 +239,7 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, rpc)
+		}(chain, chainRpc)
 	}
 
 	// Bitcoin chains - use TSS BTC address
@@ -257,7 +257,7 @@ func printTSSBalances(
 				}
 				return
 			}
-			balance, err := chains.GetBTCBalance(ctx, btcAddr, network)
+			balance, err := chains.GetBTCBalance(ctx, btcAddr, c.ChainId)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -279,8 +279,8 @@ func printTSSBalances(
 
 	// Sui chains - use TSS Sui address
 	for _, chain := range suiChains {
-		rpc := getRPCForChain(cfg, chain)
-		if rpc == "" {
+		chainRpc := getRPCForChain(cfg, chain)
+		if chainRpc == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: suiAddr,
@@ -309,13 +309,13 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, rpc)
+		}(chain, chainRpc)
 	}
 
 	// Solana chains - use gateway PDA balance
 	for _, chain := range solanaChains {
-		rpc := getRPCForChain(cfg, chain)
-		if rpc == "" {
+		chainRpc := getRPCForChain(cfg, chain)
+		if chainRpc == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: "N/A",
@@ -370,13 +370,13 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, rpc)
+		}(chain, chainRpc)
 	}
 
 	// TON chains - use gateway contract balance
 	for _, chain := range tonChains {
-		rpc := getRPCForChain(cfg, chain)
-		if rpc == "" {
+		chainRpc := getRPCForChain(cfg, chain)
+		if chainRpc == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: "N/A",
@@ -431,7 +431,7 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, rpc)
+		}(chain, chainRpc)
 	}
 
 	go func() {

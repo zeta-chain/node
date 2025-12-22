@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/params"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
@@ -279,14 +280,9 @@ func FormatEVMBalance(wei *big.Int) string {
 		return "0.000000000"
 	}
 
-	divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-	wholePart := new(big.Int).Div(wei, divisor)
-	remainder := new(big.Int).Mod(wei, divisor)
+	weiFloat := new(big.Float).SetInt(wei)
+	divisor := new(big.Float).SetInt(big.NewInt(params.Ether))
+	eth := new(big.Float).Quo(weiFloat, divisor)
 
-	remainderStr := fmt.Sprintf("%018d", remainder)
-	if len(remainderStr) > 9 {
-		remainderStr = remainderStr[:9]
-	}
-
-	return fmt.Sprintf("%s.%s", wholePart.String(), remainderStr)
+	return eth.Text('f', 9)
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"time"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -188,9 +189,12 @@ func voteFromStdMemo(
 }
 
 const (
-	mempoolAddressAPIMainnet = "https://mempool.space/api/address/%s"
-	mempoolAddressAPITestnet = "https://mempool.space/testnet4/api/address/%s"
-	satoshisPerBitcoin       = 100_000_000
+	mempoolAddressAPIMainnet  = "https://mempool.space/api/address/%s"
+	mempoolAddressAPITestnet3 = "https://mempool.space/testnet/api/address/%s"
+	mempoolAddressAPISignet   = "https://mempool.space/signet/api/address/%s"
+	mempoolAddressAPITestnet4 = "https://mempool.space/testnet4/api/address/%s"
+	satoshisPerBitcoin        = 100_000_000
+	httpClientTimeout         = 30 * time.Second
 )
 
 // BTCAddressStats represents the response from mempool.space address API
@@ -214,15 +218,19 @@ type BTCAddressStats struct {
 
 // GetBTCBalance fetches the BTC balance for a given address using mempool.space API
 // Returns the balance in BTC (not satoshis)
-func GetBTCBalance(ctx context.Context, address string, network string) (float64, error) {
-	apiURL := getMempoolAddressAPIURL(network, address)
+func GetBTCBalance(ctx context.Context, address string, chainID int64) (float64, error) {
+	apiURL := getMempoolAddressAPIURL(chainID, address)
+	if apiURL == "" {
+		return 0, fmt.Errorf("unsupported Bitcoin chain ID: %d", chainID)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	btcClient := &http.Client{Timeout: httpClientTimeout}
+	resp, err := btcClient.Do(req)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch address stats: %w", err)
 	}
@@ -242,15 +250,19 @@ func GetBTCBalance(ctx context.Context, address string, network string) (float64
 	return float64(balanceSatoshis) / satoshisPerBitcoin, nil
 }
 
-// getMempoolAddressAPIURL returns the mempool.space address API URL for the given network
-func getMempoolAddressAPIURL(network, address string) string {
-	switch network {
-	case config.NetworkMainnet:
+// getMempoolAddressAPIURL returns the mempool.space address API URL for the given chain ID
+func getMempoolAddressAPIURL(chainID int64, address string) string {
+	switch chainID {
+	case 8332: // Bitcoin mainnet
 		return fmt.Sprintf(mempoolAddressAPIMainnet, address)
-	case config.NetworkTestnet:
-		return fmt.Sprintf(mempoolAddressAPITestnet, address)
+	case 18332: // Bitcoin testnet3
+		return fmt.Sprintf(mempoolAddressAPITestnet3, address)
+	case 18333: // Bitcoin signet
+		return fmt.Sprintf(mempoolAddressAPISignet, address)
+	case 18334: // Bitcoin testnet4
+		return fmt.Sprintf(mempoolAddressAPITestnet4, address)
 	default:
-		return fmt.Sprintf(mempoolAddressAPITestnet, address)
+		return ""
 	}
 }
 
