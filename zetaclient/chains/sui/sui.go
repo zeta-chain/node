@@ -136,6 +136,8 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		zetaHeight = uint64(zetaBlock.Block.Height)
 		chainID    = s.observer.Chain().ChainId
 
+		// #nosec G115 positive
+		interval  = uint64(s.observer.ChainParams().OutboundScheduleInterval)
 		lookahead = s.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
 		lookback = uint64(float64(lookahead) * outboundLookbackFactor)
@@ -151,13 +153,15 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			nonce          = outboundParams.TssNonce
 		)
 
+		logger := s.outboundLogger(outboundID)
+
 		switch {
 		case int64(i) == lookahead:
 			// take only first N cctxs
 			return nil
 		case outboundParams.ReceiverChainId != chainID:
 			// should not happen
-			s.outboundLogger(outboundID).Error().Msg("chain id mismatch")
+			logger.Error().Msg("chain id mismatch")
 			continue
 		case nonce >= maxNonce:
 			return fmt.Errorf("nonce %d is too high (%s). Earliest nonce %d", nonce, outboundID, firstNonce)
@@ -168,22 +172,20 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			// ProcessOutboundTrackers HAS fetched existing Sui outbound,
 			// Let's report this by voting to zetacore
 			if err := s.observer.VoteOutbound(ctx, cctx); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling VoteOutbound")
+				logger.Error().Err(err).Msg("error calling VoteOutbound")
 			}
 			continue
 		}
 
-		// Here we have a cctx that needs to be scheduled. Let's invoke async operation.
-		// - Signer will build, sign & broadcast the tx.
-		// - It will also monitor Sui to report outbound tracker
-		//   so we'd have a pair of (tss_nonce -> sui tx hash)
-		// - Then this pair will be handled by ProcessOutboundTrackers -> OutboundCreated -> VoteOutbound
-		bg.Work(ctx, func(ctx context.Context) error {
-			if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
-				s.outboundLogger(outboundID).Error().Err(err).Msg("error calling ProcessCCTX")
-			}
-			return nil
-		})
+		// schedule keysign if the interval has arrived
+		if nonce%interval == zetaHeight%interval {
+			bg.Work(ctx, func(ctx context.Context) error {
+				if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
+					logger.Error().Err(err).Msg("error calling ProcessCCTX")
+				}
+				return nil
+			})
+		}
 	}
 
 	return nil
