@@ -196,7 +196,10 @@ func (a *AppContext) Update(
 
 	// print warning if mempool is congested
 	if mempoolThreshold > 0 && a.unconfirmedTxCount > mempoolThreshold {
-		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
+		a.logger.Warn().
+			Int64("unconfirmed_tx_count", a.unconfirmedTxCount).
+			Int64("threshold", mempoolThreshold).
+			Msg("mempool is congested")
 	}
 
 	return nil
