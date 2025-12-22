@@ -59,7 +59,6 @@ PREPARAMS_PATH="/root/preparams/${HOSTNAME}.json"
 # Skip preparams setup for replacement observer - it will copy from source client later
 if [[ -z "$OBSERVER_REPLACE_MODE" ]]; then
     if [[ -n "${ZETACLIENTD_GEN_PREPARAMS}" ]]; then
-        # Generate pre-params as early as possible to reach keygen height on schedule.
         if [ ! -f "$PREPARAMS_PATH" ]; then
             zetaclientd gen-pre-params "$PREPARAMS_PATH"
         fi
@@ -126,9 +125,7 @@ if [[ -n "$OBSERVER_REPLACE_MODE" && -n "$REUSE_TSS_FROM" ]]; then
     mkdir -p /root/preparams/
     scp -r "${REUSE_TSS_FROM}":~/.zetacored/keyring-file/* ~/.zetacored/keyring-file/ 2>/dev/null || true
     scp -r "${REUSE_TSS_FROM}":~/.tss/* ~/.tss/ 2>/dev/null || true
-    # Remove stale address_book.seed so it gets regenerated with fresh bootstrap peers
     rm -f ~/.tss/address_book.seed
-    # Copy preparams from source client since we're reusing their TSS keyshare
     scp "${REUSE_TSS_FROM}":/root/preparams/"${REUSE_TSS_FROM}".json "$PREPARAMS_PATH" 2>/dev/null || true
 fi
 

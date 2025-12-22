@@ -308,11 +308,8 @@ start-e2e-test-4nodes: e2e-images
 	@echo "--> Starting e2e test with 4 nodes"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-# Run e2e tests with 4 nodes and enable the observer replacement flow at the end
-# First run performs replacement, second run verifies network works with new observer
-# OBSERVER_REPLACE_MODE=true tells zetaclient-new-validator to copy TSS/hotkey from REUSE_TSS_FROM client
-start-e2e-test-replace: e2e-images
-	@echo "--> Starting e2e test with 4 nodes and observer replacement flow"
+start-replace-observer: e2e-images
+	@echo "--> Starting e2e with observer replacement"
 	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
 	export LOCALNET_MODE=replace && \
 	export OBSERVER_REPLACE_MODE=true && \

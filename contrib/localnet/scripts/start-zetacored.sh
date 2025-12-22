@@ -144,7 +144,7 @@ then
 fi
 
 echo "Creating keys for operator and hotkey for $HOSTNAME"
-# Ensure new-validator is marked as non-observer (it becomes observer via replacement flow or TSS flow)
+# Ensure new-validator is marked as non-observer (it becomes observer via replacement or add-observer)
 if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
   source ~/add-keys.sh n
 else
@@ -219,7 +219,6 @@ then
   if host zetacore-new-validator ; then
     echo "zetacore-new-validator exists"
     ssh zetaclient-new-validator mkdir -p ~/.zetacored/
-    # Copy to os_info/ so it gets collected and funded (IsObserver=n prevents observer set inclusion)
     while ! scp zetacore-new-validator:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_non_validator.json; do
         echo "Waiting for os_info.json from node zetacore-new-validator"
         sleep 1

@@ -404,18 +404,14 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   exit 1
 fi
 
-# Restart zetaclientd on all active nodes after observer replacement
-# The TSS topology remains the same (same keygen), only the operator address changes
-restart_zetaclients_after_replacement() {
-  # All zetaclients that need to restart after replacement
+
+restart_zetaclients() {
   local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3" "zetaclient-new-validator")
 
   for node in "${nodes[@]}"; do
-    # Skip if node is not accessible
     ssh -q root@$node "exit" 2>/dev/null || continue
 
     echo "Restarting zetaclientd on $node"
-    # Kill existing zetaclientd processes and let supervisor restart them
     ssh root@$node "pkill -f zetaclientd || true" || continue
   done
 
@@ -423,9 +419,7 @@ restart_zetaclients_after_replacement() {
   sleep 15
 }
 
-# Mode `replace` is used to run the E2E tests with observer replacement flow.
-# It runs E2E tests with --replace-observer flag which triggers observer replacement at the end.
-# After replacement completes, it runs E2E tests again to verify the network works with the new observer.
+# Mode `replace` is used to run the E2E tests and replace an observer
 if [ "$LOCALNET_MODE" == "replace" ]; then
   if [[ ! -f "$deployed_config_path" ]]; then
     [[ -n $CI ]] && echo "::group::setup"
@@ -451,7 +445,7 @@ if [ "$LOCALNET_MODE" == "replace" ]; then
   fi
 
   echo "Observer replacement completed, restarting zetaclients"
-  restart_zetaclients_after_replacement
+  restart_zetaclients
 
   export RUN_NUMBER=2
   echo "Running E2E test after observer replacement"

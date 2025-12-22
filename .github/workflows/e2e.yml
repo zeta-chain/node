@@ -121,6 +121,7 @@ jobs:
       PERFORMANCE_TESTS_1K: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
+      REPLACE_OBSERVER: ${{ steps.matrix-conditionals.outputs.REPLACE_OBSERVER }}
       STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
@@ -159,6 +160,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS_1K', labels.includes('PERFORMANCE_TESTS_1K'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
+              core.setOutput('REPLACE_OBSERVER', labels.includes('REPLACE_OBSERVER'));
               core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
@@ -223,6 +225,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS_1K', makeTargets.includes('performance-test-1k'));
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
+              core.setOutput('REPLACE_OBSERVER', makeTargets.includes('replace-observer'));
               core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
@@ -285,6 +288,10 @@ jobs:
           - make-target: "start-tss-migration-remove-observer"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            timeout-minutes: 40
+          - make-target: "start-replace-observer"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.REPLACE_OBSERVER == 'true' }}
             timeout-minutes: 40
           - make-target: "start-staking-test"
             runs-on: ubuntu-22.04

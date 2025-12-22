@@ -9,10 +9,10 @@ import (
 )
 
 // replaceObserver performs the flow to replace an existing observer with a new validator while reusing the exiting tss key-shard
-func replaceObserver(r *runner.E2ERunner, reuseTSSFrom string) {
+func replaceObserver(r *runner.E2ERunner, reuseTSSFromNode string) {
 	stakeToBecomeValidator(r)
-	addGrantsWithHotkey(r, "zetaclient-new-validator", reuseTSSFrom)
-	updateObserver(r, reuseTSSFrom)
+	addGrantsWithHotkey(r, ZetaclientNewValidatorNode, reuseTSSFromNode)
+	updateObserver(r, reuseTSSFromNode)
 }
 
 // updateObserver updates the observer set to replace the old operator address with the new one.
@@ -21,7 +21,7 @@ func updateObserver(r *runner.E2ERunner, oldZetaclient string) {
 	require.NoError(r, err)
 	oldObserver := oldInfo.ObserverAddress
 
-	newInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	newInfo, err := utils.FetchHotkeyAddress(ZetaclientNewValidatorNode)
 	require.NoError(r, err)
 	newObserver := newInfo.ObserverAddress
 

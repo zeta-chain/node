@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	StakeAmount = "1000000000000000000000azeta"
+	StakeAmount                = "1000000000000000000000azeta"
+	ZetaclientNewValidatorNode = "zetaclient-new-validator"
 )
 
 // addNewObserver is a test function that adds a new observer to the network.
@@ -70,7 +71,7 @@ func stakeToBecomeValidator(r *runner.E2ERunner) {
 
 // addNodeAccount adds the node account of a new validator to the network.
 func addNodeAccount(r *runner.E2ERunner) {
-	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	observerInfo, err := utils.FetchHotkeyAddress(ZetaclientNewValidatorNode)
 	require.NoError(r, err)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
@@ -84,7 +85,7 @@ func addNodeAccount(r *runner.E2ERunner) {
 
 // addObserverAccount adds a validator account to the observer set.
 func addObserverAccount(r *runner.E2ERunner) {
-	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	observerInfo, err := utils.FetchHotkeyAddress(ZetaclientNewValidatorNode)
 	require.NoError(r, err)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
@@ -98,7 +99,7 @@ func addObserverAccount(r *runner.E2ERunner) {
 
 // addGrants adds the necessary grants between operator and hotkey accounts.
 func addGrants(r *runner.E2ERunner) {
-	addGrantsWithHotkey(r, "zetaclient-new-validator", "zetaclient-new-validator")
+	addGrantsWithHotkey(r, ZetaclientNewValidatorNode, ZetaclientNewValidatorNode)
 }
 
 // addGrantsWithHotkey grants the necessary permissions from granter to grantee
@@ -141,7 +142,7 @@ func addGrantsWithHotkey(r *runner.E2ERunner, granter, grantee string) {
 
 // fundHotkeyAccountForNewNode funds the hotkey address of a new validator.
 func fundHotkeyAccountForNewNode(r *runner.E2ERunner) {
-	fundHotkeyAccount(r, "zetaclient-new-validator")
+	fundHotkeyAccount(r, ZetaclientNewValidatorNode)
 }
 
 // fundHotkeyAccount funds the hotkey address of the specified zetaclient.
