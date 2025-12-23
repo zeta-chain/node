@@ -184,10 +184,7 @@ func (a *AppContext) Update(
 		return errors.Wrap(err, "unable to update chain registry")
 	}
 
-	// print warning if mempool is congested
-	if int64(unconfirmedTxCount) > a.config.GetMempoolCongestionThreshold() {
-		a.logger.Warn().Int64("unconfirmed_tx_count", a.unconfirmedTxCount).Msg("mempool is congested")
-	}
+	mempoolThreshold := a.config.GetMempoolCongestionThreshold()
 
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -196,6 +193,14 @@ func (a *AppContext) Update(
 	a.operationalFlags = operationalFlags
 	a.currentBaseFee = currentBaseFee
 	a.unconfirmedTxCount = int64(unconfirmedTxCount)
+
+	// print warning if mempool is congested
+	if mempoolThreshold > 0 && a.unconfirmedTxCount > mempoolThreshold {
+		a.logger.Warn().
+			Int64("unconfirmed_tx_count", a.unconfirmedTxCount).
+			Int64("threshold", mempoolThreshold).
+			Msg("mempool is congested")
+	}
 
 	return nil
 }
