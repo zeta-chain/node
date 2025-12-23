@@ -142,8 +142,8 @@ func (r *E2ERunner) suiDeprecatePreviousPackage() {
 	err = r.setSuiChainParams(false)
 	require.NoError(r, err)
 
-	// wait 2 Zeta blocks to ensure zetaclient picks up the new chain params
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
+	// wait 10 Zeta blocks to ensure zetaclient picks up the new chain params
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 10, 100*time.Second)
 }
 
 // moveCallUpgraded performs a move call to 'upgraded' method on the new Sui gateway package
@@ -225,8 +225,8 @@ func (r *E2ERunner) suiVerifyDepositFromDeprecatePackage(packageID string, amoun
 	resp := r.SuiDepositSUI(packageID, r.EVMAddress(), math.NewUintFromBigInt(amount))
 	r.Logger.Info("Sui deposit tx: %s from deprecated package: %s", resp.Digest, packageID)
 
-	// wait for 2 zeta blocks
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 20*time.Second)
+	// wait for 10 zeta blocks
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 10, 100*time.Second)
 
 	// query cctx by inbound hash, no CCTX should be created
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: resp.Digest}
