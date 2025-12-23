@@ -101,19 +101,30 @@ fi
 
 # If this is the replacement observer client, copy keyring-file, TSS, and preparams from source client
 if [[ -n "$OBSERVER_REPLACE_MODE" && -n "$REUSE_TSS_FROM" ]]; then
-    echo "Waiting for TSS keyshare on ${REUSE_TSS_FROM} (timeout 10m)..."
-    timeout_seconds=$((10 * 60))
+    timeout_seconds=300  # 5 minutes
+    log_interval=30
+    echo "Waiting for TSS keyshare on ${REUSE_TSS_FROM} (timeout ${timeout_seconds}s)..."
     start_time=$(date +%s)
+    last_log_time=$start_time
+
     while true; do
         # Consider either the standard local_share.json or any json file under ~/.tss as presence of keyshare
         if ssh -q "${REUSE_TSS_FROM}" 'test -f ~/.tss/local_share.json || ls -1 ~/.tss/*.json >/dev/null 2>&1'; then
             echo "TSS keyshare detected on ${REUSE_TSS_FROM}"
             break
         fi
+
         now=$(date +%s)
         elapsed=$((now - start_time))
+
+        # Log progress every 30 seconds
+        if (( now - last_log_time >= log_interval )); then
+            echo "Still waiting for TSS keyshare... (${elapsed}s elapsed, timeout at ${timeout_seconds}s)"
+            last_log_time=$now
+        fi
+
         if (( elapsed >= timeout_seconds )); then
-            echo "Error: TSS keyshare not found on ${REUSE_TSS_FROM} within 10 minutes"
+            echo "Error: TSS keyshare not found on ${REUSE_TSS_FROM} within ${timeout_seconds} seconds"
             exit 1
         fi
         sleep 5
@@ -123,10 +134,42 @@ if [[ -n "$OBSERVER_REPLACE_MODE" && -n "$REUSE_TSS_FROM" ]]; then
     mkdir -p ~/.zetacored/keyring-file/
     mkdir -p ~/.tss/
     mkdir -p /root/preparams/
-    scp -r "${REUSE_TSS_FROM}":~/.zetacored/keyring-file/* ~/.zetacored/keyring-file/ 2>/dev/null || true
-    scp -r "${REUSE_TSS_FROM}":~/.tss/* ~/.tss/ 2>/dev/null || true
+
+    # Copy keyring-file with error handling
+    if ! scp -r "${REUSE_TSS_FROM}":~/.zetacored/keyring-file/* ~/.zetacored/keyring-file/ 2>/dev/null; then
+        echo "Error: Failed to copy keyring-file from ${REUSE_TSS_FROM}"
+        exit 1
+    fi
+    echo "Copied keyring-file successfully"
+
+    # Copy TSS files with error handling
+    if ! scp -r "${REUSE_TSS_FROM}":~/.tss/* ~/.tss/ 2>/dev/null; then
+        echo "Error: Failed to copy TSS files from ${REUSE_TSS_FROM}"
+        exit 1
+    fi
+    echo "Copied TSS files successfully"
     rm -f ~/.tss/address_book.seed
-    scp "${REUSE_TSS_FROM}":/root/preparams/"${REUSE_TSS_FROM}".json "$PREPARAMS_PATH" 2>/dev/null || true
+
+    # Validate preparams file exists and is non-empty on source before copying
+    preparams_source="/root/preparams/${REUSE_TSS_FROM}.json"
+    echo "Validating preparams file on ${REUSE_TSS_FROM}..."
+    if ! ssh -q "${REUSE_TSS_FROM}" "test -s ${preparams_source}"; then
+        echo "Error: Preparams file ${preparams_source} not found or empty on ${REUSE_TSS_FROM}"
+        exit 1
+    fi
+
+    # Copy preparams file with error handling
+    if ! scp "${REUSE_TSS_FROM}":"${preparams_source}" "$PREPARAMS_PATH"; then
+        echo "Error: Failed to copy preparams file from ${REUSE_TSS_FROM}"
+        exit 1
+    fi
+
+    # Verify copied preparams file locally
+    if [[ ! -s "$PREPARAMS_PATH" ]]; then
+        echo "Error: Copied preparams file is missing or empty at $PREPARAMS_PATH"
+        exit 1
+    fi
+    echo "Copied and verified preparams file successfully"
 fi
 
 while [ ! -f $HOME/.zetacored/os.json ]; do

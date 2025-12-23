@@ -213,7 +213,7 @@ services:
     hostname: zetacore-new-validator
     profiles:
       - tss
-      - replace
+      - replace-observer
       - all
     restart: always
     networks:
@@ -233,7 +233,7 @@ services:
     hostname: zetaclient-new-validator
     profiles:
       - tss
-      - replace
+      - replace-observer
       - all
     restart: always
     networks:

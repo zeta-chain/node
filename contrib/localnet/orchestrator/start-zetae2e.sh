@@ -419,9 +419,17 @@ restart_zetaclients() {
   sleep 15
 }
 
-# Mode `replace` is used to run the E2E tests and replace an observer
-if [ "$LOCALNET_MODE" == "replace" ]; then
-  if [[ ! -f "$deployed_config_path" ]]; then
+# Mode `replace` tests observer replacement by:
+#   1. Running E2E setup (deploys contracts, initializes state)
+#   2. Running E2E tests before replacing an observer
+#   3. Replacing an observer and restarting zetaclients
+#   4. Running E2E tests again to verify the network works after replacement
+if [ "$LOCALNET_MODE" == "replace-observer" ]; then
+
+  # Step 1: Run setup only if not already done (config file indicates completion)
+  if [[ -f "$deployed_config_path" ]]; then
+    echo "Skipping E2E setup because it has already been completed"
+  else
     [[ -n $CI ]] && echo "::group::setup"
     zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" --skip-header-proof
     if [ $? -ne 0 ]; then
@@ -429,10 +437,9 @@ if [ "$LOCALNET_MODE" == "replace" ]; then
       exit 1
     fi
     [[ -n $CI ]] && echo -e "\n::endgroup::"
-  else
-    echo "Skipping E2E setup because it has already been completed"
   fi
 
+  # Step 2: Run E2E tests before observer replacement
   echo "Running E2E test before observer replacement"
   REUSE_TSS_FLAG=""
   if [[ -n "$REUSE_TSS_FROM" ]]; then
@@ -444,9 +451,11 @@ if [ "$LOCALNET_MODE" == "replace" ]; then
     exit 1
   fi
 
+  # Step 3: Restart zetaclients to pick up the new observer configuration
   echo "Observer replacement completed, restarting zetaclients"
   restart_zetaclients
 
+  # Step 4: Run E2E tests again to verify network functions correctly after replacement
   export RUN_NUMBER=2
   echo "Running E2E test after observer replacement"
   zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof

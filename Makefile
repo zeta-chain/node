@@ -311,10 +311,10 @@ start-e2e-test-4nodes: e2e-images
 start-replace-observer: e2e-images
 	@echo "--> Starting e2e with observer replacement"
 	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
-	export LOCALNET_MODE=replace && \
+	export LOCALNET_MODE=replace-observer && \
 	export OBSERVER_REPLACE_MODE=true && \
 	export REUSE_TSS_FROM=zetaclient2 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile replace --profile sui --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile replace-observer --profile sui --profile solana up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
