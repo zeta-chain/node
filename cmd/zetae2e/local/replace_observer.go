@@ -8,7 +8,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-// replaceObserver performs the flow to replace an existing observer with a new validator while reusing the exiting tss key-shard
+// replaceObserver performs the flow to replace an existing observer with a new validator while reusing the existing tss key-shard
 func replaceObserver(r *runner.E2ERunner, reuseTSSFromNode string) {
 	stakeToBecomeValidator(r)
 	addGrantsWithHotkey(r, ZetaclientNewValidatorNode, reuseTSSFromNode)
