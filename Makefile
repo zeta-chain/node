@@ -172,7 +172,7 @@ download-snapshot:
 ###                                 Linting            	                    ###
 ###############################################################################
 
-# Make sure LATEST golangci-lint is installed 
+# Make sure LATEST golangci-lint is installed
 # go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
 lint-deps:
 	@if ! command -v golangci-lint &> /dev/null; then \
@@ -307,6 +307,14 @@ start-e2e-test: e2e-images
 start-e2e-test-4nodes: e2e-images
 	@echo "--> Starting e2e test with 4 nodes"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-replace-observer: e2e-images solana
+	@echo "--> Starting e2e with observer replacement"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
+	export LOCALNET_MODE=replace-observer && \
+	export OBSERVER_REPLACE_MODE=true && \
+	export REUSE_TSS_FROM=zetaclient2 && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile replace-observer --profile sui --profile solana up -d
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
