@@ -3,10 +3,12 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
+	addresslookuptable "github.com/gagliardetto/solana-go/programs/address-lookup-table"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -22,6 +24,96 @@ import (
 
 // MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
 const MaxSignaturesPerTicker = 100
+
+// getRPCClient attempts to extract *rpc.Client from the SolanaClient interface.
+// Returns nil if the client cannot be unwrapped to *rpc.Client.
+func getRPCClient(client SolanaClient) *rpc.Client {
+	if rpcClient, ok := client.(*rpc.Client); ok {
+		return rpcClient
+	}
+	if wrapper, ok := client.(interface{ UnwrapClient() any }); ok {
+		if rpcClient, ok := wrapper.UnwrapClient().(*rpc.Client); ok {
+			return rpcClient
+		}
+	}
+	return nil
+}
+
+// ProcessTransactionWithAddressLookups resolves address lookup tables in a versioned transaction.
+// This must be called before filtering inbound events to ensure accounts are properly resolved.
+func ProcessTransactionWithAddressLookups(ctx context.Context, tx *solana.Transaction, rpcClient *rpc.Client) error {
+	lookups := tx.Message.GetAddressTableLookups()
+	if lookups == nil {
+		// No address lookup tables in this transaction
+		return nil
+	}
+
+	resolutions := make(map[solana.PublicKey]solana.PublicKeySlice)
+	for _, lookup := range lookups {
+		tableKey := lookup.AccountKey
+		altState, err := addresslookuptable.GetAddressLookupTableStateWithOpts(
+			ctx,
+			rpcClient,
+			tableKey,
+			&rpc.GetAccountInfoOpts{Commitment: rpc.CommitmentConfirmed},
+		)
+		if err != nil {
+			return errors.Wrapf(err, "error getting address lookup table state for %s", tableKey)
+		}
+
+		if altState == nil {
+			return errors.Errorf("address lookup table %s not found", tableKey)
+		}
+
+		resolutions[tableKey] = altState.Addresses
+	}
+
+	if err := tx.Message.SetAddressTables(resolutions); err != nil {
+		return errors.Wrap(err, "error setting address tables")
+	}
+
+	if err := tx.Message.ResolveLookups(); err != nil {
+		return errors.Wrap(err, "error resolving lookups")
+	}
+
+	return nil
+}
+
+// ProcessTransactionResultWithAddressLookups processes address lookup tables for a transaction result.
+// This is a convenience function that extracts the transaction and processes it with the given RPC client.
+// Returns the resolved transaction if successful, or nil if rpcClient is nil or processing failed.
+// If rpcClient is nil, it logs a warning and returns nil.
+func ProcessTransactionResultWithAddressLookups(
+	ctx context.Context,
+	txResult *rpc.GetTransactionResult,
+	rpcClient *rpc.Client,
+	logger zerolog.Logger,
+	signature fmt.Stringer,
+) *solana.Transaction {
+	if rpcClient == nil {
+		logger.Warn().
+			Stringer("signature", signature).
+			Msg("RPC client is nil, skipping address lookup table processing")
+		return nil
+	}
+
+	tx, err := txResult.Transaction.GetTransaction()
+	if err != nil {
+		// If we can't get the transaction, there's nothing to process
+		return nil
+	}
+
+	if err := ProcessTransactionWithAddressLookups(ctx, tx, rpcClient); err != nil {
+		logger.Warn().
+			Err(err).
+			Stringer("signature", signature).
+			Msg("error processing address lookup tables, continuing anyway")
+		return nil
+	}
+
+	// Return the resolved transaction so it can be used by FilterInboundEvents
+	return tx
+}
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
@@ -62,6 +154,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		ob.Logger().Inbound.Info().Int("signatures", len(signatures)).Msg("got inbound signatures")
 	}
 
+	// get RPC client before the loop to avoid parsing in every iteration
+	rpcClient := getRPCClient(ob.solanaClient)
+
 	// loop signature from oldest to latest to filter inbound events
 	for i := len(signatures) - 1; i >= 0; i-- {
 		sig := signatures[i]
@@ -80,8 +175,23 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
+				// Process address lookup tables before filtering events
+				resolvedTx := ProcessTransactionResultWithAddressLookups(
+					ctx,
+					txResult,
+					rpcClient,
+					ob.Logger().Inbound,
+					sig.Signature,
+				)
+
 				// filter the events
-				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+				events, err := FilterInboundEvents(
+					txResult,
+					ob.gatewayID,
+					ob.Chain().ChainId,
+					ob.Logger().Inbound,
+					resolvedTx,
+				)
 				if err != nil {
 					// Log the error but continue processing other transactions
 					ob.Logger().Inbound.Error().
@@ -158,17 +268,21 @@ func (ob *Observer) VoteInboundEvents(
 //   - takes at most 3 events (one SOL + one SPL + one call) per transaction.
 //   - ignores exceeding events.
 //   - assigns indices based on instruction position in the transaction
+//
+// resolvedTx is an optional pre-resolved transaction (e.g., with address lookup tables resolved).
+// If provided, it will be used instead of extracting a fresh transaction from txResult.
 func FilterInboundEvents(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
 	senderChainID int64,
 	logger zerolog.Logger,
+	resolvedTx *solana.Transaction,
 ) ([]*clienttypes.InboundEvent, error) {
 	if txResult.Meta.Err != nil {
 		return nil, errors.Errorf("transaction failed with error: %v", txResult.Meta.Err)
 	}
 
-	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
+	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger, resolvedTx)
 	if err != nil {
 		return nil, err
 	}

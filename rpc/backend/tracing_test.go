@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/evm/indexer"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 
@@ -280,7 +281,7 @@ func (s *TestSuite) TestTraceBlock() {
 		registerMock    func()
 		expTraceResults []*evmtypes.TxTraceResult
 		resBlock        *tmrpctypes.ResultBlock
-		config          *evmtypes.TraceConfig
+		config          *rpctypes.TraceConfig
 		expPass         bool
 	}{
 		{
@@ -288,7 +289,7 @@ func (s *TestSuite) TestTraceBlock() {
 			func() {},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockEmpty,
-			&evmtypes.TraceConfig{},
+			&rpctypes.TraceConfig{},
 			true,
 		},
 		{
@@ -296,13 +297,21 @@ func (s *TestSuite) TestTraceBlock() {
 			func() {
 				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
-				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
+				// convert rpctypes.TraceConfig to evmtypes.TraceConfig by marshaling the map to JSON string
+				traceConfig := &evmtypes.TraceConfig{
+					TracerJsonConfig: `{"disableCode":true}`,
+				}
+				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx}, traceConfig)
 				RegisterConsensusParams(client, 1)
 				RegisterBlockResults(client, 1)
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,
-			&evmtypes.TraceConfig{},
+			&rpctypes.TraceConfig{
+				TracerConfig: map[string]interface{}{
+					"disableCode": true,
+				},
+			},
 			false,
 		},
 	}
