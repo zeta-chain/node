@@ -55194,6 +55194,8 @@ definitions:
         type: boolean
       gasPriceIncreaseFlags:
         $ref: '#/definitions/zetachain.zetacore.observer.GasPriceIncreaseFlags'
+      isV2ZetaEnabled:
+        type: boolean
   zetachain.zetacore.observer.GasPriceIncreaseFlags:
     type: object
     properties:
@@ -55273,6 +55275,8 @@ definitions:
   zetachain.zetacore.observer.MsgUpdateOperationalChainParamsResponse:
     type: object
   zetachain.zetacore.observer.MsgUpdateOperationalFlagsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateV2ZetaFlowsResponse:
     type: object
   zetachain.zetacore.observer.MsgVoteBlameResponse:
     type: object

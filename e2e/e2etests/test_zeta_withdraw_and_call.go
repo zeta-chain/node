@@ -4,17 +4,16 @@ import (
 	"math/big"
 	"strings"
 
-	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	// crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestZetaWithdrawAndCall tests that ZETA withdraw and call through gateway
-// is not supported in V2 - no CCTX should be created.
+// TestZetaWithdrawAndCall tests ZETA withdraw and call through gateway
 func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
@@ -44,20 +43,22 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		gasLimit,
 	)
 
-	// ZETA withdraws through gateway are not supported in V2, verify no CCTX is created
-	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and call should succeed
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_and_call")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+		r.AssertTestDAppEVMCalled(true, payload, amount)
 
-	// // wait for the cctx to be mined
-	// cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	// r.Logger.CCTX(*cctx, "withdraw")
-	// utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	// r.AssertTestDAppEVMCalled(true, payload, amount)
-	//
-	// // check expected sender was used
-	// senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
-	// 	&bind.CallOpts{},
-	// 	[]byte(payload),
-	// )
-	// require.NoError(r, err)
-	// require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+		// check expected sender was used
+		senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+			&bind.CallOpts{},
+			[]byte(payload),
+		)
+		require.NoError(r, err)
+		require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

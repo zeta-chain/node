@@ -3,17 +3,16 @@ package e2etests
 import (
 	"math/big"
 
-	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	// crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestZetaWithdrawAndCallRevertWithCall tests that ZETA withdraw and call revert with call through gateway
-// is not supported in V2 - no CCTX should be created.
+// TestZetaWithdrawAndCallRevertWithCall tests ZETA withdraw and call revert with call through gateway
 func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -25,7 +24,7 @@ func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	// r.AssertTestDAppZEVMCalled(false, payload, nil, amount)
+	r.AssertTestDAppZEVMCalled(false, payload, nil, amount)
 
 	// perform the withdraw
 	tx := r.ZETAWithdrawAndArbitraryCall(
@@ -41,25 +40,27 @@ func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 		},
 	)
 
-	// ZETA withdraws through gateway are not supported in V2, verify no CCTX is created
-	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and call should revert with call
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_and_call_revert_with_call")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	// // wait for the cctx to be mined
-	// cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	// r.Logger.CCTX(*cctx, "withdraw")
-	// utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
-	//
-	// r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
-	//
-	// // check expected sender was used
-	// senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(
-	// 	&bind.CallOpts{},
-	// 	[]byte(payload),
-	// )
-	// require.NoError(r, err)
-	// require.Equal(r, r.ZEVMAuth.From, senderForMsg)
-	//
-	// newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, r.TestDAppV2ZEVMAddr, nil)
-	// require.NoError(r, err)
-	// require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+		r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
+
+		// check expected sender was used
+		senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(
+			&bind.CallOpts{},
+			[]byte(payload),
+		)
+		require.NoError(r, err)
+		require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+
+		newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, r.TestDAppV2ZEVMAddr, nil)
+		require.NoError(r, err)
+		require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

@@ -401,6 +401,24 @@ func (zts *ZetaTxServer) EnableHeaderVerification(account string, chainIDList []
 	return err
 }
 
+// UpdateV2ZETAFlows updates the V2 ZETA flows flag
+func (zts *ZetaTxServer) UpdateV2ZETAFlows(account string, isV2ZETAEnabled bool) error {
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	_, err = zts.BroadcastTx(account, observertypes.NewMsgUpdateV2ZetaFlows(
+		addr.String(),
+		isV2ZETAEnabled,
+	))
+	return err
+}
+
 // UpdateGatewayAddress updates the gateway address
 func (zts *ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error {
 	// retrieve account

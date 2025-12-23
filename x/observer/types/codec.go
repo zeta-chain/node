@@ -23,6 +23,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateGasPriceIncreaseFlags{}, "observer/UpdateGasPriceIncreaseFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateOperationalFlags{}, "observer/UpdateOperationalFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateOperationalChainParams{}, "observer/UpdateOperationalChainParams", nil)
+	cdc.RegisterConcrete(&MsgUpdateV2ZetaFlows{}, "observer/UpdateV2ZetaFlows", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -42,6 +43,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateGasPriceIncreaseFlags{},
 		&MsgUpdateOperationalFlags{},
 		&MsgUpdateOperationalChainParams{},
+		&MsgUpdateV2ZetaFlows{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

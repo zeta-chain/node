@@ -61,6 +61,7 @@ const (
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
+	flagV2ZETAFlows            = "v2-zeta-flows"
 )
 
 var (
@@ -109,6 +110,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 	cmd.Flags().
 		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().Bool(flagV2ZETAFlows, false, "set to true to enable V2 ZETA gateway flows")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -148,6 +150,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
+		v2ZETAFlows            = must(cmd.Flags().GetBool(flagV2ZETAFlows))
 
 		testStress        = testEthStress || testSolanaStress || testSuiStress
 		shouldSetupSolana = setupSolana || testSolana || testStress
@@ -258,6 +261,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			chains.GoerliLocalnet.ChainId,
 			chains.BitcoinRegtest.ChainId,
 		}))
+	}
+
+	if v2ZETAFlows {
+		noError(deployerRunner.EnableV2ZETAFlows())
 	}
 
 	// setting up the networks

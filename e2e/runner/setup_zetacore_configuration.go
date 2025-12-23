@@ -99,3 +99,20 @@ func (r *E2ERunner) EnableHeaderVerification(chainIDList []int64) error {
 
 	return r.ZetaTxServer.EnableHeaderVerification(e2eutils.AdminPolicyName, chainIDList)
 }
+
+// EnableV2ZETAFlows enables the V2 ZETA flows flag
+func (r *E2ERunner) EnableV2ZETAFlows() error {
+	r.Logger.Print("⚙️ enabling V2 ZETA flows")
+
+	return r.ZetaTxServer.UpdateV2ZETAFlows(e2eutils.OperationalPolicyName, true)
+}
+
+// IsV2ZETAEnabled returns true if V2 ZETA flows are enabled
+func (r *E2ERunner) IsV2ZETAEnabled() bool {
+	res, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
+	if err != nil {
+		r.Logger.Print("⚠️ failed to query crosschain flags: %v", err)
+		return false
+	}
+	return res.CrosschainFlags.IsV2ZetaEnabled
+}

@@ -3,6 +3,8 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
@@ -19,7 +21,7 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 
 	// deploy testabort contract
-	testAbortAddr, txDeploy, _, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
+	testAbortAddr, txDeploy, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnZEVM(txDeploy)
 
@@ -42,29 +44,32 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 		},
 	)
 
-	// wait for the cctx to be reverted
-	//cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	//r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	//utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "zeta_deposit")
+	r.Logger.CCTX(*cctx, "zeta_deposit_revert_and_abort")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
-	require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
 
-	//// check onAbort was called
-	//aborted, err := testAbort.IsAborted(&bind.CallOpts{})
-	//require.NoError(r, err)
-	//require.True(r, aborted)
-	//
-	//// Asset is empty as ZETA is the native gas token on ZEVM
-	//emptyAddress := ethcommon.Address{}
-	//// check abort context was passed
-	//abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
-	//require.NoError(r, err)
-	//require.EqualValues(r, emptyAddress.Hex(), abortContext.Asset.Hex())
-	//
-	//// check abort contract received the tokens
-	//balance, err := r.ZEVMClient.BalanceAt(r.Ctx, testAbortAddr, nil)
-	//require.NoError(r, err)
-	//require.True(r, balance.Uint64() > 0)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: deposit should fail, revert should fail, then abort with onAbort called
+
+		// check onAbort was called
+		aborted, err := testAbort.IsAborted(&bind.CallOpts{})
+		require.NoError(r, err)
+		require.True(r, aborted)
+
+		// Asset is empty as ZETA is the native gas token on ZEVM
+		emptyAddress := ethcommon.Address{}
+		// check abort context was passed
+		abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
+		require.NoError(r, err)
+		require.EqualValues(r, emptyAddress.Hex(), abortContext.Asset.Hex())
+
+		// check abort contract received the tokens
+		balance, err := r.ZEVMClient.BalanceAt(r.Ctx, testAbortAddr, nil)
+		require.NoError(r, err)
+		require.True(r, balance.Uint64() > 0)
+	} else {
+		// V2 ZETA flows disabled: deposit should be aborted with ErrZetaThroughGateway
+		require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
+	}
 }

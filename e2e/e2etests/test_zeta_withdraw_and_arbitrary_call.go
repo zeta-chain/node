@@ -8,11 +8,10 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	// crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestZetaWithdrawAndArbitraryCall tests that ZETA withdraw and arbitrary call through gateway
-// is not supported in V2 - no CCTX should be created.
+// TestZetaWithdrawAndArbitraryCall tests ZETA withdraw and arbitrary call through gateway
 func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -24,7 +23,7 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	// r.AssertTestDAppEVMCalled(false, payload, amount)
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	// perform the withdraw
 	tx := r.ZETAWithdrawAndArbitraryCall(
@@ -35,12 +34,14 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
-	// ZETA withdraws through gateway are not supported in V2, verify no CCTX is created
-	utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
-
-	// // wait for the cctx to be mined
-	// cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	// r.Logger.CCTX(*cctx, "withdraw")
-	// utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	// r.AssertTestDAppEVMCalled(true, payload, amount)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and arbitrary call should succeed
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_and_arbitrary_call")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+		r.AssertTestDAppEVMCalled(true, payload, amount)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

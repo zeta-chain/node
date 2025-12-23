@@ -29,6 +29,7 @@ message CrosschainFlags {
   bool isInboundEnabled = 1;
   bool isOutboundEnabled = 2;
   GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
+  bool isV2ZetaEnabled = 4;
 }
 
 message LegacyCrosschainFlags {

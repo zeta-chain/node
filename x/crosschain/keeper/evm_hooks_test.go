@@ -89,6 +89,13 @@ func SetupStateForProcessLogsZetaWithdraw(
 		ConnectorZevm:  sample.EthAddress().String(),
 		Gateway:        gatewayFromLog,
 	})
+
+	// Enable V2 ZETA flows for testing
+	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
+		IsInboundEnabled:  true,
+		IsOutboundEnabled: true,
+		IsV2ZetaEnabled:   true,
+	})
 }
 
 // SetupStateForProcessLogsZetaSent sets up additional state required for processing logs for ZetaSent events
