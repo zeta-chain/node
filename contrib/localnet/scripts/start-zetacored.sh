@@ -144,6 +144,7 @@ then
 fi
 
 echo "Creating keys for operator and hotkey for $HOSTNAME"
+# Ensure new-validator is marked as non-observer (it becomes observer via replacement or add-observer)
 if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
   source ~/add-keys.sh n
 else
