@@ -442,8 +442,11 @@ func WaitForZetaBlocks(
 		require.False(
 			t,
 			time.Since(startTime) > timeout,
-			"timeout waiting for Zeta blocks, current height: %d",
+			"timeout waiting for Zeta blocks, oldHeight: %d, currentHeight: %d, waitBlocks: %d, elapsed: %v",
+			oldHeight,
 			newHeight,
+			waitBlocks,
+			time.Since(startTime),
 		)
 
 		// check how many blocks elapsed
