@@ -44,10 +44,13 @@ func adminTestRoutine(
 		adminRunner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain to the deployer account
-		txZetaDeposit := adminRunner.DepositZETAToDeployer()
+		// only deposit ZETA if V2 ZETA flows are enabled (gateway deposits don't work otherwise)
+		if adminRunner.IsV2ZETAEnabled() {
+			txZetaDeposit := adminRunner.DepositZETAToDeployer()
+			adminRunner.WaitForMinedCCTX(txZetaDeposit.Hash())
+		}
 		txEtherDeposit := adminRunner.DepositEtherToDeployer()
 		txERC20Deposit := adminRunner.DepositERC20ToDeployer()
-		adminRunner.WaitForMinedCCTX(txZetaDeposit.Hash())
 		adminRunner.WaitForMinedCCTX(txEtherDeposit)
 		adminRunner.WaitForMinedCCTX(txERC20Deposit)
 

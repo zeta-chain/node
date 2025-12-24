@@ -16,6 +16,21 @@ import (
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
+	// Skip if V2 ZETA flows are disabled.
+	//
+	// This test requires ZETA withdrawals through the GatewayZEVM contract, which only works
+	// when V2 ZETA flows are enabled (IsV2ZetaEnabled flag in crosschain flags).
+	//
+	// - The chain params contain a ConnectorContractAddress that observers watch for ZetaSent events
+	// - When testLegacy=true: LegacySetupEVM sets ConnectorContractAddress to the legacy connector (ConnectorEthAddr) V1
+	// - When testLegacy=false: UpdateEVMChainParams sets ConnectorContractAddress to the V2 connector (ConnectorNativeAddr) V2
+	// Admin tests do not use the flag, therefore, are using the ConnectorNative only
+
+	if !r.IsV2ZETAEnabled() {
+		r.Logger.Print("⚠️ skipping TestUpdateBytecodeConnector: V2 ZETA flows are disabled")
+		return
+	}
+
 	// Can withdraw 10ZETA
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
