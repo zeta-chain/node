@@ -91,6 +91,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
 			chain.ChainId,
 			zerolog.Nop(),
+			nil, // no pre-resolved transaction
 		)
 		require.NoError(t, err)
 		require.Len(t, events, 1)
@@ -139,7 +140,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 		}
 
 		// ACT
-		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
+		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -166,7 +167,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 		}
 
 		// ACT
-		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop())
+		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -175,7 +176,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	})
 
 	t.Run("should not filter reverted inbound deposit SOL", func(t *testing.T) {
-		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop())
+		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.Error(t, err)
 	})
 }
