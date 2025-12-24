@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-const consensusVersion = 5
+const consensusVersion = 6
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -129,6 +129,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		panic(err)
 	}
 	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(err)
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 5, m.Migrate5to6); err != nil {
 		panic(err)
 	}
 }
