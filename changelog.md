@@ -19,6 +19,7 @@ by calling `updateAdditionalActionFee` admin function.
 * [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
 * [4218](https://github.com/zeta-chain/node/pull/4218) - enable NoAssetCall from Bitcoin chain
 * [3834](https://github.com/zeta-chain/node/pull/3734) - refund a portion of remaining unused tokens to user
+* [4486](https://github.com/zeta-chain/node/pull/4486) - add a flag to toggle V2ZETA flows on and off 
 
 ### Refactor
 
