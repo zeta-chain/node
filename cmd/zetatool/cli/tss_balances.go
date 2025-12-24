@@ -209,8 +209,8 @@ func printTSSBalances(
 
 	// EVM chains - use TSS EVM address
 	for _, chain := range evmChains {
-		chainRpc := getRPCForChain(cfg, chain)
-		if chainRpc == "" {
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: evmAddr.Hex(),
@@ -239,7 +239,7 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, chainRpc)
+		}(chain, chainRPC)
 	}
 
 	// Bitcoin chains - use TSS BTC address
@@ -279,8 +279,8 @@ func printTSSBalances(
 
 	// Sui chains - use TSS Sui address
 	for _, chain := range suiChains {
-		chainRpc := getRPCForChain(cfg, chain)
-		if chainRpc == "" {
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: suiAddr,
@@ -309,13 +309,13 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, chainRpc)
+		}(chain, chainRPC)
 	}
 
 	// Solana chains - use gateway PDA balance
 	for _, chain := range solanaChains {
-		chainRpc := getRPCForChain(cfg, chain)
-		if chainRpc == "" {
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: "N/A",
@@ -370,13 +370,13 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, chainRpc)
+		}(chain, chainRPC)
 	}
 
 	// TON chains - use gateway contract balance
 	for _, chain := range tonChains {
-		chainRpc := getRPCForChain(cfg, chain)
-		if chainRpc == "" {
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
 			results <- chainBalance{
 				Chain:   chain.Name,
 				Address: "N/A",
@@ -431,7 +431,7 @@ func printTSSBalances(
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
-		}(chain, chainRpc)
+		}(chain, chainRPC)
 	}
 
 	go func() {
