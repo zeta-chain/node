@@ -25,6 +25,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/coreregistry.sol"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
@@ -35,7 +36,6 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"

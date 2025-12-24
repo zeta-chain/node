@@ -50,7 +50,6 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
@@ -308,7 +307,7 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.3
-	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251024131414-98b6687542f8
+	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20251024131414-e17e5d88ff64
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 	go.uber.org/mock v0.5.2
 )
@@ -418,4 +417,7 @@ replace (
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
 	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
+
+	// protocol-contracts was renamed to protocol-contracts-evm; redirect to old module path
+	github.com/zeta-chain/protocol-contracts-evm => github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870
 )

@@ -36,4 +36,14 @@ const (
 
 	// DefaultAppMempoolSize is the default size of ZetaChain mempool
 	DefaultAppMempoolSize = 3000
+	// TODO : Check if they are used
+	// CmdWhitelistERC20 is used for CCTX of type cmd to give the instruction to the TSS to whitelist an ERC20 on an exeternal chain
+
+	CmdWhitelistERC20 = "cmd_whitelist_erc20"
+
+	// CmdMigrateERC20CustodyFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
+	CmdMigrateERC20CustodyFunds = "cmd_migrate_erc20_custody_funds"
+
+	// CmdUpdateERC20CustodyPauseStatus is used for CCTX of type cmd to give the instruction to the TSS to update the pause status of the ERC20 custody contract
+	CmdUpdateERC20CustodyPauseStatus = "cmd_update_erc20_custody_pause_status"
 )

@@ -1,13 +1,14 @@
 package v6_test
 
 import (
-	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
 	"testing"
+
+	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
 
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
-	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
+
 	"github.com/zeta-chain/node/x/authority/types"
 )
 

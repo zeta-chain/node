@@ -331,7 +331,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy || testAdmin)
+		deployerRunner.RunSetup() //testLegacy || testAdmin
 		if testAdmin {
 			deployerRunner.UpdateEVMChainParams(false)
 		}
@@ -526,20 +526,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiDepositRestrictedName,
 			//e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,
-		}
-
-		// TODO: https://github.com/zeta-chain/node/issues/4139
-		// the upgrade test is now based on old sui gateway package
-		// 1. does not have MessageContext object, we have to skip all WaC tests
-		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
-		suiBreakingTestsV35Upgrade := []string{
-			e2etests.TestSuiWithdrawRevertWithCallName,
-			e2etests.TestSuiWithdrawAndCallName,
-			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
-			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
-			e2etests.TestSuiTokenWithdrawAndCallName,
-			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
-			e2etests.TestSuiWithdrawRestrictedName,
 		}
 
 		// TODO: https://github.com/zeta-chain/node/issues/4139

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 )
 
 func TestKeeper_GetZetaInboundDetails(t *testing.T) {

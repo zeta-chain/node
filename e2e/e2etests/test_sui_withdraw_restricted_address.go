@@ -66,7 +66,7 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, new(big.Int).Add(revertBalanceBefore, amount), revertBalanceAfter)
 
 	// Invalid address format
-	tx, err = r.GatewayZEVM.Withdraw(
+	tx, err = r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5abaa"),
 		amount,

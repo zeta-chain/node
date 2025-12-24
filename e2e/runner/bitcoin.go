@@ -264,7 +264,7 @@ func (r *E2ERunner) WithdrawBTC(
 	}
 
 	// withdraw 'amount' of BTC through ZEVM gateway
-	tx, err := r.GatewayZEVM.Withdraw(
+	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		[]byte(receiverStr),
 		amount,

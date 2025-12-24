@@ -78,7 +78,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  sender,
 			ToAddress:    tssAddress,
-			Value:        tx.Vout[0].Value,
+			Value:        tx.Vout[0].Value - depositorFee,
 			DepositorFee: depositorFee,
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
@@ -122,7 +122,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
-			Value:        tx.Vout[0].Value,
+			Value:        tx.Vout[0].Value - depositorFee,
 			DepositorFee: depositorFee,
 			MemoBytes:    []byte("no memo found"),
 			BlockNumber:  blockNumber,
@@ -162,7 +162,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  sender,
 			ToAddress:    tssAddress,
-			Value:        tx.Vout[0].Value,
+			Value:        tx.Vout[0].Value - depositorFee,
 			DepositorFee: depositorFee,
 			MemoBytes:    make([]byte, 600),
 			BlockNumber:  blockNumber,
@@ -208,7 +208,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  sender,
 			ToAddress:    tssAddress,
-			Value:        tx.Vout[0].Value,
+			Value:        tx.Vout[0].Value - depositorFee,
 			DepositorFee: depositorFee,
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,

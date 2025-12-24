@@ -16,9 +16,11 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const (
@@ -199,25 +201,25 @@ func (r *E2ERunner) DeployCoreRegistry() {
 }
 
 // DeployTestDAppV2ZEVM deploys the test DApp V2 contract
-func (r *E2ERunner) DeployTestDAppV2ZEVM() {
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
-		r.ZEVMAuth,
-		r.ZEVMClient,
-		true,
-		r.GatewayEVMAddr,
-		r.WZetaAddr,
-	)
-	require.NoError(r, err)
-	r.ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
-
-	r.TestDAppV2ZEVMAddr = testDAppV2Addr
-	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.True(r, isZetaChain)
-}
+//func (r *E2ERunner) DeployTestDAppV2ZEVM() {
+//	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+//		r.ZEVMAuth,
+//		r.ZEVMClient,
+//		true,
+//		r.GatewayEVMAddr,
+//		r.WZetaAddr,
+//	)
+//	require.NoError(r, err)
+//	r.ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+//
+//	r.TestDAppV2ZEVMAddr = testDAppV2Addr
+//	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
+//	require.NoError(r, err)
+//
+//	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})
+//	require.NoError(r, err)
+//	require.True(r, isZetaChain)
+//}
 
 // InitializeChainParams initializes the values for the chain params of the EVM and BTC chains
 func (r *E2ERunner) InitializeChainParams(testLegacy bool) {
@@ -322,6 +324,7 @@ func (r *E2ERunner) DeployTestDAppV2ZEVM() {
 		r.ZEVMClient,
 		true,
 		r.GatewayEVMAddr,
+		r.ZetaEthAddr,
 	)
 	require.NoError(r, err)
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")

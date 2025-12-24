@@ -2,10 +2,8 @@ package observer
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -276,119 +274,6 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 				// if it's a legacy memo, check receiver address only
 				require.Equal(t, tt.expectedReceiver.Hex(), tt.event.ToAddress)
 			}
-		})
-	}
-}
-
-func Test_ResolveAmountForMsgVoteInbound(t *testing.T) {
-	tests := []struct {
-		name                  string
-		event                 *BTCInboundEvent
-		returnError           bool
-		expectedMsgVoteAmount cosmosmath.Uint
-		expectedStatus        crosschaintypes.InboundStatus
-		expectedErrorMessage  string
-	}{
-		{
-			name: "should resolve msg vote amount normally",
-			event: &BTCInboundEvent{
-				Value:        0.0002, // 20,000 satoshis
-				DepositorFee: 0.0001, // 10,000 satoshis
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeDepositAndCall,
-					},
-				},
-			},
-			expectedMsgVoteAmount: cosmosmath.NewUint(10000), // 20,000 - 10,000 = 10,000
-			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
-		},
-		{
-			name: "deposited value is equal to depositor fee",
-			event: &BTCInboundEvent{
-				Value:        0.0001, // 10,000 satoshis
-				DepositorFee: 0.0001, // 10,000 satoshis
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeDeposit,
-					},
-				},
-			},
-			expectedMsgVoteAmount: cosmosmath.NewUint(0),
-			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
-		},
-		{
-			name: "deposited amount is less than depositor fee",
-			event: &BTCInboundEvent{
-				Value:        0.00009999, //  9,999 satoshis
-				DepositorFee: 0.0001,     // 10,000 satoshis
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeDeposit,
-					},
-				},
-			},
-			expectedMsgVoteAmount: cosmosmath.NewUint(0),
-			expectedStatus:        crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
-			expectedErrorMessage:  fmt.Sprintf("deposited amount %v is less than depositor fee %v", 0.00009999, 0.0001),
-		},
-		{
-			name: "should return error if remaining BTC value is invalid",
-			event: &BTCInboundEvent{
-				Value:        21000000.00011, // value too large
-				DepositorFee: 0.0001,         // 10,000 satoshis
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeDeposit,
-					},
-				},
-			},
-			returnError: true,
-		},
-		{
-			name: "NoAssetCall - small excessive funds (within limit)",
-			event: &BTCInboundEvent{
-				Value:        0.0001 + 0.001, // 110,000 satoshis
-				DepositorFee: 0.0001,         //  10,000 satoshis (remaining exactly at limit)
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeCall,
-					},
-				},
-			},
-			expectedMsgVoteAmount: cosmosmath.NewUint(0), // NoAssetCall expects no asset transfer
-			expectedStatus:        crosschaintypes.InboundStatus_SUCCESS,
-		},
-		{
-			name: "NoAssetCall - large excessive funds (beyond limit)",
-			event: &BTCInboundEvent{
-				Value:        0.0001 + 0.00100001, // 110,001 satoshis
-				DepositorFee: 0.0001,              //  10,000 satoshis (remaining: 100,001, exceeds limit)
-				MemoStd: &memo.InboundMemo{
-					Header: memo.Header{
-						OpCode: memo.OpCodeCall,
-					},
-				},
-			},
-			expectedMsgVoteAmount: cosmosmath.NewUint(100_001), // excessive funds will be returned
-			expectedStatus:        crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS,
-			expectedErrorMessage:  "remaining funds of 100001 satoshis exceed 100000 satoshis",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.event.ResolveAmountForMsgVoteInbound()
-
-			if tt.returnError {
-				require.Error(t, err)
-				return
-			}
-
-			// check MsgVoteAmount, status and error message
-			require.True(t, tt.expectedMsgVoteAmount.Equal(tt.event.AmountForMsgVoteInbound))
-			require.Equal(t, tt.expectedStatus, tt.event.Status)
-			require.Equal(t, tt.expectedErrorMessage, tt.event.ErrorMessage)
 		})
 	}
 }
