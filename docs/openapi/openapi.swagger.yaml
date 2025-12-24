@@ -27078,233 +27078,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/inTxHashToCctx:
-    get:
-      summary: 'Deprecated(v17): use InboundHashToCctxAll'
-      operationId: InTxHashToCctxAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundHashToCctxResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/inTxHashToCctx/{inboundHash}:
-    get:
-      summary: 'Deprecated(v17): use InboundHashToCctx'
-      operationId: InTxHashToCctx
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetInboundHashToCctxResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: inboundHash
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/inTxHashToCctxData/{inboundHash}:
-    get:
-      summary: 'Deprecated(v17): use InboundHashToCctxData'
-      operationId: InTxHashToCctxData
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryInboundHashToCctxDataResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: inboundHash
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/inTxTracker:
-    get:
-      summary: 'Deprecated(v17): use InboundTrackerAll'
-      operationId: InTxTrackerAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackersResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/inTxTrackerByChain/{chainId}:
-    get:
-      summary: 'Deprecated(v17): use InboundTrackerAllByChain'
-      operationId: InTxTrackerAllByChain
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackerByChainResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: chainId
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-      deprecated: true
   /zeta-chain/crosschain/inboundHashToCctx:
     get:
       summary: Queries a list of InboundHashToCctx items.
@@ -27549,85 +27322,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/lastBlockHeight:
-    get:
-      summary: Queries a list of lastBlockHeight items.
-      operationId: LastBlockHeightAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllLastBlockHeightResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /zeta-chain/crosschain/lastBlockHeight/{index}:
-    get:
-      summary: Queries a lastBlockHeight by index.
-      operationId: LastBlockHeight
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetLastBlockHeightResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /zeta-chain/crosschain/lastZetaHeight:
     get:
       summary: Queries a list of lastMetaHeight items.
@@ -27643,158 +27337,6 @@ paths:
             $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTracker:
-    get:
-      summary: 'Deprecated(v17): use OutboundTrackerAll'
-      operationId: OutTxTrackerAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}:
-    get:
-      summary: 'Deprecated(v17): use OutboundTracker'
-      operationId: OutTxTracker
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetOutboundTrackerResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: chainID
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: nonce
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - Query
-      deprecated: true
-  /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
-    get:
-      summary: 'Deprecated(v17): use OutboundTrackerAllByChain'
-      operationId: OutTxTrackerAllByChain
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerByChainResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/google.rpc.Status'
-      parameters:
-        - name: chain
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-      deprecated: true
   /zeta-chain/crosschain/outboundTracker:
     get:
       summary: Queries a list of OutboundTracker items.
@@ -54786,6 +54328,11 @@ definitions:
       confirmationMode:
         $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
         title: confirmation mode used for the inbound
+      errorMessage:
+        type: string
+        title: |-
+          error_message carries information about the error that caused non-SUCCESS
+          status of inbound observation
   zetachain.zetacore.crosschain.InboundStatus:
     type: string
     enum:
@@ -54793,12 +54340,14 @@ definitions:
       - INSUFFICIENT_DEPOSITOR_FEE
       - INVALID_RECEIVER_ADDRESS
       - INVALID_MEMO
+      - EXCESSIVE_NOASSETCALL_FUNDS
     default: SUCCESS
     description: |-
       - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
       depositor fee
        - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
        - INVALID_MEMO: parse memo is invalid
+       - EXCESSIVE_NOASSETCALL_FUNDS: Bitcoin NoAssetCall carries too much excess funds beyond the depositor fee
     title: InboundStatus represents the status of an observed inbound
   zetachain.zetacore.crosschain.InboundTracker:
     type: object
@@ -54810,21 +54359,6 @@ definitions:
         type: string
       coinType:
         $ref: '#/definitions/zetachain.zetacore.pkg.coin.CoinType'
-  zetachain.zetacore.crosschain.LastBlockHeight:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain:
-        type: string
-      lastInboundHeight:
-        type: string
-        format: uint64
-      lastOutboundHeight:
-        type: string
-        format: uint64
   zetachain.zetacore.crosschain.MsgAbortStuckCCTXResponse:
     type: object
   zetachain.zetacore.crosschain.MsgAddInboundTrackerResponse:
@@ -54835,11 +54369,6 @@ definitions:
       isRemoved:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFundsResponse:
-    type: object
-    properties:
-      cctxIndex:
-        type: string
   zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse:
     type: object
   zetachain.zetacore.crosschain.MsgRefundAbortedCCTXResponse:
@@ -54848,11 +54377,6 @@ definitions:
     type: object
   zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse:
     type: object
-  zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse:
-    type: object
-    properties:
-      cctxIndex:
-        type: string
   zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlagsResponse:
     type: object
   zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse:
@@ -54863,7 +54387,7 @@ definitions:
     type: object
   zetachain.zetacore.crosschain.MsgVoteOutboundResponse:
     type: object
-  zetachain.zetacore.crosschain.MsgWhitelistERC20Response:
+  zetachain.zetacore.crosschain.MsgWhitelistAssetResponse:
     type: object
     properties:
       zrc20Address:
@@ -54920,6 +54444,9 @@ definitions:
       confirmationMode:
         $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
         title: confirmation mode used for the outbound
+      userGasFeePaid:
+        type: string
+        description: This field tracks the original gas fee paid by the user.
   zetachain.zetacore.crosschain.OutboundTracker:
     type: object
     properties:
@@ -54996,16 +54523,6 @@ definitions:
           $ref: '#/definitions/zetachain.zetacore.crosschain.InboundTracker'
       pagination:
         $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
-  zetachain.zetacore.crosschain.QueryAllLastBlockHeightResponse:
-    type: object
-    properties:
-      LastBlockHeight:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetachain.zetacore.crosschain.LastBlockHeight'
-      pagination:
-        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
   zetachain.zetacore.crosschain.QueryAllOutboundTrackerByChainResponse:
     type: object
     properties:
@@ -55051,11 +54568,6 @@ definitions:
     properties:
       inboundHashToCctx:
         $ref: '#/definitions/zetachain.zetacore.crosschain.InboundHashToCctx'
-  zetachain.zetacore.crosschain.QueryGetLastBlockHeightResponse:
-    type: object
-    properties:
-      LastBlockHeight:
-        $ref: '#/definitions/zetachain.zetacore.crosschain.LastBlockHeight'
   zetachain.zetacore.crosschain.QueryGetOutboundTrackerResponse:
     type: object
     properties:
@@ -55516,8 +55028,6 @@ definitions:
   zetachain.zetacore.observer.Ballot:
     type: object
     properties:
-      index:
-        type: string
       ballotIdentifier:
         type: string
       voterList:
@@ -55594,10 +55104,6 @@ definitions:
       chainId:
         type: string
         format: int64
-      confirmationCount:
-        type: string
-        format: uint64
-        title: 'Deprecated(v28): use confirmation_params instead'
       gasPriceTicker:
         type: string
         format: uint64
@@ -55638,6 +55144,12 @@ definitions:
         description: |-
           Skip actions that require scanning the contents of each block.
           The main thing this disables is transfers directly to the TSS address.
+      stabilityPoolPercentage:
+        type: string
+        format: uint64
+        description: |-
+          Percentage of unused tokens for outbounds that are are sent to the
+          stability pool. The value should be between 0 and 100.
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:

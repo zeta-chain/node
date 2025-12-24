@@ -378,6 +378,9 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     fi
   fi
 
+  NEW_VERSION=$(get_zetacored_version)
+  echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
+
   # wait for zevm endpoint to come up
   sleep 10
   echo "Upgrade result zetacored version : ${OLD_ZETACORED_VERSION} -> ${NEW_VERSION}"

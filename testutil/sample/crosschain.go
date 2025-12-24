@@ -323,18 +323,6 @@ func CustomCctxsInBlockRange(
 	return cctxs
 }
 
-func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.LastBlockHeight{
-		Creator:            AccAddress(),
-		Index:              index,
-		Chain:              StringRandom(r, 32),
-		LastInboundHeight:  r.Uint64(),
-		LastOutboundHeight: r.Uint64(),
-	}
-}
-
 func InboundHashToCctx(t *testing.T, inboundHash string) types.InboundHashToCctx {
 	r := newRandFromStringSeed(t, inboundHash)
 
@@ -543,6 +531,14 @@ func ValidZrc20WithdrawToETHReceipt(t *testing.T) (receipt ethtypes.Receipt) {
 // receiver is bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu
 func ValidZRC20WithdrawToBTCReceipt(t *testing.T) (receipt ethtypes.Receipt) {
 	return readZetaReceipt(t, "zrc20_withdraw_to_btc")
+}
+
+func ValidZetaWithdrawToEthReceipt(t *testing.T) (receipt ethtypes.Receipt) {
+	return readZetaReceipt(t, "gateway_withdraw_zeta_to_eth")
+}
+
+func ValidZetaWithdrawAndCallReceipt(t *testing.T) (receipt ethtypes.Receipt) {
+	return readZetaReceipt(t, "gateway_withdraw_and_call_zeta_to_eth")
 }
 
 // ValidZetaSentDestinationExternalReceipt is a receipt for a Zeta sent to an external destination

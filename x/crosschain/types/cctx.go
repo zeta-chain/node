@@ -34,6 +34,17 @@ func (m CrossChainTx) GetConnectedChainID() (int64, bool, error) {
 	return m.InboundParams.SenderChainId, false, nil
 }
 
+// IsWithdrawTx returns true if the CCTX is an outgoing withdraw transaction originating from ZetaChain.
+func (m CrossChainTx) IsWithdrawTx() (bool, error) {
+	if m.InboundParams == nil {
+		return false, fmt.Errorf("inbound params cannot be nil")
+	}
+
+	// If the sender chain ID is ZetaChain, this is an outgoing CCTX.
+	// Note: additional chains argument is empty, all ZetaChain IDs are hardcoded in the codebase.
+	return chains.IsZetaChain(m.InboundParams.SenderChainId, []chains.Chain{}), nil
+}
+
 // GetEVMRevertAddress returns the EVM revert address
 // If a revert address is specified in the revert options, it returns the address
 // Otherwise returns sender address
@@ -135,24 +146,8 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		return fmt.Errorf("cannot revert before trying to process an outbound tx")
 	}
 
-	// in protocol contract V1, developers can specify a revert address for Bitcoin chains
-	// TODO: remove this V1 logic after switching Bitcoin to V2 architecture
-	// NOTE: this logic was not removed directly in https://github.com/zeta-chain/node/issues/2711
-	// because it there could still be pending V1 Bitcoin CCTXs during at the time of the upgrade switching to V2
-	// this logic is needed to correctly process the reverted CCTXs that were created before the upgrade
-	// it can be removed after all the pending V1 Bitcoin CCTXs are processed
-	// https://github.com/zeta-chain/node/issues/3431
+	// Use revert address from RevertOptions if available, otherwise use the sender address
 	revertReceiver := m.InboundParams.Sender
-	if m.ProtocolContractVersion == ProtocolContractVersion_V1 &&
-		chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
-		revertAddress, valid := m.RevertOptions.GetBTCRevertAddress(m.InboundParams.SenderChainId)
-		if valid {
-			revertReceiver = revertAddress
-		}
-	}
-
-	// in protocol contract V2, developers can specify a specific address to receive the revert
-	// if not specified, the sender address is used
 	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
 		switch {
 		case chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}):
@@ -195,8 +190,8 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	return nil
 }
 
-// AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(
+// UpdateCurrentOutbound updates the current outbound using the given vote outbound message.
+func (m *CrossChainTx) UpdateCurrentOutbound(
 	ctx sdk.Context,
 	msg MsgVoteOutbound,
 	ballotStatus observertypes.BallotStatus,
@@ -316,6 +311,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		IsCrossChainCall:       msg.IsCrossChainCall,
 		Status:                 msg.Status,
 		ConfirmationMode:       msg.ConfirmationMode,
+		ErrorMessage:           msg.ErrorMessage,
 	}
 
 	outboundParams := &OutboundParams{

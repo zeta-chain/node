@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -28,7 +26,6 @@ import (
 	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -290,7 +287,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupBitcoinAccounts(true)
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy || testAdmin)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -303,7 +300,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		deployerRunner.SetupZEVMProtocolContracts()
+		deployerRunner.SetupZEVM()
 		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{
@@ -313,10 +310,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if shouldSetupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
-		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
+		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.InitializeChainParams(testLegacy || testAdmin)
+		deployerRunner.UpdateEVMChainParams(testLegacy)
 
 		if shouldSetupTON {
 			deployerRunner.SetupTON(
@@ -333,8 +330,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		err = OverwriteAccountData(cmd, &conf)
-		noError(err)
+		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
+		if testAdmin {
+			deployerRunner.UpdateEVMChainParams(false)
+		}
 	})
 
 	// if a config output is specified, write the config
@@ -377,6 +377,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.UpdateGatewayGasLimit(4_000_000)
+
+	// run tests
 	var eg errgroup.Group
 
 	if !skipRegular {
@@ -402,8 +404,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
 			e2etests.TestCriticalAdminTransactionsName,
-			e2etests.TestPauseERC20CustodyName,
-			e2etests.TestMigrateERC20CustodyFundsName,
 			e2etests.TestUpdateOperationalChainParamsName,
 			e2etests.TestBurnFungibleModuleAssetName,
 
@@ -541,6 +541,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiWithdrawRestrictedName,
 		}
+
+		// TODO: https://github.com/zeta-chain/node/issues/4139
+		// the v35 upgrade test is now based on v32 sui gateway
+		// 1. does not have MessageContext object, we have to skip all WaC tests
+		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
+		suiBreakingTestsV35Upgrade := []string{
+			e2etests.TestSuiWithdrawRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiWithdrawRestrictedName,
+		}
 		if !deployerRunner.IsRunningUpgrade() {
 			suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
 		}
@@ -641,11 +655,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	deployerRunner.AddPreUpgradeHandler("v32.0.0", func() {
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
-	})
+
 	// TODO : enable sui gateway upgrade tests to be run multiple times
 	// https://github.com/zeta-chain/node/issues/4038
 	// https://github.com/zeta-chain/node/issues/4315

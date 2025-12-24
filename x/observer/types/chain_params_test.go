@@ -101,6 +101,13 @@ func TestChainParamsList_Validate(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorContains(t, err, "duplicated chain id")
 	})
+
+	t.Run("should return error if stability pool percentage is greater than 100", func(t *testing.T) {
+		list := types.GetDefaultChainParams()
+		list.ChainParams[0].StabilityPoolPercentage = 101
+		err := list.Validate()
+		require.ErrorIs(t, err, types.ErrParamsStabilityPoolPercentage)
+	})
 }
 
 type UpdateChainParamsSuite struct {
@@ -124,11 +131,6 @@ func TestChainParamsEqual(t *testing.T) {
 	// ChainId matters
 	cp := copyParams(params)
 	cp.ChainId = 2
-	require.False(t, types.ChainParamsEqual(*params, *cp))
-
-	// ConfirmationCount matters
-	cp = copyParams(params)
-	cp.ConfirmationCount = params.ConfirmationCount + 1
 	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// GasPriceTicker matters
@@ -225,7 +227,6 @@ func TestChainParamsEqual(t *testing.T) {
 
 func (s *UpdateChainParamsSuite) SetupTest() {
 	s.zetaParams = &types.ChainParams{
-		ConfirmationCount:           0,
 		GasPriceTicker:              0,
 		InboundTicker:               0,
 		OutboundTicker:              0,
@@ -242,7 +243,6 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		GatewayAddress:              "",
 	}
 	s.evmParams = &types.ChainParams{
-		ConfirmationCount:           1,
 		GasPriceTicker:              1,
 		InboundTicker:               1,
 		OutboundTicker:              1,
@@ -265,7 +265,6 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		},
 	}
 	s.btcParams = &types.ChainParams{
-		ConfirmationCount:           1,
 		GasPriceTicker:              1,
 		InboundTicker:               1,
 		OutboundTicker:              1,
@@ -402,10 +401,6 @@ func Test_OutboundConfirmationFast(t *testing.T) {
 
 func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp := copyParams(params)
-	cp.ConfirmationCount = 0
-	require.Error(s.T(), cp.Validate())
-
-	cp = copyParams(params)
 	cp.ConfirmationParams = nil
 	require.Error(s.T(), cp.Validate())
 

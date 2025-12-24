@@ -123,6 +123,8 @@ func (r *E2ERunner) SuiUpdateGatewayInfoAndTSS() {
 	tssAddr, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
 	require.NoError(r, err)
 	r.SuiTSSAddress = tssAddr.Sui
+
+	r.Logger.Info("current gateway package ID: %s", r.SuiGateway.PackageID())
 }
 
 // suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
@@ -521,7 +523,6 @@ func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 			FastInboundCount:  1,
 			FastOutboundCount: 1,
 		},
-		ConfirmationCount: 1, // still need to be provided for now
 	}
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast sui chain params tx")

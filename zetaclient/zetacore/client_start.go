@@ -27,10 +27,6 @@ func NewFromConfig(
 	hotkeyPassword string,
 	logger zerolog.Logger,
 ) (*Client, error) {
-	hotKey := cfg.AuthzHotkey
-
-	chainIP := cfg.ZetaCoreURL
-
 	kb, _, err := keys.GetKeyringKeybase(*cfg, hotkeyPassword)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyring base")
@@ -54,7 +50,7 @@ func NewFromConfig(
 	authz.SetupAuthZSignerList(k.GetOperatorAddress().String(), signerAddress)
 
 	// Create client
-	client, err := NewClient(k, chainIP, hotKey, cfg.ChainID, logger)
+	client, err := NewClient(k, *cfg, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the client")
 	}

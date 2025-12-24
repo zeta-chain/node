@@ -44,6 +44,8 @@ enum InboundStatus {
   INVALID_RECEIVER_ADDRESS = 2;
   // parse memo is invalid
   INVALID_MEMO = 3;
+  // Bitcoin NoAssetCall carries too much excess funds beyond the depositor fee
+  EXCESSIVE_NOASSETCALL_FUNDS = 4;
 }
 
 message InboundParams {
@@ -73,6 +75,10 @@ message InboundParams {
 
   // confirmation mode used for the inbound
   ConfirmationMode confirmation_mode = 21;
+
+  // error_message carries information about the error that caused non-SUCCESS
+  // status of inbound observation
+  string error_message = 22;
 
   // not used. do not edit.
   reserved 13 to 19;
@@ -123,6 +129,12 @@ message OutboundParams {
 
   // confirmation mode used for the outbound
   ConfirmationMode confirmation_mode = 25;
+
+  // This field tracks the original gas fee paid by the user.
+  string user_gas_fee_paid = 26 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
 
   // not used. do not edit.
   reserved 13 to 19;

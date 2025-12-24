@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/testgasconsumer"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -18,8 +18,9 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	// Deploy the GasConsumer contract
-	// gas limit is currently 4M
+	// Update the gateway gas limit to 4M
+	r.UpdateGatewayGasLimit(uint64(4_000_000))
+	// Deploy the GasConsumer contract with a gas limit of 5M
 	gasConsumerAddress, txDeploy, _, err := testgasconsumer.DeployTestGasConsumer(
 		r.ZEVMAuth,
 		r.ZEVMClient,
@@ -39,5 +40,5 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 }

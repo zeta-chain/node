@@ -5,7 +5,6 @@ import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
 import "zetachain/zetacore/crosschain/gas_price.proto";
 import "zetachain/zetacore/crosschain/inbound_hash_to_cctx.proto";
 import "zetachain/zetacore/crosschain/inbound_tracker.proto";
-import "zetachain/zetacore/crosschain/last_block_height.proto";
 import "zetachain/zetacore/crosschain/outbound_tracker.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
@@ -14,11 +13,13 @@ option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // GenesisState defines the crosschain module's genesis state.
 message GenesisState {
+  reserved 8;
+  reserved "lastBlockHeightList";
+
   repeated OutboundTracker outboundTrackerList = 2
       [ (gogoproto.nullable) = false ];
   repeated GasPrice gasPriceList = 5;
   repeated CrossChainTx CrossChainTxs = 7;
-  repeated LastBlockHeight lastBlockHeightList = 8;
   repeated InboundHashToCctx inboundHashToCctxList = 9
       [ (gogoproto.nullable) = false ];
   repeated InboundTracker inbound_tracker_list = 11

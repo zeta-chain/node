@@ -7,19 +7,19 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/wzeta.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectornative.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaeth.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
-	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
@@ -357,24 +357,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
-	if c := conf.Contracts.ZEVM.ContextAppAddr; c != "" {
-		r.ContextAppAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ContextAppAddr: %w", err)
-		}
-		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
-		if err != nil {
-			return err
-		}
-	}
-
-	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
-		r.ZevmTestDAppAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ZevmTestDappAddr: %w", err)
-		}
-	}
-
 	if c := conf.Contracts.EVM.TestDappAddr; c != "" {
 		r.EvmTestDAppAddr, err = c.AsEVMAddress()
 		if err != nil {
@@ -410,6 +392,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
 		}
 		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.CoreRegistry; c != "" {
+		r.CoreRegistryAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid CoreRegistryAddr: %w", err)
+		}
+		r.CoreRegistry, err = coreregistry.NewCoreRegistry(r.CoreRegistryAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

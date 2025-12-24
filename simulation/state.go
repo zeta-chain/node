@@ -234,7 +234,6 @@ func extractObserverGenesisState(
 			identifier := fmt.Sprintf("ballot-%d-%d", i, j)
 			ballots[i+j] = &observertypes.Ballot{
 				BallotIdentifier:     identifier,
-				Index:                identifier,
 				VoterList:            observers,
 				Votes:                votes,
 				ObservationType:      observertypes.ObservationType_InboundTx,

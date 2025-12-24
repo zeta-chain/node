@@ -69,13 +69,6 @@ func (cp ChainParams) Validate() error {
 		return nil
 	}
 
-	// validate confirmation counts
-	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
-	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
-	// https://github.com/zeta-chain/node/issues/3466
-	if cp.ConfirmationCount == 0 {
-		return errors.New("ConfirmationCount must be greater than 0")
-	}
 	if cp.ConfirmationParams == nil {
 		return errors.New("confirmation params cannot be nil")
 	}
@@ -148,6 +141,13 @@ func (cp ChainParams) Validate() error {
 		return ErrParamsMinObserverDelegation
 	}
 
+	if cp.StabilityPoolPercentage > 100 {
+		return errors.Wrapf(
+			ErrParamsStabilityPoolPercentage,
+			"stability pool percentage must be in range [0,100], got: %d",
+			cp.StabilityPoolPercentage,
+		)
+	}
 	return nil
 }
 
@@ -214,7 +214,6 @@ func GetDefaultChainParams() ChainParamsList {
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.Ethereum.ChainId,
-		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -238,7 +237,6 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscMainnet.ChainId,
-		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -262,7 +260,6 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinMainnet.ChainId,
-		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -285,8 +282,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           chains.Goerli.ChainId,
-		ConfirmationCount: 6,
+		ChainId: chains.Goerli.ChainId,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
 		ConnectorContractAddress:    constant.EVMZeroAddress,
@@ -311,7 +307,6 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscTestnet.ChainId,
-		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -335,7 +330,6 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.Mumbai.ChainId,
-		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -359,7 +353,6 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinTestnet.ChainId,
-		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -383,7 +376,6 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinRegtest.ChainId,
-		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -407,7 +399,6 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.GoerliLocalnet.ChainId,
-		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 		Erc20CustodyContractAddress: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
@@ -433,7 +424,6 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.ZetaChainPrivnet.ChainId,
-		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    constant.EVMZeroAddress,
 		Erc20CustodyContractAddress: constant.EVMZeroAddress,
@@ -452,7 +442,6 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 // ChainParamsEqual returns true if two chain params are equal
 func ChainParamsEqual(params1, params2 ChainParams) bool {
 	return params1.ChainId == params2.ChainId &&
-		params1.ConfirmationCount == params2.ConfirmationCount &&
 		params1.ZetaTokenContractAddress == params2.ZetaTokenContractAddress &&
 		params1.ConnectorContractAddress == params2.ConnectorContractAddress &&
 		params1.Erc20CustodyContractAddress == params2.Erc20CustodyContractAddress &&

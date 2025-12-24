@@ -149,6 +149,9 @@ const (
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
 	TestBitcoinStdMemoDepositAndCallRevertAndAbortName     = "bitcoin_std_memo_deposit_and_call_revert_and_abort"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
+	TestBitcoinToZEVMCallName                              = "bitcoin_to_zevm_call"
+	TestBitcoinToZEVMCallAbortName                         = "bitcoin_to_zevm_call_abort"
+	TestBitcoinToZEVMCallExcessiveFundsRevertName          = "bitcoin_to_zevm_call_excessive_funds_revert"
 	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
@@ -272,12 +275,18 @@ const (
 	TestLegacyZetaWithdrawName            = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName   = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
-	TestZetaDepositName                      = "zeta_deposit"
-	TestZetaDepositAndCallName               = "zeta_deposit_and_call"
-	TestZetaDepositAndCallRevertName         = "zeta_deposit_and_call_revert"
-	TestZetaDepositRevertAndAbortName        = "zeta_deposit_revert_and_abort"
-	TestZetaDepositAndCallRevertWithCallName = "zeta_deposit_and_call_revert_with_call"
-	TestZetaDepositAndCallNoMessageName      = "zeta_deposit_and_call_no_message"
+	TestZetaDepositName                       = "zeta_deposit"
+	TestZetaDepositAndCallName                = "zeta_deposit_and_call"
+	TestZetaDepositAndCallRevertName          = "zeta_deposit_and_call_revert"
+	TestZetaDepositRevertAndAbortName         = "zeta_deposit_revert_and_abort"
+	TestZetaDepositAndCallRevertWithCallName  = "zeta_deposit_and_call_revert_with_call"
+	TestZetaDepositAndCallNoMessageName       = "zeta_deposit_and_call_no_message"
+	TestZetaWithdrawName                      = "zeta_withdraw"
+	TestZetaWithdrawAndCallName               = "zeta_withdraw_and_call"
+	TestZetaWithdrawAndArbitraryCallName      = "zeta_withdraw_and_arbitrary_call"
+	TestZetaWithdrawAndCallRevertName         = "zeta_withdraw_and_call_revert"
+	TestZetaWithdrawAndCallRevertWithCallName = "zeta_withdraw_and_call_revert_with_call"
+	TestZetaWithdrawRevertAndAbortName        = "zeta_withdraw_revert_and_abort"
 )
 
 const (
@@ -290,7 +299,8 @@ var (
 	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
-const V2ZetaVersion = "v33.0.0"
+// v2ZetaVersion is the minimum version that supports ZETA transfers using the gateway (v2 protocol contracts)
+const v2ZetaVersion = "v37.0.0"
 
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
@@ -304,7 +314,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
@@ -313,7 +323,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestZetaDepositAndCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertName,
@@ -322,14 +332,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositRevertAndAbortName,
 		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestZetaDepositRevertAndAbort,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
@@ -338,7 +348,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallNoMessageName,
@@ -347,7 +357,63 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallNoMessage,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawName,
+		"withdraw Zeta from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestZetaWithdraw,
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawAndCallName,
+		"withdraw zeta from ZEVM and call a contract on connected eth chain",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
+		},
+		TestZetaWithdrawAndCall,
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawAndCallRevertName,
+		"withdraw Zeta from ZEVM and call a contract on connected eth chain that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestZetaWithdrawAndCallRevert,
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawAndCallRevertWithCallName,
+		"withdraw Zeta from ZEVM and call a contract on connected eth chain that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestZetaWithdrawAndCallRevertWithCall,
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawRevertAndAbortName,
+		"withdraw Zeta from ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
+		},
+		TestZetaWithdrawRevertAndAbort,
+		runner.WithMinimumVersion(v2ZetaVersion),
+	),
+	runner.NewE2ETest(
+		TestZetaWithdrawAndArbitraryCallName,
+		"withdraw Zeta from ZEVM and arbitrary call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestZetaWithdrawAndArbitraryCall,
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
@@ -393,7 +459,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestETHDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
@@ -458,7 +524,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawAndCall,
 	),
@@ -474,7 +540,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract with no message content",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawAndCallNoMessage,
 	),
@@ -507,7 +573,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM, revert, then abort with onAbort, check onAbort can created cctx",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
@@ -613,7 +679,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestERC20WithdrawAndCall,
 	),
@@ -622,7 +688,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestERC20WithdrawAndCallNoMessage,
 	),
@@ -1236,7 +1302,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallName,
@@ -1317,11 +1383,30 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
+		TestBitcoinToZEVMCallName,
+		"bitcoin -> zevm call",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCall,
+	),
+	runner.NewE2ETest(
+		TestBitcoinToZEVMCallAbortName,
+		"bitcoin -> zevm call fails and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCallAbort,
+	),
+	runner.NewE2ETest(
+		TestBitcoinToZEVMCallExcessiveFundsRevertName,
+		"bitcoin -> zevm call revert with excessive funds",
+		[]runner.ArgDefinition{},
+		TestBitcoinToZEVMCallExcessiveFundsRevert,
+		runner.WithMinimumVersion("v37.0.0"),
+	),
+	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,
 		"deposit Bitcoin into ZEVM that aborts due to insufficient deposit fee",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositAndAbortWithLowDepositFee,
-		runner.WithMinimumVersion("v27.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
@@ -1399,9 +1484,11 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
 		"deposit Bitcoin with invalid memo; expect revert",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			{Description: "amount in btc", DefaultValue: "0.01"},
+		},
 		TestBitcoinDepositInvalidMemoRevert,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawRBFName,
@@ -1625,18 +1712,6 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTSS,
-	),
-	runner.NewE2ETest(
-		TestPauseERC20CustodyName,
-		"pausing ERC20 custody on ZetaChain",
-		[]runner.ArgDefinition{},
-		TestPauseERC20Custody,
-	),
-	runner.NewE2ETest(
-		TestMigrateERC20CustodyFundsName,
-		"migrate ERC20 custody funds",
-		[]runner.ArgDefinition{},
-		TestMigrateERC20CustodyFunds,
 	),
 	runner.NewE2ETest(
 		TestMigrateConnectorFundsName,
@@ -1867,7 +1942,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestEtherWithdrawRestricted,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyEtherDepositAndCallRefundName,

@@ -54,9 +54,9 @@ func Test_InboundBallotIdentifier(t *testing.T) {
 		},
 		{
 			name:                     chains.SolanaMainnet.Name,
-			inboundHash:              "5oj38HmTH4k2NSsqHK9oRrLjpPNBkm17dNXHFsaT6cTuJQRPWTCGqsPpRumPEbpL2B6Wuv51M69WoJwM24864PjB",
+			inboundHash:              "63mNGRSCUq2dYjnFGDdDQzUMyFdnpupQrbezSDStReoeRAfd32ekXRoJ4Eszq4fC3XL3xSQnSqyDBJYQQAoiYtc6",
 			inboundChainID:           chains.SolanaMainnet.ChainId,
-			expectedBallotIdentifier: "0xfb5f2adc2a23c301d3231613284d937f6f45cc7b1139011abbc8486de7fcbd5f",
+			expectedBallotIdentifier: "0x465d6d48aa027bb633b26df727bea13baa1269025b95017aa0f5826a4acd8dc8",
 			expectError:              false,
 		},
 	}

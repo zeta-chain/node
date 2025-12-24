@@ -161,7 +161,6 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
 		slashingMock.MockIsTombstoned(false)
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList:        []string{observer},
 			// already voted
@@ -259,7 +258,6 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		threshold, err := sdkmath.LegacyNewDecFromStr("0.7")
 		require.NoError(t, err)
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList: []string{
 				sample.AccAddress(),
@@ -320,7 +318,6 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		threshold, err := sdkmath.LegacyNewDecFromStr("0.1")
 		require.NoError(t, err)
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList: []string{
 				observer,
