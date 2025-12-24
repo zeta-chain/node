@@ -93,6 +93,42 @@ func (gw *Gateway) SendCall(
 	return gw.send(ctx, s, amount, body, sendMode)
 }
 
+// SendUpdateTSS sends an admin operation to update the TSS address on the gateway.
+func (gw *Gateway) SendUpdateTSS(
+	ctx context.Context,
+	s Sender,
+	amount math.Uint,
+	newTSSAddress eth.Address,
+	sendMode uint8,
+) error {
+	updateTSS := UpdateTSS{NewTSSAddress: newTSSAddress}
+
+	body, err := updateTSS.AsBody()
+	if err != nil {
+		return errors.Wrap(err, "failed to create update_tss body")
+	}
+
+	return gw.send(ctx, s, amount, body, sendMode)
+}
+
+// SendResetSeqno sends an admin operation to reset the gateway's seqno (nonce).
+func (gw *Gateway) SendResetSeqno(
+	ctx context.Context,
+	s Sender,
+	amount math.Uint,
+	newSeqno uint32,
+	sendMode uint8,
+) error {
+	resetSeqno := ResetSeqno{NewSeqno: newSeqno}
+
+	body, err := resetSeqno.AsBody()
+	if err != nil {
+		return errors.Wrap(err, "failed to create reset_seqno body")
+	}
+
+	return gw.send(ctx, s, amount, body, sendMode)
+}
+
 func (gw *Gateway) send(ctx context.Context, s Sender, amount math.Uint, body *boc.Cell, sendMode uint8) error {
 	if body == nil {
 		return errors.New("body is nil")
