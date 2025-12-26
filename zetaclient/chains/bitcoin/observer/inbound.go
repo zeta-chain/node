@@ -3,9 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"math/big"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/pkg/errors"
@@ -213,35 +211,40 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 		return nil
 	}
 
-	// convert the amount to integer (satoshis)
-	amountSats, err := common.GetSatoshis(event.Value)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Float64("value", event.Value).
-			Msg("cannot convert value to satoshis")
+	// resolve the amount to be used in inbound vote message
+	if err := event.ResolveAmountForMsgVoteInbound(); err != nil {
+		// should never happen, otherwise skip this tx
+		logger.Error().Err(err).Msg("unable to resolve msg vote amount")
 		return nil
 	}
-	amountInt := big.NewInt(amountSats)
 
 	// create inbound vote message contract V1 for legacy memo
 	if event.MemoStd == nil {
-		return ob.NewInboundVoteFromLegacyMemo(event, amountInt)
+		return ob.NewInboundVoteFromLegacyMemo(event)
 	}
 
 	// create inbound vote message for standard memo
-	return ob.NewInboundVoteFromStdMemo(event, amountInt)
+	return ob.NewInboundVoteFromStdMemo(event)
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
 func (ob *Observer) NewInboundVoteFromLegacyMemo(
 	event *BTCInboundEvent,
-	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
 	// determine confirmation mode
 	confirmationMode := crosschaintypes.ConfirmationMode_FAST
 	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	// build options
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+	}
+
+	// add error message if present
+	if event.ErrorMessage != "" {
+		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
 	}
 
 	return crosschaintypes.NewMsgVoteInbound(
@@ -251,7 +254,7 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		event.FromAddress,
 		event.ToAddress,
 		ob.ZetaRepo().ZetaChain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
+		event.AmountForMsgVoteInbound,
 		hex.EncodeToString(event.MemoBytes),
 		event.TxHash,
 		event.BlockNumber,
@@ -263,14 +266,13 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 		confirmationMode,
-		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+		options...,
 	)
 }
 
 // NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
 func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
-	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
 	// inject revert options specified by the memo
 	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
@@ -289,6 +291,17 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
 	}
 
+	// build options
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithRevertOptions(revertOptions),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+	}
+
+	// add error message if present
+	if event.ErrorMessage != "" {
+		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
+	}
+
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetaRepo().GetOperatorAddress(),
 		event.FromAddress,
@@ -296,19 +309,18 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		event.FromAddress,
 		event.MemoStd.Receiver.Hex(),
 		ob.ZetaRepo().ZetaChain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
+		event.AmountForMsgVoteInbound,
 		hex.EncodeToString(event.MemoStd.Payload),
 		event.TxHash,
 		event.BlockNumber,
 		0,
-		coin.CoinType_Gas,
+		event.CoinType(),
 		"",
 		0,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 		confirmationMode,
-		crosschaintypes.WithRevertOptions(revertOptions),
-		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+		options...,
 	)
 }

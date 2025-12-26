@@ -1484,9 +1484,7 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
 		"deposit Bitcoin with invalid memo; expect revert",
-		[]runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.01"},
-		},
+		[]runner.ArgDefinition{},
 		TestBitcoinDepositInvalidMemoRevert,
 		runner.WithMinimumVersion("v37.0.0"),
 	),

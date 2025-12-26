@@ -63,13 +63,14 @@ type zetaclientdSupervisor struct {
 }
 
 func newZetaclientdSupervisor(
-	zetacoreGRPCURL string,
+	zetaCoreURL string,
 	logger zerolog.Logger,
 	enableAutoDownload bool,
 ) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
+
 	conn, err := grpc.Dial(
-		zetacoreGRPCURL,
+		fmt.Sprintf("%s:9090", zetaCoreURL),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

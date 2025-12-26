@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
 	cosmosmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -15,10 +16,17 @@ import (
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+)
+
+const (
+	// maxNoAssetCallExcessAmount is the maximum excess amount beyond depositor fee for Bitcoin NoAssetCall
+	// A static value 100K satoshis (0.001 BTC) is used to prevent accidental funds loss exceeding $110 at the time of writing
+	maxNoAssetCallExcessAmount = 100_000
 )
 
 // BTCInboundEvent represents an incoming transaction event
@@ -150,6 +158,34 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		return errors.New("got empty receiver address from memo")
 	}
 	event.ToAddress = receiver.Hex()
+
+	return nil
+}
+
+// ResolveAmountForMsgVoteInbound resolves the final amount in satoshis to be used in the MsgVoteInbound message.
+// It converts the float BTC value to satoshis and validates NoAssetCall operation for excessive funds.
+// Note: the depositor fee is already deducted from event.Value in GetBtcEventWithWitness.
+func (event *BTCInboundEvent) ResolveAmountForMsgVoteInbound() error {
+	// convert BTC value to satoshis
+	// Note: Value already has depositor fee deducted (see DeductDepositorFee in witness.go)
+	amountSats, err := zetabtc.GetSatoshis(event.Value)
+	if err != nil {
+		return errors.Wrapf(err, "invalid BTC value: %f", event.Value)
+	}
+	event.AmountForMsgVoteInbound = cosmosmath.NewUintFromBigInt(big.NewInt(amountSats))
+
+	// check if this is a NoAssetCall operation and validate excessive funds
+	if event.MemoStd != nil && event.MemoStd.OpCode == memo.OpCodeCall {
+		if amountSats <= maxNoAssetCallExcessAmount {
+			// NoAssetCall expects no asset transfer
+			// small excess amount above depositor fee will not be forwarded to ZEVM
+			event.AmountForMsgVoteInbound = cosmosmath.NewUint(0)
+		} else {
+			// large excess amount will be returned to the sender by reverting the tx
+			event.Status = crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS
+			event.ErrorMessage = fmt.Sprintf("remaining funds of %d satoshis exceed %d satoshis", amountSats, maxNoAssetCallExcessAmount)
+		}
+	}
 
 	return nil
 }
