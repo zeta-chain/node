@@ -137,6 +137,9 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, legacyTestRunning boo
 	chainParams := currentChainParamsRes.ChainParams
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
+	if chainParams.ConfirmationParams == nil {
+		chainParams.ConfirmationParams = observertypes.GetDefaultGoerliLocalnetChainParams().ConfirmationParams
+	}
 	if legacyTestRunning {
 		chainParams.DisableTssBlockScan = false
 	}
