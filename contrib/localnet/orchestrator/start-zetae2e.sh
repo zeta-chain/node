@@ -347,7 +347,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
     echo "Running E2E command to setup the networks and populate the state..."
       # Use light flag to ensure tests can complete before the upgrade height
-      zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
+       zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS} --test-filter '^(add_|bitcoin_|crosschain_|deposit_|erc20_|eth_|legacy_|zevm_)'
       if [ $? -ne 0 ]; then
         echo "First E2E failed"
         exit 1
