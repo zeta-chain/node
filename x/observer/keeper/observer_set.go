@@ -60,18 +60,20 @@ func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) (uint64, error
 }
 
 // RemoveObserverFromSet removes an observer from the observer set.
-func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
+// Returns the observer count after the operation
+func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) uint64 {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
-		return
+		return 0
 	}
 	for i, addr := range observerSet.ObserverList {
 		if addr == address {
 			observerSet.ObserverList = append(observerSet.ObserverList[:i], observerSet.ObserverList[i+1:]...)
 			k.SetObserverSet(ctx, observerSet)
-			return
+			break
 		}
 	}
+	return observerSet.LenUint()
 }
 
 // UpdateObserverAddress updates an observer address in the observer set.It makes sure the updated observer set is valid.

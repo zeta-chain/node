@@ -24,11 +24,16 @@ copy_operator_keys() {
     mkdir -p /root/$node/
     scp -r root@$node:/root/.zetacored/keyring-test/ /root/$node/keyring-test/ || continue
     mkdir -p /root/$node/config
-    scp root@$node:/root/.zetacored/config/client.toml /root/$node/config/client.toml
+    scp root@$node:/root/.zetacored/config/client.toml /root/$node/config/client.toml || true
 
-    # Set node ID suffix
+    # Set node ID suffix uniquely for each node
     node_num=${node//[^0-9]/}
-    node_id=${node_num:-"-new-validator"}
+    node_id=""
+    if [[ -n "$node_num" ]]; then
+      node_id="$node_num"
+    elif [[ "$node" == "zetacore-new-validator" ]]; then
+      node_id="-new-validator"
+    fi
 
     # Rename and copy keys
     zetacored keys rename operator operator$node_id --home=/root/$node/ --keyring-backend=test --yes
@@ -226,7 +231,6 @@ fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 
 
 # unlock rpc tester accounts
 fund_eth_from_config '.additional_accounts.user_rpc.evm_address' 10000 "rpc tester"
-
 # Create the destination directory
 mkdir -p /root/.zetacored/keyring-test/
 # Copy the keys from the localnet directory to the keyring-test directory
@@ -260,7 +264,8 @@ deployed_config_path=/root/state/deployed.yml
 
 ### Run zetae2e command depending on the option passed
 ACCOUNT_CONFIG="/work/config.yml"
-export OLD_VERSION=$(get_zetacored_version)
+export OLD_ZETACORED_VERSION=$(get_zetacored_version)
+export RUN_NUMBER=1
 # Mode migrate is used to run the e2e tests before and after the TSS migration
 # It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
 # The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
@@ -278,7 +283,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   fi
 
   echo "Running E2E test before migrating TSS"
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light --test-tss-migration
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light ${TSS_MIGRATION_FLAG:-}
   if [ $? -ne 0 ]; then
     echo "First E2E failed"
     exit 1
@@ -287,6 +292,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "Waiting 10 seconds for node to restart"
   sleep 10
 
+  export RUN_NUMBER=2
   zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof
 
   ZETAE2E_EXIT_CODE=$?
@@ -316,7 +322,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # if enabled, fetches zetae2e binary from the previous version
   # ante means "before" in Latin (used in Cosmos terminology)
   if [ "$USE_ZETAE2E_ANTE" = true ]; then
-    echo "zetae2e-ante: using the PREVIOUS binary ($OLD_VERSION)"
+    echo "zetae2e-ante: using the PREVIOUS binary"
     scp root@zetacore0:/usr/local/bin/zetae2e /usr/local/bin/zetae2e-ante
     chmod +x /usr/local/bin/zetae2e-ante
   else
@@ -350,7 +356,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
   # If this is a zetaclient only upgrade , update the binary and proceed , if not wait for the upgrade height
   if [ "$UPGRADE_ZETACLIENT_ONLY" = true ]; then
-    echo "Zetaclientd-only upgrade mode: updating zetaclientd to $NEW_VERSION"
+    echo "Zetaclientd-only upgrade mode: updating zetaclientd to current branch version"
     create_zetaclientd_upgrade_trigger
   else
     echo "Waiting for upgrade height..."
@@ -365,22 +371,23 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
       echo "Waiting 10 seconds for node to restart..."
       sleep 10
-    if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
+    NEW_VERSION=$(get_zetacored_version)
+    if [[ "$OLD_ZETACORED_VERSION" == "$NEW_VERSION" ]]; then
       echo "Version did not change after upgrade height, maybe the upgrade did not run?"
       exit 2
     fi
   fi
 
-  NEW_VERSION=$(get_zetacored_version)
   # wait for zevm endpoint to come up
   sleep 10
-  echo "Upgrade result zetacored version : ${OLD_VERSION} -> ${NEW_VERSION}"
+  echo "Upgrade result zetacored version : ${OLD_ZETACORED_VERSION} -> ${NEW_VERSION}"
   echo "Running E2E command to test the network after upgrade..."
 
   # Run zetae2e again
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
 
+  export RUN_NUMBER=2
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
     zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
   else
@@ -394,6 +401,72 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   fi
 
   echo "E2E failed after upgrade"
+  exit 1
+fi
+
+
+restart_zetaclients() {
+  local nodes=("zetaclient0" "zetaclient1" "zetaclient2" "zetaclient3" "zetaclient-new-validator")
+
+  for node in "${nodes[@]}"; do
+    ssh -q root@$node "exit" 2>/dev/null || continue
+
+    echo "Restarting zetaclientd on $node"
+    ssh root@$node "pkill -f zetaclientd || true" || continue
+  done
+
+  echo "Zetaclient restart completed, waiting for clients to come back up..."
+  sleep 15
+}
+
+# Mode `replace` tests observer replacement by:
+#   1. Running E2E setup (deploys contracts, initializes state)
+#   2. Running E2E tests before replacing an observer
+#   3. Replacing an observer and restarting zetaclients
+#   4. Running E2E tests again to verify the network works after replacement
+if [ "$LOCALNET_MODE" == "replace-observer" ]; then
+
+  # Step 1: Run setup only if not already done (config file indicates completion)
+  if [[ -f "$deployed_config_path" ]]; then
+    echo "Skipping E2E setup because it has already been completed"
+  else
+    [[ -n $CI ]] && echo "::group::setup"
+    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" --skip-header-proof
+    if [ $? -ne 0 ]; then
+      echo "E2E setup failed"
+      exit 1
+    fi
+    [[ -n $CI ]] && echo -e "\n::endgroup::"
+  fi
+
+  # Step 2: Run E2E tests before observer replacement
+  echo "Running E2E test before observer replacement"
+  REUSE_TSS_FLAG=""
+  if [[ -n "$REUSE_TSS_FROM" ]]; then
+    REUSE_TSS_FLAG="--reuse-tss-from $REUSE_TSS_FROM"
+  fi
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-header-proof --light --replace-observer $REUSE_TSS_FLAG
+  if [ $? -ne 0 ]; then
+    echo "First E2E failed"
+    exit 1
+  fi
+
+  # Step 3: Restart zetaclients to pick up the new observer configuration
+  echo "Observer replacement completed, restarting zetaclients"
+  restart_zetaclients
+
+  # Step 4: Run E2E tests again to verify network functions correctly after replacement
+  export RUN_NUMBER=2
+  echo "Running E2E test after observer replacement"
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof
+
+  ZETAE2E_EXIT_CODE=$?
+  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+    echo "E2E passed after observer replacement"
+    exit 0
+  fi
+
+  echo "E2E failed after observer replacement"
   exit 1
 fi
 

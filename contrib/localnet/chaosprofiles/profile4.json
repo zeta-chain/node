@@ -1,0 +1,32 @@
+{
+    "BitcoinClient": {
+        "EstimateSmartFee": 10,
+        "GetBlockCount": 10,
+        "GetBlockHash": 10,
+        "GetBlockHeader": 10,
+        "GetBlockHeightByStr": 10,
+        "GetBlockVerbose": 10,
+        "GetEstimatedFeeRate": 20,
+        "GetMempoolEntry": 10,
+        "GetMempoolTxsAndFees": 10,
+        "GetNetworkInfo": 10,
+        "GetRawTransaction": 10,
+        "GetRawTransactionByStr": 10,
+        "GetRawTransactionResult": 10,
+        "GetRawTransactionVerbose": 10,
+        "GetTransactionByStr": 10,
+        "GetTransactionFeeAndRate": 10,
+        "GetTransactionInitiator": 10,
+        "GetTransactionInputSpender": 10,
+        "Healthcheck": 30,
+        "IsTxStuckInMempool": 10,
+        "ListUnspentMinMaxAddresses": 20,
+        "SendRawTransaction": 20
+    },
+    "EVMClient": {},
+    "SolanaClient": {},
+    "SuiClient": {},
+    "TONClient": {},
+    "TSSClient": {},
+    "ZetacoreClient": {}
+}

@@ -3,6 +3,7 @@ package sample
 import (
 	"crypto/ecdsa"
 	cryptoed25519 "crypto/ed25519"
+	cryptorand "crypto/rand"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -83,6 +84,20 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 	addr := privKey.PubKey().Address()
 
 	return privKey, sdk.AccAddress(addr)
+}
+
+// Digest32B returns a sample 32-byte digest
+func Digest32B(t *testing.T) []byte {
+	return randomBytes(t, 32)
+}
+
+// Signature65B returns a sample 65-byte signature
+func Signature65B(t *testing.T) [65]byte {
+	var signature [65]byte
+	randomBytes := randomBytes(t, 65)
+	copy(signature[:], randomBytes)
+
+	return signature
 }
 
 // EthAddress returns a sample ethereum address
@@ -277,4 +292,12 @@ func EthTxSigned(
 	require.NoError(t, err)
 
 	return signedTx, txBytes, fromAddress
+}
+
+// randomBytes returns a sample byte array of the given length
+func randomBytes(t *testing.T, length int) []byte {
+	randomBytes := make([]byte, length)
+	_, err := cryptorand.Read(randomBytes)
+	require.NoError(t, err)
+	return randomBytes
 }

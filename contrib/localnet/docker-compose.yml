@@ -170,6 +170,7 @@ services:
       - PPROF_ADDR=0.0.0.0:6063
       - CHAOS_PROFILE
       - CHAOS_SEED
+    restart: always
     ports:
       - "6063:6063" # pprof
       - "8888:8886" # metrics
@@ -197,6 +198,7 @@ services:
       - PPROF_ADDR=0.0.0.0:6064
       - CHAOS_PROFILE
       - CHAOS_SEED
+    restart: always
     ports:
       - "6064:6064" # pprof
       - "8889:8886" # metrics
@@ -211,7 +213,9 @@ services:
     hostname: zetacore-new-validator
     profiles:
       - tss
+      - replace-observer
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.15
@@ -219,6 +223,7 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
     volumes:
       - ssh:/root/.ssh
 
@@ -228,15 +233,21 @@ services:
     hostname: zetaclient-new-validator
     profiles:
       - tss
+      - replace-observer
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.25
+    extra_hosts:
+      - "zetaclient-new-validator.com:172.20.0.25"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6065
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
     ports:
       - "6065:6065" # pprof
       - "8890:8886" # metrics
@@ -254,10 +265,12 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.26
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: python3 -u /root/scripts_python/start-zetaclient-dry.py
     environment:
+      - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
+      - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE:-}
       - HOTKEY_BACKEND=file
-      - HOTKEY_PASSWORD=password # test purposes only
+      - HOTKEY_PASSWORD=password
       - PPROF_ADDR=0.0.0.0:6066
     ports:
       - "6066:6066" # pprof
@@ -265,6 +278,68 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+
+  testnet-node:
+    image: zetanode:latest
+    container_name: testnet-node
+    hostname: testnet-node
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.40
+    ports:
+      - "26756:26656" # P2P
+      - "26757:26657" # RPC
+      - "1417:1317"   # REST API
+      - "9190:9090"   # gRPC
+      - "8645:8545"   # EVM RPC
+      - "26760:26660" # Prometheus
+    environment:
+      - MONIKER=${TESTNET_MONIKER:-testNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=athens_7001-1
+    volumes:
+      - testnet_data:/root/.zetacored
+      - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
+    profiles:
+      - all
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mainnet-node:
+    image: zetanode:latest
+    container_name: mainnet-node
+    hostname: mainnet-node
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.41
+    ports:
+      - "26856:26656" # P2P
+      - "26857:26657" # RPC
+      - "1517:1317"   # REST API
+      - "9290:9090"   # gRPC
+      - "8745:8545"   # EVM RPC
+      - "26860:26660" # Prometheus
+    environment:
+      - MONIKER=${MAINNET_MONIKER:-mainnetNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=zetachain_7000-1
+    profiles:
+      - all
+    volumes:
+      - mainnet_data:/root/.zetacored
+      - ~/zetacored_snapshot_mainnet:/root/zetacored_snapshot_mainnet:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   eth:
     image: ethereum/client-go:v1.14.0
@@ -379,9 +454,11 @@ services:
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
+      - TSS_MIGRATION_FLAG=${TSS_MIGRATION_FLAG-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
       - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
       - UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
@@ -568,3 +645,7 @@ volumes:
   preparams:
   grafana_storage:
   redis_data:
+  testnet_data:
+  mainnet_data:
+
+

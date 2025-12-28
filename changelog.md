@@ -4,15 +4,39 @@
 
 ### Features
 
+* [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
+* [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
+* [4484](https://github.com/zeta-chain/node/pull/4484) - change params for 2s block time
+* [4507](https://github.com/zeta-chain/node/pull/4507) - add a tool to list tss balances across all supported chains
+* [4492](https://github.com/zeta-chain/node/pull/4492) - add migration script to set authorization for MsgRemoveObserver
+* [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
+* [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
+
 ### Tests
+
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
+* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
 
 ### Fixes
 
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+* [4414](https://github.com/zeta-chain/node/pull/4414) - fix example package deployment by removing gateway object reference
 * [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
 * [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
 * [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
+* [4471](https://github.com/zeta-chain/node/pull/4471) - accept uppercase receiver address in Bitcoin withdrawals
+* [4498](https://github.com/zeta-chain/node/pull/4498) - reindex txlogs at the rpc layer if duplicate indexes are present
+* [4490](https://github.com/zeta-chain/node/pull/4490) - allow object for `tracerConfig` in the zevm debug APIs
+* [4511](https://github.com/zeta-chain/node/pull/4511) - false mempool congested warning
+* [4509](https://github.com/zeta-chain/node/pull/4509) - use outbound schedule interval in sui cctx scheduling
+
+### Tests
+
+* [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+* [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
+* [4488](https://github.com/zeta-chain/node/pull/4488) - add sui to tss migration tests
+* [4491](https://github.com/zeta-chain/node/pull/4491) - add ton to tss migration tests
 
 ## v37.0.0
 

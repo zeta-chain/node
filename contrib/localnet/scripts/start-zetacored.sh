@@ -144,6 +144,7 @@ then
 fi
 
 echo "Creating keys for operator and hotkey for $HOSTNAME"
+# Ensure new-validator is marked as non-observer (it becomes observer via replacement or add-observer)
 if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
   source ~/add-keys.sh n
 else
@@ -273,6 +274,8 @@ then
   # set admin account
   admin_amount=100000000000000000000000000azeta # DEFAULT_FUND_AMOUNT * 10
   fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh $admin_amount
+  # zetaclient_dry_account is used in the dry zetaclient . Although the account is not used for transactions we still need to fund to be able to activate the account in the auth module
+  fund_account zetaclient_dry_account zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax $admin_amount
 
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
@@ -281,6 +284,7 @@ then
   fund_account emergency_policy "$emergency_policy" $admin_amount
   fund_account admin_policy "$admin_policy" $admin_amount
   fund_account operational_policy "$operational_policy" $admin_amount
+
 
   jq --arg emergency "$emergency_policy" \
     --arg operational "$operational_policy" \

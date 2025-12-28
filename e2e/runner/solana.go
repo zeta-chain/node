@@ -509,7 +509,8 @@ func (r *E2ERunner) BroadcastTxSyncOnce(tx *solana.Transaction) (solana.Signatur
 		r.Logger.Info("Error sending tx %s, check if it's already broadcasted, err: %s", sig, err.Error())
 
 		out, errGet := r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{
-			Commitment: rpc.CommitmentConfirmed,
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 		})
 
 		if errGet == nil {
@@ -529,7 +530,8 @@ func (r *E2ERunner) BroadcastTxSyncOnce(tx *solana.Transaction) (solana.Signatur
 	r.Logger.Info("Current block height %d", blockHeight)
 
 	out, err = r.SolanaClient.GetTransaction(r.Ctx, sig, &rpc.GetTransactionOpts{
-		Commitment: rpc.CommitmentConfirmed,
+		Commitment:                     rpc.CommitmentConfirmed,
+		MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion0,
 	})
 	if err != nil {
 		r.Logger.Info("Error getting tx %s", err.Error())

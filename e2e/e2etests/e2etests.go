@@ -69,6 +69,7 @@ const (
 	 */
 	TestSolanaDepositName                                 = "solana_deposit"
 	TestSolanaDepositThroughProgramName                   = "solana_deposit_through_program"
+	TestSolanaDepositThroughProgramAddressLookupTableName = "solana_deposit_through_program_alt"
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
@@ -217,6 +218,7 @@ const (
 	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
+	TestZetaclientMinimumVersionName     = "zetaclient_minimum_version"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 	TestMigrateConnectorFundsName        = "migrate_connector_funds"
 	TestBurnFungibleModuleAssetName      = "burn_fungible_module_asset"
@@ -726,6 +728,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},
 		TestSolanaDepositThroughProgram,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositThroughProgramAddressLookupTableName,
+		"deposit SOL into ZEVM through example connected program using Address Lookup Table",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "24000000"},
+		},
+		TestSolanaDepositThroughProgramAddressLookupTable,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawName,
@@ -1651,6 +1662,14 @@ var AllE2ETests = []runner.E2ETest{
 		"zetaclient signer offset",
 		[]runner.ArgDefinition{},
 		TestZetaclientSignerOffset,
+	),
+	runner.NewE2ETest(
+		TestZetaclientMinimumVersionName,
+		"zetaclient minimum version",
+		[]runner.ArgDefinition{
+			{Description: "minimum version", DefaultValue: ""},
+		},
+		TestZetaclientMinimumVersion,
 	),
 	runner.NewE2ETest(
 		TestUpdateOperationalChainParamsName,

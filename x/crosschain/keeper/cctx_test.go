@@ -128,7 +128,6 @@ func TestCCTXs(t *testing.T) {
 		},
 	}
 	for _, tt := range cctxsTest {
-		tt := tt
 		t.Run(tt.TestName, func(t *testing.T) {
 			keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 			keeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
@@ -227,7 +226,6 @@ func TestCCTXQuerySingle(t *testing.T) {
 			err:  status.Error(codes.InvalidArgument, "invalid request"),
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.Cctx(wctx, tc.request)
 			if tc.err != nil {

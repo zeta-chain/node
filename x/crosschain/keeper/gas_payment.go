@@ -55,7 +55,7 @@ func (k Keeper) PayGasAndUpdateCctx(
 }
 
 // ChainGasParams returns the params to calculates the fees for gas for a chain
-// tha gas address, the gas limit, gas price and protocol flat fee are returned
+// the gas address, the gas limit, gas price and protocol flat fee are returned
 func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, error) {
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {

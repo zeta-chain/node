@@ -116,6 +116,10 @@ func (*TSSClient) SignBatch(context.Context, [][]byte, uint64, uint64, int64,
 	panic(MsgUnreachable)
 }
 
+func (*TSSClient) IsSignatureCached(int64, [][]byte) bool {
+	panic(MsgUnreachable)
+}
+
 // ------------------------------------------------------------------------------------------------
 // Bitcoin
 // ------------------------------------------------------------------------------------------------

@@ -44,7 +44,6 @@ func TestTSSQuerySingle(t *testing.T) {
 			response: &types.QueryGetTSSResponse{TSS: tss},
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			if !tc.skipSettingTss {
 				k.SetTSS(ctx, tss)
@@ -81,7 +80,6 @@ func TestTSSQueryHistory(t *testing.T) {
 			err:           nil,
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			tssList := sample.TssList(tc.tssCount)
 			for _, tss := range tssList {

@@ -385,7 +385,6 @@ func ptbAddCmdOnCall(
 	args withdrawAndCallPTBArgs,
 ) error {
 	var (
-		gatewayObjRef    = args.gateway
 		msgContextObjRef = args.msgContextRef
 		sender           = args.sender
 		target           = args.target
@@ -401,18 +400,6 @@ func ptbAddCmdOnCall(
 	// Set message context
 	if err := ptbAddCmdSetMessageContext(ptb, gatewayPackageID, argMsgContext, sender, target); err != nil {
 		return errors.Wrap(err, "unable to add set_message_context command")
-	}
-
-	// Create immutable gateway object argument
-	argGateway, err := ptb.Obj(suiptb.ObjectArg{
-		SharedObject: &suiptb.SharedObjectArg{
-			Id:                   gatewayObjRef.ObjectId,
-			InitialSharedVersion: gatewayObjRef.Version,
-			Mutable:              false,
-		},
-	})
-	if err != nil {
-		return errors.Wrap(err, "unable to create gateway object argument")
 	}
 
 	// Build the type arguments for on_call function
@@ -434,8 +421,8 @@ func ptbAddCmdOnCall(
 			Module:        zetasui.ModuleConnected,
 			Function:      zetasui.FuncOnCall,
 			TypeArguments: onCallTypeArgs,
-			// [gateway + message context + withdrawns coins + payload objects + message]
-			Arguments: append([]suiptb.Argument{argGateway, argMsgContext, argWithdrawnCoins}, onCallArgs...),
+			// [message context + withdrawns coins + payload objects + message]
+			Arguments: append([]suiptb.Argument{argMsgContext, argWithdrawnCoins}, onCallArgs...),
 		},
 	})
 

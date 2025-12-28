@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
@@ -32,9 +33,15 @@ type Signer struct {
 
 	activeOutbounds map[string]time.Time
 
+	// tssKeysignInfoMap maps nonce to TSS keysign information
+	tssKeysignInfoMap map[uint64]*TSSKeysignInfo
+
+	// nextTSSNonce is the next TSS nonce to sign
+	nextTSSNonce uint64
+
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	ClientMode mode.ClientMode
 }
@@ -58,6 +65,7 @@ func NewSigner(
 		tssSigner:             tssSigner,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
+		tssKeysignInfoMap:     make(map[uint64]*TSSKeysignInfo),
 		logger: Logger{
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
@@ -136,7 +144,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 		now := time.Now().UTC()
 		s.activeOutbounds[outboundID] = now
 
-		s.logger.Std.Info().
+		s.logger.Std.Debug().
 			Bool("outbound_active", active).
 			Str(logs.FieldOutboundID, outboundID).
 			Time("outbound_timestamp", now).
@@ -145,7 +153,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 	default:
 		timeTaken := time.Since(startedAt)
 
-		s.logger.Std.Info().
+		s.logger.Std.Debug().
 			Bool("outbound_active", active).
 			Str(logs.FieldOutboundID, outboundID).
 			Float64("outbound_time_taken", timeTaken.Seconds()).
@@ -184,6 +192,18 @@ func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
 	)
 
 	return false
+}
+
+// SetNextTSSNonce sets the next TSS nonce metrics
+func (s *Signer) SetNextTSSNonce(nonce uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if nonce > s.nextTSSNonce {
+		s.nextTSSNonce = nonce
+		metrics.NextTSSNonce.WithLabelValues(s.Chain().Name).Set(float64(nonce))
+		s.logger.Std.Info().Uint64("next_tss_nonce", nonce).Msg("updated TSS nonce")
+	}
 }
 
 // OutboundID returns the outbound ID.

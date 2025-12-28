@@ -4,9 +4,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -104,4 +106,49 @@ func TestZetaclientSignerOffset(r *runner.E2ERunner, _ []string) {
 		}
 		return blockTimeLatencySleep > .05
 	}, time.Second*20, time.Second*1)
+}
+
+// TestZetaclientMinimumVersion tests setting the zetaclient minimum version
+func TestZetaclientMinimumVersion(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
+	minimumVersion := args[0]
+
+	// use zetacore version by default
+	if minimumVersion == "" {
+		nodeInfo, err := r.Clients.Zetacore.GetNodeInfo(r.Ctx)
+		require.NoError(r, err)
+		minimumVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
+	}
+
+	// validate version string
+	require.True(r, semver.IsValid(minimumVersion), "invalid version: %s", minimumVersion)
+
+	// query operational flags
+	oldFlags, err := r.Clients.Zetacore.Observer.OperationalFlags(
+		r.Ctx,
+		&observertypes.QueryOperationalFlagsRequest{},
+	)
+	require.NoError(r, err)
+
+	// update minimum version field
+	newFlags := oldFlags.OperationalFlags
+	newFlags.MinimumVersion = minimumVersion
+
+	// send update tx message to zetacore
+	updateMsg := observertypes.NewMsgUpdateOperationalFlags(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		newFlags,
+	)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, updateMsg)
+	require.NoError(r, err)
+
+	// query operational flags again
+	currentFlags, err := r.Clients.Zetacore.Observer.OperationalFlags(
+		r.Ctx,
+		&observertypes.QueryOperationalFlagsRequest{},
+	)
+	require.NoError(r, err)
+	require.EqualValues(r, newFlags, currentFlags.OperationalFlags)
+
+	r.Logger.Print("set zetaclient minimum version to %s", minimumVersion)
 }

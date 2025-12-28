@@ -328,7 +328,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		"blockNumber":      hexutil.Uint64(res.Height),     //#nosec G115 won't exceed uint64
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex), //#nosec G115 no int overflow expected here
 
-		// sender and receiver (contract or EOA) addreses
+		// sender and receiver (contract or EOA) addresses
 		"from": from,
 		"to":   to,
 		"type": hexutil.Uint(txType),
