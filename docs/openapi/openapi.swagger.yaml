@@ -55638,6 +55638,9 @@ definitions:
         description: |-
           Skip actions that require scanning the contents of each block.
           The main thing this disables is transfers directly to the TSS address.
+      gasPriceMultiplier:
+        type: string
+        title: The multiplier to be applied to the observed gas price
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:

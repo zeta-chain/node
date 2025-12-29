@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	suimodel "github.com/block-vision/sui-go-sdk/models"
 	btcchainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	btcwire "github.com/btcsuite/btcd/wire"
@@ -54,7 +55,7 @@ func WrapZetacoreClient(client zrepo.ZetacoreClient) *ZetacoreClient {
 	return &ZetacoreClient{ZetacoreReaderClient: client}
 }
 
-func (*ZetacoreClient) PostVoteGasPrice(context.Context, chains.Chain, uint64, uint64, uint64,
+func (*ZetacoreClient) PostVoteGasPrice(context.Context, chains.Chain, uint64, sdkmath.LegacyDec, uint64, uint64,
 ) (string, error) {
 	panic(MsgUnreachable)
 }

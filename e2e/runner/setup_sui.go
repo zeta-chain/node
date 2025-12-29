@@ -521,7 +521,8 @@ func (r *E2ERunner) setSuiChainParams(resetNonces bool) error {
 			FastInboundCount:  1,
 			FastOutboundCount: 1,
 		},
-		ConfirmationCount: 1, // still need to be provided for now
+		ConfirmationCount:  1, // still need to be provided for now
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast sui chain params tx")

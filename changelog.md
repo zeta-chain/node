@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* A new field `gas_price_multiplier` is added to the chain parameters, impacting the query API `/zeta-chain/observer/get_chain_params` and the cosmos message `MsgUpdateChainParams`.
+The `zetacored` binary must be upgraded to trigger chain parameters data migration before running the new `zetaclientd` binary.
+
 ### Features
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
@@ -11,6 +16,7 @@
 * [4492](https://github.com/zeta-chain/node/pull/4492) - add migration script to set authorization for MsgRemoveObserver
 * [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
 * [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
+* [4485](https://github.com/zeta-chain/node/pull/4485) - move gas price multiplier to zetacore chain parameters
 
 ### Tests
 

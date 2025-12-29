@@ -44,6 +44,7 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 					IsSupported:           false,
 					BallotThreshold:       sdkmath.LegacyZeroDec(),
 					MinObserverDelegation: sdkmath.LegacyZeroDec(),
+					GasPriceMultiplier:    types.DefaultGasPriceMultiplier,
 				},
 			},
 		}
@@ -89,6 +90,7 @@ func TestKeeper_GetChainParams(t *testing.T) {
 					IsSupported:           false,
 					BallotThreshold:       sdkmath.LegacyZeroDec(),
 					MinObserverDelegation: sdkmath.LegacyZeroDec(),
+					GasPriceMultiplier:    types.DefaultGasPriceMultiplier,
 				},
 			},
 		}

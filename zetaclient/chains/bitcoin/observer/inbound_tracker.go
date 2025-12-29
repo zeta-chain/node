@@ -94,6 +94,12 @@ func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context,
 		return "", err
 	}
 
+	// get fee rate multiplier
+	feeRateMultiplier, err := ob.ChainParams().GasPriceMultiplier.Float64()
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid fee rate multiplier")
+	}
+
 	// check confirmation
 	// #nosec G115 block height always positive
 	if !ob.IsBlockConfirmedForInboundSafe(uint64(blockVb.Height)) {
@@ -107,6 +113,7 @@ func (ob *Observer) CheckReceiptAndPostVoteForBtcTxHash(ctx context.Context,
 		*tx,
 		tss,
 		uint64(blockVb.Height),
+		feeRateMultiplier,
 		ob.logger.Inbound,
 		ob.netParams,
 		common.CalcDepositorFee,

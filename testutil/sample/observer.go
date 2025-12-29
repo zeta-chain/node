@@ -99,6 +99,9 @@ func ChainParams(chainID int64) *types.ChainParams {
 
 	confirmationParams := ConfirmationParams(r)
 
+	// create a random gas price multiplier between 1.0 and 2.0
+	gasPriceMultiplier := sdkmath.LegacyNewDec(Int64InRangeFromRand(r, 10, 21)).Quo(sdkmath.LegacyNewDec(10))
+
 	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
@@ -117,6 +120,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 		IsSupported:                 false,
 		GatewayAddress:              EthAddress().String(),
 		ConfirmationParams:          &confirmationParams,
+		GasPriceMultiplier:          gasPriceMultiplier,
 	}
 }
 

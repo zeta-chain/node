@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -61,8 +61,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
 
-	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	// fee rate of above tx is 28 sat/vB, apply gas rate multiplier to get depositor fee
+	gasRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+	// #nosec G115 always in range
+	depositorFee := common.DepositorFee(int64(28 * gasRateMultiplier))
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {
@@ -97,6 +99,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -141,6 +144,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -184,6 +188,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -226,6 +231,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -272,6 +278,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -293,6 +300,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -314,6 +322,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -344,6 +353,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
@@ -367,6 +377,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -396,6 +407,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -425,6 +437,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -468,6 +481,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -499,6 +513,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,

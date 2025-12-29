@@ -38,6 +38,12 @@ message ChainParams {
   // Skip actions that require scanning the contents of each block.
   // The main thing this disables is transfers directly to the TSS address.
   bool disable_tss_block_scan = 19;
+
+  // The multiplier to be applied to the observed gas price
+  string gas_price_multiplier = 20 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Deprecated(v17)

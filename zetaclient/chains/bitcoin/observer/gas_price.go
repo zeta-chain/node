@@ -47,9 +47,13 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// Bitcoin has no concept of priority fee (like eth)
 	const priorityFee = 0
 
-	// #nosec G115 always positive
-	block := uint64(blockNumber)
-	logger := ob.Logger().Chain
-	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, feeRateEstimated, priorityFee, block)
+	var (
+		// #nosec G115 always positive
+		block      = uint64(blockNumber)
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
+
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, feeRateEstimated, multiplier, priorityFee, block)
 	return err
 }

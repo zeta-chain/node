@@ -30,11 +30,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 
+	// get fee rate multiplier
+	feeRateMultiplier, err := ob.ChainParams().GasPriceMultiplier.Float64()
+	if err != nil {
+		return errors.Wrapf(err, "invalid fee rate multiplier")
+	}
+
 	// scan SAFE confirmed blocks
 	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
 	if startBlockSafe < endBlockSafe {
 		// observe inbounds for the block range [startBlock, endBlock-1]
-		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1, feeRateMultiplier)
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -58,7 +64,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// scan FAST confirmed blocks if available
 	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
 	if endBlockSafe < endBlockFast {
-		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
+		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1, feeRateMultiplier)
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -73,7 +79,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // observeInboundInBlockRange observes inbounds for given block range [startBlock, toBlock (inclusive)]
 // It returns the last successfully scanned block height, so the caller knows where to resume next time
-func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) observeInboundInBlockRange(
+	ctx context.Context,
+	startBlock, toBlock uint64,
+	feeRateMultiplier float64,
+) (uint64, error) {
 	for blockNumber := startBlock; blockNumber <= toBlock; blockNumber++ {
 		// query incoming gas asset to TSS address
 		// #nosec G115 always in range
@@ -97,6 +107,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
+			feeRateMultiplier,
 			ob.logger.Inbound,
 			ob.netParams,
 		)
@@ -153,6 +164,7 @@ func FilterAndParseIncomingTx(
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
 	tssAddress string,
+	feeRateMultiplier float64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 ) ([]*BTCInboundEvent, error) {
@@ -170,6 +182,7 @@ func FilterAndParseIncomingTx(
 			tx,
 			tssAddress,
 			blockNumber,
+			feeRateMultiplier,
 			logger,
 			netParams,
 			common.CalcDepositorFee,

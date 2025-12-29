@@ -7,8 +7,10 @@ package zrepo
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	cometbft "github.com/cometbft/cometbft/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -165,6 +167,7 @@ func (repo *ZetaRepo) PostOutboundTracker(ctx context.Context, logger zerolog.Lo
 // It returns the hash of the vote transaction.
 func (repo *ZetaRepo) VoteGasPrice(ctx context.Context, logger zerolog.Logger,
 	gasPrice uint64,
+	gasPriceMultiplier sdkmath.LegacyDec,
 	priorityFee uint64,
 	block uint64,
 ) (string, error) {
@@ -174,7 +177,15 @@ func (repo *ZetaRepo) VoteGasPrice(ctx context.Context, logger zerolog.Logger,
 		return "", nil
 	}
 
-	zhash, err := repo.client.PostVoteGasPrice(ctx, repo.connectedChain, gasPrice, priorityFee, block)
+	// Apply gas price multiplier to the gasPrice
+	gasPriceBig := new(big.Int).SetUint64(gasPrice)
+	gasPriceDec := sdkmath.LegacyNewDecFromBigInt(gasPriceBig)
+	gasPriceInt := gasPriceDec.Mul(gasPriceMultiplier).TruncateInt()
+	if gasPriceInt.IsZero() || !gasPriceInt.IsUint64() {
+		return "", fmt.Errorf("invalid gas price: %s", gasPriceInt.String())
+	}
+
+	zhash, err := repo.client.PostVoteGasPrice(ctx, repo.connectedChain, gasPriceInt.Uint64(), priorityFee, block)
 	if err != nil {
 		err = newClientError(ErrClientVoteGasPrice, err)
 		logger.Error().Err(err).Send()
