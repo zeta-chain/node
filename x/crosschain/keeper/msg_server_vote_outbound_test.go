@@ -617,7 +617,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 		//Successfully mock SaveOutbound
 		expectedNumberOfOutboundParams := 2
-		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss, expectedNumberOfOutboundParams)
+		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss)
 		oldParamsLen := len(cctx.OutboundParams)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		msg := types.MsgVoteOutbound{
@@ -704,9 +704,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		require.Equal(t, msg.Digest(), c.OutboundParams[0].BallotIndex)
 		require.Equal(t, "", c.GetCurrentOutboundParam().BallotIndex)
 		// The message processing fails during the creation of the revert tx
-		// So the original outbound tx is executed and the revert tx is not finalized.
-		// The cctx status is Aborted
-		require.Equal(t, types.TxFinalizationStatus_NotFinalized, c.GetCurrentOutboundParam().TxFinalizationStatus)
+		// Both outbounds are set to Executed when CCTX is aborted to ensure proper cleanup of pending nonces.
+		require.Equal(t, types.TxFinalizationStatus_Executed, c.GetCurrentOutboundParam().TxFinalizationStatus)
 		require.Equal(t, types.TxFinalizationStatus_Executed, c.OutboundParams[oldParamsLen-1].TxFinalizationStatus)
 	})
 
@@ -877,6 +876,8 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		// Set TxFinalizationStatus to Executed so the nonce is removed from pending nonces
+		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			Index:    "",
 			ChainId:  cctx.GetCurrentOutboundParam().ReceiverChainId,
@@ -929,6 +930,8 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		for _, outboundParams := range cctx.OutboundParams {
+			// Set TxFinalizationStatus to Executed so the nonces are removed from pending nonces
+			outboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 			k.SetOutboundTracker(ctx, types.OutboundTracker{
 				Index:    "",
 				ChainId:  outboundParams.ReceiverChainId,
