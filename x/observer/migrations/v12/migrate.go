@@ -13,7 +13,7 @@ type observerKeeper interface {
 }
 
 // MigrateStore migrates the x/observer module state from the consensus version 11 to version 12.
-// The migration updates the 'StabilityPoolPercentage' field of all chain params to 60.
+// The migration updates the 'StabilityPoolPercentage' field of all chain params to 100
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	allChainParams, found := observerKeeper.GetChainParamsList(ctx)
 	if !found {

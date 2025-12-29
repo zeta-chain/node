@@ -713,9 +713,9 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
-		// New outbound not added and the old outbound is not finalized
+		// New outbound not added but the old outbound is set to Executed for proper nonce cleanup
 		require.Len(t, cctx.OutboundParams, oldOutboundParamsLen)
-		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
+		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
 	t.Run("cctx aborted if the cctx has already been reverted once", func(t *testing.T) {
