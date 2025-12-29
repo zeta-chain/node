@@ -70,6 +70,8 @@ func triggerTSSMigration(
 	verbose bool,
 	conf config.Config,
 	testSolana bool,
+	testSui bool,
+	testTon bool,
 ) {
 	migrationStartTime := time.Now()
 	logger.Print("🏁 starting tss migration")
@@ -113,6 +115,16 @@ func triggerTSSMigration(
 		deployerRunner.UpdateTSSAddressSolana(
 			conf.Contracts.Solana.GatewayProgramID.String(),
 			conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	}
+	if testSui {
+		deployerRunner.UpdateTSSAddressSui(conf.RPCs.SuiFaucet)
+	}
+
+	if testTon {
+		deployerRunner.UpdateTSSAddressTON(
+			conf.Contracts.TON.GatewayAccountID.String(),
+			conf.RPCs.TONFaucet,
+		)
 	}
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

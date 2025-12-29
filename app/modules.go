@@ -54,7 +54,7 @@ import (
 )
 
 // ModuleBasics defines the module BasicManager that is in charge of setting up basic,
-// non-dependant module elements, such as codec registration
+// non-dependent module elements, such as codec registration
 // and genesis verification.
 // https://github.com/zeta-chain/node/issues/3021
 // TODO: Use app.mm to create the basic manager instead
