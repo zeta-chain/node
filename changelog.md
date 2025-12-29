@@ -12,11 +12,6 @@
 * [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
 * [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
 
-### Tests
-
-* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
-* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
-
 ### Fixes
 
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
@@ -35,8 +30,10 @@
 
 * [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
 * [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
 * [4488](https://github.com/zeta-chain/node/pull/4488) - add sui to tss migration tests
 * [4491](https://github.com/zeta-chain/node/pull/4491) - add ton to tss migration tests
+* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
 
 ## v37.0.0
 
