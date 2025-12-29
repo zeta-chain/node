@@ -55,7 +55,7 @@ func (r *E2ERunner) RequestSuiFromFaucet(faucetURL, recipient string) {
 
 // SetupSui initializes the gateway package on Sui and initialize the chain params on ZetaChain
 func (r *E2ERunner) SetupSui(faucetURL string) {
-	r.Logger.Print("⚙️ initializing gateway package on Sui")
+	r.Logger.Print("⚙️ Setting up Sui gateway")
 
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")

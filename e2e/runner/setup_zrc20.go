@@ -15,7 +15,7 @@ import (
 
 // SetupZRC20 setup ZRC20 for the ZEVM
 func (r *E2ERunner) SetupZRC20(zrc20Deployment txserver.ZRC20Deployment) {
-	r.Logger.Print("⚙️ deploying ZRC20s on ZEVM")
+	r.Logger.Print("⚙️ Setting up ZRC20 contracts on ZEVM")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))

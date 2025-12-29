@@ -22,6 +22,8 @@ import (
 
 // SetupTON setups TON deployer and deploys Gateway contract
 func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
+	r.Logger.Print("⚙️ Setting up TON network")
+
 	require.NotEmpty(r, faucetURL, "TON faucet url is empty")
 	require.NotNil(r, r.Clients.TON, "TON client is not initialized")
 

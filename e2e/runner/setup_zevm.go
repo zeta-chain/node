@@ -45,7 +45,7 @@ const GatewayGasLimit = 4000000
 
 // SetupZEVM setup protocol contracts for the ZEVM
 func (r *E2ERunner) SetupZEVM() {
-	r.Logger.Print("⚙️ setting up ZEVM protocol contracts")
+	r.Logger.Print("⚙️ Setting up ZEVM V2 protocol contracts")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("ZEVM protocol contracts took %s\n", time.Since(startTime))

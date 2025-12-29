@@ -286,7 +286,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup TSS address and setup deployer wallet
 		deployerRunner.SetupBitcoinAccounts(true)
 
-		//setup protocol contracts v1 as they are still supported for now
+		//setup evm contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain

@@ -20,7 +20,7 @@ import (
 
 // SetupEVM setup contracts on EVM with v2 contracts
 func (r *E2ERunner) SetupEVM() {
-	r.Logger.Info("⚙️ setting up EVM network")
+	r.Logger.Print("⚙️ Setting up EVM network v2 contracts")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("EVM setup took %s\n", time.Since(startTime))

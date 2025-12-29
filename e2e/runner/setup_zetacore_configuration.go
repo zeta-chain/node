@@ -17,6 +17,8 @@ import (
 // TODO: should be used for all protocol contracts including the ZETA connector
 // https://github.com/zeta-chain/node/issues/3257
 func (r *E2ERunner) UpdateEVMChainParams(testLegacy bool) {
+	r.Logger.Print("⚙️ Updating EVM chain params")
+
 	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
 	require.NoError(r, err)
 
