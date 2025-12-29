@@ -131,7 +131,7 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	createConfirmationParamsIfAbsent(chainParams)
 
 	// get fee rate multiplier, fallback to default if not set in chain params
-	feeRateMultiplier := types.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
 	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
 		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
 	}

@@ -4,6 +4,9 @@
 
 ### Breaking Changes
 
+* A new field `gas_price_multiplier` is added to the chain parameters, impacting the query API `/zeta-chain/observer/get_chain_params` and the cosmos message `MsgUpdateChainParams`.
+The `zetacored` binary must be upgraded to trigger chain parameters data migration before running the new `zetaclientd` binary.
+
 ### Features
 
 * [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
