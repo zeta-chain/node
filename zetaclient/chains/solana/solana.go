@@ -139,7 +139,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 	}
 
 	// schedule keysign for each pending cctx
-	for _, cctx := range cctxList {
+	for i, cctx := range cctxList {
 		var (
 			params        = cctx.GetCurrentOutboundParam()
 			inboundParams = cctx.GetInboundParams()
@@ -150,6 +150,9 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		logger := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, outboundID).Logger()
 
 		switch {
+		case int64(i) == scheduleLookahead:
+			// stop if lookahead is reached
+			return nil
 		case params.ReceiverChainId != chainID:
 			logger.Error().Msg("chain id mismatch")
 			continue
