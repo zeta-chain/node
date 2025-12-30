@@ -22,6 +22,7 @@ const (
 
 	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateTssFunds = "cmd_migrate_tss_funds"
+
 	// BTCWithdrawalDustAmount is the minimum satoshis that can be withdrawn from zEVM to avoid outbound dust output
 	// The Bitcoin protocol sets a minimum output value to 546 satoshis (dust limit) but we set it to 1000 satoshis
 	BTCWithdrawalDustAmount = 1000
@@ -42,4 +43,10 @@ const (
 
 	// DefaultAppMempoolSize is the default size of ZetaChain mempool
 	DefaultAppMempoolSize = 3000
+
+	// OutboundLookbackFactor is the factor to determine how many nonces to look back to not miss older pending cctxs
+	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
+	// the scheduler should pick up and process any pending cctx with nonce <= 880 (1000 - 120 * 1.0).
+	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
+	OutboundLookbackFactor = 1.0
 )

@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -24,14 +25,6 @@ type EVM struct {
 	observer  *observer.Observer
 	signer    *signer.Signer
 }
-
-const (
-	// outboundLookBackFactor is the factor to determine how many nonces to look back for pending cctxs
-	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
-	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
-	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	outboundLookBackFactor = 1.0
-)
 
 func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *EVM {
 	return &EVM{
@@ -135,7 +128,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		chainID   = e.observer.Chain().ChainId
 		lookahead = e.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
-		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
+		outboundScheduleLookBack = uint64(float64(lookahead) * constant.OutboundLookbackFactor)
 	)
 
 	cctxList, err := e.observer.ZetaRepo().GetPendingCCTXs(ctx)

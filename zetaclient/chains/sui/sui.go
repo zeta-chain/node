@@ -151,19 +151,18 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 			outboundID     = base.OutboundIDFromCCTX(cctx)
 			outboundParams = cctx.GetCurrentOutboundParam()
 			nonce          = outboundParams.TssNonce
+			logger         = s.outboundLogger(outboundID)
 		)
-
-		logger := s.outboundLogger(outboundID)
 
 		switch {
 		case int64(i) == lookahead:
-			// take only first N cctxs
+			// stop if lookahead is reached
 			return nil
 		case outboundParams.ReceiverChainId != chainID:
 			// should not happen
 			logger.Error().Msg("chain id mismatch")
 			continue
-		case nonce >= maxNonce:
+		case nonce > maxNonce:
 			return fmt.Errorf("nonce %d is too high (%s). Earliest nonce %d", nonce, outboundID, firstNonce)
 		case s.signer.IsOutboundActive(outboundID):
 			// cctx is already being processed & broadcasted by signer

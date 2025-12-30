@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/signer"
@@ -121,48 +121,70 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	time.Sleep(delay)
 
-	// #nosec G115 always in range
-	zetaHeight := uint64(zetaBlock.Block.Height)
-
 	cctxs, err := t.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, cctx := range cctxs {
-		outboundID := base.OutboundIDFromCCTX(cctx)
-		err := t.processCCTX(ctx, outboundID, cctx, zetaHeight)
-		if err != nil {
-			t.outboundLogger(outboundID).Error().Err(err).Msg("failed to schedule CCTX")
-		}
-	}
-
-	return nil
-}
-
-func (t *TON) processCCTX(ctx context.Context,
-	outboundID string,
-	cctx *types.CrossChainTx,
-	zetaHeight uint64,
-) error {
-	switch {
-	case t.signer.IsOutboundActive(outboundID):
-		return nil //no-op
-	case cctx.GetCurrentOutboundParam().ReceiverChainId != t.observer.Chain().ChainId:
-		return errors.New("chain id mismatch")
-	}
-
-	// vote outbound if it's already confirmed
-	continueKeySign, err := t.observer.VoteOutboundIfConfirmed(ctx, cctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to VoteOutboundIfConfirmed")
-	}
-	if !continueKeySign {
-		t.outboundLogger(outboundID).Info().Msg("schedule CCTX: outbound already processed")
+	// no-op
+	if len(cctxs) == 0 {
 		return nil
 	}
 
-	go t.signer.TryProcessOutbound(ctx, cctx, t.observer.ZetaRepo(), zetaHeight)
+	var (
+		// #nosec G115 always in range
+		zetaHeight = uint64(zetaBlock.Block.Height)
+		chainID    = t.observer.Chain().ChainId
+
+		// #nosec G115 positive
+		interval  = uint64(t.observer.ChainParams().OutboundScheduleInterval)
+		lookahead = t.observer.ChainParams().OutboundScheduleLookahead
+		// #nosec G115 always in range
+		lookback = uint64(float64(lookahead) * constant.OutboundLookbackFactor)
+
+		firstNonce = cctxs[0].GetCurrentOutboundParam().TssNonce
+		maxNonce   = firstNonce + lookback
+	)
+
+	for i, cctx := range cctxs {
+		var (
+			outboundID     = base.OutboundIDFromCCTX(cctx)
+			outboundParams = cctx.GetCurrentOutboundParam()
+			nonce          = outboundParams.TssNonce
+			logger         = t.outboundLogger(outboundID)
+		)
+
+		switch {
+		case int64(i) == lookahead:
+			// stop if lookahead is reached
+			return nil
+		case outboundParams.ReceiverChainId != chainID:
+			// should not happen
+			logger.Error().Msg("chain id mismatch")
+			continue
+		case nonce > maxNonce:
+			return fmt.Errorf("nonce %d is too high (%s). Earliest nonce %d", nonce, outboundID, firstNonce)
+		case t.signer.IsOutboundActive(outboundID):
+			// cctx is already being processed & broadcasted by signer
+			continue
+		}
+
+		// vote outbound if it's already confirmed
+		continueKeysign, err := t.observer.VoteOutboundIfConfirmed(ctx, cctx)
+		if err != nil {
+			logger.Error().Err(err).Msg("call to VoteOutboundIfConfirmed failed")
+			continue
+		}
+		if !continueKeysign {
+			logger.Info().Msg("outbound already processed")
+			continue
+		}
+
+		// schedule keysign if the interval has arrived
+		if nonce%interval == zetaHeight%interval {
+			go t.signer.TryProcessOutbound(ctx, cctx, t.observer.ZetaRepo(), zetaHeight)
+		}
+	}
 
 	return nil
 }
