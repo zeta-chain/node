@@ -166,7 +166,7 @@ devnet-fork-upgrade:
 
 download-snapshot:
 	@echo "--> Downloading and caching snapshot..."
-	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1)
+	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1) --force
 
 ###############################################################################
 ###                                 Linting            	                    ###

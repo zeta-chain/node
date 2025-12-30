@@ -68,7 +68,6 @@ func (cp ChainParams) Validate() error {
 	if chains.IsZetaChain(cp.ChainId, nil) {
 		return nil
 	}
-
 	if cp.ConfirmationParams == nil {
 		return errors.New("confirmation params cannot be nil")
 	}

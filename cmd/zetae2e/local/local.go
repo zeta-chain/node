@@ -331,7 +331,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup() //testLegacy || testAdmin
+		deployerRunner.RunSetup()
 		if testAdmin {
 			deployerRunner.UpdateEVMChainParams(false)
 		}
