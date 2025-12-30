@@ -14,7 +14,6 @@ func (r *E2ERunner) RunSetup() {
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(updateAdditionalFeeTx, "Updating additional fee failed")
 	r.UpgradeGatewayZEVM()
-	//r.UpdateProtocolContractsInChainParams(testLegacy)
 	r.DeployCoreRegistry()
 	r.ActivateChainsOnRegistry()
 	r.DeployTestDAppV2ZEVM()

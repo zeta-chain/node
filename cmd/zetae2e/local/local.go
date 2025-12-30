@@ -331,7 +331,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup() //testLegacy || testAdmin
+		deployerRunner.RunSetup()
 		if testAdmin {
 			deployerRunner.UpdateEVMChainParams(false)
 		}
@@ -873,7 +873,21 @@ func waitKeygenHeight(
 		logger.Info("Last ZetaHeight: %d", response.Height)
 
 		if response.Height >= keygenHeight+bufferBlocks {
-			return nil
+			// Check keygen status before exiting
+			keygenResp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+			if err != nil {
+				logger.Error("observerClient.Keygen error: %s", err)
+				continue
+			}
+			if keygenResp.Keygen == nil {
+				logger.Error("keygen is nil")
+				continue
+			}
+			if keygenResp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess {
+				logger.Print("✅ keygen successful")
+				return nil
+			}
+			logger.Info("keygen status: %s, waiting...", keygenResp.Keygen.Status.String())
 		}
 	}
 }
