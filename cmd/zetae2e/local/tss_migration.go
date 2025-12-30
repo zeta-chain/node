@@ -99,7 +99,9 @@ func triggerTSSMigration(
 		require.NoError(deployerRunner, err)
 
 		// Generate new TSS
-		noError(waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0))
+		noError(
+			waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0),
+		)
 	}
 
 	// Run migration
