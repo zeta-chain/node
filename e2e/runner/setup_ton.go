@@ -114,6 +114,7 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {

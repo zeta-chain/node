@@ -38,6 +38,7 @@ func GetBtcEventWithWitness(
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
+	feeRateMultiplier float64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
@@ -80,7 +81,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, feeRateMultiplier, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}

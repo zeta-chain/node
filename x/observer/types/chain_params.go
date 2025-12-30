@@ -15,6 +15,15 @@ import (
 var (
 	DefaultMinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("1000000000000000000000")
 	DefaultBallotThreshold       = sdkmath.LegacyMustNewDecFromStr("0.66")
+
+	// DefaultGasPriceMultiplier is the default gas price multiplier for all chains
+	DefaultGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("1.0")
+
+	// DefaultEVMOutboundGasPriceMultiplier is the default gas price multiplier for EVM-chain outbound txs
+	DefaultEVMOutboundGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("1.2")
+
+	// DefaultBTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbound txs
+	DefaultBTCOutboundGasPriceMultiplier = sdkmath.LegacyMustNewDecFromStr("2.0")
 )
 
 // Validate checks that the ConfirmationParams is valid
@@ -87,14 +96,12 @@ func (cp ChainParams) Validate() error {
 	}
 	if cp.OutboundScheduleInterval == 0 || cp.OutboundScheduleInterval > 100 { // 600 secs
 		return fmt.Errorf(
-
 			"OutboundScheduleInterval %d out of range",
 			cp.OutboundScheduleInterval,
 		)
 	}
 	if cp.OutboundScheduleLookahead == 0 || cp.OutboundScheduleLookahead > 500 { // 500 cctxs
 		return fmt.Errorf(
-
 			"OutboundScheduleLookahead %d out of range",
 			cp.OutboundScheduleLookahead,
 		)
@@ -103,7 +110,6 @@ func (cp ChainParams) Validate() error {
 	// if WatchUtxoTicker defined, check validity
 	if cp.WatchUtxoTicker > 300 {
 		return fmt.Errorf(
-
 			"WatchUtxoTicker %d out of range",
 			cp.WatchUtxoTicker,
 		)
@@ -112,21 +118,18 @@ func (cp ChainParams) Validate() error {
 	// if contract addresses are defined, check validity
 	if cp.ZetaTokenContractAddress != "" && !validChainContractAddress(cp.ZetaTokenContractAddress) {
 		return fmt.Errorf(
-
 			"invalid ZetaTokenContractAddress %s",
 			cp.ZetaTokenContractAddress,
 		)
 	}
 	if cp.ConnectorContractAddress != "" && !validChainContractAddress(cp.ConnectorContractAddress) {
 		return fmt.Errorf(
-
 			"invalid ConnectorContractAddress %s",
 			cp.ConnectorContractAddress,
 		)
 	}
 	if cp.Erc20CustodyContractAddress != "" && !validChainContractAddress(cp.Erc20CustodyContractAddress) {
 		return fmt.Errorf(
-
 			"invalid Erc20CustodyContractAddress %s",
 			cp.Erc20CustodyContractAddress,
 		)
@@ -138,6 +141,16 @@ func (cp ChainParams) Validate() error {
 
 	if cp.MinObserverDelegation.IsNil() {
 		return ErrParamsMinObserverDelegation
+	}
+
+	// validate gas price multiplier
+	if cp.GasPriceMultiplier.IsNil() {
+		return fmt.Errorf("GasPriceMultiplier cannot be nil")
+	}
+
+	if cp.GasPriceMultiplier.GT(sdkmath.LegacyNewDec(100)) ||
+		cp.GasPriceMultiplier.LT(sdkmath.LegacyMustNewDecFromStr("0.01")) {
+		return fmt.Errorf("GasPriceMultiplier %s out of range", cp.GasPriceMultiplier.String())
 	}
 
 	if cp.StabilityPoolPercentage > 100 {
@@ -231,8 +244,10 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 			SafeOutboundCount: 14,
 			FastOutboundCount: 14,
 		},
+		GasPriceMultiplier: DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscMainnet.ChainId,
@@ -254,8 +269,10 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 			SafeOutboundCount: 14,
 			FastOutboundCount: 14,
 		},
+		GasPriceMultiplier: DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinMainnet.ChainId,
@@ -277,8 +294,10 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 			SafeOutboundCount: 2,
 			FastOutboundCount: 2,
 		},
+		GasPriceMultiplier: DefaultBTCOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId: chains.Goerli.ChainId,
@@ -301,8 +320,10 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 			SafeOutboundCount: 6,
 			FastOutboundCount: 6,
 		},
+		GasPriceMultiplier: DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BscTestnet.ChainId,
@@ -324,8 +345,10 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 			SafeOutboundCount: 6,
 			FastOutboundCount: 6,
 		},
+		GasPriceMultiplier: DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.Mumbai.ChainId,
@@ -347,8 +370,10 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 			SafeOutboundCount: 12,
 			FastOutboundCount: 12,
 		},
+		GasPriceMultiplier: DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinTestnet.ChainId,
@@ -370,8 +395,10 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 			SafeOutboundCount: 2,
 			FastOutboundCount: 2,
 		},
+		GasPriceMultiplier: DefaultBTCOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.BitcoinRegtest.ChainId,
@@ -393,8 +420,10 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 			SafeOutboundCount: 1,
 			FastOutboundCount: 1,
 		},
+		GasPriceMultiplier: DefaultBTCOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.GoerliLocalnet.ChainId,
@@ -418,8 +447,10 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 			FastOutboundCount: 1,
 		},
 		DisableTssBlockScan: true,
+		GasPriceMultiplier:  DefaultEVMOutboundGasPriceMultiplier,
 	}
 }
+
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
 		ChainId:                     chains.ZetaChainPrivnet.ChainId,
@@ -435,6 +466,7 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		GasPriceMultiplier:          DefaultGasPriceMultiplier,
 	}
 }
 
@@ -455,7 +487,8 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.IsSupported == params2.IsSupported &&
 		params1.GatewayAddress == params2.GatewayAddress &&
 		confirmationParamsEqual(params1.ConfirmationParams, params2.ConfirmationParams) &&
-		params1.DisableTssBlockScan == params2.DisableTssBlockScan
+		params1.DisableTssBlockScan == params2.DisableTssBlockScan &&
+		params1.GasPriceMultiplier.Equal(params2.GasPriceMultiplier)
 }
 
 // confirmationParamsEqual returns true if two confirmation params are equal

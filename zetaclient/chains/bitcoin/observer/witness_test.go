@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -11,10 +12,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -60,8 +62,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
 
-	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	// fee rate of above tx is 28 sat/vB, apply gas rate multiplier to get depositor fee
+	gasRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+	// #nosec G115 always in range
+	depositorFee := common.DepositorFee(int64(28 * gasRateMultiplier))
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {
@@ -96,6 +100,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -140,6 +145,53 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
+	})
+
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
+		// load tx and modify amount to less than depositor fee
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
+
+		// mock up the input
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
+		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
+		eventExpected := &BTCInboundEvent{
+			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:    tssAddress,
+			Value:        0.0,
+			DepositorFee: depositorFee,
+			MemoBytes:    memo,
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
+			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
+		}
+
+		// mock up rpc client to return sender address
+		rpcClient := mocks.NewBitcoinClient(t)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+
+		// get BTC event
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -182,6 +234,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -228,6 +281,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -249,6 +303,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -270,6 +325,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -300,6 +356,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
@@ -323,6 +380,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -352,6 +410,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -381,12 +440,59 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
 		)
 		require.NoError(t, err)
 		require.Nil(t, event)
+	})
+
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
+		// load tx and modify amount to less than depositor fee
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
+
+		// mock up the input
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
+		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
+		eventExpected := &BTCInboundEvent{
+			FromAddress:  sender,
+			ToAddress:    tssAddress,
+			Value:        0.0,
+			DepositorFee: depositorFee,
+			MemoBytes:    memo,
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
+			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
+		}
+
+		// mock up rpc client to return sender address
+		rpcClient := mocks.NewBitcoinClient(t)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+
+		// get BTC event
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			gasRateMultiplier,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
 	})
 
 	t.Run("should return error if unable to get inscription initiator", func(t *testing.T) {
@@ -412,6 +518,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,

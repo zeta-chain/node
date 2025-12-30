@@ -129,11 +129,18 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
+	// get fee rate multiplier, fallback to default if not set in chain params
+	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
+	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
+		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
+	}
+
 	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
 		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
+		feeRateMultiplier,
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,

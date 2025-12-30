@@ -48,6 +48,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 			SafeInboundCount:  confirmation,
 			SafeOutboundCount: confirmation,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 }
 

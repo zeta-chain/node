@@ -13,8 +13,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
-
-	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 const (
@@ -66,7 +64,7 @@ type BitcoinClient interface {
 }
 
 // DepositorFeeCalculator is a function type to calculate the Bitcoin depositor fee
-type DepositorFeeCalculator func(context.Context, BitcoinClient, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
+type DepositorFeeCalculator func(context.Context, BitcoinClient, *btcjson.TxRawResult, float64, *chaincfg.Params) (float64, error)
 
 // FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/vB.
 func FeeRateToSatPerByte(rate float64) (uint64, error) {
@@ -239,6 +237,7 @@ func CalcDepositorFee(
 	ctx context.Context,
 	bitcoinClient BitcoinClient,
 	rawResult *btcjson.TxRawResult,
+	feeRateMultiplier float64,
 	netParams *chaincfg.Params,
 ) (float64, error) {
 	// use default fee for regnet
@@ -254,7 +253,7 @@ func CalcDepositorFee(
 
 	// apply gas price multiplier
 	// #nosec G115 always in range
-	feeRate = int64(float64(feeRate) * common.BTCOutboundGasPriceMultiplier)
+	feeRate = int64(float64(feeRate) * feeRateMultiplier)
 
 	return DepositorFee(feeRate), nil
 }

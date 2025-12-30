@@ -172,6 +172,7 @@ func TestZetacore_GetChainParamsForChainID(t *testing.T) {
 		ChainId:               123,
 		BallotThreshold:       sdkmath.LegacyZeroDec(),
 		MinObserverDelegation: sdkmath.LegacyZeroDec(),
+		GasPriceMultiplier:    sdkmath.LegacyZeroDec(),
 	}}
 	input := observertypes.QueryGetChainParamsForChainRequest{ChainId: 123}
 	method := "/zetachain.zetacore.observer.Query/GetChainParamsForChain"
@@ -193,6 +194,7 @@ func TestZetacore_GetChainParams(t *testing.T) {
 				ChainId:               123,
 				MinObserverDelegation: sdkmath.LegacyZeroDec(),
 				BallotThreshold:       sdkmath.LegacyZeroDec(),
+				GasPriceMultiplier:    sdkmath.LegacyZeroDec(),
 			},
 		},
 	}}

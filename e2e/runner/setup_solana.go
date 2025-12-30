@@ -203,6 +203,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 			SafeInboundCount:  32,
 			SafeOutboundCount: 32,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {

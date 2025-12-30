@@ -29,7 +29,7 @@ import (
 
 // mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
 func mockDepositFeeCalculator(fee float64, err error) common.DepositorFeeCalculator {
-	return func(_ context.Context, _ common.BitcoinClient, _ *btcjson.TxRawResult, _ *chaincfg.Params) (float64, error) {
+	return func(_ context.Context, _ common.BitcoinClient, _ *btcjson.TxRawResult, _ float64, _ *chaincfg.Params) (float64, error) {
 		return fee, err
 	}
 }
