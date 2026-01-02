@@ -120,7 +120,7 @@ func (s *Signer) SignBatch(ctx context.Context, batch TSSKeysignBatch, zetaHeigh
 	)
 
 	// calculate keysign height
-	keysignHeight, err := batch.KeysignHeight(chainID)
+	keysignHeight, err := KeysignHeight(chainID, zetaHeight)
 	if err != nil {
 		return errors.Wrap(err, "unable to calculate keysign height")
 	}

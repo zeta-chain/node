@@ -234,47 +234,47 @@ func Test_ContainsNonce(t *testing.T) {
 }
 
 func Test_KeysignHeight(t *testing.T) {
-	info := NewTSSKeysignInfo(sample.Digest32B(t), sample.Signature65B(t))
-
 	tests := []struct {
-		name        string
-		chainID     int64
-		batchNumber uint64
-		errorMsg    string
+		name       string
+		chainID    int64
+		zetaHeight int64
+		errorMsg   string
 	}{
 		{
-			name:        "max batch number and chainID, should work",
-			chainID:     mathpkg.MaxPairValue,
-			batchNumber: mathpkg.MaxPairValue - 1,
+			name:       "max zeta height bucket and chainID, should work",
+			chainID:    mathpkg.MaxPairValue,
+			zetaHeight: mathpkg.MaxPairValue*10 - 1,
 		},
 		{
-			name:        "invalid batch number too large",
-			chainID:     1,
-			batchNumber: mathpkg.MaxPairValue,
-			errorMsg:    "batch number is too large",
+			name:       "invalid zeta height zero",
+			chainID:    1,
+			zetaHeight: 0,
+			errorMsg:   fmt.Sprintf("invalid zeta height: %d", 0),
 		},
 		{
-			name:        "invalid chainID zero",
-			chainID:     0,
-			batchNumber: 0,
-			errorMsg:    "invalid chain ID: 0",
+			name:       "invalid zeta height too large",
+			chainID:    1,
+			zetaHeight: mathpkg.MaxPairValue * 10,
+			errorMsg:   fmt.Sprintf("invalid zeta height: %d", mathpkg.MaxPairValue*10),
 		},
 		{
-			name:        "invalid chainID too large",
-			chainID:     mathpkg.MaxPairValue + 1,
-			batchNumber: 0,
-			errorMsg:    fmt.Sprintf("invalid chain ID: %d", mathpkg.MaxPairValue+1),
+			name:       "invalid chainID zero",
+			chainID:    0,
+			zetaHeight: 1,
+			errorMsg:   "invalid chain ID: 0",
+		},
+		{
+			name:       "invalid chainID too large",
+			chainID:    mathpkg.MaxPairValue + 1,
+			zetaHeight: 1,
+			errorMsg:   fmt.Sprintf("invalid chain ID: %d", mathpkg.MaxPairValue+1),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// ARRANGE
-			batch := NewTSSKeysignBatch()
-			batch.AddKeysignInfo(tc.batchNumber*batchSize, *info)
-
 			// ACT
-			height, err := batch.KeysignHeight(tc.chainID)
+			height, err := KeysignHeight(tc.chainID, tc.zetaHeight)
 
 			// ASSERT
 			if tc.errorMsg != "" {
