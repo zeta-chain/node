@@ -129,7 +129,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		// #nosec G115 positive
 		interval           = uint64(s.observer.ChainParams().OutboundScheduleInterval)
 		scheduleLookahead  = s.observer.ChainParams().OutboundScheduleLookahead
-		scheduleLookback   = uint64(float64(scheduleLookahead) * constant.OutboundLookbackFactor)
+		maxNonceOffset     = uint64(float64(scheduleLookahead) * constant.MaxNonceOffsetFactor)
 		needsProcessingCtr = 0
 	)
 
@@ -156,7 +156,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		case params.ReceiverChainId != chainID:
 			logger.Error().Msg("chain id mismatch")
 			continue
-		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+scheduleLookback:
+		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+maxNonceOffset:
 			return fmt.Errorf(
 				"nonce %d is too high (%s). Earliest nonce %d",
 				params.TssNonce,

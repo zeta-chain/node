@@ -140,10 +140,10 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 		interval  = uint64(t.observer.ChainParams().OutboundScheduleInterval)
 		lookahead = t.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
-		lookback = uint64(float64(lookahead) * constant.OutboundLookbackFactor)
+		maxNonceOffset = uint64(float64(lookahead) * constant.MaxNonceOffsetFactor)
 
 		firstNonce = cctxs[0].GetCurrentOutboundParam().TssNonce
-		maxNonce   = firstNonce + lookback
+		maxNonce   = firstNonce + maxNonceOffset
 	)
 
 	for i, cctx := range cctxs {

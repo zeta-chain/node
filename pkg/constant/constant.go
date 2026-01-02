@@ -44,9 +44,21 @@ const (
 	// DefaultAppMempoolSize is the default size of ZetaChain mempool
 	DefaultAppMempoolSize = 3000
 
-	// OutboundLookbackFactor is the factor to determine how many nonces to look back to not miss older pending cctxs
-	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
-	// the scheduler should pick up and process any pending cctx with nonce <= 880 (1000 - 120 * 1.0).
-	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	OutboundLookbackFactor = 1.0
+	// MaxNonceOffsetFactor is the factor to determine the maximum nonce offset between first pending CCTX and the CCTX being scheduled.
+	// By setting a maximum nonce offset, the CCTX scheduler will conditionally hold on and wait for older pending CCTXs to be processed
+	// before scheduling higher nonce CCTXs, to avoid missing any pending CCTXs.
+	//
+	// The missed pending CCTXs situation is like this:
+	//   - Pending nonces: [1000, 1020)
+	//   - Pending  CCTXs: [979, 980, 981, 982, 1000, 1001, ..., 1019], where 979 - 982 are missed.
+	//   - OutboundScheduleLookahead == 20
+	//   - MaxNonceOffsetFactor == 1.0, results in max nonce offset = 20 * 1.0 = 20
+	//
+	// In this case, the scheduler
+	//   - should process CCTXs with nonces [979, 980, 981, 982] because they are missed pending CCTXs.
+	//   - should NOT process CCTXs with nonces [1000, 1001, ..., 1019] because their nonces are much
+	//     higher that of the first pending CCTX (1000 - 979 > 20).
+	//
+	// NOTE: 1.0 means use the same value as lookahead for the maximum nonce offset.
+	MaxNonceOffsetFactor = 1.0
 )

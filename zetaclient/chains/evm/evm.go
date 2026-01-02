@@ -128,7 +128,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		chainID   = e.observer.Chain().ChainId
 		lookahead = e.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
-		outboundScheduleLookBack = uint64(float64(lookahead) * constant.OutboundLookbackFactor)
+		maxNonceOffset = uint64(float64(lookahead) * constant.MaxNonceOffsetFactor)
 	)
 
 	cctxList, err := e.observer.ZetaRepo().GetPendingCCTXs(ctx)
@@ -155,7 +155,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		switch {
 		case params.ReceiverChainId != chainID:
 			return fmt.Errorf("chain id mismatch: want %d, got %d", chainID, params.ReceiverChainId)
-		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+outboundScheduleLookBack:
+		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+maxNonceOffset:
 			return fmt.Errorf(
 				"nonce %d is too high (%s). Earliest nonce %d",
 				params.TssNonce,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -25,14 +26,6 @@ type Sui struct {
 	observer  *observer.Observer
 	signer    *signer.Signer
 }
-
-const (
-	// outboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
-	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
-	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
-	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	outboundLookbackFactor = 1.0
-)
 
 // New Sui observer-signer constructor.
 func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *Sui {
@@ -140,10 +133,10 @@ func (s *Sui) scheduleCCTX(ctx context.Context) error {
 		interval  = uint64(s.observer.ChainParams().OutboundScheduleInterval)
 		lookahead = s.observer.ChainParams().OutboundScheduleLookahead
 		// #nosec G115 always in range
-		lookback = uint64(float64(lookahead) * outboundLookbackFactor)
+		maxNonceOffset = uint64(float64(lookahead) * constant.MaxNonceOffsetFactor)
 
 		firstNonce = cctxList[0].GetCurrentOutboundParam().TssNonce
-		maxNonce   = firstNonce + lookback
+		maxNonce   = firstNonce + maxNonceOffset
 	)
 
 	for i, cctx := range cctxList {
