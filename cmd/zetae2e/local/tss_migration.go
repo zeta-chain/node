@@ -86,9 +86,9 @@ func triggerTSSMigration(
 	numberOfTssToGenerate := 1
 	expectedTssCount := numberOfTssToGenerate + len(tssList.TssList)
 
-	// Generate 2 new TSS addresses
+	// Generate new TSS address(es)
 	for i := 0; i < numberOfTssToGenerate; i++ {
-		logger.Print("🔑 generating TSS %d/2", i+1)
+		logger.Print("🔑 generating TSS %d/%d", i+1, numberOfTssToGenerate)
 
 		response, err := deployerRunner.CctxClient.LastZetaHeight(
 			deployerRunner.Ctx,
