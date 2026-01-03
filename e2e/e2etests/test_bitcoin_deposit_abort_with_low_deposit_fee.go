@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"fmt"
+
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/stretchr/testify/require"
 
@@ -29,6 +31,11 @@ func TestBitcoinDepositAndAbortWithLowDepositFee(r *runner.E2ERunner, args []str
 	require.Equal(r, cctx.InboundParams.Amount.Uint64(), uint64(0))
 	require.Equal(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(0))
 
-	// check cctx error
+	// check cctx status and error message
 	require.EqualValues(r, crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.InboundParams.Status)
+	utils.RequireCCTXErrorMessages(
+		r,
+		&cctx,
+		fmt.Sprintf("deposited amount %v is less than depositor fee", depositAmount),
+	)
 }

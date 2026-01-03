@@ -253,7 +253,7 @@ jobs:
           - make-target: "start-upgrade-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
-          - make-target: "start-upgrade-test-zetaclient"
+          - make-target: "start-upgrade-test-zetaclient-light"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TEST_ZETACLIENT == 'true' }}
           - make-target: "start-upgrade-test-light"

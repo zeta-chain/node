@@ -9,11 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	clientauthz "github.com/zeta-chain/node/zetaclient/authz"
-	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 )
 
 // GetInboundVoteMessage returns a new MsgVoteInbound
@@ -56,18 +54,6 @@ func GetInboundVoteMessage(
 		types.ConfirmationMode_SAFE,
 	)
 	return msg
-}
-
-// GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chain chains.Chain) float64 {
-	switch chain.Consensus {
-	case chains.Consensus_ethereum:
-		return clientcommon.EVMOutboundGasPriceMultiplier
-	case chains.Consensus_bitcoin:
-		return clientcommon.BTCOutboundGasPriceMultiplier
-	default:
-		return clientcommon.DefaultGasPriceMultiplier
-	}
 }
 
 // WrapMessageWithAuthz wraps a message with an authz message

@@ -149,8 +149,12 @@ func (ob *Observer) ObserveGasPrice(ctx context.Context) error {
 	// There's no concept of priority fee in Sui.
 	const priorityFee = 0
 
-	logger := ob.Logger().Chain
-	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, priorityFee, epoch)
+	var (
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
+
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, multiplier, priorityFee, epoch)
 	if err != nil {
 		return err
 	}

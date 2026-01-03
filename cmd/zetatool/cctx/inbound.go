@@ -128,13 +128,19 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
+
+	// get fee rate multiplier, fallback to default if not set in chain params
+	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
+	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
+		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
+	}
 
 	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
 		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
+		feeRateMultiplier,
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,
@@ -162,7 +168,6 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
 
 	evmClient, err := zetatoolchains.GetEvmClient(ctx, inboundChain)
 	if err != nil {
@@ -237,13 +242,14 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			}
 			msg = zetatoolchains.GasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
 		}
-	case compareAddress(tx.To().Hex(), chainParams.GatewayAddress):
+	default:
 		{
 			gatewayAddr := ethcommon.HexToAddress(chainParams.GatewayAddress)
 			gateway, err := gatewayevm.NewGatewayEVM(gatewayAddr, evmClient)
 			if err != nil {
 				return fmt.Errorf("failed to get gateway contract: %w", err)
 			}
+			foundLog := false
 			for _, log := range receipt.Logs {
 				if log == nil || log.Address != gatewayAddr {
 					continue
@@ -251,6 +257,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 				eventDeposit, err := gateway.ParseDeposited(*log)
 				if err == nil {
 					msg = zetatoolchains.DepositInboundVoteV2(eventDeposit, inboundChain.ChainId, zetaChainID)
+					foundLog = true
 					break
 				}
 				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
@@ -260,23 +267,21 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 						inboundChain.ChainId,
 						zetaChainID,
 					)
+					foundLog = true
 					break
 				}
 				eventCall, err := gateway.ParseCalled(*log)
 				if err == nil {
 					msg = zetatoolchains.CallInboundVoteV2(eventCall, inboundChain.ChainId, zetaChainID)
+					foundLog = true
 					break
 				}
 			}
+			if !foundLog {
+				return fmt.Errorf("no valid gateway event found for tx %s", inboundHash)
+			}
 		}
-	default:
-		return fmt.Errorf(
-			"irrelevant transaction , not sent to any known address txHash: %s to address %s",
-			inboundHash,
-			tx.To(),
-		)
 	}
-
 	c.CCTXIdentifier = msg.Digest()
 	c.updateInboundConfirmation(isConfirmed)
 	return nil
@@ -313,7 +318,6 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	createConfirmationParamsIfAbsent(chainParams)
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
@@ -378,16 +382,4 @@ func compareAddress(a string, b string) bool {
 	lowerA := strings.ToLower(a)
 	lowerB := strings.ToLower(b)
 	return strings.EqualFold(lowerA, lowerB)
-}
-
-// createConfirmationParamsIfAbsent sets the confirmation params if they are not already set
-// TODO: Remove this once the confirmation migration is done
-// https://github.com/zeta-chain/node/issues/3466
-func createConfirmationParamsIfAbsent(chainParams *types.ChainParams) {
-	if chainParams != nil && chainParams.ConfirmationParams == nil {
-		chainParams.ConfirmationParams = &types.ConfirmationParams{
-			SafeInboundCount:  chainParams.ConfirmationCount,
-			SafeOutboundCount: chainParams.ConfirmationCount,
-		}
-	}
 }

@@ -15,8 +15,12 @@ func (ob *Observer) ObserveGasPrice(ctx context.Context) error {
 	// There's no concept of priority fee in TON.
 	const priorityFee = 0
 
-	logger := ob.Logger().Chain
-	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, priorityFee, block)
+	var (
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
+
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, multiplier, priorityFee, block)
 	if err != nil {
 		return err
 	}

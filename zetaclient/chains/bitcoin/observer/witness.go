@@ -38,6 +38,7 @@ func GetBtcEventWithWitness(
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
+	feeRateMultiplier float64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
@@ -80,7 +81,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, feeRateMultiplier, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
@@ -88,11 +89,15 @@ func GetBtcEventWithWitness(
 	// deduct depositor fee
 	// to allow developers to track failed deposit caused by insufficient depositor fee,
 	// the error message will be forwarded to zetacore to register a failed CCTX
-	status := types.InboundStatus_SUCCESS
+	var (
+		status       = types.InboundStatus_SUCCESS
+		errorMessage string
+	)
 	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
 	if err != nil {
 		amount = 0
 		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		errorMessage = err.Error()
 		logger.Error().Err(err).Fields(lf).Msg("unable to deduct depositor fee")
 	}
 
@@ -124,6 +129,7 @@ func GetBtcEventWithWitness(
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
 		Status:       status,
+		ErrorMessage: errorMessage,
 	}, nil
 }
 

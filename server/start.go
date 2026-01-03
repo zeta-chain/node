@@ -163,6 +163,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Uint64(server.FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 
+	//nolint:lll
 	cmd.Flags().Uint(server.FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().
 		Uint64(server.FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune CometBFT blocks")
@@ -193,10 +194,15 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Uint64(srvflags.JSONRPCGasCap, cosmosevmserverconfig.DefaultGasCap, "Sets a cap on gas that can be used in eth_call/estimateGas unit is aatom (0=infinite)")
 
+	//nolint:lll
 	cmd.Flags().
 		Bool(srvflags.JSONRPCAllowInsecureUnlock, cosmosevmserverconfig.DefaultJSONRPCAllowInsecureUnlock, "Allow insecure account unlocking when account-related RPCs are exposed by http")
+
+	//nolint:lll
 	cmd.Flags().
 		Float64(srvflags.JSONRPCTxFeeCap, cosmosevmserverconfig.DefaultTxFeeCap, "Sets a cap on transaction fee that can be sent via the RPC APIs (1 = default 1 evmos)")
+
+	//nolint:lll
 	cmd.Flags().
 		Int32(srvflags.JSONRPCFilterCap, cosmosevmserverconfig.DefaultFilterCap, "Sets the global cap for total number of filters that can be created")
 	cmd.Flags().
@@ -208,6 +214,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Bool(srvflags.JSONRPCAllowUnprotectedTxs, cosmosevmserverconfig.DefaultAllowUnprotectedTxs, "Allow for unprotected (non EIP155 signed) transactions to be submitted via the node's RPC when the global parameter is disabled")
 
+	//nolint:lll
 	cmd.Flags().
 		Int32(srvflags.JSONRPCLogsCap, cosmosevmserverconfig.DefaultLogsCap, "Sets the max number of results can be returned from single `eth_getLogs` query")
 	cmd.Flags().
@@ -215,15 +222,22 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Int(srvflags.JSONRPCMaxOpenConnections, cosmosevmserverconfig.DefaultMaxOpenConnections, "Sets the maximum number of simultaneous connections for the server listener")
 
+	//nolint:lll
 	cmd.Flags().Bool(srvflags.JSONRPCEnableIndexer, false, "Enable the custom tx indexer for json-rpc")
 	cmd.Flags().Bool(srvflags.JSONRPCEnableMetrics, false, "Define if EVM rpc metrics server should be enabled")
 
 	cmd.Flags().
 		String(srvflags.EVMTracer, cosmosevmserverconfig.DefaultEVMTracer, "the EVM tracer type to collect execution traces from the EVM transaction execution (json|struct|access_list|markdown)")
+
+	//nolint:lll
 	cmd.Flags().
 		Uint64(srvflags.EVMMaxTxGasWanted, cosmosevmserverconfig.DefaultMaxTxGasWanted, "the gas wanted for each eth tx returned in ante handler in check tx mode")
+
+	//nolint:lll
 	cmd.Flags().
 		Bool(srvflags.EVMEnablePreimageRecording, cosmosevmserverconfig.DefaultEnablePreimageRecording, "Enables tracking of SHA3 preimages in the EVM (not implemented yet)")
+
+	//nolint:lll
 	cmd.Flags().
 		Uint64(srvflags.EVMChainID, cosmosevmserverconfig.DefaultEVMChainID, "the EIP-155 compatible replay protection chain ID")
 

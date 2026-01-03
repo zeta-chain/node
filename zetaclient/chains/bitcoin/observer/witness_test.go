@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -12,10 +13,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -61,8 +62,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
 
-	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	// fee rate of above tx is 28 sat/vB, apply gas rate multiplier to get depositor fee
+	gasRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+	// #nosec G115 always in range
+	depositorFee := common.DepositorFee(int64(28 * gasRateMultiplier))
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {
@@ -97,6 +100,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -141,6 +145,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -162,6 +167,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
@@ -171,6 +177,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
 		}
 
 		// mock up rpc client to return sender address
@@ -184,6 +191,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -226,6 +234,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -272,6 +281,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -293,6 +303,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -314,6 +325,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -344,6 +356,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
@@ -367,6 +380,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -396,6 +410,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -425,6 +440,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -446,6 +462,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  sender,
 			ToAddress:    tssAddress,
@@ -455,6 +472,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
 		}
 
 		// mock up rpc client to return sender address
@@ -468,6 +486,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -499,6 +518,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			*tx,
 			tssAddress,
 			blockNumber,
+			gasRateMultiplier,
 			log.Logger,
 			net,
 			feeCalculator,
@@ -506,47 +526,4 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.ErrorContains(t, err, "rpc error")
 		require.Nil(t, event)
 	})
-}
-
-func Test_DeductDepositorFee(t *testing.T) {
-	tests := []struct {
-		name         string
-		deposited    float64
-		depositorFee float64
-		expected     float64
-		errMsg       string
-	}{
-		{
-			name:         "deduct depositor fee successfully",
-			deposited:    0.012,
-			depositorFee: 0.002,
-			expected:     0.01,
-		},
-		{
-			name:         "remaining zero amount after deduction",
-			deposited:    0.012,
-			depositorFee: 0.012,
-			expected:     0,
-		},
-		{
-			name:         "fail if deposited amount is lower than depositor fee",
-			deposited:    0.012,
-			depositorFee: 0.013,
-			expected:     0,
-			errMsg:       "less than depositor fee",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := DeductDepositorFee(tt.deposited, tt.depositorFee)
-			require.Equal(t, tt.expected, result)
-
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-				return
-			}
-			require.NoError(t, err)
-		})
-	}
 }

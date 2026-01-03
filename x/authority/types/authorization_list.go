@@ -25,11 +25,9 @@ var (
 	}
 	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
-		"/zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus",
-		"/zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFunds",
 		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
 		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
-		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",
+		"/zetachain.zetacore.crosschain.MsgWhitelistAsset",
 		"/zetachain.zetacore.fungible.MsgUpdateContractBytecode",
 		"/zetachain.zetacore.fungible.MsgUpdateSystemContract",
 		"/zetachain.zetacore.fungible.MsgUpdateGatewayContract",

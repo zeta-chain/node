@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## Unreleased
+## Release ReForge
+- zetacored: v37.0.0
+- zetaclientd: v38.0.0
+
+### Breaking Changes
+
+* A new field `gas_price_multiplier` is added to the chain parameters, impacting the query API `/zeta-chain/observer/get_chain_params` and the cosmos message `MsgUpdateChainParams`.
+The `zetacored` binary must be upgraded to trigger chain parameters data migration before running the new `zetaclientd` binary.
 
 ### Features
 
@@ -11,11 +18,7 @@
 * [4492](https://github.com/zeta-chain/node/pull/4492) - add migration script to set authorization for MsgRemoveObserver
 * [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
 * [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
-
-### Tests
-
-* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
-* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
+* [4485](https://github.com/zeta-chain/node/pull/4485) - move gas price multiplier to zetacore chain parameters
 
 ### Fixes
 
@@ -36,8 +39,10 @@
 
 * [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
 * [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
 * [4488](https://github.com/zeta-chain/node/pull/4488) - add sui to tss migration tests
 * [4491](https://github.com/zeta-chain/node/pull/4491) - add ton to tss migration tests
+* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
 
 ## v37.0.0
 
@@ -144,6 +149,69 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
 * [4291](https://github.com/zeta-chain/node/pull/4291) - adjust inbound retry gas limit and stop tx broadcasting on mempool congestion
 
+## Unreleased
+
+### Breaking Changes
+
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
+* `confirmation_count` in the chain params has been entirely removed. It was made deprecated in v28. Use `confirmation_params` instead.
+* The message `MsgWhitelistERC20` has been renamed to `MsgWhitelistAsset`. The message parameters remain unchanged.
+  * The event `EventERC20Whitelist` has been renamed to `EventAssetWhitelist`. The event parameters remain unchanged.
+
+### Features
+
+* [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+* [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to observe inbound events from Sui original gateway package
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4157](https://github.com/zeta-chain/node/pull/4157) - multiple evm calls in single tx
+* [4211](https://github.com/zeta-chain/node/pull/4211) - provide error information in cctx when Bitcoin deposit fail
+* [4218](https://github.com/zeta-chain/node/pull/4218) - enable NoAssetCall from Bitcoin chain
+* [3834](https://github.com/zeta-chain/node/pull/3734) - refund a portion of remaining unused tokens to user
+
+### Refactor
+
+* [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4192](https://github.com/zeta-chain/node/pull/4192) - remove deprecated code in observer module, including `confirmation_count`
+* [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
+* [4203](https://github.com/zeta-chain/node/pull/4203) - rename `whitelistERC20` into `whitelistAsset`
+* [4199](https://github.com/zeta-chain/node/pull/4199) - remove `MsgUpdateERC20CustodyPauseStatus` and `MsgMigrateERC20CustodyFunds`
+* [4205](https://github.com/zeta-chain/node/pull/4205) - remove index field in ballot
+* [4200](https://github.com/zeta-chain/node/pull/4200) - remove `LastBlockHeight` state variable
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4210](https://github.com/zeta-chain/node/pull/4210) - skip writing config file to the filesystem when updating consensus timeout deltas
+* [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
+
+### Fixes
+
+* [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
+* [4116](https://github.com/zeta-chain/node/pull/4116) - remove confirmation mode from outbound and inbound digest
+* [4111](https://github.com/zeta-chain/node/pull/4111) - cancel Solana outbound if transaction size is too large
+* [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
+* [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
+* [4169](https://github.com/zeta-chain/node/pull/4169) - unpack revert message from Bitcoin memo without considering `CallOnRevert` flag
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4197](https://github.com/zeta-chain/node/pull/4197) - re-check for finalized ballot when executing inbound vote to create cctx
+* [4217](https://github.com/zeta-chain/node/pull/4217) - remove ZetaChain chain ID from GasStabilityPoolBalances query
+* [4251](https://github.com/zeta-chain/node/pull/4251) - check test contracts deployment in E2E tests
+
+### Tests
+
+* [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
+* [4113](https://github.com/zeta-chain/node/pull/4113) - fix Solana flaky depositAndCall e2e tests in live networks
+* [4142](https://github.com/zeta-chain/node/pull/4142) - fix Solana flaky SPL deposit e2e test in live networks
+* [4158](https://github.com/zeta-chain/node/pull/4158) - have e2e tests interact with pre-deployed example dApp contract
+* [4165](https://github.com/zeta-chain/node/pull/4165) - fix Sui flaky depositAndCall e2e test in live networks
+* [4177](https://github.com/zeta-chain/node/pull/4177) - add an E2E test to verify depositAndCall with high gas consumption
+* [4310](https://github.com/zeta-chain/node/pull/4310) - add zetaclient only upgrade tests
+
+## v36.0.0
+
+### Features
+
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+
 ## v33.0.0
 
 ### Features
@@ -155,6 +223,8 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 * [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
+* [4068](https://github.com/zeta-chain/node/pull/4068) - add support for hostname in addition to public IP for zetaclient to connect to zetacore
+* [4087](https://github.com/zeta-chain/node/pull/4087) - re-enable Sui authenticated call and adopt MessageContext ID as a gateway dynamic field
 
 ### Fixes
 
@@ -168,6 +238,7 @@ Also EnableSolanaAddressLookupTable feature flag should be set.
 * [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 * [4067](https://github.com/zeta-chain/node/pull/4067) - disable sui authenticated call temporarily until gateway upgrade
+* [4072](https://github.com/zeta-chain/node/pull/4072) - improve rate limiter robustness and code quality
 
 ### Refactor
 

@@ -64,7 +64,7 @@ message EventCCTXGasPriceIncreased {
   string additional_fees = 3;
 }
 
-message EventERC20Whitelist {
+message EventAssetWhitelist {
   string whitelist_cctx_index = 1;
   string zrc20_address = 2;
 }

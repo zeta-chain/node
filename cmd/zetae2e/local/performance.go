@@ -165,7 +165,7 @@ func ethereumWithdrawPerformanceRoutine(
 		}
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := r.DepositEtherDeployer()
+		txEtherDeposit := r.DepositEtherToDeployer()
 		r.WaitForMinedCCTX(txEtherDeposit)
 
 		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")

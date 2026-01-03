@@ -392,6 +392,15 @@ func (zts *ZetaTxServer) UpdateChainParams(chainParams *observertypes.ChainParam
 	return err
 }
 
+// UpdateGatewayGasLimit updates the gateway gas limit
+func (zts *ZetaTxServer) UpdateGatewayGasLimit(gasLimit uint64) error {
+	_, err := zts.BroadcastTx(utils.OperationalPolicyName, fungibletypes.NewMsgUpdateGatewayGasLimit(
+		zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		gasLimit,
+	))
+	return err
+}
+
 // EnableHeaderVerification enables the header verification for the given chain IDs
 func (zts *ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
 	// retrieve account

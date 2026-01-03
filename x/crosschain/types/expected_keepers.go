@@ -216,6 +216,7 @@ type FungibleKeeper interface {
 		liquidityCap *sdkmath.Uint,
 	) (ethcommon.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
+	DepositChainGasToken(ctx sdk.Context, chainID int64, amount *big.Int, receiver ethcommon.Address) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	LegacyZETADepositAndCallContract(ctx sdk.Context,
 		sender ethcommon.Address,
@@ -232,6 +233,7 @@ type FungibleKeeper interface {
 		remainingAmount *big.Int,
 		data []byte,
 		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
+	GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error)
 }
 
 type AuthorityKeeper interface {

@@ -31,10 +31,14 @@ import (
 
 func resolveRPC(chain chains.Chain, cfg *config.Config) string {
 	return map[chains.Network]string{
-		chains.Network_eth:     cfg.EthereumRPC,
-		chains.Network_base:    cfg.BaseRPC,
-		chains.Network_polygon: cfg.PolygonRPC,
-		chains.Network_bsc:     cfg.BscRPC,
+		chains.Network_eth:        cfg.EthereumRPC,
+		chains.Network_base:       cfg.BaseRPC,
+		chains.Network_polygon:    cfg.PolygonRPC,
+		chains.Network_bsc:        cfg.BscRPC,
+		chains.Network_arbitrum:   cfg.ArbitrumRPC,
+		chains.Network_optimism:   cfg.OptimismRPC,
+		chains.Network_avalanche:  cfg.AvalancheRPC,
+		chains.Network_worldchain: cfg.WorldRPC,
 	}[chain.Network]
 }
 

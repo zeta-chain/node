@@ -92,7 +92,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	utils.RequireTxSuccessful(r, receipt)
 
 	// Check deposit revert when paused
-	depositHash := r.DepositEtherDeployer()
+	depositHash := r.DepositEtherToDeployer()
 
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, depositHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)

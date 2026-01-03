@@ -34,8 +34,13 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get block number")
 	}
 
-	logger := ob.Logger().Chain
-	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice.Uint64(), priorityFee, blockNum)
+	var (
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
+
+	// #nosec G115 checked in range
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice.Uint64(), multiplier, priorityFee, blockNum)
 	return err
 }
 

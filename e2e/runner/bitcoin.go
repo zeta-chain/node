@@ -26,6 +26,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
@@ -264,7 +265,7 @@ func (r *E2ERunner) WithdrawBTC(
 	}
 
 	// withdraw 'amount' of BTC through ZEVM gateway
-	tx, err := r.GatewayZEVM.Withdraw(
+	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		[]byte(receiverStr),
 		amount,
@@ -552,8 +553,16 @@ func (r *E2ERunner) WaitForBitcoinTxInclusion(
 
 // BitcoinCalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
 func (r *E2ERunner) BitcoinCalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
+	// query chain params
+	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: r.GetBitcoinChainID()}
+	resp, err := r.Clients.Zetacore.Observer.GetChainParamsForChain(r.Ctx, query)
+	require.NoError(r, err)
+
+	// get fee rate multiplier
+	feeRateMultiplier := resp.ChainParams.GasPriceMultiplier.MustFloat64()
+
 	// calculate depositor fee
-	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, r.BitcoinParams)
+	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, feeRateMultiplier, r.BitcoinParams)
 	require.NoError(r, err)
 
 	// convert depositor fee to satoshis

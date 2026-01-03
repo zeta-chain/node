@@ -7,10 +7,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"golang.org/x/mod/semver"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
@@ -31,47 +29,29 @@ func GetDefaultUpgradeHandlerVersion() string {
 	return semver.Major(vVersion)
 }
 
-func createUpgrades(chainID string) []upgradeTrackerItem {
-	addErc20ModuleUpgrade := upgradeTrackerItem{
-		index: 1752528615,
-		storeUpgrade: &storetypes.StoreUpgrades{
-			Added: []string{erc20types.ModuleName},
-		},
-		// TODO: enable back IBC
-		// https://github.com/zeta-chain/node/issues/2573
-		//{
-		//	index: <CURRENT TIMESTAMP>,
-		//	storeUpgrade: &storetypes.StoreUpgrades{
-		//		Added: []string{
-		//			capabilitytypes.ModuleName,
-		//			ibcexported.ModuleName,
-		//			ibctransfertypes.ModuleName,
-		//		},
-		//	},
-		//},
-		//{
-		//	index: <CURRENT TIMESTAMP>,
-		//	storeUpgrade: &storetypes.StoreUpgrades{
-		//		Added: []string{ibccrosschaintypes.ModuleName},
-		//	},
-		//},
-	}
-	upgrades := make([]upgradeTrackerItem, 0)
-	if chainID != "" {
-		evmChaindID, err := chains.CosmosToEthChainID(chainID)
-		if err != nil {
-			panic("invalid chain ID: " + chainID + ", error: " + err.Error())
-		}
-		if evmChaindID == chains.ZetaChainMainnet.ChainId {
-			return append(upgrades, addErc20ModuleUpgrade)
-		}
-	}
-	return upgrades
-}
-
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
-		upgrades:     createUpgrades(app.ChainID()),
+		upgrades: []upgradeTrackerItem{
+			// TODO: enable back IBC
+			// these commented lines allow for the IBC modules to be added to the upgrade tracker
+			// https://github.com/zeta-chain/node/issues/2573
+			//{
+			//	index: <CURRENT TIMESTAMP>,
+			//	storeUpgrade: &storetypes.StoreUpgrades{
+			//		Added: []string{
+			//			capabilitytypes.ModuleName,
+			//			ibcexported.ModuleName,
+			//			ibctransfertypes.ModuleName,
+			//		},
+			//	},
+			//},
+			//{
+			//	index: <CURRENT TIMESTAMP>,
+			//	storeUpgrade: &storetypes.StoreUpgrades{
+			//		Added: []string{ibccrosschaintypes.ModuleName},
+			//	},
+			//},
+		},
 		stateFileDir: DefaultNodeHome,
 	}
 

@@ -22,6 +22,8 @@ import (
 
 // SetupTON setups TON deployer and deploys Gateway contract
 func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
+	r.Logger.Print("⚙️ Setting up TON network")
+
 	require.NotEmpty(r, faucetURL, "TON faucet url is empty")
 	require.NotNil(r, r.Clients.TON, "TON client is not initialized")
 
@@ -96,7 +98,6 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	chainParams := &observertypes.ChainParams{
 		ChainId:                     chainID,
-		ConfirmationCount:           1,
 		GasPriceTicker:              5,
 		InboundTicker:               5,
 		OutboundTicker:              5,
@@ -113,6 +114,7 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {

@@ -30,7 +30,6 @@ func NewFromConfig(
 	hotKey := cfg.AuthzHotkey
 
 	chainIP := cfg.ZetaCoreURL
-
 	kb, _, err := keys.GetKeyringKeybase(*cfg, hotkeyPassword)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyring base")
