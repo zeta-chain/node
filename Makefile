@@ -166,7 +166,7 @@ devnet-fork-upgrade:
 
 download-snapshot:
 	@echo "--> Downloading and caching snapshot..."
-	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1)
+	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1) --force
 
 ###############################################################################
 ###                                 Linting            	                    ###
@@ -475,6 +475,7 @@ start-upgrade-test-zetaclient-light: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=60 && \
 	export E2E_ARGS="--upgrade-contracts" && \
+	export USE_ZETAE2E_ANTE=true && \
 	export UPGRADE_ZETACLIENT_ONLY=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient -f docker-compose-upgrade.yml up -d
 
@@ -513,7 +514,8 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 start-connector-migration-test: zetanode-upgrade
 	@echo "--> Starting migration test for v2 connector contracts"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
+	export UPGRADE_HEIGHT=60 && \
+	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-connector-migration --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 

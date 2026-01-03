@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -166,6 +167,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
@@ -175,6 +177,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
 		}
 
 		// mock up rpc client to return sender address
@@ -459,6 +462,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		depositedAmount := tx.Vout[0].Value
 		eventExpected := &BTCInboundEvent{
 			FromAddress:  sender,
 			ToAddress:    tssAddress,
@@ -468,6 +472,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
 		}
 
 		// mock up rpc client to return sender address
@@ -521,47 +526,4 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.ErrorContains(t, err, "rpc error")
 		require.Nil(t, event)
 	})
-}
-
-func Test_DeductDepositorFee(t *testing.T) {
-	tests := []struct {
-		name         string
-		deposited    float64
-		depositorFee float64
-		expected     float64
-		errMsg       string
-	}{
-		{
-			name:         "deduct depositor fee successfully",
-			deposited:    0.012,
-			depositorFee: 0.002,
-			expected:     0.01,
-		},
-		{
-			name:         "remaining zero amount after deduction",
-			deposited:    0.012,
-			depositorFee: 0.012,
-			expected:     0,
-		},
-		{
-			name:         "fail if deposited amount is lower than depositor fee",
-			deposited:    0.012,
-			depositorFee: 0.013,
-			expected:     0,
-			errMsg:       "less than depositor fee",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := DeductDepositorFee(tt.deposited, tt.depositorFee)
-			require.Equal(t, tt.expected, result)
-
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-				return
-			}
-			require.NoError(t, err)
-		})
-	}
 }

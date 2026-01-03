@@ -21,5 +21,10 @@ replace (
 	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250808111716-1882abec3ec9
 )
 
+// protocol-contracts was renamed to protocol-contracts-evm; redirect to old module path
+replace (
+	github.com/zeta-chain/protocol-contracts-evm => github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870
+)
+
 // uncomment this for local development/testing/debugging
 // replace github.com/zeta-chain/node => ../..

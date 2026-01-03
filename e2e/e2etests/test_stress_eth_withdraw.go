@@ -107,7 +107,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 				auth.Nonce = big.NewInt(int64(currentNonce))
 
 				// Send withdrawal transaction
-				tx, err := r.GatewayZEVM.Withdraw(
+				tx, err := r.GatewayZEVM.Withdraw0(
 					&auth,
 					r.EVMAddress().Bytes(),
 					withdrawalAmount,

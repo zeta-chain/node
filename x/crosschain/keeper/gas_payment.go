@@ -128,7 +128,9 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	}
 
 	// calculate the final gas fee
-	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
+	gasFee := gas.GasLimit.Mul(gas.GasPrice)
+	// add a flat protocol fee which paid for every cctx.
+	outTxGasFee := gasFee.Add(gas.ProtocolFlatFee)
 
 	// subtract the withdraw fee from the input amount
 	if outTxGasFee.GT(inputAmount) {
@@ -150,6 +152,9 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
+
+	// Gas fee paid by the user in Gas ERC20
+	cctx.GetCurrentOutboundParam().UserGasFeePaid = gasFee
 
 	return nil
 }
@@ -190,7 +195,8 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
 	}
 
-	outTxGasFee := gas.GasLimit.Mul(gas.GasPrice).Add(gas.ProtocolFlatFee)
+	gasFee := gas.GasLimit.Mul(gas.GasPrice)
+	outTxGasFee := gasFee.Add(gas.ProtocolFlatFee)
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, chainID)
 	if !found {
@@ -310,6 +316,9 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
+	// Gas fee paid by the user in Gas ERC20
+	cctx.GetCurrentOutboundParam().UserGasFeePaid = gasFee
+
 	return nil
 }
 
@@ -347,7 +356,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		)
 	}
 
-	// get the gas price
+	// get the gas price, using outbound chainID
 	gasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return cosmoserrors.Wrapf(types.ErrUnableToGetGasPrice,
@@ -372,6 +381,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 	// get the gas fee in gas token
 	gasLimit := sdkmath.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
+	// Gas fee in outbound chain's gas token
 	outTxGasFee := gasLimit.Mul(gasPrice)
 
 	// get the gas fee in Zeta using system uniswapv2 pool wzeta/gasZRC20 and adding the protocol fee
@@ -446,6 +456,9 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	} else {
 		cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 	}
+
+	// zeta token paid by the user is swapped for gas ZRC20 and burned to pay for fee.
+	cctx.GetCurrentOutboundParam().UserGasFeePaid = sdkmath.NewUintFromBigInt(outTxGasFeeInZeta)
 
 	return nil
 }

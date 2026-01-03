@@ -6,7 +6,6 @@ import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
 import "zetachain/zetacore/crosschain/gas_price.proto";
 import "zetachain/zetacore/crosschain/inbound_hash_to_cctx.proto";
 import "zetachain/zetacore/crosschain/inbound_tracker.proto";
-import "zetachain/zetacore/crosschain/last_block_height.proto";
 import "zetachain/zetacore/crosschain/outbound_tracker.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
@@ -93,18 +92,6 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/protocolFee";
   }
 
-  // Queries a lastBlockHeight by index.
-  rpc LastBlockHeight(QueryGetLastBlockHeightRequest)
-      returns (QueryGetLastBlockHeightResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/lastBlockHeight/{index}";
-  }
-
-  // Queries a list of lastBlockHeight items.
-  rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest)
-      returns (QueryAllLastBlockHeightResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight";
-  }
   // Queries a send by index.
   rpc Cctx(QueryGetCctxRequest) returns (QueryGetCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctx/{index}";
@@ -155,71 +142,6 @@ service Query {
   rpc RateLimiterInput(QueryRateLimiterInputRequest)
       returns (QueryRateLimiterInputResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/rateLimiterInput";
-  }
-
-  // Deprecated(v17): the following queries are deprecated and will be removed
-  // in v18 They are defined to maintain backward compatibility after inTx and
-  // outTx renaming
-
-  // Deprecated(v17): use OutboundTracker
-  rpc OutTxTracker(QueryGetOutboundTrackerRequest)
-      returns (QueryGetOutboundTrackerResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use OutboundTrackerAll
-  rpc OutTxTrackerAll(QueryAllOutboundTrackerRequest)
-      returns (QueryAllOutboundTrackerResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use OutboundTrackerAllByChain
-  rpc OutTxTrackerAllByChain(QueryAllOutboundTrackerByChainRequest)
-      returns (QueryAllOutboundTrackerByChainResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/outTxTrackerByChain/{chain}";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use InboundTrackerAllByChain
-  rpc InTxTrackerAllByChain(QueryAllInboundTrackerByChainRequest)
-      returns (QueryAllInboundTrackerByChainResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/inTxTrackerByChain/{chain_id}";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use InboundTrackerAll
-  rpc InTxTrackerAll(QueryAllInboundTrackersRequest)
-      returns (QueryAllInboundTrackersResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/inTxTracker";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use InboundHashToCctx
-  rpc InTxHashToCctx(QueryGetInboundHashToCctxRequest)
-      returns (QueryGetInboundHashToCctxResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/inTxHashToCctx/{inboundHash}";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use InboundHashToCctxData
-  rpc InTxHashToCctxData(QueryInboundHashToCctxDataRequest)
-      returns (QueryInboundHashToCctxDataResponse) {
-    option (google.api.http).get =
-        "/zeta-chain/crosschain/inTxHashToCctxData/{inboundHash}";
-    option deprecated = true;
-  }
-
-  // Deprecated(v17): use InboundHashToCctxAll
-  rpc InTxHashToCctxAll(QueryAllInboundHashToCctxRequest)
-      returns (QueryAllInboundHashToCctxResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
-    option deprecated = true;
   }
 }
 
@@ -306,19 +228,6 @@ message QueryAllGasPriceRequest {
 
 message QueryAllGasPriceResponse {
   repeated GasPrice GasPrice = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryGetLastBlockHeightRequest { string index = 1; }
-
-message QueryGetLastBlockHeightResponse { LastBlockHeight LastBlockHeight = 1; }
-
-message QueryAllLastBlockHeightRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllLastBlockHeightResponse {
-  repeated LastBlockHeight LastBlockHeight = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

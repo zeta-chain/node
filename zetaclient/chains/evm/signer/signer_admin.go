@@ -16,13 +16,13 @@ import (
 // SignAdminTx signs a admin cmd transaction based on the given command
 func (signer *Signer) SignAdminTx(txData *OutboundData, cmd string, params string) (*ethtypes.Transaction, error) {
 	switch cmd {
-	case constant.CmdWhitelistERC20:
+	case constant.CmdWhitelistAsset:
 		return signer.signWhitelistERC20Cmd(txData, params)
 	case constant.CmdMigrateERC20CustodyFunds:
 		return signer.signMigrateERC20CustodyFundsCmd(txData, params)
 	case constant.CmdUpdateERC20CustodyPauseStatus:
 		return signer.signUpdateERC20CustodyPauseStatusCmd(txData, params)
-	case constant.CmdMigrateTssFunds:
+	case constant.CmdMigrateTSSFunds:
 		return signer.signMigrateTssFundsCmd(txData)
 	}
 	return nil, fmt.Errorf("SignAdminTx: unknown command %s", cmd)

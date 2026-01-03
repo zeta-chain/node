@@ -291,6 +291,48 @@ func (k Keeper) CallDepositAndRevert(
 	)
 }
 
+func (k Keeper) CallZetaDepositAndRevert(
+	ctx sdk.Context,
+	inboundSender string,
+	amount *big.Int,
+	target common.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, types.ErrSystemContractNotFound
+	}
+	gatewayAddr := common.HexToAddress(systemContract.Gateway)
+	if crypto.IsEmptyAddress(gatewayAddr) {
+		return nil, types.ErrGatewayContractNotSet
+	}
+	// NOTE:
+	// depositAndRevert: ZRC20 version for depositAndRevert method
+	// depositAndRevert0: ZETA version for depositAndRevert method
+	return k.CallEVM(
+		ctx,
+		*gatewayABI,
+		types.ModuleAddressEVM,
+		gatewayAddr,
+		amount,
+		k.GetGatewayGasLimitSafe(ctx),
+		true,
+		false,
+		"depositAndRevert0",
+		target,
+		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
+			Asset:         common.Address{}, // TODO : Should we set this to WZETA?
+			Amount:        amount,
+			RevertMessage: message,
+		},
+	)
+}
+
 // CallExecuteAbort calls the executeAbort function on the gateway contract
 //
 //	function executeAbort(

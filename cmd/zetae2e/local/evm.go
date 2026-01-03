@@ -97,20 +97,24 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
-
-	// ZETA v2 not enabled
-	// TODO: enable back
-	// https://github.com/zeta-chain/node/issues/4373
-	//eg.Go(
-	//	evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
-	//		e2etests.TestZetaDepositName,
-	//		e2etests.TestZetaDepositAndCallName,
-	//		e2etests.TestZetaDepositAndCallRevertName,
-	//		e2etests.TestZetaDepositRevertAndAbortName,
-	//		e2etests.TestZetaDepositAndCallRevertWithCallName,
-	//		e2etests.TestZetaDepositAndCallNoMessageName,
-	//	),
-	//)
+	// test zeta token workflow
+	eg.Go(
+		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgRed, deployerRunner, verbose,
+			e2etests.TestZetaDepositName,
+			e2etests.TestETHDepositName,
+			e2etests.TestZetaDepositAndCallName,
+			e2etests.TestZetaDepositAndCallRevertName,
+			e2etests.TestZetaDepositRevertAndAbortName,
+			e2etests.TestZetaDepositAndCallRevertWithCallName,
+			e2etests.TestZetaDepositAndCallNoMessageName,
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestZetaWithdrawAndCallName,
+			e2etests.TestZetaWithdrawAndCallRevertName,
+			e2etests.TestZetaWithdrawAndCallRevertWithCallName,
+			e2etests.TestZetaWithdrawRevertAndAbortName,
+			e2etests.TestZetaWithdrawAndArbitraryCallName,
+		),
+	)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests

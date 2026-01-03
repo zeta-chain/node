@@ -13,7 +13,7 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("can migrate gas price multiplier", func(t *testing.T) {
+	t.Run("can migrate gas price multiplier and stability pool percentage", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain params
@@ -49,13 +49,18 @@ func TestMigrateStore(t *testing.T) {
 			require.True(t, gasPriceMultiplier.IsPositive())
 			require.True(t, gasPriceMultiplier.Equal(newParam.GasPriceMultiplier))
 
-			// ensure nothing else has changed except the confirmation
+			// ensure the stability pool percentage is set correctly
+			require.Equal(t, uint64(100), newParam.StabilityPoolPercentage)
+
+			// ensure nothing else has changed except the migrated fields
 			oldParam.GasPriceMultiplier = gasPriceMultiplier
+			oldParam.StabilityPoolPercentage = 100
 			require.True(t, types.ChainParamsEqual(*oldParam, *newParam))
 		}
 	})
 
 	t.Run("migrate nothing if chain params not found", func(t *testing.T) {
+		// Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// ensure no chain params are set
@@ -65,6 +70,8 @@ func TestMigrateStore(t *testing.T) {
 
 		// migrate the store
 		err := v12.MigrateStore(ctx, *k)
+
+		// Assert
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 
 		// ensure nothing has changed
@@ -102,6 +109,7 @@ func TestMigrateStore(t *testing.T) {
 	})
 
 	t.Run("migrate nothing if chain params list validation fails", func(t *testing.T) {
+		// Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// get test chain params
@@ -120,6 +128,8 @@ func TestMigrateStore(t *testing.T) {
 
 		// migrate the store
 		err := v12.MigrateStore(ctx, *k)
+
+		// Assert
 		require.ErrorIs(t, err, types.ErrInvalidChainParams)
 
 		// ensure nothing has changed
@@ -127,6 +137,7 @@ func TestMigrateStore(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, oldChainParams, newChainParams)
 	})
+
 }
 
 // getTestChainParams returns a list of chain params for testing

@@ -112,7 +112,6 @@ func TestKeeper_HasVoted(t *testing.T) {
 
 		voter := sample.AccAddress()
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList:        []string{voter},
 			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
@@ -136,7 +135,6 @@ func TestKeeper_HasVoted(t *testing.T) {
 
 		voter := sample.AccAddress()
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList:        []string{voter},
 			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
@@ -182,7 +180,6 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 
 		voter := sample.AccAddress()
 		ballot := types.Ballot{
-			Index:            "index",
 			BallotIdentifier: "index",
 			VoterList:        []string{voter},
 			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
@@ -215,7 +212,6 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		ballots := make([]types.Ballot, numOfBallots)
 		for i := 0; i < numOfBallots; i++ {
 			ballot := types.Ballot{
-				Index:                "",
 				BallotIdentifier:     fmt.Sprintf("index-%d", i),
 				VoterList:            []string{sample.AccAddress()},
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
@@ -240,7 +236,6 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		ballots := make([]types.Ballot, numOfBallots)
 		for i := 0; i < numOfBallots; i++ {
 			ballot := types.Ballot{
-				Index:                "",
 				BallotIdentifier:     fmt.Sprintf("index-%d", i),
 				VoterList:            []string{sample.AccAddress()},
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
@@ -288,7 +283,6 @@ func TestKeeper_Ballots(t *testing.T) {
 		ballots := make([]types.Ballot, 10)
 		for i := 0; i < 10; i++ {
 			ballot := types.Ballot{
-				Index:                "",
 				BallotIdentifier:     fmt.Sprintf("index-%d", i),
 				VoterList:            []string{sample.AccAddress()},
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},

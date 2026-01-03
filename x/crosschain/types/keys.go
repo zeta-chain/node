@@ -22,13 +22,9 @@ const (
 	// NOTE: named metacore because previous module name was metacore
 	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
-
-	// CCTXIndexLength is the length of a crosschain transaction index
-	CCTXIndexLength          = 66
-	MaxOutboundTrackerHashes = 5
 )
 
-// GetProtocolFee returns the protocol fee for the cross chain transaction
+// GetProtocolFee returns the protocol fee for the cross-chain transaction
 // It is no longer used, but the function is kept for backward compatibility with the Zeta Conversion Rate query
 func GetProtocolFee() math.Uint {
 	return math.ZeroUint()
@@ -49,7 +45,6 @@ const (
 	// CounterIndexKey is the prefix to use for the counter index
 	CounterIndexKey = "ctr-idx-"
 
-	LastBlockHeightKey   = "LastBlockHeight-value-"
 	FinalizedInboundsKey = "FinalizedInbounds-value-"
 
 	GasPriceKey = "GasPrice-value-"

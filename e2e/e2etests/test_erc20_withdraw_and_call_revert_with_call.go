@@ -40,7 +40,7 @@ func TestERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	requireCCTXStatus(r, crosschaintypes.CctxStatus_Reverted, cctx)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	r.AssertTestDAppZEVMCalled(true, payload, nil, big.NewInt(0))
 

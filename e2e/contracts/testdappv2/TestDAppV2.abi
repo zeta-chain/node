@@ -10,6 +10,11 @@
         "internalType": "address",
         "name": "gateway_",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "zetatoken_",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -293,6 +298,25 @@
         "type": "string"
       }
     ],
+    "name": "getSenderAddressWithMessage",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      }
+    ],
     "name": "getSenderWithMessage",
     "outputs": [
       {
@@ -460,7 +484,7 @@
     ],
     "name": "onRevert",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -512,6 +536,19 @@
     "name": "simpleCall",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetatoken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

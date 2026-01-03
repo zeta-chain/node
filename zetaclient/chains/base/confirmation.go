@@ -12,8 +12,8 @@ import (
 func (ob *Observer) GetScanRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
-	confirmation := ob.ChainParams().InboundConfirmationSafe()
 
+	confirmation := ob.ChainParams().InboundConfirmationSafe()
 	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit)
 }
 

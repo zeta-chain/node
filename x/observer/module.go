@@ -130,12 +130,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 9, m.Migrate9to10); err != nil {
-		panic(err)
-	}
-	if err := cfg.RegisterMigration(types.ModuleName, 10, m.Migrate10to11); err != nil {
-		panic(err)
-	}
 	if err := cfg.RegisterMigration(types.ModuleName, 11, m.Migrate11to12); err != nil {
 		panic(err)
 	}

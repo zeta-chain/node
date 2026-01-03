@@ -81,18 +81,28 @@ func triggerTSSMigration(
 		&observertypes.QueryTssHistoryRequest{},
 	)
 	require.NoError(deployerRunner, err)
-	expectedTssCount := 1 + len(tssList.TssList)
+	// Increase this number to generate more than 1 TSS.
+	// The migration always happens to the latest one, this is set on zetacore directly
+	numberOfTssToGenerate := 1
+	expectedTssCount := numberOfTssToGenerate + len(tssList.TssList)
 
-	response, err := deployerRunner.CctxClient.LastZetaHeight(
-		deployerRunner.Ctx,
-		&crosschaintypes.QueryLastZetaHeightRequest{},
-	)
-	require.NoError(deployerRunner, err)
-	err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
-	require.NoError(deployerRunner, err)
+	// Generate new TSS address(es)
+	for i := 0; i < numberOfTssToGenerate; i++ {
+		logger.Print("🔑 generating TSS %d/%d", i+1, numberOfTssToGenerate)
 
-	// Generate new TSS
-	noError(waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0))
+		response, err := deployerRunner.CctxClient.LastZetaHeight(
+			deployerRunner.Ctx,
+			&crosschaintypes.QueryLastZetaHeightRequest{},
+		)
+		require.NoError(deployerRunner, err)
+		err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
+		require.NoError(deployerRunner, err)
+
+		// Generate new TSS
+		noError(
+			waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0),
+		)
+	}
 
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one

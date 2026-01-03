@@ -126,4 +126,32 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		require.Equal(t, int64(chainID), res.Balances[0].ChainId)
 		require.Equal(t, "0", res.Balances[0].Balance)
 	})
+
+	t.Run("should ignore ZetaChain chain ID in response", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseObserverMock: true,
+		})
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		observerMock := keepertest.GetFungibleObserverMock(t, k)
+		chainID := 5
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]chains.Chain{
+			{
+				ChainId: int64(chainID),
+			},
+			{
+				ChainId: chains.ZetaChainMainnet.ChainId,
+				Network: chains.Network_zeta,
+			},
+		})
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		setupGasCoin(t, ctx, k, sdkk.EvmKeeper, int64(chainID), "foobar", "foobar")
+
+		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
+		require.NoError(t, err)
+		require.Len(t, res.Balances, 1)
+		require.Equal(t, int64(chainID), res.Balances[0].ChainId)
+		require.Equal(t, "0", res.Balances[0].Balance)
+	})
 }
