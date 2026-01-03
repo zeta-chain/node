@@ -89,6 +89,14 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		if err != nil {
+			// Log when V2 ZETA withdrawal is ignored due to disabled flag
+			if errorsmod.IsOf(err, types.ErrZetaThroughGateway) {
+				ctx.Logger().Info(
+					"V2 ZETA withdrawal ignored: V2 ZETA flows are disabled",
+					"tx_hash", log.TxHash.Hex(),
+					"coin_type", coin.CoinType_Zeta.String(),
+				)
+			}
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalEvent,
 				"failed to parse inbound details for withdraw: %v", err,

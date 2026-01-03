@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 
@@ -49,7 +50,10 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 			config.CCTX.ProtocolContractVersion == types.ProtocolContractVersion_V2 &&
 			!c.crosschainKeeper.zetaObserverKeeper.IsV2ZetaEnabled(ctx) {
 			config.CCTX.SetAbort(types.StatusMessages{
-				StatusMessage: types.ErrZetaThroughGateway.Error(),
+				StatusMessage: errorsmod.Wrap(
+					types.ErrZetaThroughGateway,
+					"V2 ZETA flows are disabled for deposits",
+				).Error(),
 			})
 			return types.CctxStatus_Aborted, nil
 		}

@@ -19,6 +19,7 @@ The `zetacored` binary must be upgraded to trigger chain parameters data migrati
 * [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
 * [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
 * [4485](https://github.com/zeta-chain/node/pull/4485) - move gas price multiplier to zetacore chain parameters
+* [4515](https://github.com/zeta-chain/node/pull/4515) - add a flag to toggle v2 ZETA flows and set it false by default
 
 ### Fixes
 
