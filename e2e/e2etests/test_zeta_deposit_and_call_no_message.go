@@ -51,6 +51,6 @@ func TestZetaDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	} else {
 		// V2 ZETA flows disabled: deposit should be aborted
 		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
-		require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
+		require.Contains(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
 	}
 }

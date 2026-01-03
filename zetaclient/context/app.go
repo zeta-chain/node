@@ -97,6 +97,11 @@ func (a *AppContext) IsInboundObservationEnabled() bool {
 	return a.GetCrossChainFlags().IsInboundEnabled
 }
 
+// IsV2ZetaEnabled returns true if V2 ZETA gateway flows are enabled
+func (a *AppContext) IsV2ZetaEnabled() bool {
+	return a.GetCrossChainFlags().IsV2ZetaEnabled
+}
+
 // GetCrossChainFlags returns crosschain flags
 func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	a.mu.RLock()

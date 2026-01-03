@@ -3,6 +3,7 @@ package runner
 import (
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/utils"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -11,10 +12,10 @@ func (r *E2ERunner) EnableV2ZETAFlows() error {
 	r.Logger.Print("enabling V2 ZETA gateway flows")
 
 	msg := observertypes.NewMsgUpdateV2ZetaFlows(
-		r.ZetaTxServer.MustGetAccountAddressFromName(r.Account.RawEVMAddress.String()),
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		true,
 	)
-	_, err := r.ZetaTxServer.BroadcastTx(r.Account.RawEVMAddress.String(), msg)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msg)
 	if err != nil {
 		return err
 	}

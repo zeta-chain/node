@@ -32,6 +32,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
 		expectedChain := chains.Chain{
 			ChainName:  chains.ChainName_eth_mainnet,
 			ChainId:    1,
@@ -63,6 +64,9 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			IsArbitraryCall: false,
 		}
 
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
+
 		// ACT
 		result, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
@@ -84,6 +88,9 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(100000),
 			IsArbitraryCall: false,
 		}
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
 
 		// ACT
 		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
@@ -107,6 +114,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(999)).Return(chains.Chain{}, false)
 
 		// ACT
@@ -131,6 +139,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
 		expectedChain := chains.Chain{
 			ChainName: chains.ChainName_eth_mainnet,
 			ChainId:   1,
@@ -164,6 +173,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", ctx).Return(true)
 		expectedChain := chains.Chain{
 			ChainName: chains.ChainName_eth_mainnet,
 			ChainId:   1,

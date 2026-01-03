@@ -16,7 +16,6 @@ import (
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
-
 	if !r.IsV2ZETAEnabled() {
 		r.Logger.Print("⚠️ skipping TestUpdateBytecodeConnector: V2 ZETA flows are disabled")
 		return

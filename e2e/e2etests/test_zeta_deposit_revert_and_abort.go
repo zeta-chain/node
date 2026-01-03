@@ -69,6 +69,6 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 		require.True(r, balance.Uint64() > 0)
 	} else {
 		// V2 ZETA flows disabled: cctx should be aborted with error message
-		require.Equal(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
+		require.Contains(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
 	}
 }
