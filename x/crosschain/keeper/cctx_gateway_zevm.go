@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -44,6 +45,14 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 		return newCCTXStatus, nil
 	case types.InboundStatus_SUCCESS:
 		// process the deposit normally
+		if config.CCTX.InboundParams.CoinType == coin.CoinType_Zeta &&
+			config.CCTX.ProtocolContractVersion == types.ProtocolContractVersion_V2 &&
+			!c.crosschainKeeper.zetaObserverKeeper.IsV2ZetaEnabled(ctx) {
+			config.CCTX.SetAbort(types.StatusMessages{
+				StatusMessage: types.ErrZetaThroughGateway.Error(),
+			})
+			return types.CctxStatus_Aborted, nil
+		}
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 

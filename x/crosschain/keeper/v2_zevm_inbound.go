@@ -182,6 +182,14 @@ func (k Keeper) getZETAInboundDetails(
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
 ) (InboundDetails, error) {
+	// Check if V2 ZETA flows are enabled
+	if !k.zetaObserverKeeper.IsV2ZetaEnabled(ctx) {
+		return InboundDetails{}, errorsmod.Wrap(
+			types.ErrZetaThroughGateway,
+			"V2 ZETA flows are disabled for withdrawals",
+		)
+	}
+
 	if receiverChainID == nil || receiverChainID.Int64() == 0 {
 		return InboundDetails{}, errorsmod.Wrap(
 			types.ErrInvalidWithdrawalEvent,

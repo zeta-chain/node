@@ -993,3 +993,15 @@ message MsgUpdateOperationalChainParams {
 }
 ```
 
+#### MsgUpdateV2ZetaFlows
+
+UpdateV2ZetaFlows updates the V2 ZETA gateway flows flag.
+The flag is updated by the policy account with the groupOperational policy type.
+
+```proto
+message MsgUpdateV2ZetaFlows {
+	string creator = 1;
+	bool isV2ZetaEnabled = 2;
+}
+```
+

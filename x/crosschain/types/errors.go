@@ -62,4 +62,5 @@ var (
 	ErrUnableToParseCCTXIndexBytes = errorsmod.Register(ModuleName, 1161, "unable to parse cctx index bytes")
 	ErrInvalidPriorityFee          = errorsmod.Register(ModuleName, 1162, "invalid priority fee")
 	ErrInvalidWithdrawalEvent      = errorsmod.Register(ModuleName, 1163, "invalid withdrawal event")
+	ErrZetaThroughGateway          = errorsmod.Register(ModuleName, 1164, "ZETA through gateway is currently disabled")
 )
