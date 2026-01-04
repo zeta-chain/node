@@ -12,18 +12,33 @@ import (
 type observerKeeper interface {
 	GetChainParamsList(ctx sdk.Context) (val types.ChainParamsList, found bool)
 	SetChainParamsList(ctx sdk.Context, chainParams types.ChainParamsList)
+	GetCrosschainFlags(ctx sdk.Context) (val types.CrosschainFlags, found bool)
+	SetCrosschainFlags(ctx sdk.Context, crosschainFlags types.CrosschainFlags)
 }
 
 // MigrateStore migrates the x/observer module state from the consensus version 11 to version 12.
 // The migration updates the 'StabilityPoolPercentage' field of all chain params to 100
 // The migration sets default gas price multipliers for all external chains.
+// The migration disables V2 ZETA flows.
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
+	if err := UpdateChainParams(ctx, observerKeeper); err != nil {
+		return err
+	}
+
+	if err := UpdateCrosschainFlags(ctx, observerKeeper); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateChainParams updates the chain params with gas price multiplier and stability pool percentage.
+func UpdateChainParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 	allChainParams, found := observerKeeper.GetChainParamsList(ctx)
 	if !found {
 		return errorsmod.Wrap(types.ErrChainParamsNotFound, "failed to get chain params")
 	}
 
-	// set new fields to the same value as 'confirmation_count'
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams != nil {
 			chain, foundChain := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
@@ -35,13 +50,24 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		}
 	}
 
-	// validate the updated chain params list
 	if err := allChainParams.Validate(); err != nil {
 		return errorsmod.Wrap(types.ErrInvalidChainParams, err.Error())
 	}
 
-	// set the updated chain params list
 	observerKeeper.SetChainParamsList(ctx, allChainParams)
+
+	return nil
+}
+
+// UpdateCrosschainFlags disables V2 ZETA flows in the crosschain flags.
+func UpdateCrosschainFlags(ctx sdk.Context, observerKeeper observerKeeper) error {
+	flags, found := observerKeeper.GetCrosschainFlags(ctx)
+	if !found {
+		flags = types.CrosschainFlags{}
+	}
+
+	flags.IsV2ZetaEnabled = false
+	observerKeeper.SetCrosschainFlags(ctx, flags)
 
 	return nil
 }

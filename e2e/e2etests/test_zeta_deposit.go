@@ -17,6 +17,10 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 	receiverAddress := r.EVMAddress()
 
+	// get balance before deposit
+	oldBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
+	require.NoError(r, err)
+
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 	// perform the deposit
 	tx := r.ZETADeposit(receiverAddress, amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
@@ -27,11 +31,9 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	if r.IsV2ZETAEnabled() {
 		// V2 ZETA flows enabled: deposit should succeed
 		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-		oldBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
-		require.NoError(r, err)
 		newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
 		require.NoError(r, err)
-		require.True(r, newBalance.Cmp(oldBalance) >= 0)
+		require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 	} else {
 		// V2 ZETA flows disabled: deposit should be aborted
 		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)

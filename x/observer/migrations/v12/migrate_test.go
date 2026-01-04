@@ -13,7 +13,47 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("can migrate gas price multiplier and stability pool percentage", func(t *testing.T) {
+	t.Run("can migrate chain params and crosschain flags", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// set chain params
+		testChainParams := getTestChainParams()
+		k.SetChainParamsList(ctx, testChainParams)
+
+		// set crosschain flags with V2 ZETA enabled
+		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
+			IsInboundEnabled:  true,
+			IsOutboundEnabled: true,
+			IsV2ZetaEnabled:   true,
+		})
+
+		// ACT
+		err := v12.MigrateStore(ctx, *k)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// verify chain params were migrated
+		newChainParams, found := k.GetChainParamsList(ctx)
+		require.True(t, found)
+		require.Len(t, newChainParams.ChainParams, len(testChainParams.ChainParams))
+		for _, param := range newChainParams.ChainParams {
+			require.Equal(t, uint64(100), param.StabilityPoolPercentage)
+			require.True(t, param.GasPriceMultiplier.IsPositive())
+		}
+
+		// verify V2 ZETA flows were disabled
+		flags, found := k.GetCrosschainFlags(ctx)
+		require.True(t, found)
+		require.False(t, flags.IsV2ZetaEnabled)
+		require.True(t, flags.IsInboundEnabled)
+		require.True(t, flags.IsOutboundEnabled)
+	})
+}
+
+func TestUpdateChainParams(t *testing.T) {
+	t.Run("can update gas price multiplier and stability pool percentage", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain params
@@ -26,7 +66,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, testChainParams, oldChainParams)
 
 		// migrate the store
-		err := v12.MigrateStore(ctx, *k)
+		err := v12.UpdateChainParams(ctx, *k)
 		require.NoError(t, err)
 
 		// ensure we still have same number of chain params after migration
@@ -59,85 +99,82 @@ func TestMigrateStore(t *testing.T) {
 		}
 	})
 
-	t.Run("migrate nothing if chain params not found", func(t *testing.T) {
-		// Arrange
+	t.Run("returns error if chain params not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		// ensure no chain params are set
-		allChainParams, found := k.GetChainParamsList(ctx)
-		require.False(t, found)
-		require.Empty(t, allChainParams.ChainParams)
+		err := v12.UpdateChainParams(ctx, *k)
 
-		// migrate the store
-		err := v12.MigrateStore(ctx, *k)
-
-		// Assert
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
-
-		// ensure nothing has changed
-		allChainParams, found = k.GetChainParamsList(ctx)
-		require.False(t, found)
-		require.Empty(t, allChainParams.ChainParams)
 	})
 
-	t.Run("migrate nothing if chain not found", func(t *testing.T) {
+	t.Run("returns error if chain not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		// set chain params
 		testChainParams := getTestChainParams()
-
-		// change the first chain ID to unknown
 		testChainParams.ChainParams[0].ChainId = 1000000000
-
-		// set chain params
 		k.SetChainParamsList(ctx, testChainParams)
 
-		// ensure the chain params are set correctly
-		oldChainParams, found := k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Equal(t, testChainParams, oldChainParams)
+		err := v12.UpdateChainParams(ctx, *k)
 
-		// migrate the store
-		err := v12.MigrateStore(ctx, *k)
 		require.ErrorIs(t, err, types.ErrSupportedChains)
 		require.ErrorContains(t, err, "chain 1000000000 not found")
-
-		// ensure nothing has changed
-		newChainParams, found := k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Equal(t, oldChainParams, newChainParams)
 	})
 
-	t.Run("migrate nothing if chain params list validation fails", func(t *testing.T) {
-		// Arrange
+	t.Run("returns error if chain params validation fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		// get test chain params
 		testChainParams := getTestChainParams()
-
-		// make the first chain params invalid
 		testChainParams.ChainParams[0].InboundTicker = 0
-
-		// set chain params
 		k.SetChainParamsList(ctx, testChainParams)
 
-		// ensure the chain params are set correctly
-		oldChainParams, found := k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Equal(t, testChainParams, oldChainParams)
+		err := v12.UpdateChainParams(ctx, *k)
 
-		// migrate the store
-		err := v12.MigrateStore(ctx, *k)
-
-		// Assert
 		require.ErrorIs(t, err, types.ErrInvalidChainParams)
+	})
+}
 
-		// ensure nothing has changed
-		newChainParams, found := k.GetChainParamsList(ctx)
+func TestUpdateCrosschainFlags(t *testing.T) {
+	t.Run("disables V2 ZETA flows when flags exist", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// set crosschain flags with V2 ZETA enabled
+		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
+			IsInboundEnabled:  true,
+			IsOutboundEnabled: true,
+			IsV2ZetaEnabled:   true,
+		})
+
+		// ACT
+		err := v12.UpdateCrosschainFlags(ctx, *k)
+
+		// ASSERT
+		require.NoError(t, err)
+		flags, found := k.GetCrosschainFlags(ctx)
 		require.True(t, found)
-		require.Equal(t, oldChainParams, newChainParams)
+		require.False(t, flags.IsV2ZetaEnabled)
+		// other flags should be preserved
+		require.True(t, flags.IsInboundEnabled)
+		require.True(t, flags.IsOutboundEnabled)
 	})
 
+	t.Run("sets flags when not found", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// ensure no flags are set
+		_, found := k.GetCrosschainFlags(ctx)
+		require.False(t, found)
+
+		// ACT
+		err := v12.UpdateCrosschainFlags(ctx, *k)
+
+		// ASSERT
+		require.NoError(t, err)
+		flags, found := k.GetCrosschainFlags(ctx)
+		require.True(t, found)
+		require.False(t, flags.IsV2ZetaEnabled)
+	})
 }
 
 // getTestChainParams returns a list of chain params for testing
