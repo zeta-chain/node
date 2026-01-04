@@ -63,7 +63,7 @@ func UpdateChainParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 func UpdateCrosschainFlags(ctx sdk.Context, observerKeeper observerKeeper) error {
 	flags, found := observerKeeper.GetCrosschainFlags(ctx)
 	if !found {
-		flags = types.CrosschainFlags{}
+		flags = *types.DefaultCrosschainFlags()
 	}
 
 	flags.IsV2ZetaEnabled = false

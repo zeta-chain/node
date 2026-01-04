@@ -158,7 +158,7 @@ func TestUpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.IsOutboundEnabled)
 	})
 
-	t.Run("sets flags when not found", func(t *testing.T) {
+	t.Run("sets default flags when not found", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
@@ -174,6 +174,10 @@ func TestUpdateCrosschainFlags(t *testing.T) {
 		flags, found := k.GetCrosschainFlags(ctx)
 		require.True(t, found)
 		require.False(t, flags.IsV2ZetaEnabled)
+		// verify default flags are used
+		require.True(t, flags.IsInboundEnabled)
+		require.True(t, flags.IsOutboundEnabled)
+		require.NotNil(t, flags.GasPriceIncreaseFlags)
 	})
 }
 
