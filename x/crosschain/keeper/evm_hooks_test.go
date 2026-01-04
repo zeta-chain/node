@@ -909,6 +909,40 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.Equal(t, cctxList[0].ProtocolContractVersion, crosschaintypes.ProtocolContractVersion_V2)
 	})
 
+	t.Run("fails to process ZETA Withdraw when V2 ZETA flows are disabled", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+
+		SetupStateForProcessLogsZetaWithdraw(
+			t, ctx, k, zk, sdkk, chain,
+			sdkmath.NewInt(1000000000000),
+		)
+
+		// Disable V2 ZETA flows
+		zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
+			IsInboundEnabled:  true,
+			IsOutboundEnabled: true,
+			IsV2ZetaEnabled:   false,
+		})
+
+		block := sample.ValidZetaWithdrawToEthReceipt(t)
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		// ACT
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "V2 ZETA flows are disabled for withdrawals")
+	})
+
 	t.Run("successfully parse and process ZRC20Withdrawal to BTC chain", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
