@@ -39,7 +39,7 @@ type Output struct {
 	// the current withdraw rate (azeta/block) within the current sliding window
 	CurrentWithdrawRate sdkmath.Int
 
-	// wehther the current withdraw rate exceeds the given rate limit or not
+	// whether the current withdraw rate exceeds the given rate limit or not
 	RateLimitExceeded bool
 }
 

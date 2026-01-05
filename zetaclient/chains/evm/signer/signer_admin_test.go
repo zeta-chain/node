@@ -28,7 +28,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("SignAdminTx CmdWhitelistERC20", func(t *testing.T) {
-		cmd := constant.CmdWhitelistERC20
+		cmd := constant.CmdWhitelistAsset
 		params := ConnectorAddress.Hex()
 
 		// Mock the digest to be signed
@@ -93,7 +93,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	})
 
 	t.Run("SignAdminTx CmdMigrateTssFunds", func(t *testing.T) {
-		cmd := constant.CmdMigrateTssFunds
+		cmd := constant.CmdMigrateTSSFunds
 
 		// Mock the digest to be signed
 		digest := getMigrateTssFundsDigest(t, evmSigner.Signer, txData)

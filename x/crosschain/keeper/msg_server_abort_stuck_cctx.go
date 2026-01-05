@@ -45,6 +45,11 @@ func (k msgServer) AbortStuckCCTX(
 		StatusMessage: AbortMessage,
 	})
 
+	// Set all outbound params to Executed to ensure nonces are removed from pending nonces
+	for _, outboundParams := range cctx.OutboundParams {
+		outboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	}
+
 	// Save out outbound,
 	// We do not need to provide the tss-pubkey as NonceToCctx is not updated / New outbound is not added
 	k.SaveOutbound(ctx, &cctx, "")

@@ -56,7 +56,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// we deploy connectorETH in this test to simulate a new "canonical" chain emitting ZETA
 	// to represent the ZETA already existing on ZetaChain we manually send the minted ZETA to the connector
-	newRunner.LegacySendZetaOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
+	newRunner.TransferZETAOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
 
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
@@ -153,7 +153,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// whitelist erc20 zrc20
 	newRunner.Logger.Info("whitelisting ERC20 on new network")
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistERC20(
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, crosschaintypes.NewMsgWhitelistAsset(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		newRunner.ERC20Addr.Hex(),
 		chains.Sepolia.ChainId,
@@ -165,8 +165,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	))
 	require.NoError(r, err)
 
-	event, ok := txserver.EventOfType[*crosschaintypes.EventERC20Whitelist](res.Events)
-	require.True(r, ok, "no EventERC20Whitelist in %s", res.TxHash)
+	event, ok := txserver.EventOfType[*crosschaintypes.EventAssetWhitelist](res.Events)
+	require.True(r, ok, "no EventAssetWhitelist in %s", res.TxHash)
 	erc20zrc20Addr := event.Zrc20Address
 	whitelistCCTXIndex := event.WhitelistCctxIndex
 
@@ -182,7 +182,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// deposit ERC20 on ZetaChain
-	txERC20Deposit := newRunner.DepositERC20Deployer()
+	txERC20Deposit := newRunner.DepositERC20ToDeployer()
 	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// stop mining

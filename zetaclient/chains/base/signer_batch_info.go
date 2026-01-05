@@ -2,9 +2,9 @@ package base
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/pkg/errors"
-
+	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 )
 
@@ -13,6 +13,10 @@ const (
 	// signing a 10-digest batch takes about 3~4 seconds on average, and
 	// increasing batch size won't result in significant performance boost
 	batchSize = 10
+
+	// keysignHeightBucket is the bucket size to map zeta height to keysign height bucket.
+	// 20 seconds is used to avoid keysign height drifting too fast.
+	keysignHeightBucket = int64(20 * time.Second / constant.ZetaBlockTime)
 )
 
 // TSSKeysignInfo represents a record of TSS keysign information.
@@ -118,23 +122,24 @@ func (b *TSSKeysignBatch) ContainsNonce(nonce uint64) bool {
 
 // KeysignHeight calculates an artificial keysign height tweaked by chainID.
 // This is used to uniquely identify TSS keysign request across all chains.
-func (b *TSSKeysignBatch) KeysignHeight(chainID int64) (uint64, error) {
-	batchNumber := b.BatchNumber()
-	if batchNumber >= mathpkg.MaxPairValue {
-		return 0, errors.New("batch number is too large")
+func KeysignHeight(chainID int64, zetaHeight int64) (uint64, error) {
+	heightBucket := zetaHeight / keysignHeightBucket
+	if zetaHeight <= 0 || heightBucket >= mathpkg.MaxPairValue {
+		return 0, fmt.Errorf("invalid zeta height: %d", zetaHeight)
 	}
 
 	if chainID <= 0 || chainID > mathpkg.MaxPairValue {
 		return 0, fmt.Errorf("invalid chain ID: %d", chainID)
 	}
 
-	// use batch number as unique identifier, added 1 to avoid 0
+	// use height bucket as unique identifier, added 1 to avoid 0
 	// #nosec G115 - checked in range
-	identifier := uint32(batchNumber + 1)
+	identifier := uint32(heightBucket + 1)
 
 	// #nosec G115 - checked in range
 	chainID32 := uint32(chainID)
 
+	// create artificial height using pairing function
 	return mathpkg.CantorPair(identifier, chainID32), nil
 }
 

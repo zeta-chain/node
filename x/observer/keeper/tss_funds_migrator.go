@@ -13,12 +13,12 @@ import (
 func (k Keeper) SetFundMigrator(ctx sdk.Context, fm types.TssFundMigratorInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TssFundMigratorKey))
 	b := k.cdc.MustMarshal(&fm)
-	store.Set([]byte(fmt.Sprintf("%d", fm.ChainId)), b)
+	store.Set(fmt.Appendf(nil, "%d", fm.ChainId), b)
 }
 
 func (k Keeper) GetFundMigrator(ctx sdk.Context, chainID int64) (val types.TssFundMigratorInfo, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TssFundMigratorKey))
-	b := store.Get([]byte(fmt.Sprintf("%d", chainID)))
+	b := store.Get(fmt.Appendf(nil, "%d", chainID))
 	if b == nil {
 		return val, false
 	}

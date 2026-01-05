@@ -40,6 +40,9 @@ func startBitcoinTests(
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
 		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+		e2etests.TestBitcoinToZEVMCallName,
+		e2etests.TestBitcoinToZEVMCallAbortName,
+		e2etests.TestBitcoinToZEVMCallExcessiveFundsRevertName,
 		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
 		e2etests.TestBitcoinDepositInvalidMemoRevertName,
 		e2etests.TestCrosschainSwapName,
@@ -174,8 +177,8 @@ func initBitcoinRunner(
 		runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := runner.DepositEtherDeployer()
-		txERC20Deposit := runner.DepositERC20Deployer()
+		txEtherDeposit := runner.DepositEtherToDeployer()
+		txERC20Deposit := runner.DepositERC20ToDeployer()
 
 		runner.WaitForMinedCCTX(txEtherDeposit)
 		runner.WaitForMinedCCTX(txERC20Deposit)

@@ -11,8 +11,7 @@ type authorityKeeper interface {
 	GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationList, found bool)
 }
 
-// MigrateStore migrates the authority module state from the consensus version 5 to 6
-// It ensures that the newly added message MsgRemoveObserver is authorized under the Admin policy.
+// MigrateStore migrates the authority module state from the consensus version 4 to 5
 func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
@@ -23,6 +22,14 @@ func MigrateStore(
 			MsgUrl:           "/zetachain.zetacore.observer.MsgRemoveObserver",
 			AuthorizedPolicy: types.PolicyType_groupAdmin,
 		}
+		whitelistAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.crosschain.MsgWhitelistAsset",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
+		updateV2ZetaFlowsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
+		}
 	)
 
 	al, found := keeper.GetAuthorizationList(ctx)
@@ -31,7 +38,12 @@ func MigrateStore(
 	}
 
 	authorizationList.SetAuthorization(removeObserverAuthorization)
-	if err := authorizationList.Validate(); err != nil {
+	authorizationList.SetAuthorization(whitelistAuthorization)
+	authorizationList.SetAuthorization(updateV2ZetaFlowsAuthorization)
+
+	// Validate the authorization list
+	err := authorizationList.Validate()
+	if err != nil {
 		return err
 	}
 	keeper.SetAuthorizationList(ctx, authorizationList)

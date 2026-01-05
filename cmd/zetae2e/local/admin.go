@@ -38,16 +38,18 @@ func adminTestRoutine(
 
 		// funding the account
 		// we transfer around the total supply of Zeta to the admin for the chain migration test
-		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 20_500_000_000)
+		txZetaSend := deployerRunner.TransferZETAOnEvm(account.EVMAddress(), 20_500_000_000)
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 1000)
 		adminRunner.WaitForTxReceiptOnEVM(txZetaSend)
 		adminRunner.WaitForTxReceiptOnEVM(txERC20Send)
 
-		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := adminRunner.LegacyDepositZeta()
-		txEtherDeposit := adminRunner.DepositEtherDeployer()
-		txERC20Deposit := adminRunner.DepositERC20Deployer()
-		adminRunner.WaitForMinedCCTX(txZetaDeposit)
+		// depositing the necessary tokens on ZetaChain to the deployer account
+		if adminRunner.IsV2ZETAEnabled() {
+			txZetaDeposit := adminRunner.DepositZETAToDeployer()
+			adminRunner.WaitForMinedCCTX(txZetaDeposit.Hash())
+		}
+		txEtherDeposit := adminRunner.DepositEtherToDeployer()
+		txERC20Deposit := adminRunner.DepositERC20ToDeployer()
 		adminRunner.WaitForMinedCCTX(txEtherDeposit)
 		adminRunner.WaitForMinedCCTX(txERC20Deposit)
 

@@ -112,15 +112,13 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	allTss, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
 	require.NoError(r, err)
 
-	require.Len(r, allTss.TssList, 2)
-
 	// Update TSS to new address
 	sort.Slice(allTss.TssList, func(i, j int) bool {
 		return allTss.TssList[i].FinalizedZetaHeight < allTss.TssList[j].FinalizedZetaHeight
 	})
 	msgUpdateTss := crosschaintypes.NewMsgUpdateTssAddress(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
-		allTss.TssList[1].TssPubkey,
+		allTss.TssList[len(allTss.TssList)-1].TssPubkey,
 	)
 	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateTss)
 	require.NoError(r, err)
@@ -130,7 +128,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 
 	currentTss, err := r.ObserverClient.TSS(r.Ctx, &observertypes.QueryGetTSSRequest{})
 	require.NoError(r, err)
-	require.Equal(r, allTss.TssList[1].TssPubkey, currentTss.TSS.TssPubkey)
+	require.Equal(r, allTss.TssList[len(allTss.TssList)-1].TssPubkey, currentTss.TSS.TssPubkey)
 
 	newTss, err := r.ObserverClient.GetTssAddress(r.Ctx, &observertypes.QueryGetTssAddressRequest{})
 	require.NoError(r, err)

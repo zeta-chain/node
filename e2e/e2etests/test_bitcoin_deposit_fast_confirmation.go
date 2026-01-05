@@ -92,7 +92,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be SAFE confirmed
 	timeStart = time.Now()
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
 	safeConfirmTime := time.Since(timeStart)
 

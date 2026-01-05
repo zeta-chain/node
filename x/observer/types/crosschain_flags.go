@@ -32,5 +32,6 @@ func DefaultCrosschainFlags() *CrosschainFlags {
 		IsInboundEnabled:      true,
 		IsOutboundEnabled:     true,
 		GasPriceIncreaseFlags: &DefaultGasPriceIncreaseFlags,
+		IsV2ZetaEnabled:       false,
 	}
 }

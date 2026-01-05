@@ -1,11 +1,13 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -31,17 +33,30 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	case types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE:
 		// abort if CCTX has insufficient depositor fee for Bitcoin, the CCTX can't be reverted in this case
 		// because there is no fund to pay for the revert tx
+		depositErr := errors.New(config.CCTX.InboundParams.ErrorMessage)
 		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
-			ErrorMessageOutbound: "insufficient depositor fee",
+			ErrorMessageOutbound: depositErr.Error(),
 			StatusMessage:        "inbound observation failed",
 		})
 		return types.CctxStatus_Aborted, nil
-	case types.InboundStatus_INVALID_MEMO:
-		// when invalid memo is reported, the CCTX is reverted to the sender
-		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, errors.New("invalid memo"), true)
+	case types.InboundStatus_INVALID_MEMO, types.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS:
+		// when invalid memo or excessive funds is reported, the CCTX is reverted to the sender
+		depositErr := errors.New(config.CCTX.InboundParams.ErrorMessage)
+		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, depositErr, true)
 		return newCCTXStatus, nil
 	case types.InboundStatus_SUCCESS:
 		// process the deposit normally
+		if config.CCTX.InboundParams.CoinType == coin.CoinType_Zeta &&
+			config.CCTX.ProtocolContractVersion == types.ProtocolContractVersion_V2 &&
+			!c.crosschainKeeper.zetaObserverKeeper.IsV2ZetaEnabled(ctx) {
+			config.CCTX.SetAbort(types.StatusMessages{
+				StatusMessage: errorsmod.Wrap(
+					types.ErrZetaThroughGateway,
+					"V2 ZETA flows are disabled for deposits",
+				).Error(),
+			})
+			return types.CctxStatus_Aborted, nil
+		}
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 

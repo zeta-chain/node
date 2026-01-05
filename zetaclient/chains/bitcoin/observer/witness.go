@@ -89,11 +89,15 @@ func GetBtcEventWithWitness(
 	// deduct depositor fee
 	// to allow developers to track failed deposit caused by insufficient depositor fee,
 	// the error message will be forwarded to zetacore to register a failed CCTX
-	status := types.InboundStatus_SUCCESS
+	var (
+		status       = types.InboundStatus_SUCCESS
+		errorMessage string
+	)
 	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
 	if err != nil {
 		amount = 0
 		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		errorMessage = err.Error()
 		logger.Error().Err(err).Fields(lf).Msg("unable to deduct depositor fee")
 	}
 
@@ -125,6 +129,7 @@ func GetBtcEventWithWitness(
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
 		Status:       status,
+		ErrorMessage: errorMessage,
 	}, nil
 }
 

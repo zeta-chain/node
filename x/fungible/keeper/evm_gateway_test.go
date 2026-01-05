@@ -33,7 +33,7 @@ func TestKeeper_DepositAndCallZeta(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", sample.EthAddress().String(), "foo")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 
@@ -63,7 +63,7 @@ func TestKeeper_DepositAndCallZeta(t *testing.T) {
 		message := []byte("test message")
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 
@@ -97,7 +97,7 @@ func TestKeeper_DepositAndCallZeta(t *testing.T) {
 			SystemContract: sample.EthAddress().Hex(),
 		})
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 
@@ -132,7 +132,7 @@ func TestKeeper_CallDepositAndRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", sample.EthAddress().String(), "foo")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 
@@ -180,7 +180,7 @@ func TestKeeper_CallDepositAndRevert(t *testing.T) {
 		message := []byte("test message")
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 
@@ -211,7 +211,7 @@ func TestKeeper_CallDepositAndRevert(t *testing.T) {
 			SystemContract: sample.EthAddress().Hex(),
 		})
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM, sample.EthAddress())
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 

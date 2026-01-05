@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/blame.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
-import "zetachain/zetacore/observer/params.proto";
+import "zetachain/zetacore/observer/chain_params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/operational.proto";
@@ -42,6 +42,8 @@ service Msg {
       returns (MsgUpdateOperationalFlagsResponse);
   rpc UpdateOperationalChainParams(MsgUpdateOperationalChainParams)
       returns (MsgUpdateOperationalChainParamsResponse);
+  rpc UpdateV2ZetaFlows(MsgUpdateV2ZetaFlows)
+      returns (MsgUpdateV2ZetaFlowsResponse);
 }
 
 message MsgUpdateObserver {
@@ -201,3 +203,11 @@ message MsgDisableFastConfirmation {
   int64 chain_id = 2;
 }
 message MsgDisableFastConfirmationResponse {}
+
+// MsgUpdateV2ZetaFlows is used to update the V2 ZETA gateway flows flag.
+message MsgUpdateV2ZetaFlows {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  bool isV2ZetaEnabled = 2;
+}
+message MsgUpdateV2ZetaFlowsResponse {}

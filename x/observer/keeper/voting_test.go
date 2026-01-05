@@ -534,7 +534,6 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 
 		ballot := types.Ballot{
-			Index:            index,
 			BallotIdentifier: index,
 			VoterList: []string{
 				sample.AccAddress(),
@@ -588,7 +587,6 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		require.NoError(t, err)
 
 		ballot := types.Ballot{
-			Index:            index,
 			BallotIdentifier: index,
 			VoterList: []string{
 				sample.AccAddress(),

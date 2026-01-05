@@ -3,7 +3,6 @@ package runner
 import (
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/testdapp"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
@@ -12,6 +11,7 @@ import (
 // SetupLegacyZEVMContracts sets up the legacy contracts on ZEVM
 // In particular it deploys test contracts used with the protocol contracts v1
 func (r *E2ERunner) SetupLegacyZEVMContracts() {
+	r.Logger.Print("⚙️ Setting up ZEVM legacy protocol contracts")
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
 		r.ZEVMAuth,
@@ -24,16 +24,13 @@ func (r *E2ERunner) SetupLegacyZEVMContracts() {
 	r.ZevmTestDAppAddr = appAddr
 	r.Logger.Info("TestDApp Zevm contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
 
-	// deploy ZEVMSwapApp and ContextApp
+	// deploy ZEVMSwapApp
 	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
 		r.ZEVMAuth,
 		r.ZEVMClient,
 		r.UniswapV2RouterAddr,
 		r.SystemContractAddr,
 	)
-	require.NoError(r, err)
-
-	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
 	receipt := e2eutils.MustWaitForTxReceipt(
@@ -47,16 +44,4 @@ func (r *E2ERunner) SetupLegacyZEVMContracts() {
 
 	r.ZEVMSwapAppAddr = zevmSwapAppAddr
 	r.ZEVMSwapApp = zevmSwapApp
-
-	receipt = e2eutils.MustWaitForTxReceipt(
-		r.Ctx,
-		r.ZEVMClient,
-		txContextApp,
-		r.Logger,
-		r.ReceiptTimeout,
-	)
-	r.requireTxSuccessful(receipt, "ContextApp deployment failed")
-
-	r.ContextAppAddr = contextAppAddr
-	r.ContextApp = contextApp
 }

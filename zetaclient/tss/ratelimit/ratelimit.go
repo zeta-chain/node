@@ -52,27 +52,36 @@ func New(maxPending uint64) *RateLimiter {
 // Acquire acquires a signature for a given chain and nonce.
 // Returns ErrThrottled if the rate limit is exceeded.
 func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
+	// First try to acquire the semaphore
 	if !r.sem.TryAcquire(1) {
 		return errors.Wrapf(ErrThrottled, "chain: %d, nonce: %d", chainID, nonce)
 	}
 
+	// If semaphore acquisition succeeds, increment the pending counter
+	// This ensures we only increment when we actually acquire a permit
 	r.pending.Add(1)
 
 	return nil
 }
 
 func (r *RateLimiter) Release() {
-	// noop
-	if r.pending.Load() == 0 {
+	// Check if there are pending items to release
+	if r.pending.Load() <= 0 {
 		return
 	}
 
-	r.sem.Release(1)
+	// Decrement the pending counter first
 	r.pending.Add(-1)
+	// Then release the semaphore
+	r.sem.Release(1)
 }
 
 // Pending returns the number of pending signatures.
 func (r *RateLimiter) Pending() uint64 {
-	// #nosec G115 always in range
-	return uint64(r.pending.Load())
+	// Ensure we never return a negative value
+	pending := r.pending.Load()
+	if pending < 0 {
+		return 0
+	}
+	return uint64(pending)
 }

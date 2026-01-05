@@ -18,4 +18,6 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
+
+	r.Logger.Print("Zeta deposit cctx: %s", cctx.Index)
 }

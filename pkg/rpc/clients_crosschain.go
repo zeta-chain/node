@@ -12,16 +12,6 @@ import (
 // 32MB
 var maxSizeOption = grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 
-// GetLastBlockHeight returns the zetachain block height
-func (c *Clients) GetLastBlockHeight(ctx context.Context) (uint64, error) {
-	resp, err := c.Crosschain.LastBlockHeight(ctx, &types.QueryGetLastBlockHeightRequest{})
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get block height")
-	}
-
-	return resp.GetLastBlockHeight().LastInboundHeight, nil
-}
-
 // GetBlockHeight returns the zetachain block height
 func (c *Clients) GetBlockHeight(ctx context.Context) (int64, error) {
 	resp, err := c.Crosschain.LastZetaHeight(ctx, &types.QueryLastZetaHeightRequest{})

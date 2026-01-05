@@ -3,21 +3,25 @@ package v6_test
 import (
 	"testing"
 
+	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
+
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
-	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
+
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("update authorization list with remove observer", func(t *testing.T) {
+	t.Run("update authorization list", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		list := types.DefaultAuthorizationsList()
 		// Ensure the target authorization is missing so migration should add it
 		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgRemoveObserver")
+		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgWhitelistAsset")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act
@@ -28,12 +32,7 @@ func TestMigrateStore(t *testing.T) {
 		list, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)
 
-		// After migration, default list should be restored for this item at least;
-		// simplest is to compare with defaults since migration uses SetAuthorization on existing list
-		// which results in same as default for that authorization
-		policy, err := list.GetAuthorizedPolicy("/zetachain.zetacore.observer.MsgRemoveObserver")
-		require.NoError(t, err)
-		require.Equal(t, types.PolicyType_groupAdmin, policy)
+		require.ElementsMatch(t, types.DefaultAuthorizationsList().Authorizations, list.Authorizations)
 	})
 
 	t.Run("set default authorization list if list is not found", func(t *testing.T) {
@@ -50,7 +49,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, types.DefaultAuthorizationsList(), list)
 	})
 
-	t.Run("return error when list is invalid", func(t *testing.T) {
+	t.Run("return error list is invalid", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
 
