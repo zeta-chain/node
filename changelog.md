@@ -34,6 +34,7 @@ The `zetacored` binary must be upgraded to trigger chain parameters data migrati
 * [4490](https://github.com/zeta-chain/node/pull/4490) - allow object for `tracerConfig` in the zevm debug APIs
 * [4511](https://github.com/zeta-chain/node/pull/4511) - false mempool congested warning
 * [4509](https://github.com/zeta-chain/node/pull/4509) - use outbound schedule interval in sui cctx scheduling
+* [4514](https://github.com/zeta-chain/node/pull/4514) - use Zeta height as a factor to calculate the EVM chain artificial height for TSS keysign
 
 ### Tests
 
