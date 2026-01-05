@@ -37,6 +37,7 @@ The `zetacored` binary must be upgraded to trigger chain parameters data migrati
 * [4509](https://github.com/zeta-chain/node/pull/4509) - use outbound schedule interval in sui cctx scheduling
 * [4514](https://github.com/zeta-chain/node/pull/4514) - use Zeta height as a factor to calculate the EVM chain artificial height for TSS keysign
 * [4513](https://github.com/zeta-chain/node/pull/4513) - use `outbound_schedule_interval` and `outbound_schedule_lookahead` in ton cctx scheduling
+* [4516](https://github.com/zeta-chain/node/pull/4516) - skip stale events in the Zeta block subscription channel
 
 ### Tests
 
