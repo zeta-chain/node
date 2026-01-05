@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "zetachain/zetacore/observer/blame.proto";
 import "zetachain/zetacore/observer/crosschain_flags.proto";
 import "zetachain/zetacore/observer/observer.proto";
-import "zetachain/zetacore/observer/params.proto";
+import "zetachain/zetacore/observer/chain_params.proto";
 import "zetachain/zetacore/observer/pending_nonces.proto";
 import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/operational.proto";

@@ -37,5 +37,5 @@ func TestETHDepositAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }

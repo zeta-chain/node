@@ -28,7 +28,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		supportedChains := k.GetChainsSupportingTSSMigration(ctx)
+		supportedChains := k.TSSFundsMigrationChains(ctx)
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,

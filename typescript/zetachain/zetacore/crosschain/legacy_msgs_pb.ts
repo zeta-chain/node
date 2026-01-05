@@ -20,7 +20,62 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file zetachain/zetacore/crosschain/legacy_msgs.proto.
  */
 export const file_zetachain_zetacore_crosschain_legacy_msgs: GenFile = /*@__PURE__*/
-  fileDesc("Ci96ZXRhY2hhaW4vemV0YWNvcmUvY3Jvc3NjaGFpbi9sZWdhY3lfbXNncy5wcm90bxIdemV0YWNoYWluLnpldGFjb3JlLmNyb3NzY2hhaW4iwgEKFE1zZ0FkZFRvT3V0VHhUcmFja2VyEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSDQoFbm9uY2UYAyABKAQSDwoHdHhfaGFzaBgEIAEoCRIzCgVwcm9vZhgFIAEoCzIkLnpldGFjaGFpbi56ZXRhY29yZS5wa2cucHJvb2ZzLlByb29mEhIKCmJsb2NrX2hhc2gYBiABKAkSEAoIdHhfaW5kZXgYByABKAM6DILnsCoHY3JlYXRvciLsAQoTTXNnQWRkVG9JblR4VHJhY2tlchIPCgdjcmVhdG9yGAEgASgJEhAKCGNoYWluX2lkGAIgASgDEg8KB3R4X2hhc2gYAyABKAkSOAoJY29pbl90eXBlGAQgASgOMiUuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jb2luLkNvaW5UeXBlEjMKBXByb29mGAUgASgLMiQuemV0YWNoYWluLnpldGFjb3JlLnBrZy5wcm9vZnMuUHJvb2YSEgoKYmxvY2tfaGFzaBgGIAEoCRIQCgh0eF9pbmRleBgHIAEoAzoMguewKgdjcmVhdG9yIlsKGU1zZ1JlbW92ZUZyb21PdXRUeFRyYWNrZXISDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAxINCgVub25jZRgDIAEoBDoMguewKgdjcmVhdG9yIp8EChtNc2dWb3RlT25PYnNlcnZlZE91dGJvdW5kVHgSDwoHY3JlYXRvchgBIAEoCRIRCgljY3R4X2hhc2gYAiABKAkSGwoTb2JzZXJ2ZWRfb3V0VHhfaGFzaBgDIAEoCRIiChpvYnNlcnZlZF9vdXRUeF9ibG9ja0hlaWdodBgEIAEoBBIfChdvYnNlcnZlZF9vdXRUeF9nYXNfdXNlZBgKIAEoBBJJCiJvYnNlcnZlZF9vdXRUeF9lZmZlY3RpdmVfZ2FzX3ByaWNlGAsgASgJQh3I3h8A2t4fFWNvc21vc3Nkay5pby9tYXRoLkludBIqCiJvYnNlcnZlZF9vdXRUeF9lZmZlY3RpdmVfZ2FzX2xpbWl0GAwgASgEEk8KDnZhbHVlX3JlY2VpdmVkGAUgASgJQjfI3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnTy3h8VeWFtbDoidmFsdWVfcmVjZWl2ZWQiEjwKBnN0YXR1cxgGIAEoDjIsLnpldGFjaGFpbi56ZXRhY29yZS5wa2cuY2hhaW5zLlJlY2VpdmVTdGF0dXMSEwoLb3V0VHhfY2hhaW4YByABKAMSFwoPb3V0VHhfdHNzX25vbmNlGAggASgEEjgKCWNvaW5fdHlwZRgJIAEoDjIlLnpldGFjaGFpbi56ZXRhY29yZS5wa2cuY29pbi5Db2luVHlwZToMguewKgdjcmVhdG9yIoADChpNc2dWb3RlT25PYnNlcnZlZEluYm91bmRUeBIPCgdjcmVhdG9yGAEgASgJEg4KBnNlbmRlchgCIAEoCRIXCg9zZW5kZXJfY2hhaW5faWQYAyABKAMSEAoIcmVjZWl2ZXIYBCABKAkSFgoOcmVjZWl2ZXJfY2hhaW4YBSABKAMSLgoGYW1vdW50GAYgASgJQh7I3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnQSDwoHbWVzc2FnZRgIIAEoCRISCgppbl90eF9oYXNoGAkgASgJEhcKD2luX2Jsb2NrX2hlaWdodBgKIAEoBBIRCglnYXNfbGltaXQYCyABKAQSOAoJY29pbl90eXBlGAwgASgOMiUuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jb2luLkNvaW5UeXBlEhEKCXR4X29yaWdpbhgNIAEoCRINCgVhc3NldBgOIAEoCRITCgtldmVudF9pbmRleBgPIAEoBDoMguewKgdjcmVhdG9yIngKEE1zZ0dhc1ByaWNlVm90ZXISDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAxINCgVwcmljZRgDIAEoBBIUCgxibG9ja19udW1iZXIYBCABKAQSDgoGc3VwcGx5GAUgASgJOgyC57AqB2NyZWF0b3JC+QEKIWNvbS56ZXRhY2hhaW4uemV0YWNvcmUuY3Jvc3NjaGFpbkIPTGVnYWN5TXNnc1Byb3RvUAFaLWdpdGh1Yi5jb20vemV0YS1jaGFpbi9ub2RlL3gvY3Jvc3NjaGFpbi90eXBlc6ICA1paQ6oCHVpldGFjaGFpbi5aZXRhY29yZS5Dcm9zc2NoYWluygIdWmV0YWNoYWluXFpldGFjb3JlXENyb3NzY2hhaW7iAilaZXRhY2hhaW5cWmV0YWNvcmVcQ3Jvc3NjaGFpblxHUEJNZXRhZGF0YeoCH1pldGFjaGFpbjo6WmV0YWNvcmU6OkNyb3NzY2hhaW5iBnByb3RvMw", [file_cosmos_msg_v1_msg, file_gogoproto_gogo, file_zetachain_zetacore_pkg_chains_chains, file_zetachain_zetacore_pkg_coin_coin, file_zetachain_zetacore_pkg_proofs_proofs, file_zetachain_zetacore_crosschain_rate_limiter_flags, file_zetachain_zetacore_crosschain_cross_chain_tx]);
+  fileDesc("Ci96ZXRhY2hhaW4vemV0YWNvcmUvY3Jvc3NjaGFpbi9sZWdhY3lfbXNncy5wcm90bxIdemV0YWNoYWluLnpldGFjb3JlLmNyb3NzY2hhaW4i1QEKEU1zZ1doaXRlbGlzdEVSQzIwEg8KB2NyZWF0b3IYASABKAkSFQoNZXJjMjBfYWRkcmVzcxgCIAEoCRIQCghjaGFpbl9pZBgDIAEoAxIMCgRuYW1lGAQgASgJEg4KBnN5bWJvbBgFIAEoCRIQCghkZWNpbWFscxgGIAEoDRIRCglnYXNfbGltaXQYByABKAMSNQoNbGlxdWlkaXR5X2NhcBgIIAEoCUIeyN4fANreHxZjb3Ntb3NzZGsuaW8vbWF0aC5VaW50OgyC57AqB2NyZWF0b3IiwgEKFE1zZ0FkZFRvT3V0VHhUcmFja2VyEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSDQoFbm9uY2UYAyABKAQSDwoHdHhfaGFzaBgEIAEoCRIzCgVwcm9vZhgFIAEoCzIkLnpldGFjaGFpbi56ZXRhY29yZS5wa2cucHJvb2ZzLlByb29mEhIKCmJsb2NrX2hhc2gYBiABKAkSEAoIdHhfaW5kZXgYByABKAM6DILnsCoHY3JlYXRvciLsAQoTTXNnQWRkVG9JblR4VHJhY2tlchIPCgdjcmVhdG9yGAEgASgJEhAKCGNoYWluX2lkGAIgASgDEg8KB3R4X2hhc2gYAyABKAkSOAoJY29pbl90eXBlGAQgASgOMiUuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jb2luLkNvaW5UeXBlEjMKBXByb29mGAUgASgLMiQuemV0YWNoYWluLnpldGFjb3JlLnBrZy5wcm9vZnMuUHJvb2YSEgoKYmxvY2tfaGFzaBgGIAEoCRIQCgh0eF9pbmRleBgHIAEoAzoMguewKgdjcmVhdG9yIlsKGU1zZ1JlbW92ZUZyb21PdXRUeFRyYWNrZXISDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAxINCgVub25jZRgDIAEoBDoMguewKgdjcmVhdG9yIp8EChtNc2dWb3RlT25PYnNlcnZlZE91dGJvdW5kVHgSDwoHY3JlYXRvchgBIAEoCRIRCgljY3R4X2hhc2gYAiABKAkSGwoTb2JzZXJ2ZWRfb3V0VHhfaGFzaBgDIAEoCRIiChpvYnNlcnZlZF9vdXRUeF9ibG9ja0hlaWdodBgEIAEoBBIfChdvYnNlcnZlZF9vdXRUeF9nYXNfdXNlZBgKIAEoBBJJCiJvYnNlcnZlZF9vdXRUeF9lZmZlY3RpdmVfZ2FzX3ByaWNlGAsgASgJQh3I3h8A2t4fFWNvc21vc3Nkay5pby9tYXRoLkludBIqCiJvYnNlcnZlZF9vdXRUeF9lZmZlY3RpdmVfZ2FzX2xpbWl0GAwgASgEEk8KDnZhbHVlX3JlY2VpdmVkGAUgASgJQjfI3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnTy3h8VeWFtbDoidmFsdWVfcmVjZWl2ZWQiEjwKBnN0YXR1cxgGIAEoDjIsLnpldGFjaGFpbi56ZXRhY29yZS5wa2cuY2hhaW5zLlJlY2VpdmVTdGF0dXMSEwoLb3V0VHhfY2hhaW4YByABKAMSFwoPb3V0VHhfdHNzX25vbmNlGAggASgEEjgKCWNvaW5fdHlwZRgJIAEoDjIlLnpldGFjaGFpbi56ZXRhY29yZS5wa2cuY29pbi5Db2luVHlwZToMguewKgdjcmVhdG9yIoADChpNc2dWb3RlT25PYnNlcnZlZEluYm91bmRUeBIPCgdjcmVhdG9yGAEgASgJEg4KBnNlbmRlchgCIAEoCRIXCg9zZW5kZXJfY2hhaW5faWQYAyABKAMSEAoIcmVjZWl2ZXIYBCABKAkSFgoOcmVjZWl2ZXJfY2hhaW4YBSABKAMSLgoGYW1vdW50GAYgASgJQh7I3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnQSDwoHbWVzc2FnZRgIIAEoCRISCgppbl90eF9oYXNoGAkgASgJEhcKD2luX2Jsb2NrX2hlaWdodBgKIAEoBBIRCglnYXNfbGltaXQYCyABKAQSOAoJY29pbl90eXBlGAwgASgOMiUuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jb2luLkNvaW5UeXBlEhEKCXR4X29yaWdpbhgNIAEoCRINCgVhc3NldBgOIAEoCRITCgtldmVudF9pbmRleBgPIAEoBDoMguewKgdjcmVhdG9yIngKEE1zZ0dhc1ByaWNlVm90ZXISDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAxINCgVwcmljZRgDIAEoBBIUCgxibG9ja19udW1iZXIYBCABKAQSDgoGc3VwcGx5GAUgASgJOgyC57AqB2NyZWF0b3IisgEKG01zZ01pZ3JhdGVFUkMyMEN1c3RvZHlGdW5kcxIPCgdjcmVhdG9yGAEgASgJEhAKCGNoYWluX2lkGAIgASgDEhsKE25ld19jdXN0b2R5X2FkZHJlc3MYAyABKAkSFQoNZXJjMjBfYWRkcmVzcxgEIAEoCRIuCgZhbW91bnQYBSABKAlCHsjeHwDa3h8WY29zbW9zc2RrLmlvL21hdGguVWludDoMguewKgdjcmVhdG9yImIKIE1zZ1VwZGF0ZUVSQzIwQ3VzdG9keVBhdXNlU3RhdHVzEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSDQoFcGF1c2UYAyABKAg6DILnsCoHY3JlYXRvckL5AQohY29tLnpldGFjaGFpbi56ZXRhY29yZS5jcm9zc2NoYWluQg9MZWdhY3lNc2dzUHJvdG9QAVotZ2l0aHViLmNvbS96ZXRhLWNoYWluL25vZGUveC9jcm9zc2NoYWluL3R5cGVzogIDWlpDqgIdWmV0YWNoYWluLlpldGFjb3JlLkNyb3NzY2hhaW7KAh1aZXRhY2hhaW5cWmV0YWNvcmVcQ3Jvc3NjaGFpbuICKVpldGFjaGFpblxaZXRhY29yZVxDcm9zc2NoYWluXEdQQk1ldGFkYXRh6gIfWmV0YWNoYWluOjpaZXRhY29yZTo6Q3Jvc3NjaGFpbmIGcHJvdG8z", [file_cosmos_msg_v1_msg, file_gogoproto_gogo, file_zetachain_zetacore_pkg_chains_chains, file_zetachain_zetacore_pkg_coin_coin, file_zetachain_zetacore_pkg_proofs_proofs, file_zetachain_zetacore_crosschain_rate_limiter_flags, file_zetachain_zetacore_crosschain_cross_chain_tx]);
+
+/**
+ * legacy MsgWhitelistERC20
+ * defined to keep codec compatibility
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
+ */
+export type MsgWhitelistERC20 = Message<"zetachain.zetacore.crosschain.MsgWhitelistERC20"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string erc20_address = 2;
+   */
+  erc20Address: string;
+
+  /**
+   * @generated from field: int64 chain_id = 3;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string name = 4;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string symbol = 5;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: uint32 decimals = 6;
+   */
+  decimals: number;
+
+  /**
+   * @generated from field: int64 gas_limit = 7;
+   */
+  gasLimit: bigint;
+
+  /**
+   * @generated from field: string liquidity_cap = 8;
+   */
+  liquidityCap: string;
+};
+
+/**
+ * Describes the message zetachain.zetacore.crosschain.MsgWhitelistERC20.
+ * Use `create(MsgWhitelistERC20Schema)` to create a new message.
+ */
+export const MsgWhitelistERC20Schema: GenMessage<MsgWhitelistERC20> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 0);
 
 /**
  * legacy MsgAddOutboundTracker
@@ -70,7 +125,7 @@ export type MsgAddToOutTxTracker = Message<"zetachain.zetacore.crosschain.MsgAdd
  * Use `create(MsgAddToOutTxTrackerSchema)` to create a new message.
  */
 export const MsgAddToOutTxTrackerSchema: GenMessage<MsgAddToOutTxTracker> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 0);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 1);
 
 /**
  * legacy MsgAddInboundTracker
@@ -120,7 +175,7 @@ export type MsgAddToInTxTracker = Message<"zetachain.zetacore.crosschain.MsgAddT
  * Use `create(MsgAddToInTxTrackerSchema)` to create a new message.
  */
 export const MsgAddToInTxTrackerSchema: GenMessage<MsgAddToInTxTracker> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 1);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 2);
 
 /**
  * legacy MsgRemoveOutboundTracker
@@ -150,7 +205,7 @@ export type MsgRemoveFromOutTxTracker = Message<"zetachain.zetacore.crosschain.M
  * Use `create(MsgRemoveFromOutTxTrackerSchema)` to create a new message.
  */
 export const MsgRemoveFromOutTxTrackerSchema: GenMessage<MsgRemoveFromOutTxTracker> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 2);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 3);
 
 /**
  * legacy MsgVoteOutbound
@@ -225,7 +280,7 @@ export type MsgVoteOnObservedOutboundTx = Message<"zetachain.zetacore.crosschain
  * Use `create(MsgVoteOnObservedOutboundTxSchema)` to create a new message.
  */
 export const MsgVoteOnObservedOutboundTxSchema: GenMessage<MsgVoteOnObservedOutboundTx> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 3);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 4);
 
 /**
  * legacy MsgVoteInbound
@@ -316,7 +371,7 @@ export type MsgVoteOnObservedInboundTx = Message<"zetachain.zetacore.crosschain.
  * Use `create(MsgVoteOnObservedInboundTxSchema)` to create a new message.
  */
 export const MsgVoteOnObservedInboundTxSchema: GenMessage<MsgVoteOnObservedInboundTx> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 4);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 5);
 
 /**
  * legacy MsgVoteGasPrice
@@ -356,5 +411,75 @@ export type MsgGasPriceVoter = Message<"zetachain.zetacore.crosschain.MsgGasPric
  * Use `create(MsgGasPriceVoterSchema)` to create a new message.
  */
 export const MsgGasPriceVoterSchema: GenMessage<MsgGasPriceVoter> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 5);
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 6);
+
+/**
+ * legacy MsgMigrateERC20CustodyFunds
+ * defined to keep codec compatibility
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFunds
+ */
+export type MsgMigrateERC20CustodyFunds = Message<"zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFunds"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string new_custody_address = 3;
+   */
+  newCustodyAddress: string;
+
+  /**
+   * @generated from field: string erc20_address = 4;
+   */
+  erc20Address: string;
+
+  /**
+   * @generated from field: string amount = 5;
+   */
+  amount: string;
+};
+
+/**
+ * Describes the message zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFunds.
+ * Use `create(MsgMigrateERC20CustodyFundsSchema)` to create a new message.
+ */
+export const MsgMigrateERC20CustodyFundsSchema: GenMessage<MsgMigrateERC20CustodyFunds> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 7);
+
+/**
+ * legacy MsgUpdateERC20CustodyPauseStatus
+ * defined to keep codec compatibility
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus
+ */
+export type MsgUpdateERC20CustodyPauseStatus = Message<"zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: bool pause = 3;
+   */
+  pause: boolean;
+};
+
+/**
+ * Describes the message zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus.
+ * Use `create(MsgUpdateERC20CustodyPauseStatusSchema)` to create a new message.
+ */
+export const MsgUpdateERC20CustodyPauseStatusSchema: GenMessage<MsgUpdateERC20CustodyPauseStatus> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_crosschain_legacy_msgs, 8);
 

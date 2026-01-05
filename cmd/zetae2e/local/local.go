@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -28,7 +26,6 @@ import (
 	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -289,8 +286,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup TSS address and setup deployer wallet
 		deployerRunner.SetupBitcoinAccounts(true)
 
-		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy || testAdmin)
+		//setup evm contracts v1 as they are still supported for now
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -303,7 +300,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		deployerRunner.SetupZEVMProtocolContracts()
+		deployerRunner.SetupZEVM()
 		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{
@@ -313,10 +310,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if shouldSetupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
-		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
+		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.InitializeChainParams(testLegacy || testAdmin)
+		deployerRunner.UpdateEVMChainParams(testLegacy)
 
 		if shouldSetupTON {
 			deployerRunner.SetupTON(
@@ -333,8 +330,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
 		err = OverwriteAccountData(cmd, &conf)
-		noError(err)
-		deployerRunner.RunSetup(testLegacy || testAdmin)
+		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		deployerRunner.RunSetup()
+		if testAdmin {
+			deployerRunner.UpdateEVMChainParams(false)
+		}
 	})
 
 	// if a config output is specified, write the config
@@ -377,6 +377,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.UpdateGatewayGasLimit(4_000_000)
+
+	// run tests
 	var eg errgroup.Group
 
 	if !skipRegular {
@@ -402,8 +404,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateBytecodeConnectorName,
 			e2etests.TestDepositEtherLiquidityCapName,
 			e2etests.TestCriticalAdminTransactionsName,
-			e2etests.TestPauseERC20CustodyName,
-			e2etests.TestMigrateERC20CustodyFundsName,
 			e2etests.TestUpdateOperationalChainParamsName,
 			e2etests.TestBurnFungibleModuleAssetName,
 
@@ -529,7 +529,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		// TODO: https://github.com/zeta-chain/node/issues/4139
-		// the upgrade test is now based on old sui gateway package
+		// the v35 upgrade test is now based on v32 sui gateway
 		// 1. does not have MessageContext object, we have to skip all WaC tests
 		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
 		suiBreakingTestsV35Upgrade := []string{
@@ -641,11 +641,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	deployerRunner.AddPreUpgradeHandler("v32.0.0", func() {
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
-	})
+
 	// TODO : enable sui gateway upgrade tests to be run multiple times
 	// https://github.com/zeta-chain/node/issues/4038
 	// https://github.com/zeta-chain/node/issues/4315
@@ -877,7 +873,21 @@ func waitKeygenHeight(
 		logger.Info("Last ZetaHeight: %d", response.Height)
 
 		if response.Height >= keygenHeight+bufferBlocks {
-			return nil
+			// Check keygen status before exiting
+			keygenResp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+			if err != nil {
+				logger.Error("observerClient.Keygen error: %s", err)
+				continue
+			}
+			if keygenResp.Keygen == nil {
+				logger.Error("keygen is nil")
+				continue
+			}
+			if keygenResp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess {
+				logger.Print("✅ keygen successful")
+				return nil
+			}
+			logger.Info("keygen status: %s, waiting...", keygenResp.Keygen.Status.String())
 		}
 	}
 }

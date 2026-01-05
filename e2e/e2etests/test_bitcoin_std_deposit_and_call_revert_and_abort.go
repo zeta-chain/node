@@ -51,7 +51,7 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	txHash := r.DepositBTCWithExactAmount(amount, inboundMemo)
 
 	// ASSERT
-	// Now we want to make sure revert TX is completed.
+	// now we want to make sure tx is aborted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "bitcoin_std_memo_deposit")
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Aborted)

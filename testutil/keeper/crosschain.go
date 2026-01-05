@@ -456,6 +456,7 @@ func MockSaveOutbound(
 	tss observertypes.TSS,
 	expectedNumberOfOutboundParams int,
 ) {
+	// For abort cases, all outbounds have TxFinalizationStatus_Executed, so all nonces should be removed.
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
 		Return().Times(expectedNumberOfOutboundParams)
@@ -466,11 +467,12 @@ func MockSaveOutboundNewRevertCreated(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	tss observertypes.TSS,
-	expectedNumberOfOutboundParams int,
 ) {
+	// Only expect RemoveFromPendingNonces to be called once for the old executed outbound.
+	// The new revert outbound has TxFinalizationStatus_NotFinalized, so it should NOT be removed.
 	m.On("RemoveFromPendingNonces",
 		ctx, tss.TssPubkey, cctx.GetCurrentOutboundParam().ReceiverChainId, mock.Anything).
-		Return().Times(expectedNumberOfOutboundParams)
+		Return().Once()
 
 	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
 	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()

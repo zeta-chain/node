@@ -135,6 +135,30 @@ func (signer *Signer) signZetaConnectorWithdraw(txData *OutboundData) (*ethtypes
 	return tx, nil
 }
 
+func (signer *Signer) signZetaConnectorWithdrawAndCall(txData *OutboundData) (*ethtypes.Transaction, error) {
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := connectorABI.Pack("withdrawAndCall", messageContext, txData.to, txData.amount, txData.message)
+	if err != nil {
+		return nil, errors.Wrap(err, "withdraw and call pack error")
+	}
+
+	tx, _, _, err := signer.Sign(
+		data,
+		signer.zetaConnectorAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "sign withdrawAndCall error")
+	}
+	return tx, nil
+}
+
 // signERC20CustodyWithdrawAndCall signs a erc20 withdrawal and call transaction
 // function withdrawAndCall
 // address token,

@@ -31,7 +31,7 @@ jobs:
       # uses json for semgrep script for transformation in the next step
       - run: semgrep ci --json --output semgrep-findings.json 
       
-      # transforms the output from above into a GHAS compatible SARIF 
+      # transforms the output from above into a GHAS compatible SARIF
       # SARIF output by "semgrep --sarif" doesn't integrate well with GHAS dashboard
       # Example: the event name uses segmrep rules name/ID, severities are [error, warning, info], tags are a bit confusing)
       - run: python semgrep-utilities/utilities/github-sarif-helper/src/semgrep-json-to-sarif.py --json semgrep-findings.json --sarif semgrep-github.sarif

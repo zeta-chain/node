@@ -402,6 +402,13 @@ def main(node_version, upgrade_version=None):
     print("\n[10/10] Setting up Cosmovisor and starting node...")
     setup_cosmovisor(node_version, upgrade_version)
 
+    # Create priv_validator_state.json if missing
+    data_dir = ZETACORED_DIR / "data"
+    pvs = f"{data_dir}/priv_validator_state.json"
+    if not os.path.isfile(pvs):
+        with open(pvs, 'w') as f:
+            json.dump({"height": "0", "round": 0, "step": 0}, f)
+
     # Run cosmovisor start in foreground
     print("\nStarting Cosmovisor...")
     cosmovisor_cmd = "cosmovisor start"

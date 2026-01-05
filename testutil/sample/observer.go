@@ -22,8 +22,7 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 	r := newRandFromStringSeed(t, index)
 
 	return &types.Ballot{
-		Index:                index,
-		BallotIdentifier:     StringRandom(r, 32),
+		BallotIdentifier:     index,
 		VoterList:            []string{AccAddress(), AccAddress()},
 		Votes:                []types.VoteType{types.VoteType_FailureObservation, types.VoteType_SuccessObservation},
 		ObservationType:      types.ObservationType_EmptyObserverType,
@@ -103,9 +102,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 	gasPriceMultiplier := sdkmath.LegacyNewDec(Int64InRangeFromRand(r, 10, 21)).Quo(sdkmath.LegacyNewDec(10))
 
 	return &types.ChainParams{
-		ChainId:           chainID,
-		ConfirmationCount: r.Uint64(),
-
+		ChainId:                     chainID,
 		GasPriceTicker:              Uint64InRange(1, 300),
 		InboundTicker:               Uint64InRange(1, 300),
 		OutboundTicker:              Uint64InRange(1, 300),
@@ -127,9 +124,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
 	fiftyPercent := sdkmath.LegacyMustNewDecFromStr("0.5")
 	return &types.ChainParams{
-		ChainId:           chainID,
-		ConfirmationCount: r.Uint64(),
-
+		ChainId:                     chainID,
 		GasPriceTicker:              Uint64InRangeFromRand(r, 1, 300),
 		InboundTicker:               Uint64InRangeFromRand(r, 1, 300),
 		OutboundTicker:              Uint64InRangeFromRand(r, 1, 300),
@@ -286,9 +281,8 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 	ballotList := make([]types.Ballot, n)
 
 	for i := 0; i < n; i++ {
-		identifier := crypto.Keccak256Hash([]byte(fmt.Sprintf("%d-%d-%d", r.Int63(), r.Int63(), r.Int63())))
+		identifier := crypto.Keccak256Hash(fmt.Appendf(nil, "%d-%d-%d", r.Int63(), r.Int63(), r.Int63()))
 		ballotList[i] = types.Ballot{
-			Index:                identifier.Hex(),
 			BallotIdentifier:     identifier.Hex(),
 			VoterList:            observerSet,
 			Votes:                VotesSuccessOnly(len(observerSet)),

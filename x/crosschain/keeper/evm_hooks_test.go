@@ -27,6 +27,70 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// SetupStateForProcessLogsZetaWithdraw sets up additional state required for processing logs for ZETA withdraw events
+// This sets up the system contract with gateway configuration and mints necessary coins.
+func SetupStateForProcessLogsZetaWithdraw(
+	t *testing.T,
+	ctx sdk.Context,
+	k *crosschainkeeper.Keeper,
+	zk keepertest.ZetaKeepers,
+	sdkk keepertest.SDKKeepers,
+	chain chains.Chain,
+	mintAmount sdkmath.Int,
+) {
+	// Mint coins for the fungible module
+	err := sdkk.BankKeeper.MintCoins(
+		ctx,
+		fungibletypes.ModuleName,
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, mintAmount)),
+	)
+	require.NoError(t, err)
+
+	// Set up gateway and ZRC20 addresses
+	gatewayFromLog := "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	zrc20FromLog := "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
+
+	// Deploy system contract
+	systemContract, err := zk.FungibleKeeper.DeploySystemContract(
+		ctx,
+		ethcommon.HexToAddress(zrc20FromLog),
+		ethcommon.Address{},
+		ethcommon.Address{},
+	)
+	require.NoError(t, err)
+
+	// Set up TSS
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+
+	// Set gas price
+	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+		ChainId: chain.ChainId,
+		Prices:  []uint64{100},
+	})
+
+	// Set chain nonces
+	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+		ChainId: chain.ChainId,
+		Nonce:   0,
+	})
+
+	// Set pending nonces
+	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+		NonceLow:  0,
+		NonceHigh: 0,
+		ChainId:   chain.ChainId,
+		Tss:       tss.TssPubkey,
+	})
+
+	// Set system contract configuration
+	zk.FungibleKeeper.SetSystemContract(ctx, fungibletypes.SystemContract{
+		SystemContract: systemContract.Hex(),
+		ConnectorZevm:  sample.EthAddress().String(),
+		Gateway:        gatewayFromLog,
+	})
+}
+
 // SetupStateForProcessLogsZetaSent sets up additional state required for processing logs for ZetaSent events
 // This sets up the gas coin, zrc20 contract, gas price, zrc20 pool.
 // This should be used in conjunction with SetupStateForProcessLogs for processing ZetaSent events
@@ -783,6 +847,61 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 }
 
 func TestKeeper_ProcessLogs(t *testing.T) {
+	t.Run("successfully process ZETA Withdraw to ETH chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+
+		SetupStateForProcessLogsZetaWithdraw(
+			t, ctx, k, zk, sdkk, chain,
+			sdkmath.NewInt(1000000000000),
+		)
+
+		block := sample.ValidZetaWithdrawToEthReceipt(t)
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+
+		require.Equal(t, cctxList[0].InboundParams.CoinType, coin.CoinType_Zeta)
+		require.Equal(t, cctxList[0].ProtocolContractVersion, crosschaintypes.ProtocolContractVersion_V2)
+	})
+
+	t.Run("successfully process ZETA Withdraw and call to ETH chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+
+		// Use the new setup function
+		SetupStateForProcessLogsZetaWithdraw(
+			t, ctx, k, zk, sdkk, chain,
+			sdkmath.NewInt(10000000000),
+		)
+
+		block := sample.ValidZetaWithdrawAndCallReceipt(t)
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+
+		require.Equal(t, cctxList[0].InboundParams.CoinType, coin.CoinType_Zeta)
+		require.Equal(t, cctxList[0].ProtocolContractVersion, crosschaintypes.ProtocolContractVersion_V2)
+	})
+
 	t.Run("successfully parse and process ZRC20Withdrawal to BTC chain", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)

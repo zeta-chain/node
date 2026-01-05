@@ -61,6 +61,13 @@ func WithCrossChainCall(isCrossChainCall bool) InboundVoteOption {
 	}
 }
 
+// WithErrorMessage sets the error message for the inbound vote message
+func WithErrorMessage(errorMessage string) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.ErrorMessage = errorMessage
+	}
+}
+
 var _ sdk.Msg = &MsgVoteInbound{}
 
 func NewMsgVoteInbound(
@@ -162,6 +169,8 @@ func (msg *MsgVoteInbound) Digest() string {
 	m := *msg
 	m.Creator = ""
 	m.InboundBlockHeight = 0
+	m.ConfirmationMode = ConfirmationMode_SAFE
+	m.ErrorMessage = ""
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }

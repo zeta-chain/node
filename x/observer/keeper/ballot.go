@@ -12,9 +12,8 @@ import (
 
 func (k Keeper) SetBallot(ctx sdk.Context, ballot *types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
-	ballot.Index = ballot.BallotIdentifier
 	b := k.cdc.MustMarshal(ballot)
-	store.Set([]byte(ballot.Index), b)
+	store.Set([]byte(ballot.BallotIdentifier), b)
 }
 
 func (k Keeper) SetBallotList(ctx sdk.Context, ballotlist *types.BallotListForHeight) {

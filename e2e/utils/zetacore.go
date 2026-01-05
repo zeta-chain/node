@@ -48,7 +48,7 @@ func GetCCTXByInboundHash(
 
 	// query cctx by inbound hash
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
-	res, err := client.InTxHashToCctxData(ctx, in)
+	res, err := client.InboundHashToCctxData(ctx, in)
 
 	require.NoError(t, err)
 
@@ -119,7 +119,7 @@ func WaitCctxsMinedByInboundHash(
 		// for the update tests
 		// TODO: replace with InboundHashToCctxData once removed
 		// https://github.com/zeta-chain/node/issues/2200
-		res, err := client.InTxHashToCctxData(ctx, in)
+		res, err := client.InboundHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
 			if i%20 == 0 {
@@ -370,7 +370,7 @@ func WaitCctxByInboundHash(
 	}
 
 	for {
-		out, err := c.InTxHashToCctxData(ctx, in)
+		out, err := c.InboundHashToCctxData(ctx, in)
 		statusCode, _ := status.FromError(err)
 
 		switch {

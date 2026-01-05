@@ -15,6 +15,7 @@ type observerKeeper interface {
 }
 
 // MigrateStore migrates the x/observer module state from the consensus version 11 to version 12.
+// The migration updates the 'StabilityPoolPercentage' field of all chain params to 100
 // The migration sets default gas price multipliers for all external chains.
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	allChainParams, found := observerKeeper.GetChainParamsList(ctx)
@@ -25,11 +26,12 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	// set new fields to the same value as 'confirmation_count'
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams != nil {
-			chain, found := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
-			if !found {
+			chain, foundChain := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
+			if !foundChain {
 				return errorsmod.Wrapf(types.ErrSupportedChains, "chain %d not found", chainParams.ChainId)
 			}
 			chainParams.GasPriceMultiplier = GetGasPriceMultiplierForChain(chain)
+			chainParams.StabilityPoolPercentage = 100
 		}
 	}
 

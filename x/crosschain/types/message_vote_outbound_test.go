@@ -184,11 +184,11 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 
-	// confirmation mode used
+	// confirmation mode not used
 	msgNew = msg
 	msgNew.ConfirmationMode = types.ConfirmationMode_FAST
 	hash2 = msgNew.Digest()
-	require.NotEqual(t, hash, hash2, "confirmation mode should change hash")
+	require.Equal(t, hash, hash2, "confirmation mode should not change hash")
 }
 
 func TestMsgVoteOutbound_GetSigners(t *testing.T) {

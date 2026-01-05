@@ -34,13 +34,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	// Set all the last block heights
-	for _, elem := range genState.LastBlockHeightList {
-		if elem != nil {
-			k.SetLastBlockHeight(ctx, *elem)
-		}
-	}
-
 	// Set the cross-chain transactions only,
 	// We don't need to call SaveCCTXUpdate as the other fields are being set already
 	for _, elem := range genState.CrossChainTxs {
@@ -71,12 +64,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	gasPriceList := k.GetAllGasPrice(ctx)
 	for _, elem := range gasPriceList {
 		genesis.GasPriceList = append(genesis.GasPriceList, &elem)
-	}
-
-	// Get all last block heights
-	lastBlockHeightList := k.GetAllLastBlockHeight(ctx)
-	for _, elem := range lastBlockHeightList {
-		genesis.LastBlockHeightList = append(genesis.LastBlockHeightList, &elem)
 	}
 
 	// Get all send

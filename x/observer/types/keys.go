@@ -41,7 +41,7 @@ func KeyPrefix(p string) []byte {
 }
 
 func BallotListKeyPrefix(p int64) []byte {
-	return []byte(fmt.Sprintf("%d", p))
+	return fmt.Appendf(nil, "%d", p)
 }
 
 func ChainNoncesKeyPrefix(chainID int64) []byte {
@@ -70,10 +70,6 @@ const (
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
 
-	// TODO remove unused keys
-	BlockHeaderKey      = "BlockHeader-value-"
-	BlockHeaderStateKey = "BlockHeaderState-value-"
-
 	// TODO rename to BallotListForHeightKey
 	BallotListKey = "BallotList-value-"
 	TSSKey        = "TSS-value-"
@@ -88,8 +84,6 @@ const (
 
 	// TODO rename to NonceToCctxListKey
 	NonceToCctxKeyPrefix = "NonceToCctx-value-"
-
-	ParamsKey = "Params-value-"
 
 	OperationalFlagsKey = "OperationalFlags-value-"
 )

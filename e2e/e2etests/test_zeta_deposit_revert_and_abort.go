@@ -47,7 +47,7 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})

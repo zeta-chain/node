@@ -261,7 +261,6 @@ func TestBallot_AddVote(t *testing.T) {
 	for _, test := range tt {
 		t.Run(test.name, func(t *testing.T) {
 			ballot := Ballot{
-				Index:            "index",
 				BallotIdentifier: "identifier",
 				VoterList:        test.voterList,
 				Votes:            CreateVotes(len(test.voterList)),

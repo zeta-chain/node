@@ -40,7 +40,7 @@ func (r *E2ERunner) LegacySetEVMContractsFromConfig() {
 
 // LegacySetupEVM setup legacy contracts on EVM for e2e test
 func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, legacyTestRunning bool) {
-	r.Logger.Print("⚙️ setting up EVM network legacy contracts")
+	r.Logger.Print("⚙️ Setting up EVM network legacy contracts")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Info("EVM setup took %s\n", time.Since(startTime))
@@ -137,6 +137,9 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, legacyTestRunning boo
 	chainParams := currentChainParamsRes.ChainParams
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
+	if chainParams.ConfirmationParams == nil {
+		chainParams.ConfirmationParams = observertypes.GetDefaultGoerliLocalnetChainParams().ConfirmationParams
+	}
 	if legacyTestRunning {
 		chainParams.DisableTssBlockScan = false
 	}

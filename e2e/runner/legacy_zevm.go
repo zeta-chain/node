@@ -7,27 +7,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectorzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 )
-
-// LegacySendZetaOnEvm sends ZETA to an address on EVM using legacy protocol contracts
-// this allows the ZETA contract deployer to funds other accounts on EVM
-func (r *E2ERunner) LegacySendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
-	// the deployer might be sending ZETA in different goroutines
-	r.Lock()
-	defer r.Unlock()
-
-	amount := big.NewInt(1e18)
-	amount = amount.Mul(amount, big.NewInt(zetaAmount))
-	tx, err := r.ZetaEth.Transfer(r.EVMAuth, address, amount)
-	require.NoError(r, err)
-
-	return tx
-}
 
 // LegacyDepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM using legacy protocol contracts
 func (r *E2ERunner) LegacyDepositZeta() ethcommon.Hash {
@@ -35,13 +19,6 @@ func (r *E2ERunner) LegacyDepositZeta() ethcommon.Hash {
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
 	return r.LegacyDepositZetaWithAmount(r.EVMAddress(), amount)
-}
-
-func (r *E2ERunner) ZetaDeposit() *ethtypes.Transaction {
-	amount := big.NewInt(1e18)
-	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
-
-	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
 // LegacyDepositZetaWithAmountAndPayload deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount and payload using legacy protocol contracts
@@ -175,6 +152,20 @@ func (r *E2ERunner) LegacyDepositAndApproveWZeta(amount *big.Int) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "wzeta approve")
 	r.requireTxSuccessful(receipt, "approve failed, logs: %+v", receipt.Logs)
+}
+
+// DepositWZeta deposits WZETA on ZetaChain
+func (r *E2ERunner) DepositWZeta(amount *big.Int) {
+	r.ZEVMAuth.Value = amount
+	tx, err := r.WZeta.Deposit(r.ZEVMAuth)
+	require.NoError(r, err)
+
+	r.ZEVMAuth.Value = big.NewInt(0)
+	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
+	r.requireTxSuccessful(receipt, "deposit failed")
 }
 
 // LegacyWithdrawZeta withdraws ZETA from ZetaChain to the ZETA smart contract on EVM using legacy protocol contracts

@@ -43,7 +43,7 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
@@ -55,7 +55,7 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, r.ERC20ZRC20Addr.Hex(), abortContext.Asset.Hex())
 
-	// wait for the arc20 balance to be updated
+	// wait for the zrc20 balance to be updated
 	change := utils.NewBalanceChange(true)
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 }
