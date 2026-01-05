@@ -2,7 +2,9 @@ package base
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 )
 
@@ -12,9 +14,9 @@ const (
 	// increasing batch size won't result in significant performance boost
 	batchSize = 10
 
-	// zetaHeightDivisor is the divisor to map zeta height to keysign height bucket.
-	// 10 blocks (apprx. 20 seconds) is used to avoid keysign height drifting too fast.
-	zetaHeightDivisor = 10
+	// keysignHeightBucket is the bucket size to map zeta height to keysign height bucket.
+	// 20 seconds is used to avoid keysign height drifting too fast.
+	keysignHeightBucket = int64(20 * time.Second / constant.ZetaBlockTime)
 )
 
 // TSSKeysignInfo represents a record of TSS keysign information.
@@ -121,7 +123,7 @@ func (b *TSSKeysignBatch) ContainsNonce(nonce uint64) bool {
 // KeysignHeight calculates an artificial keysign height tweaked by chainID.
 // This is used to uniquely identify TSS keysign request across all chains.
 func KeysignHeight(chainID int64, zetaHeight int64) (uint64, error) {
-	heightBucket := zetaHeight / zetaHeightDivisor
+	heightBucket := zetaHeight / keysignHeightBucket
 	if zetaHeight <= 0 || heightBucket >= mathpkg.MaxPairValue {
 		return 0, fmt.Errorf("invalid zeta height: %d", zetaHeight)
 	}
