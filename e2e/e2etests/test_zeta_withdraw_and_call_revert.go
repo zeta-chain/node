@@ -41,12 +41,17 @@ func TestZetaWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 		},
 	)
 
-	// wait for the cctx to be reverted
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and call should revert
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_and_call_revert")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, revertAddress, nil)
-	require.NoError(r, err)
-	require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+		newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, revertAddress, nil)
+		require.NoError(r, err)
+		require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

@@ -57,3 +57,12 @@ func (k Keeper) DisableInboundOnly(ctx sdk.Context) {
 	flags.IsInboundEnabled = false
 	k.SetCrosschainFlags(ctx, flags)
 }
+
+// IsV2ZetaEnabled returns true if V2 ZETA gateway flows are enabled
+func (k Keeper) IsV2ZetaEnabled(ctx sdk.Context) bool {
+	flags, found := k.GetCrosschainFlags(ctx)
+	if !found {
+		return false
+	}
+	return flags.IsV2ZetaEnabled
+}

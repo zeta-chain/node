@@ -65,6 +65,7 @@ const (
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
 	flagTestTimeout            = "test-timeout"
+	flagV2ZETAFlows            = "v2-zeta-flows"
 	flagReceiptTimeout         = "receipt-timeout"
 	flagCctxTimeout            = "cctx-timeout"
 	previousVersion            = "v32.0.2"
@@ -120,6 +121,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 	cmd.Flags().
 		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().Bool(flagV2ZETAFlows, false, "set to true to enable V2 ZETA gateway flows")
 	cmd.Flags().Duration(flagTestTimeout, DefaultTestTimeout, "overall timeout for the e2e tests")
 	cmd.Flags().Duration(flagReceiptTimeout, DefaultReceiptTimeout, "timeout for waiting for transaction receipts")
 	cmd.Flags().Duration(flagCctxTimeout, DefaultCctxTimeout, "timeout for waiting for CCTX to reach desired status")
@@ -166,6 +168,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
+		v2ZETAFlows            = must(cmd.Flags().GetBool(flagV2ZETAFlows))
 
 		testStress        = testEthStress || testSolanaStress || testSuiStress || testZEVMStress
 		shouldSetupSolana = setupSolana || testSolana || testSolanaStress
@@ -276,6 +279,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			chains.GoerliLocalnet.ChainId,
 			chains.BitcoinRegtest.ChainId,
 		}))
+	}
+
+	if v2ZETAFlows {
+		noError(deployerRunner.EnableV2ZETAFlows())
 	}
 
 	// setting up the networks

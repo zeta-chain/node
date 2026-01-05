@@ -21,6 +21,7 @@ func TestMigrateStore(t *testing.T) {
 		// Ensure the target authorization is missing so migration should add it
 		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgRemoveObserver")
 		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgWhitelistAsset")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act

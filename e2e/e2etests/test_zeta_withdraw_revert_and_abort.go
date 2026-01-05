@@ -46,22 +46,27 @@ func TestZetaWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 		gasLimit,
 	)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and call should abort
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_revert_and_abort")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
-	// check onAbort was called
-	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
-	require.NoError(r, err)
-	require.True(r, aborted)
+		// check onAbort was called
+		aborted, err := testAbort.IsAborted(&bind.CallOpts{})
+		require.NoError(r, err)
+		require.True(r, aborted)
 
-	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
-	require.NoError(r, err)
-	require.EqualValues(r, common.Address{}.Hex(), abortContext.Asset.Hex())
+		// check abort context was passed
+		abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
+		require.NoError(r, err)
+		require.EqualValues(r, common.Address{}.Hex(), abortContext.Asset.Hex())
 
-	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, testAbortAddr, nil)
-	require.NoError(r, err)
-	require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+		newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, testAbortAddr, nil)
+		require.NoError(r, err)
+		require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

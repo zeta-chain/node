@@ -26,6 +26,10 @@ func MigrateStore(
 			MsgUrl:           "/zetachain.zetacore.crosschain.MsgWhitelistAsset",
 			AuthorizedPolicy: types.PolicyType_groupAdmin,
 		}
+		updateV2ZetaFlowsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
+		}
 	)
 
 	al, found := keeper.GetAuthorizationList(ctx)
@@ -35,6 +39,7 @@ func MigrateStore(
 
 	authorizationList.SetAuthorization(removeObserverAuthorization)
 	authorizationList.SetAuthorization(whitelistAuthorization)
+	authorizationList.SetAuthorization(updateV2ZetaFlowsAuthorization)
 
 	// Validate the authorization list
 	err := authorizationList.Validate()
