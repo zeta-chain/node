@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/e2e/utils"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -25,8 +23,11 @@ func (r *E2ERunner) EnableV2ZETAFlows() error {
 }
 
 // IsV2ZETAEnabled checks if V2 ZETA gateway flows are enabled
+// Returns false if crosschain flags are not set on the network
 func (r *E2ERunner) IsV2ZETAEnabled() bool {
 	response, err := r.ObserverClient.CrosschainFlags(r.Ctx, &observertypes.QueryGetCrosschainFlagsRequest{})
-	require.NoError(r, err)
+	if err != nil {
+		return false
+	}
 	return response.CrosschainFlags.IsV2ZetaEnabled
 }

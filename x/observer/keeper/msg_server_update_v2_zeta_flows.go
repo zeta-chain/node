@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// UpdateV2ZetaFlows updates the V2 ZETA gateway flows flag.
+// UpdateV2ZetaFlows updates the IsV2ZetaEnabled flag.
 // The flag is updated by the policy account with the groupOperational policy type.
 func (k msgServer) UpdateV2ZetaFlows(
 	goCtx context.Context,
