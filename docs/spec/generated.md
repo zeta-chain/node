@@ -818,10 +818,7 @@ message MsgUpdateObserver {
 
 #### MsgUpdateChainParams
 
-UpdateChainParams updates chain parameters for a specific chain, or add a new one.
-Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
-connector and ERC20 custody contract addresses, etc.
-Only the admin policy account is authorized to broadcast this message.
+UpdateChainParams updates the chain params with gas price multiplier and stability pool percentage.
 
 ```proto
 message MsgUpdateChainParams {
