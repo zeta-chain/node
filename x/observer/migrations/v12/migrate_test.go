@@ -50,6 +50,51 @@ func TestMigrateStore(t *testing.T) {
 		require.True(t, flags.IsInboundEnabled)
 		require.True(t, flags.IsOutboundEnabled)
 	})
+
+	t.Run("returns error when chain params not found", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// don't set any chain params
+
+		// ACT
+		err := v12.MigrateStore(ctx, *k)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
+	})
+
+	t.Run("returns error when chain not found in chain params", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// set chain params with invalid chain ID
+		testChainParams := getTestChainParams()
+		testChainParams.ChainParams[0].ChainId = 999999999
+		k.SetChainParamsList(ctx, testChainParams)
+
+		// ACT
+		err := v12.MigrateStore(ctx, *k)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrSupportedChains)
+	})
+
+	t.Run("returns error when chain params validation fails", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// set chain params with invalid values that will fail validation
+		testChainParams := getTestChainParams()
+		testChainParams.ChainParams[0].InboundTicker = 0
+		k.SetChainParamsList(ctx, testChainParams)
+
+		// ACT
+		err := v12.MigrateStore(ctx, *k)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrInvalidChainParams)
+	})
 }
 
 func TestUpdateChainParams(t *testing.T) {
@@ -146,10 +191,9 @@ func TestUpdateCrosschainFlags(t *testing.T) {
 		})
 
 		// ACT
-		err := v12.UpdateCrosschainFlags(ctx, *k)
+		v12.UpdateCrosschainFlags(ctx, *k)
 
 		// ASSERT
-		require.NoError(t, err)
 		flags, found := k.GetCrosschainFlags(ctx)
 		require.True(t, found)
 		require.False(t, flags.IsV2ZetaEnabled)
@@ -167,10 +211,9 @@ func TestUpdateCrosschainFlags(t *testing.T) {
 		require.False(t, found)
 
 		// ACT
-		err := v12.UpdateCrosschainFlags(ctx, *k)
+		v12.UpdateCrosschainFlags(ctx, *k)
 
 		// ASSERT
-		require.NoError(t, err)
 		flags, found := k.GetCrosschainFlags(ctx)
 		require.True(t, found)
 		require.False(t, flags.IsV2ZetaEnabled)
