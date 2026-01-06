@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/testgasconsumer"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -12,7 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestDepositAndCallHighGasUsage tests that a deposit and call with gas usage close to limit get mined
+// TestDepositAndCallHighGasUsage tests that a deposit and call with gas usage close to limit (currently 4M) get mined
 func TestDepositAndCallHighGasUsage(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -35,7 +35,7 @@ func TestDepositAndCallHighGasUsage(r *runner.E2ERunner, args []string) {
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
-	// wait for the cctx to be reverted
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)

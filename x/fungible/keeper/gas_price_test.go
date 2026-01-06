@@ -6,7 +6,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"

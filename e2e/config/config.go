@@ -87,6 +87,7 @@ type AdditionalAccounts struct {
 	UserERC20Revert       Account `yaml:"user_erc20_revert"`
 	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
 	UserZeta              Account `yaml:"user_zeta"`
+	UserRPC               Account `yaml:"user_rpc"`
 }
 
 type PolicyAccounts struct {
@@ -299,6 +300,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserERC20Revert,
 		a.UserEmissionsWithdraw,
 		a.UserZeta,
+		a.UserRPC,
 	}
 }
 
@@ -428,6 +430,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserZeta, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserRPC, err = generateAccount()
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -15,14 +16,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-)
-
-const (
-	// outboundLookbackFactor is the factor to determine how many nonces to look back for pending cctxs
-	// For example, give OutboundScheduleLookahead of 120, pending NonceLow of 1000 and factor of 1.0,
-	// the scheduler need to be able to pick up and schedule any pending cctx with nonce < 880 (1000 - 120 * 1.0)
-	// NOTE: 1.0 means look back the same number of cctxs as we look ahead
-	outboundLookbackFactor = 1.0
 )
 
 // Solana represents Solana observer-signer.
@@ -58,9 +51,9 @@ func (s *Solana) Start(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get app from context")
 	}
 
-	newBlockChan, err := s.observer.ZetacoreClient().NewBlockSubscriber(ctx)
+	newBlockChan, err := s.observer.ZetaRepo().WatchNewBlocks(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to create new block subscriber")
+		return err
 	}
 
 	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
@@ -75,17 +68,9 @@ func (s *Solana) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().OutboundTicker)
 	})
 
-	optInboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsInboundObservationEnabled()
-	})
-
-	optOutboundSkipper := scheduler.Skipper(func() bool {
-		return !app.IsOutboundObservationEnabled()
-	})
-
-	optGenericSkipper := scheduler.Skipper(func() bool {
-		return !s.observer.ChainParams().IsSupported
-	})
+	optInboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipInbound(s.observer.Observer, app) })
+	optOutboundSkipper := scheduler.Skipper(func() bool { return base.CheckSkipOutbound(s.observer.Observer, app) })
+	optGasPriceSkipper := scheduler.Skipper(func() bool { return base.CheckSkipGasPrice(s.observer.Observer, app) })
 
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
@@ -98,7 +83,8 @@ func (s *Solana) Start(ctx context.Context) error {
 
 	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
-	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
+	register(s.observer.ProcessInternalTrackers, "process_internal_trackers", optInboundInterval, optInboundSkipper)
+	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGasPriceSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
 	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
@@ -143,17 +129,17 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		// #nosec G115 positive
 		interval           = uint64(s.observer.ChainParams().OutboundScheduleInterval)
 		scheduleLookahead  = s.observer.ChainParams().OutboundScheduleLookahead
-		scheduleLookback   = uint64(float64(scheduleLookahead) * outboundLookbackFactor)
+		maxNonceOffset     = uint64(float64(scheduleLookahead) * constant.MaxNonceOffsetFactor)
 		needsProcessingCtr = 0
 	)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	cctxList, err := s.observer.ZetaRepo().GetPendingCCTXs(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to list pending cctx")
+		return err
 	}
 
 	// schedule keysign for each pending cctx
-	for _, cctx := range cctxList {
+	for i, cctx := range cctxList {
 		var (
 			params        = cctx.GetCurrentOutboundParam()
 			inboundParams = cctx.GetInboundParams()
@@ -164,10 +150,13 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		logger := s.observer.Logger().Outbound.With().Str(logs.FieldOutboundID, outboundID).Logger()
 
 		switch {
+		case int64(i) == scheduleLookahead:
+			// stop if lookahead is reached
+			return nil
 		case params.ReceiverChainId != chainID:
 			logger.Error().Msg("chain id mismatch")
 			continue
-		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+scheduleLookback:
+		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+maxNonceOffset:
 			return fmt.Errorf(
 				"nonce %d is too high (%s). Earliest nonce %d",
 				params.TssNonce,
@@ -208,7 +197,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 			go s.signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				s.observer.ZetacoreClient(),
+				s.observer.ZetaRepo(),
 				zetaHeight,
 			)
 		}

@@ -17,7 +17,7 @@ import (
 
 	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/ptr"

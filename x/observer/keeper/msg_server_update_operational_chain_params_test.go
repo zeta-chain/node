@@ -155,7 +155,7 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 		otherChainParams3 := sample.ChainParams(4)
 		otherChainParams4 := sample.ChainParams(5)
 
-		// ensure orignal values are different
+		// ensure original values are different
 		require.NotEqualValues(t, originalChainParams.GasPriceTicker, msg.GasPriceTicker)
 		require.NotEqualValues(t, originalChainParams.InboundTicker, msg.InboundTicker)
 		require.NotEqualValues(t, originalChainParams.OutboundTicker, msg.OutboundTicker)

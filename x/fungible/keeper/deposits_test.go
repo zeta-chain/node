@@ -428,15 +428,15 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
-		exampleContract, err := k.DeployContract(ctx, example.ExampleMetaData)
+		example, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, exampleContract)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
 		// deposit
 		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
-			exampleContract,
+			example,
 			big.NewInt(42),
 			chain,
 			[]byte{},
@@ -448,12 +448,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, contractCall)
 
-		balance, err := k.BalanceOfZRC4(ctx, zrc20, exampleContract)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
 		require.NoError(t, err)
 		require.Equal(t, big.NewInt(42), balance)
 
 		// check onCrossChainCall() hook was called
-		assertExampleBarValue(t, ctx, k, exampleContract, 42)
+		assertExampleBarValue(t, ctx, k, example, 42)
 	})
 
 	t.Run("should fail if call contract fails", func(t *testing.T) {
@@ -468,15 +468,15 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
-		reverterContract, err := k.DeployContract(ctx, reverter.ReverterMetaData)
+		reverter, err := k.DeployContract(ctx, reverter.ReverterMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverterContract)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 
 		// deposit
 		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
-			reverterContract,
+			reverter,
 			big.NewInt(42),
 			chain,
 			[]byte{},
@@ -488,7 +488,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		require.Error(t, err)
 		require.True(t, contractCall)
 
-		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverterContract)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
 		require.NoError(t, err)
 		require.EqualValues(t, int64(0), balance.Int64())
 	})
@@ -528,6 +528,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	})
 
 	t.Run("can deposit ZETA token using V2", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// setup gas coin
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -661,6 +666,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process no-call deposit for coinType ZETA", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -799,6 +809,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process deposit and call for coinType Zeta", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -834,6 +849,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 	})
 
 	t.Run("should process deposit for coinType Zeta", func(t *testing.T) {
+		// ZETA v2 not enabled
+		// TODO: enable back
+		// https://github.com/zeta-chain/node/issues/4373
+		t.Skip()
+
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -945,3 +965,143 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		)
 	})
 }
+
+//func TestKeeper_ProcessAbort(t *testing.T) {
+//	t.Run("should process abort with onAbort call", func(t *testing.T) {
+//		// ARRANGE
+//		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+//		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+//
+//		chainID := chains.DefaultChainsList()[0].ChainId
+//
+//		// deploy test dapp
+//		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+//
+//		// deploy the system contracts
+//		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+//		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+//
+//		// ACT
+//		_, err := k.ProcessAbort(
+//			ctx,
+//			sample.EthAddress().String(),
+//			big.NewInt(82),
+//			false,
+//			chainID,
+//			coin.CoinType_Gas,
+//			"",
+//			testAbort,
+//			[]byte("foo"),
+//		)
+//
+//		// ASSERT
+//		require.NoError(t, err)
+//		balance, err := k.BalanceOfZRC4(ctx, zrc20, testAbort)
+//		require.NoError(t, err)
+//		require.Equal(t, big.NewInt(82), balance)
+//	})
+//
+//	t.Run("should return a onAbortFailError if onAbortFailed", func(t *testing.T) {
+//		// ARRANGE
+//		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+//		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+//
+//		chainID := chains.DefaultChainsList()[0].ChainId
+//
+//		// deploy the system contracts
+//		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+//		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+//
+//		// onAbort will fail because the testAbort contract is not a valid contract
+//		abortAddress := sample.EthAddress()
+//
+//		// ACT
+//		_, err := k.ProcessAbort(
+//			ctx,
+//			sample.EthAddress().String(),
+//			big.NewInt(82),
+//			false,
+//			chainID,
+//			coin.CoinType_Gas,
+//			"",
+//			abortAddress,
+//			[]byte("foo"),
+//		)
+//
+//		// ASSERT
+//		require.Error(t, err)
+//		require.ErrorIs(t, err, types.ErrOnAbortFailed)
+//
+//		// account still founded
+//		balance, err := k.BalanceOfZRC4(ctx, zrc20, abortAddress)
+//		require.NoError(t, err)
+//		require.Equal(t, big.NewInt(82), balance)
+//	})
+//
+//	t.Run("successfully process abort for ZETA token", func(t *testing.T) {
+//		// ZETA v2 not enabled
+//		// TODO: enable back
+//		// https://github.com/zeta-chain/node/issues/4373
+//		t.Skip()
+//
+//		// ARRANGE
+//		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+//		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+//
+//		chainID := chains.DefaultChainsList()[0].ChainId
+//
+//		// deploy test dapp
+//		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+//		abortAmount := big.NewInt(82)
+//
+//		// deploy the system contracts
+//		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+//
+//		// ACT
+//		_, err := k.ProcessAbort(
+//			ctx,
+//			sample.EthAddress().String(),
+//			abortAmount,
+//			false,
+//			chainID,
+//			coin.CoinType_Zeta,
+//			"",
+//			testAbort,
+//			[]byte("foo"),
+//		)
+//
+//		// ASSERT
+//		require.NoError(t, err)
+//		require.Equal(t, abortAmount.Int64(),
+//			sdkk.BankKeeper.GetBalance(ctx, testAbort.Bytes(), config.BaseDenom).Amount.Int64())
+//	})
+//
+//	t.Run("can't process abort for invalid chain ID", func(t *testing.T) {
+//		// ARRANGE
+//		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+//		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+//
+//		// deploy test dapp
+//		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+//
+//		// deploy the system contracts
+//		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+//
+//		// ACT
+//		_, err := k.ProcessAbort(
+//			ctx,
+//			sample.EthAddress().String(),
+//			big.NewInt(82),
+//			false,
+//			919191,
+//			coin.CoinType_Gas,
+//			"",
+//			testAbort,
+//			[]byte("foo"),
+//		)
+//
+//		// ASSERT
+//		require.Error(t, err)
+//		require.NotErrorIs(t, err, types.ErrOnAbortFailed)
+//	})
+//}

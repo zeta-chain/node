@@ -7,10 +7,11 @@ import (
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	tontypes "github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
 
 	"github.com/zeta-chain/node/e2e/config"
-	"github.com/zeta-chain/node/e2e/runner/ton"
+	ton "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -21,6 +22,8 @@ import (
 
 // SetupTON setups TON deployer and deploys Gateway contract
 func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
+	r.Logger.Print("⚙️ Setting up TON network")
+
 	require.NotEmpty(r, faucetURL, "TON faucet url is empty")
 	require.NotNil(r, r.Clients.TON, "TON client is not initialized")
 
@@ -111,6 +114,7 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
@@ -165,4 +169,55 @@ func (r *E2ERunner) tonProvisionUser(
 	)
 
 	return wt
+}
+
+// UpdateTSSAddressTON updates the TSS address on the TON gateway contract and resets the seqno.
+func (r *E2ERunner) UpdateTSSAddressTON(gatewayAccountID, faucetURL string) {
+	require.NotNil(r, r.Clients.TON, "TON client is not initialized")
+	require.NotEmpty(r, faucetURL, "TON faucet url is empty")
+
+	ctx := r.Ctx
+	faucetConfig, err := ton.GetFaucet(ctx, faucetURL)
+	require.NoError(r, err, "unable to get faucet config")
+	deployer, err := ton.NewDeployer(r.Clients.TON, faucetConfig)
+	require.NoError(r, err, "unable to create TON deployer")
+
+	var gwIDStr string
+	if gatewayAccountID != "" {
+		gwIDStr = gatewayAccountID
+	} else if !r.TONGateway.IsZero() {
+		gwIDStr = r.TONGateway.ToRaw()
+	}
+	require.NotEmpty(r, gwIDStr, "TON gateway account id is empty")
+	gw := toncontracts.NewGateway(tontypes.MustParseAccountID(gwIDStr))
+
+	deployerSeqno, err := r.Clients.TON.GetSeqno(ctx, deployer.GetAddress())
+	require.NoError(r, err, "unable to get deployer seqno")
+
+	// Send update_tss admin message
+	// Use 0.1 TON for gas (authority operations require minimal gas)
+	amount := math.NewUint(100_000_000)
+	sendMode := toncontracts.SendFlagSeparateFees + toncontracts.SendFlagIgnoreErrors
+
+	err = gw.SendUpdateTSS(ctx, &deployer.Wallet, amount, r.TSSAddress, sendMode)
+	require.NoError(r, err, "unable to send update_tss to TON gateway")
+
+	const maxWaitingTime = 30 * time.Second
+	err = r.Clients.TON.WaitForNextSeqno(ctx, deployer.GetAddress(), deployerSeqno, maxWaitingTime)
+	require.NoError(r, err, "unable to confirm update_tss transaction")
+	err = r.Clients.TON.WaitForBlocks(ctx)
+	require.NoError(r, err, "unable to wait for blocks after update_tss")
+
+	r.Logger.Print("💎 successfully updated TSS address on TON gateway to %s", r.TSSAddress.Hex())
+	deployerSeqno, err = r.Clients.TON.GetSeqno(ctx, deployer.GetAddress())
+	require.NoError(r, err, "unable to get deployer seqno before reset_seqno")
+
+	err = gw.SendResetSeqno(ctx, &deployer.Wallet, amount, 0, sendMode)
+	require.NoError(r, err, "unable to send reset_seqno to TON gateway")
+
+	err = r.Clients.TON.WaitForNextSeqno(ctx, deployer.GetAddress(), deployerSeqno, maxWaitingTime)
+	require.NoError(r, err, "unable to confirm reset_seqno transaction")
+
+	err = r.Clients.TON.WaitForBlocks(ctx)
+	require.NoError(r, err, "unable to wait for blocks after reset_seqno")
 }

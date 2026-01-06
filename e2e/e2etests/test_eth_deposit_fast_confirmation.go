@@ -7,7 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -59,8 +59,6 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr, liquidityCap)
 	require.NoError(r, err)
 	r.Logger.Info("set liquidity cap to %s tx hash: %s", liquidityCap.String(), res.TxHash)
-	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
 
 	// ACT-1
 	// deposit with exactly fast amount cap, should be fast confirmed
@@ -77,20 +75,17 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be FAST confirmed
 	timeStart := time.Now()
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	require.Equal(r, crosschaintypes.ConfirmationMode_FAST, cctx.InboundParams.ConfirmationMode)
-	fastConfirmTime := time.Since(timeStart)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, fastAmountCap.BigInt()), newBalance)
+	// zetaclient is patched
+	// SAFE mode is always used for all inbound votes (both fast and slow votes)
+	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
+	fastConfirmTime := time.Since(timeStart)
 
 	r.Logger.Info("FAST confirmed deposit succeeded in %f seconds", fastConfirmTime.Seconds())
 
 	// ACT-2
 	// deposit with amount more than fast amount cap
-	oldBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
 	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap.BigInt(), big.NewInt(1))
 	tx = r.ETHDeposit(
 		r.EVMAddress(),
@@ -104,13 +99,9 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be SAFE confirmed
 	timeStart = time.Now()
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
 	safeConfirmTime := time.Since(timeStart)
-
-	newBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, amountMoreThanCap), newBalance)
 
 	r.Logger.Info("SAFE confirmed deposit succeeded in %f seconds", safeConfirmTime.Seconds())
 

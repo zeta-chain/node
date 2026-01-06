@@ -1,17 +1,24 @@
 package config
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"maps"
+	"net"
+	"os"
+	"sort"
 	"strings"
 	"sync"
 
+	"github.com/asaskevich/govalidator"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/showa-93/go-mask"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -31,28 +38,21 @@ const (
 
 	// DefaultRelayerKeyPath is the default path that relayer keys are stored
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
+
+	// DefaultMempoolCongestionThreshold is the default threshold of unconfirmed txs in zetacore
+	// mempool to consider it congested.
+	// Leave 30% of mempool space to allow txs get processed, otherwise the congestion may get
+	// even worse.
+	DefaultMempoolCongestionThreshold = constant.DefaultAppMempoolSize * 7 / 10
 )
 
-var (
-	// CredsInsecureGRPC is a grpc.DialOption that uses insecure transport credentials
-	// this is used when establishing gRPC connection to zetacore node via IP address
-	CredsInsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
-
-	// CredsTLSGRPC is a grpc.DialOption that uses TLS transport credentials
-	// this is used when establishing gRPC connection to zetacore node via hostname
-	CredsTLSGRPC = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
-		// #nosec G402 - InsecureSkipVerify required for non-standard certificates (e.g., CloudFlare Origin)
-		InsecureSkipVerify: true,
-		NextProtos:         []string{"h2"},
-	}))
-)
-
-// ZetacoreClientConfig is a subset of zetaclient config that is used by zetacore client
-type ZetacoreClientConfig struct {
-	GRPCURL     string          `json:"grpc_url"`
-	WSRemote    string          `json:"ws_remote"`
-	SignerName  string          `json:"signer_name"`
-	GRPCDialOpt grpc.DialOption `json:"grpc_dial_opt"`
+// ClientConfiguration is a subset of zetaclient config that is used by zetacore client
+type ClientConfiguration struct {
+	ChainHost       string `json:"chain_host"        mapstructure:"chain_host"`
+	ChainRPC        string `json:"chain_rpc"         mapstructure:"chain_rpc"`
+	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
+	SignerName      string `json:"signer_name"       mapstructure:"signer_name"`
+	SignerPasswd    string `json:"signer_passwd"`
 }
 
 // EVMConfig is the config for EVM chain
@@ -92,32 +92,52 @@ type ComplianceConfig struct {
 	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
+// FeatureFlags contains feature flags for controlling new and experimental features
+type FeatureFlags struct {
+	// EnableMultipleCalls enables multiple calls from the same transaction
+	EnableMultipleCalls bool `json:"EnableMultipleCalls"`
+
+	// EnableSolanaAddressLookupTable enables using Solana Address Lookup Table for withdraw and call
+	EnableSolanaAddressLookupTable bool `json:"EnableSolanaAddressLookupTable"`
+}
+
 // Config is the config for ZetaClient
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer          string `json:"Peer"`
-	PublicIP      string `json:"PublicIP"`
-	LogFormat     string `json:"LogFormat"`
-	LogLevel      int8   `json:"LogLevel"`
-	LogSampler    bool   `json:"LogSampler"`
-	PreParamsPath string `json:"PreParamsPath"`
-	ZetaCoreHome  string `json:"ZetaCoreHome"`
-	ChainID       string `json:"ChainID"`
-	// The old name tag 'ZetaCoreURL' is still used for backward compatibility
-	ZetacoreIP              string         `json:"ZetaCoreURL"`
-	ZetacoreURLGRPC         string         `json:"ZetaCoreURLGRPC"`
-	ZetacoreURLWSS          string         `json:"ZetaCoreURLWSS"`
+	ClientMode mode.ClientMode `json:"ClientMode"`
+
+	ChaosSeed        int64  `json:"ChaosSeed"`
+	ChaosProfilePath string `json:"ChaosProfilePath"`
+
+	Peer                    string         `json:"Peer"`
+	PublicIP                string         `json:"PublicIP"`
+	PublicDNS               string         `json:"PublicDNS"`
+	LogFormat               string         `json:"LogFormat"`
+	LogLevel                int8           `json:"LogLevel"`
+	LogSampler              bool           `json:"LogSampler"`
+	PreParamsPath           string         `json:"PreParamsPath"`
+	ZetaCoreHome            string         `json:"ZetaCoreHome"`
+	ChainID                 string         `json:"ChainID"`
+	ZetaCoreURL             string         `json:"ZetaCoreURL"`
 	AuthzGranter            string         `json:"AuthzGranter"`
 	AuthzHotkey             string         `json:"AuthzHotkey"`
-	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
 	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
 	TssPath                 string         `json:"TssPath"`
 	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
 	TestTssKeysign          bool           `json:"TestTssKeysign"`
 	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath          string         `json:"RelayerKeyPath"`
+
+	// MaxBaseFee is the maximum base fee allowed for zetaclient to send ZetaChain transactions
+	MaxBaseFee int64 `json:"MaxBaseFee"`
+
+	// MempoolCongestionThreshold is the threshold number of unconfirmed txs in the zetacore
+	// mempool to consider it congested
+	//
+	// Observation will stop if the number of unconfirmed txs in mempool is greater than to this
+	// threshold.
+	MempoolCongestionThreshold int64 `json:"MempoolCongestionThreshold"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -129,39 +149,115 @@ type Config struct {
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 
+	// feature flags for controlling new and experimental features
+	FeatureFlags FeatureFlags `json:"FeatureFlags"`
+
 	mu *sync.RWMutex
 }
 
-// GetZetacoreClientConfig returns the zetacore client config
-func (c Config) GetZetacoreClientConfig() ZetacoreClientConfig {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	var (
-		gRPCURL    string
-		wsRemote   string
-		dialOption grpc.DialOption
-	)
-
-	// zetaclient accepts both zetacore node IP address and hostnames.
-	// To be compatible with IP address users, try IP address if set, otherwise use hostnames.
-	// Note: leave the IP address field empty to use hostnames.
-	if c.ZetacoreIP != "" {
-		gRPCURL = cosmosGRPCFromIP(c.ZetacoreIP)
-		wsRemote = cosmosWSSRemoteFromIP(c.ZetacoreIP)
-		dialOption = CredsInsecureGRPC
-	} else {
-		gRPCURL = cosmosGRPCFromHost(c.ZetacoreURLGRPC)
-		wsRemote = cosmosWSSRemoteFromHost(c.ZetacoreURLWSS)
-		dialOption = CredsTLSGRPC
+// Validate performs basic validation on the configuration fields.
+func (c Config) Validate() error {
+	// go-tss requires a valid IPv4 address
+	if c.PublicIP != "" && !govalidator.IsIPv4(c.PublicIP) {
+		return errors.Errorf("reason: invalid public IP, got: %s", c.PublicIP)
 	}
 
-	return ZetacoreClientConfig{
-		GRPCURL:     gRPCURL,
-		WSRemote:    wsRemote,
-		SignerName:  c.AuthzHotkey,
-		GRPCDialOpt: dialOption,
+	if c.PublicDNS != "" && !govalidator.IsDNSName(c.PublicDNS) {
+		return errors.Errorf("reason: invalid public DNS, got: %s", c.PublicDNS)
 	}
+
+	if _, err := chains.ZetaChainFromCosmosChainID(c.ChainID); err != nil {
+		return errors.Errorf("reason: invalid chain id, got: %s", c.ChainID)
+	}
+
+	// ZetaCoreURL can be either an IP address or a hostname (e.g., Docker service name)
+	if c.ZetaCoreURL != "" && !govalidator.IsIP(c.ZetaCoreURL) && !govalidator.IsDNSName(c.ZetaCoreURL) {
+		return errors.Errorf("reason: invalid zetacore URL, got: %s", c.ZetaCoreURL)
+	}
+
+	// validate granter address - should be a valid bech32 address
+	if _, err := sdktypes.AccAddressFromBech32(c.AuthzGranter); err != nil {
+		return errors.Errorf("reason: invalid bech32 granter address, got: %s", c.AuthzGranter)
+	}
+
+	// validate grantee name - should not be empty
+	if strings.TrimSpace(c.AuthzHotkey) == "" {
+		return errors.Errorf("reason: grantee name is empty")
+	}
+
+	// acceptable log levels are: 0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic
+	if c.LogLevel < 0 || c.LogLevel > 5 {
+		return errors.Errorf("reason: log level must be between 0 and 5, got: %d", c.LogLevel)
+	}
+
+	if c.ConfigUpdateTicker == 0 {
+		return errors.Errorf("reason: config update ticker is 0")
+	}
+
+	if c.KeyringBackend != KeyringBackendFile && c.KeyringBackend != KeyringBackendTest {
+		return errors.Errorf("reason: invalid keyring backend, got: %s", c.KeyringBackend)
+	}
+
+	if c.MaxBaseFee < 0 {
+		return errors.Errorf("reason: max base fee cannot be negative, got: %d", c.MaxBaseFee)
+	}
+
+	if c.MempoolCongestionThreshold < 0 {
+		return errors.Errorf(
+			"reason: mempool congestion threshold cannot be negative, got: %d",
+			c.MempoolCongestionThreshold,
+		)
+	}
+
+	if c.ClientMode.IsChaosMode() {
+		if c.ChaosProfilePath == "" {
+			return errors.New("ChaosProfilePath is a required field")
+		}
+		if _, err := os.Stat(c.ChaosProfilePath); err != nil {
+			return fmt.Errorf("invalid ChaosProfilePath %q: %w", c.ChaosProfilePath, err)
+		}
+	}
+
+	return nil
+}
+
+// ResolvePublicDNS4 resolves the public DNS to an IPv4 address when public IP isn't set.
+// For simplicity, the 1st resolved IPv4 address is used if multiple IP addresses are found.
+func (c Config) ResolvePublicIP(logger zerolog.Logger) (string, error) {
+	// return public IP if already set
+	if c.PublicIP != "" {
+		return c.PublicIP, nil
+	}
+
+	// return error if public DNS isn't set
+	if c.PublicDNS == "" {
+		return "", errors.New("no public IP or DNS is provided")
+	}
+
+	// lookup IP addresses
+	ips, err := net.LookupIP(c.PublicDNS)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to resolve IP addresses for public DNS %q", c.PublicDNS)
+	} else if len(ips) == 0 {
+		return "", fmt.Errorf("no IP address resolved for public DNS %q", c.PublicDNS)
+	}
+
+	// sort IP addresses to be deterministic
+	strIPs := make([]string, len(ips))
+	for i, ip := range ips {
+		strIPs[i] = ip.String()
+	}
+	sort.Strings(strIPs)
+
+	// go-tss requires a valid IPv4 address
+	for _, ip := range strIPs {
+		if govalidator.IsIPv4(ip) {
+			logger.Info().Str("ip", ip).Msg("resolved public IP")
+			return ip, nil
+		}
+	}
+
+	return "", fmt.Errorf("no IPv4 address resolved for public DNS %q", c.PublicDNS)
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID
@@ -178,10 +274,8 @@ func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	// deep copy evm configs
-	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
-	maps.Copy(copied, c.EVMChainConfigs)
-	return copied
+	// shallow copy evm configs (sufficient for current struct with immutable fields)
+	return maps.Clone(c.EVMChainConfigs)
 }
 
 // GetBTCConfig returns the BTC config for the given chain ID
@@ -270,6 +364,21 @@ func (c Config) GetRelayerKeyPath() string {
 	return c.RelayerKeyPath
 }
 
+// GetMaxBaseFee returns the max base fee
+func (c Config) GetMaxBaseFee() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MaxBaseFee
+}
+
+// GetMempoolCongestionThreshold returns the threshold of unconfirmed txs in zetacore mempool to
+// consider it congested
+func (c Config) GetMempoolCongestionThreshold() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.MempoolCongestionThreshold
+}
+
 func (c EVMConfig) Empty() bool {
 	return c.Endpoint == ""
 }
@@ -278,55 +387,23 @@ func (c BTCConfig) Empty() bool {
 	return c.RPCHost == ""
 }
 
-// cosmosGRPCFromIP returns the gRPC URL for the given IP address
-// Note: this function does not strictly enforce the IP address format.
-// In E2E tests, the IP addresses passed to zetaclientd are ['zetacore0' ~ 'zetacore3']
-// and these are not IP addresses, but they should still work without issues.
-// Any wrong format of 'ipAddress' will trigger gRPC connection error, no worries.
-func cosmosGRPCFromIP(ipAddress string) string {
-	return fmt.Sprintf("%s:9090", ipAddress)
+// GetFeatureFlags returns the feature flags
+func (c Config) GetFeatureFlags() FeatureFlags {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags
 }
 
-// cosmosWSSRemoteFromIP returns the websocket remote URI for the given IP address
-func cosmosWSSRemoteFromIP(ipAddress string) string {
-	remote := cometBFTRPC(ipAddress)
-
-	// given an IP address, both remote URI formats will work:
-	// 1. http://zetacore_ip_address:26657
-	// 2. tcp://zetacore_ip_address:26657
-	// append http:// prefix if not present
-	if !strings.HasPrefix(remote, "http://") &&
-		!strings.HasPrefix(remote, "tcp://") {
-		remote = fmt.Sprintf("http://%s", remote)
-	}
-
-	return remote
+// IsEnableMultipleCallsEnabled returns true if multiple calls from same transaction are enabled
+func (c Config) IsEnableMultipleCallsEnabled() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableMultipleCalls
 }
 
-// cometBFTRPC returns the CometBFT RPC endpoint for the given IP address
-func cometBFTRPC(ipAddress string) string {
-	return fmt.Sprintf("%s:26657", ipAddress)
-}
-
-// cosmosGRPCFromHost returns the gRPC URL for the given host
-// Note: there is no assumption on node provider's gRPC URL format.
-// The given host is expected to be a valid gRPC URL.
-func cosmosGRPCFromHost(host string) string {
-	return host
-}
-
-// cosmosWSSRemoteFromHost returns the websocket remote URI for the given host.
-func cosmosWSSRemoteFromHost(host string) string {
-	// A typical WSS URLs may look like below, and we need to convert them to the remote URI.
-	// wss://rpc.provider.com/zetachain/websocket
-	// wss://zetachain-mainnet.provider.com/websocket
-
-	// remove "wss://" prefix and replace with "https://"
-	remote := "https://" + strings.TrimPrefix(host, "wss://")
-
-	// remove "/websocket" endpoint suffix if present
-	// the suffix will be passed to http.New() as a separate argument
-	remote = strings.TrimSuffix(remote, "/websocket")
-
-	return remote
+// IsEnableSolanaAddressLookupTable returns true if Solana Address Lookup Table is enabled for withdraw and call
+func (c Config) IsEnableSolanaAddressLookupTable() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.FeatureFlags.EnableSolanaAddressLookupTable
 }

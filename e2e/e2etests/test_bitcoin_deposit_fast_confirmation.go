@@ -68,8 +68,11 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be FAST confirmed
 	timeStart := time.Now()
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	require.Equal(r, crosschaintypes.ConfirmationMode_FAST, cctx.InboundParams.ConfirmationMode)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// zetaclient is patched
+	// SAFE mode is always used for all inbound votes (both fast and slow votes)
+	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
 	fastConfirmTime := time.Since(timeStart)
 
 	r.Logger.Info("FAST confirmed deposit succeeded in %f seconds", fastConfirmTime.Seconds())

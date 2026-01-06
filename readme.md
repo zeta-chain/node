@@ -30,12 +30,16 @@ The ZetaClient is a specialized client designed to act as an observer and signer
 
 In addition to the blockchain codebase, ZetaChain’s architecture includes a set of protocol contracts that serve as an interface for developers to interact with the blockchain. These smart contracts are deployed across various blockchain networks. The smart contract source code is maintained in separate repositories, depending on the network they are deployed on:
 
-* [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts)
+* [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts-evm)
 * [Solana connected chains (SVM)](https://github.com/zeta-chain/protocol-contracts-solana)
 * [TON connected chains (TVM)](https://github.com/zeta-chain/protocol-contracts-ton)
 * [Sui connected chains (Sui's MVM)](https://github.com/zeta-chain/protocol-contracts-sui)
 
 These repositories contain the necessary code and tools to deploy, interact with, and extend the functionality of ZetaChain’s cross-chain protocol on each respective blockchain network.
+
+### Versions
+
+For a complete compatibility matrix showing which protocol contract versions are compatible with specific ZetaCore and ZetaClient versions, see [VERSIONS.md](VERSIONS.md).
 
 ## Building the `zetacored`/`zetaclientd` binaries
 
@@ -81,13 +85,16 @@ documentation for all the messages in that module.
 
 Find below further documentation for development and running your own ZetaChain node:
 
+- [Get familiar with our release lifecycle](docs/development/RELEASE_LIFECYCLE.md)
 - [Run the E2E tests and interact with the localnet](docs/development/LOCAL_TESTING.md)
 - [Make a new ZetaChain release](docs/development/RELEASES.md)
+- [Build test release binaries](docs/development/BUILDING_TEST_RELEASES.md)
 - [Deploy your own ZetaChain or Bitcoin node](docs/development/DEPLOY_NODES.md)
 - [Run the simulation tests](docs/development/SIMULATION_TESTING.md)
+- [Learn about gas and fees in ZetaChain](docs/zetacore/gas_and_fees.md)
 
 ## Community
 
-[X (formerly Twitter)](https://x.com/zetablockchain) |
+[X (formerly Twitter)](https://x.com/zetachain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)

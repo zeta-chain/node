@@ -210,11 +210,11 @@ func (b *Backend) ProcessBlock(
 		header.GasLimit = uint64(gasLimitUint64)
 		header.GasUsed = gasUsedBig.ToInt().Uint64()
 		ctx := types.ContextWithHeight(blockHeight)
-		params, err := b.QueryClient.FeeMarket.Params(ctx, &feemarkettypes.QueryParamsRequest{})
+		feeMarketParams, err := b.QueryClient.FeeMarket.Params(ctx, &feemarkettypes.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
-		nextBaseFee, err := CalcBaseFee(cfg, &header, params.Params)
+		nextBaseFee, err := CalcBaseFee(cfg, &header, feeMarketParams.Params)
 		if err != nil {
 			return err
 		}
@@ -222,7 +222,7 @@ func (b *Backend) ProcessBlock(
 	} else {
 		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
-	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
+	gasUsedFloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
 
 	if gasLimitUint64 <= 0 {
 		return fmt.Errorf(
@@ -232,8 +232,8 @@ func (b *Backend) ProcessBlock(
 		)
 	}
 
-	gasUsedRatio := gasusedfloat / float64(gasLimitUint64)
-	blockGasUsed := gasusedfloat
+	gasUsedRatio := gasUsedFloat / float64(gasLimitUint64)
+	blockGasUsed := gasUsedFloat
 	targetOneFeeHistory.GasUsedRatio = gasUsedRatio
 
 	rewardCount := len(rewardPercentiles)
@@ -365,7 +365,8 @@ func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 	return res.GetCode() == 11 && strings.Contains(res.GetLog(), "no block gas left to run tx: out of gas")
 }
 
-// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response
+// GetLogsFromBlockResults returns the list of event logs from the tendermint block result response.
+// If needed, it re-indexes logs before returning
 func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
 	blockLogs := [][]*ethtypes.Log{}
 	for _, txResult := range blockRes.TxsResults {
@@ -373,10 +374,70 @@ func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*eth
 		if err != nil {
 			return nil, err
 		}
-
 		blockLogs = append(blockLogs, logs...)
 	}
+
+	if needsReindexing(blockLogs) {
+		reindexLogs(blockLogs)
+	}
+
 	return blockLogs, nil
+}
+
+// needsReindexing checks if logs in the block need re-indexing.Returns true if:
+//  1. TxIndex values are not strictly increasing across transaction groups
+//  2. Any log Index values are duplicated
+//  3. Log Index values are not monotonically increasing across all groups(transactions)
+func needsReindexing(blockLogs [][]*ethtypes.Log) bool {
+	seenLogIndices := make(map[uint]bool)
+	var lastTxIndex uint
+	var lastLogIndex uint
+	isFirstTx := true
+	isFirstLog := true
+
+	for _, txLogs := range blockLogs {
+		if len(txLogs) == 0 {
+			continue
+		}
+
+		groupTxIndex := txLogs[0].TxIndex
+		if !isFirstTx && groupTxIndex <= lastTxIndex {
+			return true
+		}
+		lastTxIndex = groupTxIndex
+		isFirstTx = false
+
+		for _, entry := range txLogs {
+			if seenLogIndices[entry.Index] {
+				return true
+			}
+			seenLogIndices[entry.Index] = true
+			if !isFirstLog && entry.Index <= lastLogIndex {
+				return true
+			}
+			lastLogIndex = entry.Index
+			isFirstLog = false
+		}
+	}
+	return false
+}
+
+// reindexLogs assigns unique TxIndex and Index values to all logs in the block.
+func reindexLogs(blockLogs [][]*ethtypes.Log) {
+	globalTxIndex := uint(0)
+	globalLogIndex := uint(0)
+
+	for _, txLogs := range blockLogs {
+		if len(txLogs) == 0 {
+			continue
+		}
+		for _, entry := range txLogs {
+			entry.TxIndex = globalTxIndex
+			entry.Index = globalLogIndex
+			globalLogIndex++
+		}
+		globalTxIndex++
+	}
 }
 
 // GetHexProofs returns list of hex data of proof op

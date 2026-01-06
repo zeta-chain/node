@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -509,10 +510,10 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
 
-		receiverExpected := "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9"
+		receiverExpected := addressDecoder(t, "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", chain.ChainId)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
-		require.Equal(t, receiverExpected, receiver)
+		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
 		require.Equal(t, int64(45000), amount)
 	})
 
@@ -521,10 +522,10 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2WSH", txHash)
 
-		receiverExpected := "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc"
+		receiverExpected := addressDecoder(t, "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc", chain.ChainId)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
-		require.Equal(t, receiverExpected, receiver)
+		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
 		require.Equal(t, int64(36557203), amount)
 	})
 
@@ -533,10 +534,10 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "5d09d232bfe41c7cb831bf53fc2e4029ab33a99087fd5328a2331b52ff2ebe5b"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2WPKH", txHash)
 
-		receiverExpected := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
+		receiverExpected := addressDecoder(t, "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y", chain.ChainId)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
-		require.Equal(t, receiverExpected, receiver)
+		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
 		require.Equal(t, int64(79938), amount)
 	})
 
@@ -545,10 +546,10 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2SH", txHash)
 
-		receiverExpected := "327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE"
+		receiverExpected := addressDecoder(t, "327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE", chain.ChainId)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
-		require.Equal(t, receiverExpected, receiver)
+		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
 		require.Equal(t, int64(1003881), amount)
 	})
 
@@ -557,10 +558,10 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2PKH", txHash)
 
-		receiverExpected := "1FueivsE338W2LgifJ25HhTcVJ7CRT8kte"
+		receiverExpected := addressDecoder(t, "1FueivsE338W2LgifJ25HhTcVJ7CRT8kte", chain.ChainId)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
-		require.Equal(t, receiverExpected, receiver)
+		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
 		require.Equal(t, int64(1140000), amount)
 	})
 }
@@ -572,7 +573,7 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 	txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
-	receiverExpected := "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9"
+	receiverExpected := addressDecoder(t, "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", chain.ChainId)
 
 	t.Run("should return error on invalid amount", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -589,20 +590,6 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 		invalidChain := chains.Chain{ChainId: 123}
 		receiver, amount, err := common.DecodeTSSVout(invalidVout, receiverExpected, invalidChain)
 		require.ErrorContains(t, err, "error GetBTCChainParams")
-		require.Empty(t, receiver)
-		require.Zero(t, amount)
-	})
-
-	t.Run("should return error when invalid receiver passed", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		// use testnet params to decode mainnet receiver
-		wrongChain := chains.BitcoinTestnet
-		receiver, amount, err := common.DecodeTSSVout(
-			invalidVout,
-			"bc1qulmx8ej27cj0xe20953cztr2excnmsqvuh0s5c",
-			wrongChain,
-		)
-		require.ErrorContains(t, err, "error decoding receiver")
 		require.Empty(t, receiver)
 		require.Zero(t, amount)
 	})
@@ -698,4 +685,11 @@ func TestDecodeScript(t *testing.T) {
 		require.False(t, isFound)
 		require.Nil(t, memo)
 	})
+}
+
+// addressDecoder decodes a BTC address from a given string and chainID
+func addressDecoder(t *testing.T, addressStr string, chainID int64) btcutil.Address {
+	btcAddress, err := chains.DecodeBtcAddress(addressStr, chainID)
+	require.NoError(t, err)
+	return btcAddress
 }

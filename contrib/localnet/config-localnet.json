@@ -1,0 +1,39 @@
+{
+  "localnet_mode": true,
+  "networks": {
+    "zeta": {
+      "primary": "http://zetacore0:8545",
+      "required": true
+    },
+    "eth": {
+      "primary": "http://eth:8545"
+    }
+  },
+  "zeta_lcd_url": {
+    "primary": "http://zetacore0:1317",
+    "required": true
+  },
+  "zeta_tendermint_url": {
+    "primary": "http://zetacore0:26657",
+    "required": true
+  },
+  "chain_ids": {
+    "zeta": "101",
+    "ethereum": "1337",
+    "bitcoin": "18444",
+    "solana": "902",
+    "sui": "104",
+    "ton": "2015142"
+  },
+  "port": "9015",
+  "refresh_interval": "15",
+  "fast_refresh_interval": "1",
+  "redis": {
+    "enabled": true,
+    "host": "redis",
+    "port": "6379",
+    "db": 0,
+    "instance": "localnet-1"
+  }
+}
+

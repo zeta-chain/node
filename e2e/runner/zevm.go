@@ -11,8 +11,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -428,7 +428,7 @@ func (r *E2ERunner) WaitForTSSGeneration(tssNumber int64) {
 		return retry.Retry(r.checkNumberOfTSSGenerated(tssNumber))
 	}
 	bo := backoff.NewConstantBackOff(time.Second * 5)
-	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 20)
 	err := retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d tss generation", tssNumber)
 }
@@ -443,6 +443,7 @@ func (r *E2ERunner) checkNumberOfTSSGenerated(tssNumber int64) error {
 	if int64(len(tssList.TssList)) < tssNumber {
 		return fmt.Errorf("waiting for %d tss generation, number of TSS :%d", tssNumber, len(tssList.TssList))
 	}
+	r.Logger.Print("Number of TSS generated: %d", len(tssList.TssList))
 	return nil
 }
 

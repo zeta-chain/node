@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"

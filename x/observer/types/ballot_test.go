@@ -259,7 +259,6 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 	}
 	for _, test := range tt {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			ballot := Ballot{
 				BallotIdentifier: "identifier",
@@ -395,7 +394,6 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 		},
 	}
 	for _, test := range tt {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 
 			ballot := Ballot{
@@ -732,7 +730,6 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			},
 		}}
 	for _, test := range tt {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result := BuildRewardsDistribution(test.ballotList)
 			require.Equal(t, test.expectedMap, result)

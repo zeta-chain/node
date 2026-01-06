@@ -11,7 +11,6 @@ import (
 )
 
 func (r *E2ERunner) AddTSSToNode() {
-	r.Logger.Print("⚙️ add new tss to Bitcoin node")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
@@ -30,7 +29,7 @@ func (r *E2ERunner) AddTSSToNode() {
 
 // SetupBitcoinAccounts sets up the TSS account and deployer account
 func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
-	r.Logger.Info("⚙️ setting up Bitcoin account")
+	r.Logger.Print("⚙️ Setting up Bitcoin accounts")
 	startTime := time.Now()
 	defer func() {
 		r.Logger.Print("✅ Bitcoin account setup in %s", time.Since(startTime))

@@ -790,6 +790,17 @@ message MsgAddObserver {
 }
 ```
 
+#### MsgRemoveObserver
+
+RemoveObserver removes an observer address from the observer set and node account list
+
+```proto
+message MsgRemoveObserver {
+	string creator = 1;
+	string observer_address = 2;
+}
+```
+
 #### MsgUpdateObserver
 
 UpdateObserver handles updating an observer address
@@ -807,10 +818,7 @@ message MsgUpdateObserver {
 
 #### MsgUpdateChainParams
 
-UpdateChainParams updates chain parameters for a specific chain, or add a new one.
-Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
-connector and ERC20 custody contract addresses, etc.
-Only the admin policy account is authorized to broadcast this message.
+UpdateChainParams updates the chain params with gas price multiplier and stability pool percentage.
 
 ```proto
 message MsgUpdateChainParams {
@@ -979,6 +987,18 @@ message MsgUpdateOperationalChainParams {
 	int64 outbound_schedule_lookahead = 8;
 	ConfirmationParams confirmation_params = 9;
 	bool disable_tss_block_scan = 10;
+}
+```
+
+#### MsgUpdateV2ZetaFlows
+
+UpdateV2ZetaFlows updates the IsV2ZetaEnabled flag.
+The flag is updated by the policy account with the groupOperational policy type.
+
+```proto
+message MsgUpdateV2ZetaFlows {
+	string creator = 1;
+	bool isV2ZetaEnabled = 2;
 }
 ```
 

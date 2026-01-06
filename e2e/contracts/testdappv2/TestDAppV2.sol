@@ -293,16 +293,21 @@ contract TestDAppV2 {
     function gatewayMultipleDeposits(address dst, bytes calldata payload) external payable {
         require(!isZetaChain);
         uint256 additionalFee = IGatewayEVM(gateway).additionalActionFeeWei();
-        // substract 2 fees from msg.value
-        uint256 amount = msg.value - additionalFee * 2;
+        // subtract 5 fees from msg.value
+        uint256 amount = msg.value - additionalFee * 5;
 
         // initial free deposit
-        IGatewayEVM(gateway).deposit{value: amount / 2 }(dst, amount / 2, RevertOptions(msg.sender, false, address(0), "", 0));
+        IGatewayEVM(gateway).deposit{value: amount / 4 }(dst, amount / 4, RevertOptions(msg.sender, false, address(0), "", 0));
 
-        // eth deposit and call with additional fee
-        IGatewayEVM(gateway).depositAndCall{value: amount / 2 + additionalFee }(dst, amount / 2, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+        // eth deposit with additional fee
+        IGatewayEVM(gateway).deposit{value: amount / 4 + additionalFee }(dst, amount / 4, RevertOptions(msg.sender, false, address(0), "", 0));
 
-        // call with additional fee
+        // 2 eth deposit and call with additional fee
+        IGatewayEVM(gateway).depositAndCall{value: amount / 4 + additionalFee }(dst, amount / 4, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+        IGatewayEVM(gateway).depositAndCall{value: amount / 4 + additionalFee }(dst, amount / 4, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+
+        // 2 calls with additional fee
+        IGatewayEVM(gateway).call{value: additionalFee}(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
         IGatewayEVM(gateway).call{value: additionalFee}(dst, payload, RevertOptions(msg.sender, false, address(0), "", 0));
     }
 
@@ -312,15 +317,19 @@ contract TestDAppV2 {
         IZRC20(asset).approve(gateway, assetAmount);
 
         // initial free deposit
-        IGatewayEVM(gateway).deposit(dst, assetAmount / 2, asset, RevertOptions(msg.sender, false, address(0), "", 0));
-        
-        // erc20 deposits with additional fee
-        IGatewayEVM(gateway).depositAndCall{ value: additionalFee }(dst, assetAmount / 2, asset, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+        IGatewayEVM(gateway).deposit(dst, assetAmount / 4, asset, RevertOptions(msg.sender, false, address(0), "", 0));
+
+        // deposit with additional fee
+        IGatewayEVM(gateway).deposit{ value: additionalFee }(dst, assetAmount / 4, asset, RevertOptions(msg.sender, false, address(0), "", 0));
+
+        // 2 erc20 deposits with additional fee
+        IGatewayEVM(gateway).depositAndCall{ value: additionalFee }(dst, assetAmount / 4, asset, payload, RevertOptions(msg.sender, false, address(0), "", 0));
+        IGatewayEVM(gateway).depositAndCall{ value: additionalFee }(dst, assetAmount / 4, asset, payload, RevertOptions(msg.sender, false, address(0), "", 0));
     }
 
     function gatewayMultipleDepositsLegacy(address dst, uint256 fee) external payable {
         require(!isZetaChain);
-        // substract fee from msg.value
+        // subtract fee from msg.value
         uint256 amount = msg.value - fee;
 
         // initial free legacy deposit

@@ -12,7 +12,7 @@ import (
 // GetSatoshis converts a bitcoin amount to satoshis
 func GetSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
-	// as an integer type.  This may happen if f is NaN or +-Infinity.
+	// as an integer type. This may happen if f is NaN or +-Infinity.
 	// BTC max amount is 21 mil and its at least 0 (Note: bitcoin allows creating 0-value outputs)
 	switch {
 	case math.IsNaN(btc):

@@ -11,7 +11,7 @@ import (
 
 // GetLatestZetaBlock returns the latest zeta block
 func (c *Clients) GetLatestZetaBlock(ctx context.Context) (*cmtservice.Block, error) {
-	res, err := c.Tendermint.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
+	res, err := c.Comet.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get latest zeta block")
 	}
@@ -24,7 +24,7 @@ func (c *Clients) GetNodeInfo(ctx context.Context) (*cmtservice.GetNodeInfoRespo
 	var err error
 
 	res, err := retry.DoTypedWithRetry(func() (*cmtservice.GetNodeInfoResponse, error) {
-		return c.Tendermint.GetNodeInfo(ctx, &cmtservice.GetNodeInfoRequest{})
+		return c.Comet.GetNodeInfo(ctx, &cmtservice.GetNodeInfoRequest{})
 	})
 
 	if err != nil {
@@ -32,4 +32,13 @@ func (c *Clients) GetNodeInfo(ctx context.Context) (*cmtservice.GetNodeInfoRespo
 	}
 
 	return res, nil
+}
+
+// GetSyncing returns whether the node is syncing or not
+func (c *Clients) GetSyncing(ctx context.Context) (bool, error) {
+	res, err := c.Comet.GetSyncing(ctx, &cmtservice.GetSyncingRequest{})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get syncing status")
+	}
+	return res.Syncing, nil
 }

@@ -22,6 +22,7 @@ var (
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
 		"/zetachain.zetacore.observer.MsgUpdateOperationalFlags",
 		"/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
+		"/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows",
 	}
 	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
@@ -36,6 +37,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
 		"/zetachain.zetacore.observer.MsgAddObserver",
+		"/zetachain.zetacore.observer.MsgRemoveObserver",
 		"/zetachain.zetacore.observer.MsgRemoveChainParams",
 		"/zetachain.zetacore.authority.MsgAddAuthorization",
 		"/zetachain.zetacore.authority.MsgRemoveAuthorization",

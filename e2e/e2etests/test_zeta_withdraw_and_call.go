@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -42,18 +42,23 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		gasLimit,
 	)
 
-	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: withdraw and call should succeed
+		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+		r.Logger.CCTX(*cctx, "zeta_withdraw_and_call")
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	r.AssertTestDAppEVMCalled(true, payload, amount)
+		r.AssertTestDAppEVMCalled(true, payload, amount)
 
-	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
-		&bind.CallOpts{},
-		[]byte(payload),
-	)
-	require.NoError(r, err)
-	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+		// check expected sender was used
+		senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+			&bind.CallOpts{},
+			[]byte(payload),
+		)
+		require.NoError(r, err)
+		require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+	} else {
+		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
+		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
+	}
 }

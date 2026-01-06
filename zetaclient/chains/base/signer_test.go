@@ -1,4 +1,4 @@
-package base_test
+package base
 
 import (
 	"testing"
@@ -7,29 +7,42 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// createSigner creates a new signer for testing
-func createSigner(t *testing.T) *base.Signer {
+// signerTestSuite is a test suite for testing the signer
+type signerTestSuite struct {
+	*Signer
+	tss *mocks.TSS
+}
+
+// newTestSuite creates a new test suite for testing
+func newSignerTestSuite(t *testing.T) *signerTestSuite {
 	// constructor parameters
 	chain := chains.Ethereum
 	tss := mocks.NewTSS(t)
-	logger := base.DefaultLogger()
 
-	// create signer
-	return base.NewSigner(chain, tss, logger)
+	//logger := DefaultLogger()
+	logger := Logger{}
+	signer := NewSigner(chain, tss, logger, mode.StandardMode)
+
+	suite := &signerTestSuite{
+		Signer: signer,
+		tss:    tss,
+	}
+
+	return suite
 }
 
 func TestNewSigner(t *testing.T) {
-	signer := createSigner(t)
+	signer := newSignerTestSuite(t)
 	require.NotNil(t, signer)
 }
 
 func Test_BeingReportedFlag(t *testing.T) {
-	signer := createSigner(t)
+	signer := newSignerTestSuite(t)
 
 	// hash to be reported
 	hash := "0x1234"
@@ -47,7 +60,7 @@ func Test_BeingReportedFlag(t *testing.T) {
 }
 
 func Test_PassesCompliance(t *testing.T) {
-	signer := createSigner(t)
+	signer := newSignerTestSuite(t)
 
 	// create config
 	cfg := config.Config{

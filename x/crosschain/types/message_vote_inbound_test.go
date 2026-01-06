@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -678,6 +678,15 @@ func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
 			require.Equal(t, tt.eligible, eligible)
 		})
 	}
+}
+
+func TestMsgVoteInbound_InboundTracker(t *testing.T) {
+	msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+	tracker := msg.InboundTracker()
+
+	require.Equal(t, msg.SenderChainId, tracker.ChainId)
+	require.Equal(t, msg.InboundHash, tracker.TxHash)
+	require.Equal(t, msg.CoinType, tracker.CoinType)
 }
 
 func TestMsgVoteInbound_GetSigners(t *testing.T) {

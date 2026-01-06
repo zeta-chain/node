@@ -116,7 +116,7 @@ type Trie struct {
 }
 
 var encodeBufferPool = sync.Pool{
-	New: func() interface{} { return new(bytes.Buffer) },
+	New: func() any { return new(bytes.Buffer) },
 }
 
 func encodeForDerive(list types.DerivableList, i int, buf *bytes.Buffer) []byte {

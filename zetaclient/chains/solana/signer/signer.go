@@ -15,10 +15,11 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 const (
@@ -72,6 +73,7 @@ type SolanaClient interface {
 		*solrpc.GetTransactionOpts,
 	) (*solrpc.GetTransactionResult, error)
 
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
 	SendTransactionWithOpts(context.Context,
 		*sol.Transaction,
 		solrpc.TransactionOpts,
@@ -151,7 +153,7 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -184,6 +186,11 @@ func (signer *Signer) TryProcessOutbound(
 		cancelTx       = !signer.PassesCompliance(cctx)
 		outboundGetter outboundGetter
 	)
+
+	if signer.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return
+	}
 
 	switch coinType {
 	case coin.CoinType_Cmd:
@@ -273,14 +280,17 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// broadcast the signed tx to the Solana network
-	signer.broadcastOutbound(ctx, outbound, chainID, nonce, logger, zetacoreClient)
+	signer.broadcastOutbound(ctx, outbound, chainID, nonce, logger, zetaRepo)
 }
 
-// signTx creates and signs solana tx containing provided instruction with relayer key.
+// signTx creates and signs a Solana tx containing the provided instruction with the relayer key.
+// If `addressLookupTable` is non-nil and `addrs` is non-empty, the transaction will include an address lookup table.
 func (signer *Signer) signTx(
 	ctx context.Context,
 	inst *sol.GenericInstruction,
 	limit uint64,
+	addressLookupTable *sol.PublicKey,
+	addrs sol.PublicKeySlice,
 ) (*sol.Transaction, error) {
 	// get a recent blockhash
 	recent, err := signer.solanaClient.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
@@ -288,7 +298,7 @@ func (signer *Signer) signTx(
 		return nil, errors.Wrap(err, "getLatestBlockhash error")
 	}
 
-	// if limit is provided, prepend compute unit limit instruction
+	// prepend compute unit limit instruction if needed
 	var instructions []sol.Instruction
 	if limit > 0 {
 		limit = min(limit, SolanaMaxComputeBudget)
@@ -296,17 +306,22 @@ func (signer *Signer) signTx(
 		limitInst := computebudget.NewSetComputeUnitLimitInstruction(uint32(limit)).Build()
 		instructions = append(instructions, limitInst)
 	}
-
 	instructions = append(instructions, inst)
 
-	// create a transaction that wraps the instruction
-	tx, err := sol.NewTransaction(
-		// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
-		// https://github.com/zeta-chain/node/issues/2599
-		instructions,
-		recent.Value.Blockhash,
+	// transaction options
+	opts := []sol.TransactionOption{
 		sol.TransactionPayer(signer.relayerKey.PublicKey()),
-	)
+	}
+
+	// add AddressLookupTable if provided
+	if addressLookupTable != nil && len(addrs) > 0 {
+		opts = append(opts, sol.TransactionAddressTables(map[sol.PublicKey]sol.PublicKeySlice{
+			*addressLookupTable: addrs,
+		}))
+	}
+
+	// create a transaction
+	tx, err := sol.NewTransaction(instructions, recent.Value.Blockhash, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create new tx")
 	}
@@ -332,7 +347,7 @@ func (signer *Signer) broadcastOutbound(
 	chainID int64,
 	nonce uint64,
 	logger zerolog.Logger,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 ) {
 	tx := outbound.Tx
 	// prepare logger fields
@@ -380,7 +395,7 @@ func (signer *Signer) broadcastOutbound(
 					break
 				}
 
-				fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
+				fallbackTx, err := signer.signTx(ctx, fallbackInst, 0, nil, nil)
 				if err != nil {
 					logger.Error().Err(err).Fields(lf).Msg("error signing increment nonce instruction")
 					break
@@ -394,21 +409,23 @@ func (signer *Signer) broadcastOutbound(
 		logger.Info().Fields(lf).Msg("broadcasted Solana outbound successfully")
 
 		// successful broadcast; report to the outbound tracker
-		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
+		signer.reportToOutboundTracker(ctx, zetaRepo, chainID, nonce, txSig, logger)
 		break
 	}
 }
 
-// createOutboundWithFallback is a helper function that creates an outbound with a main and a fallback transaction
-// and signs them with relayer key
+// createOutboundWithFallback creates an outbound with a main transaction and fallback message,
+// signed with the relayer key. If an addressLookupTable is provided, the transaction will include it.
 func (signer *Signer) createOutboundWithFallback(
 	ctx context.Context,
 	mainInst *sol.GenericInstruction,
 	msgIn *contracts.MsgIncrementNonce,
 	computeLimit uint64,
+	addressLookupTable *sol.PublicKey,
+	addrs sol.PublicKeySlice,
 ) (*Outbound, error) {
 	// Create and sign main transaction
-	tx, err := signer.signTx(ctx, mainInst, computeLimit)
+	tx, err := signer.signTx(ctx, mainInst, computeLimit, addressLookupTable, addrs)
 	if err != nil {
 		return nil, errors.Wrap(err, "error signing main instruction")
 	}
@@ -476,7 +493,7 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 // TODO(revamp): move to another package more general for cctx functions
 func IsPendingOutboundFromZetaChain(
 	cctx *types.CrossChainTx,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetacoreClient zrepo.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
 		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound

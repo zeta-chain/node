@@ -9,6 +9,10 @@ import (
 const (
 	// MaxBlocksPerScan is the maximum number of blocks to scan in one ticker
 	MaxBlocksPerScan = 100
+
+	// MaxInboundTrackersPerScan is the maximum number of inbound trackers to scan in one ticker
+	// This is to not add too much pressure to the zetacore when missed inbounds happen frequently.
+	MaxInboundTrackersPerScan = 10
 )
 
 // New constructs Config optionally with default values.
@@ -16,11 +20,13 @@ func New(setDefaults bool) Config {
 	cfg := Config{
 		EVMChainConfigs: make(map[int64]EVMConfig),
 		BTCChainConfigs: make(map[int64]BTCConfig),
+		FeatureFlags:    defaultFeatureFlags(),
 
 		mu: &sync.RWMutex{},
 	}
 
 	if setDefaults {
+		cfg.MempoolCongestionThreshold = DefaultMempoolCongestionThreshold
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()
@@ -76,5 +82,12 @@ func evmChainsConfigs() map[int64]EVMConfig {
 func btcChainsConfigs() map[int64]BTCConfig {
 	return map[int64]BTCConfig{
 		chains.BitcoinRegtest.ChainId: bitcoinConfigRegnet(),
+	}
+}
+
+// defaultFeatureFlags returns default feature flags
+func defaultFeatureFlags() FeatureFlags {
+	return FeatureFlags{
+		EnableMultipleCalls: true,
 	}
 }

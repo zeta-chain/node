@@ -9,6 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddObserver{}, "observer/AddObserver", nil)
+	cdc.RegisterConcrete(&MsgRemoveObserver{}, "observer/RemoveObserver", nil)
 	cdc.RegisterConcrete(&MsgUpdateChainParams{}, "observer/UpdateChainParams", nil)
 	cdc.RegisterConcrete(&MsgRemoveChainParams{}, "observer/RemoveChainParams", nil)
 	cdc.RegisterConcrete(&MsgVoteBlockHeader{}, "observer/VoteBlockHeader", nil)
@@ -23,11 +24,13 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateGasPriceIncreaseFlags{}, "observer/UpdateGasPriceIncreaseFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateOperationalFlags{}, "observer/UpdateOperationalFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateOperationalChainParams{}, "observer/UpdateOperationalChainParams", nil)
+	cdc.RegisterConcrete(&MsgUpdateV2ZetaFlows{}, "observer/UpdateV2ZetaFlows", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddObserver{},
+		&MsgRemoveObserver{},
 		&MsgUpdateChainParams{},
 		&MsgRemoveChainParams{},
 		&MsgVoteBlame{},
@@ -42,6 +45,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateGasPriceIncreaseFlags{},
 		&MsgUpdateOperationalFlags{},
 		&MsgUpdateOperationalChainParams{},
+		&MsgUpdateV2ZetaFlows{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

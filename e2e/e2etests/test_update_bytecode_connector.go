@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/testconnectorzevm"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -16,6 +16,10 @@ import (
 
 // TestUpdateBytecodeConnector tests updating the bytecode of a connector and interact with it
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
+	if !r.IsV2ZETAEnabled() {
+		r.Logger.Print("⚠️ skipping TestUpdateBytecodeConnector: V2 ZETA flows are disabled")
+		return
+	}
 	// Can withdraw 10ZETA
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)

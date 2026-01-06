@@ -10,7 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -89,6 +89,14 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		if err != nil {
+			// Log when V2 ZETA withdrawal is ignored due to disabled flag
+			if errorsmod.IsOf(err, types.ErrZetaThroughGateway) {
+				ctx.Logger().Info(
+					"V2 ZETA withdrawal ignored: V2 ZETA flows are disabled",
+					"tx_hash", log.TxHash.Hex(),
+					"coin_type", coin.CoinType_Zeta.String(),
+				)
+			}
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalEvent,
 				"failed to parse inbound details for withdraw: %v", err,
@@ -182,6 +190,14 @@ func (k Keeper) getZETAInboundDetails(
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
 ) (InboundDetails, error) {
+	// Check if V2 ZETA flows are enabled
+	if !k.zetaObserverKeeper.IsV2ZetaEnabled(ctx) {
+		return InboundDetails{}, errorsmod.Wrap(
+			types.ErrZetaThroughGateway,
+			"V2 ZETA flows are disabled for withdrawals",
+		)
+	}
+
 	if receiverChainID == nil || receiverChainID.Int64() == 0 {
 		return InboundDetails{}, errorsmod.Wrap(
 			types.ErrInvalidWithdrawalEvent,

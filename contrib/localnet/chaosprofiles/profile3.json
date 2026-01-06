@@ -1,0 +1,17 @@
+{
+    "BitcoinClient": {
+        "ListUnspentMinMaxAddresses": 5,
+        "SendRawTransaction": 20
+    },
+    "EVMClient": {
+        "SendTransaction": 20
+    },
+    "SolanaClient": {},
+    "SuiClient": {},
+    "TONClient": {},
+    "TSSClient": {
+        "Sign": 20,
+        "SignBatch": 20
+    },
+    "ZetacoreClient": {}
+}

@@ -29,15 +29,27 @@ type InboundEventParser struct {
 }
 
 // NewInboundEventParser creates a new InboundEventParser
+// resolvedTx is an optional pre-resolved transaction (e.g., with address lookup tables resolved).
+// If provided, it will be used instead of extracting a fresh transaction from txResult.
 func NewInboundEventParser(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
 	senderChainID int64,
 	logger zerolog.Logger,
+	resolvedTx *solana.Transaction,
 ) (*InboundEventParser, error) {
-	tx, err := txResult.Transaction.GetTransaction()
-	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling transaction")
+	var tx *solana.Transaction
+	var err error
+
+	if resolvedTx != nil {
+		// Use the pre-resolved transaction
+		tx = resolvedTx
+	} else {
+		// Extract transaction from txResult
+		tx, err = txResult.Transaction.GetTransaction()
+		if err != nil {
+			return nil, errors.Wrap(err, "error unmarshaling transaction")
+		}
 	}
 
 	return &InboundEventParser{
@@ -205,7 +217,12 @@ func (p *InboundEventParser) Parse() error {
 	if p.txResult.Meta != nil && p.txResult.Meta.InnerInstructions != nil {
 		for _, inner := range p.txResult.Meta.InnerInstructions {
 			for j, instruction := range inner.Instructions {
-				if err := p.parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
+				compiledInstruction := solana.CompiledInstruction{
+					ProgramIDIndex: instruction.ProgramIDIndex,
+					Accounts:       instruction.Accounts,
+					Data:           instruction.Data,
+				}
+				if err := p.parseInstruction(compiledInstruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
 					return err
 				}
 			}

@@ -8,9 +8,9 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	zetatoolchains "github.com/zeta-chain/node/cmd/zetatool/chains"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
@@ -129,11 +129,18 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
+	// get fee rate multiplier, fallback to default if not set in chain params
+	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
+	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
+		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
+	}
+
 	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
 		ctx,
 		rpcClient,
 		params,
 		tssBtcAddress,
+		feeRateMultiplier,
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,
@@ -317,10 +324,14 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
+	// Process address lookup tables before filtering events
+	resolvedTx := observer.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
+
 	events, err := observer.FilterInboundEvents(txResult,
 		gatewayID,
 		inboundChain.ChainId,
 		logger,
+		resolvedTx,
 	)
 
 	if err != nil {

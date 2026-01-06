@@ -14,9 +14,11 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -47,8 +49,14 @@ const (
 	// executeTxTest is local devnet tx result for testing
 	executeTxTest = "4ZuPTkYtBGDyDZNHKyHxEKL98VeaefAMUzmZVL2BrgwCvog7CqpjrRoegXDt6bD7w8dffGKGcDZqFYFi5vkAK8eo"
 
+	// executeTxAddressLookupTableTest is local devnet tx result for testing
+	executeTxAddressLookupTableTest = "58azV5L9kTLV7p3XRQRioorv6PvYzz1M6bNLfLjfwYoDuRcVv3A52QdCrr81yEYbc3vvVKxRCZdj4DcfTtDQdCPr"
+
 	// executeSPLTxTest is local devnet tx result for testing
 	executeSPLTxTest = "d3WvqtwFws9yftpxSrmwXqb48ZbBVjvxz34zY5Mo9TxaAPxsudPa68nDXZeShvK8UqtM84TgGfpdrgeX65q5WCW"
+
+	// executeSPLTxAddressLookupTableTest is local devnet tx result for testing
+	executeSPLTxAddressLookupTableTest = "ayu91XsBcdpqTPmkxB5vfVRpJUsjxyXZhGg4RTAStU7zufqRQsAjEq3CtWhcAWgjayNZiJ3f5gX8oNfz87sbrHE"
 
 	// incrementNonceTxTest is local devnet tx result for testing
 	incrementNonceTxTest = "5dpFTsscUKCGVQzL9bAUSuEE6yLXaf7d1wMjZa7RLqvtSUtAdfcdxQHNsbfcS2Sfzu4zBVxMJC2KWzuaUUbg1ZGk"
@@ -68,7 +76,7 @@ func createTestObserver(
 	t *testing.T,
 	chain chains.Chain,
 	solanaClient observer.SolanaClient,
-	tssSigner interfaces.TSSSigner,
+	tssSigner tssrepo.TSSClient,
 ) *observer.Observer {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
@@ -80,7 +88,8 @@ func createTestObserver(
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
 
-	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tssSigner, 1000, nil, database, logger)
+	baseObserver, err := base.NewObserver(chain, *chainParams,
+		zrepo.New(nil, chain, mode.StandardMode), tssSigner, 1000, nil, database, logger)
 	require.NoError(t, err)
 
 	ob, err := observer.New(baseObserver, solanaClient, chainParams.GatewayAddress)
@@ -620,6 +629,152 @@ func Test_ParseInstructionExecute(t *testing.T) {
 
 		// ASSERT
 		require.ErrorContains(t, err, "not an execute instruction")
+		require.Nil(t, inst)
+	})
+}
+
+func Test_ParseInstructionExecuteAddressLookupTable(t *testing.T) {
+	// the test chain and transaction hash
+	chain := chains.SolanaDevnet
+	txHash := executeTxAddressLookupTableTest
+	txAmount := uint64(1000000)
+	instructionIndex := 1
+
+	t.Run("should parse instruction execute with AddressLookupTable", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		// tss address used in local devnet
+		tssAddress := "0xaF5E3Bd92Ab7208C657E242Ea7b167423D2CFB4b"
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[instructionIndex]
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecute(instruction)
+		require.NoError(t, err)
+
+		// ASSERT
+		// check sender, nonce and amount
+		sender, err := inst.Signer()
+		require.NoError(t, err)
+		require.Equal(t, tssAddress, sender.String())
+		require.EqualValues(t, inst.GatewayNonce(), 0)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
+	})
+
+	t.Run("should return error on invalid instruction data", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// set invalid instruction data
+		instruction := txFake.Message.Instructions[instructionIndex]
+		instruction.Data = []byte("invalid instruction data")
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecute(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "error deserializing instruction")
+		require.Nil(t, inst)
+	})
+
+	t.Run("should return error on discriminator mismatch", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// overwrite discriminator (first 8 bytes)
+		instruction := txFake.Message.Instructions[instructionIndex]
+		fakeDiscriminator := "b712469c946da12100980d0000000000"
+		fakeDiscriminatorBytes, err := hex.DecodeString(fakeDiscriminator)
+		require.NoError(t, err)
+		copy(instruction.Data, fakeDiscriminatorBytes)
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecute(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "not an execute instruction")
+		require.Nil(t, inst)
+	})
+}
+
+func Test_ParseInstructionExecuteSPLAddressLookupTable(t *testing.T) {
+	// the test chain and transaction hash
+	chain := chains.SolanaDevnet
+	txHash := executeSPLTxAddressLookupTableTest
+	txAmount := uint64(1000000)
+	instructionIndex := 1
+
+	t.Run("should parse instruction execute SPL with AddressLookupTable", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		// tss address used in local devnet
+		tssAddress := "0xaF5E3Bd92Ab7208C657E242Ea7b167423D2CFB4b"
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[instructionIndex]
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteSPL(instruction)
+		require.NoError(t, err)
+
+		// ASSERT
+		// check sender, nonce and amount
+		sender, err := inst.Signer()
+		require.NoError(t, err)
+		require.Equal(t, tssAddress, sender.String())
+		require.EqualValues(t, inst.GatewayNonce(), 1)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
+	})
+
+	t.Run("should return error on invalid instruction data", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// set invalid instruction data
+		instruction := txFake.Message.Instructions[instructionIndex]
+		instruction.Data = []byte("invalid instruction data")
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteSPL(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "error deserializing instruction")
+		require.Nil(t, inst)
+	})
+
+	t.Run("should return error on discriminator mismatch", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// overwrite discriminator (first 8 bytes)
+		instruction := txFake.Message.Instructions[instructionIndex]
+		fakeDiscriminator := "b712469c946da12100980d0000000000"
+		fakeDiscriminatorBytes, err := hex.DecodeString(fakeDiscriminator)
+		require.NoError(t, err)
+		copy(instruction.Data, fakeDiscriminatorBytes)
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteSPL(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "not an execute_spl_token instruction")
 		require.Nil(t, inst)
 	})
 }

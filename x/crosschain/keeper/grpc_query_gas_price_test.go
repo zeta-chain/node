@@ -49,7 +49,6 @@ func TestGasPriceQuerySingle(t *testing.T) {
 			err:     fmt.Errorf("strconv.Atoi: parsing \"abc\": invalid syntax"),
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := k.GasPrice(wctx, tc.request)
 			if tc.err != nil {

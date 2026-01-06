@@ -1,5 +1,157 @@
 # CHANGELOG
 
+## Release ReForge
+- zetacored: v37.0.0
+- zetaclientd: v38.0.0
+
+### Breaking Changes
+
+* A new field `gas_price_multiplier` is added to the chain parameters, impacting the query API `/zeta-chain/observer/get_chain_params` and the cosmos message `MsgUpdateChainParams`.
+The `zetacored` binary must be upgraded to trigger chain parameters data migration before running the new `zetaclientd` binary.
+
+### Features
+
+* [4427](https://github.com/zeta-chain/node/pull/4427) - improve EVM chain outbound performance with batch and sequential keysign
+* [4479](https://github.com/zeta-chain/node/pull/4479) - add MsgRemoveObserver
+* [4484](https://github.com/zeta-chain/node/pull/4484) - change params for 2s block time
+* [4507](https://github.com/zeta-chain/node/pull/4507) - add a tool to list tss balances across all supported chains
+* [4492](https://github.com/zeta-chain/node/pull/4492) - add migration script to set authorization for MsgRemoveObserver
+* [4453](https://github.com/zeta-chain/node/pull/4453) - add an option to create dry zetaclients to connect to live networks
+* [4493](https://github.com/zeta-chain/node/pull/4493) - enable ALT in solana inbounds
+* [4485](https://github.com/zeta-chain/node/pull/4485) - move gas price multiplier to zetacore chain parameters
+* [4515](https://github.com/zeta-chain/node/pull/4515) - add a flag to toggle v2 ZETA flows and set it false by default
+
+### Fixes
+
+* [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
+* [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
+* [4414](https://github.com/zeta-chain/node/pull/4414) - fix example package deployment by removing gateway object reference
+* [4434](https://github.com/zeta-chain/node/pull/4434) - disable zetaclient public DNS usage to avoid crash when resolving DNS in the address_book
+* [4437](https://github.com/zeta-chain/node/pull/4437) - have zetaclient resolve IP address from public DNS and then use only IP address in go-tss
+* [4443](https://github.com/zeta-chain/node/pull/4443) - fix effective gas price calculation for zevm rpc
+* [4471](https://github.com/zeta-chain/node/pull/4471) - accept uppercase receiver address in Bitcoin withdrawals
+* [4502](https://github.com/zeta-chain/node/pull/4502) - update to filter by VM for evm chains requiring TSS funds migration.
+* [4498](https://github.com/zeta-chain/node/pull/4498) - reindex txlogs at the rpc layer if duplicate indexes are present
+* [4490](https://github.com/zeta-chain/node/pull/4490) - allow object for `tracerConfig` in the zevm debug APIs
+* [4511](https://github.com/zeta-chain/node/pull/4511) - false mempool congested warning
+* [4509](https://github.com/zeta-chain/node/pull/4509) - use outbound schedule interval in sui cctx scheduling
+* [4514](https://github.com/zeta-chain/node/pull/4514) - use Zeta height as a factor to calculate the EVM chain artificial height for TSS keysign
+* [4513](https://github.com/zeta-chain/node/pull/4513) - use `outbound_schedule_interval` and `outbound_schedule_lookahead` in ton cctx scheduling
+
+### Tests
+
+* [4440](https://github.com/zeta-chain/node/pull/4440) - add more chaos profiles to zetaclient localnet
+* [4474](https://github.com/zeta-chain/node/pull/4474) - add e2e test for zetaclient minimum version
+* [4476](https://github.com/zeta-chain/node/pull/4476) - add separate versions for zetaclient ,zetacore and zetae2e binaries for upgrade e2e tests.
+* [4488](https://github.com/zeta-chain/node/pull/4488) - add sui to tss migration tests
+* [4491](https://github.com/zeta-chain/node/pull/4491) - add ton to tss migration tests
+* [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
+
+## v37.0.0
+
+### Breaking Changes
+
+* EVM inbounds support multiple calls inside same tx. EVM Gateway contracts must be upgraded before node upgrade, and an additional action fee should be set,
+by calling `updateAdditionalActionFee` admin function.
+
+### Zetaclient Config
+
+* Feature flags are introduced, this section should be added to Zetaclient Config after EVM Gateway contracts are upgraded, to enable multiple EVM calls in Zetaclient.
+Also EnableSolanaAddressLookupTable feature flag should be set.
+
+```
+"FeatureFlags": {
+  "EnableMultipleCalls": true,
+  "EnableSolanaAddressLookupTable": true
+}
+```
+
+* ZetaChain maximum base fee is introduced as an optional field. It is the maximum base fee, in Gwei, allowed for zetaclient to send out ZetaChain transactions.
+```
+"MaxBaseFee": 100,
+```
+
+* ZetaChain mempool congestion threshold is introduced as an optional field. Observation will stop if the number of unconfirmed transactions in the mempool is greater than this value.
+```
+"MempoolCongestionThreshold": 3000,
+```
+
+* Public DNS is introduced as an alternative to public IP. It will be used when public IP field is empty.
+```
+"PublicIP": "",
+"PublicDNS": "my.zetaclient.com",
+```
+
+### Features
+
+* [4274](https://github.com/zeta-chain/node/pull/4274) - multiple evm calls in single tx
+* [4266](https://github.com/zeta-chain/node/pull/4266) - add support for Solana Address Lookup Table in withdraw and call
+* [4288](https://github.com/zeta-chain/node/pull/4288) - zetaclient config feature flag for multiple evm calls
+* [4313](https://github.com/zeta-chain/node/pull/4313) - add dry-mode to Sui and add client wrappers to Sui and TON
+* [4317](https://github.com/zeta-chain/node/pull/4317) - add dry-mode to Solana
+* [4325](https://github.com/zeta-chain/node/pull/4325) - add dry-mode to Bitcoin
+* [4326](https://github.com/zeta-chain/node/pull/4326) - add dry-mode to EVM
+* [4330](https://github.com/zeta-chain/node/pull/4330) - add TSS client dry-wrapper
+* [4323](https://github.com/zeta-chain/node/pull/4323) - add dry-wrappers to zetacore client
+* [4328](https://github.com/zeta-chain/node/pull/4328) - missing fields in msg hash for solana outbounds
+* [4348](https://github.com/zeta-chain/node/pull/4348) - add mode option in ZetaClient configuration
+* [4127](https://github.com/zeta-chain/node/pull/4127) - add support for Sui message context ID as a gateway dynamic field
+* [4182](https://github.com/zeta-chain/node/pull/4182) - observe Sui inbound from previous gateway package after authenticated call upgrade
+* [4254](https://github.com/zeta-chain/node/pull/4254) - add additional support for zetaclient public DNS name
+* [4342](https://github.com/zeta-chain/node/pull/4342) - add metrics for monitoring inbound voting through blockscan and trackers
+* [4384](https://github.com/zeta-chain/node/pull/4384) - disable TSS service in dry mode
+* [4359](https://github.com/zeta-chain/node/pull/4359) - add chaos mode for ZetaClient
+* [4362](https://github.com/zeta-chain/node/pull/4362) - shutdown zetaclient if zetacore is syncing
+* [4378](https://github.com/zeta-chain/node/pull/4378) - add number of connected peers to tss keygen log
+* [4387](https://github.com/zeta-chain/node/pull/4387) - add new dry zetaclient to localnet
+* [4419](https://github.com/zeta-chain/node/pull/4419) - add testnet command to create a fork from existing node data
+
+### Tests
+
+* [4293](https://github.com/zeta-chain/node/pull/4293) - improve local stress tests to replicate live networks better
+* [4351](https://github.com/zeta-chain/node/pull/4351) - fix extensive internal trackers caused by tx result query failures during the eth stress test
+* [4357](https://github.com/zeta-chain/node/pull/4357) - json rpc checks during e2e and upgrade tests
+* [4395](https://github.com/zeta-chain/node/pull/4395) - update e2e to set higher timeouts when running stress test
+* [4408](https://github.com/zeta-chain/node/pull/4408) - add chaos mode capabilities to ZetaClient localnet
+
+### Refactor
+
+* [4296](https://github.com/zeta-chain/node/pull/4296) - add zrepo package to zetaclient
+* [4356](https://github.com/zeta-chain/node/pull/4356) - rename protocol contract imports to `protocol-contracts-evm`
+* [4361](https://github.com/zeta-chain/node/pull/4361) - add basic validation on zetaclient config file
+* [4391](https://github.com/zeta-chain/node/pull/4391) - change client mode config
+
+### Fixes
+
+* [4305](https://github.com/zeta-chain/node/pull/4305) - stop ProcessOutboundTrackers from breaking when it finds an error
+* [4321](https://github.com/zeta-chain/node/pull/4321) - fix and improve internal tracker logic based on stress tests
+* [4340](https://github.com/zeta-chain/node/pull/4340) - iterate all Sui outbound tracker hashes instead of only the first
+* [4386](https://github.com/zeta-chain/node/pull/4386) - filter out nil address to prevent error logs
+
+### Documentation
+
+* [4358](https://github.com/zeta-chain/node/pull/4358) - add documentation for ZetaClient execution modes
+
+## v36.0.0
+
+### Features
+
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
+* [4277](https://github.com/zeta-chain/node/pull/4277) - add dry-mode support for TON
+* [4295](https://github.com/zeta-chain/node/pull/4295) - monitor failed inbound votes and add them to an internal inbound tracker cache
+
+### Refactor
+
+* [4144](https://github.com/zeta-chain/node/pull/4144) - standardize structured logging for zetaclient
+* [4180](https://github.com/zeta-chain/node/pull/4180) - remove unused loggers and log fields
+* [4174](https://github.com/zeta-chain/node/pull/4174) - add documentation for ZetaClient logging fields
+* [4213](https://github.com/zeta-chain/node/pull/4213) - prepare the client interfaces of the observer-signers for dry mode
+
+### Fixes
+
+* [4194](https://github.com/zeta-chain/node/pull/4194) - remove duplicate solana post-gas-price goroutine
+* [4291](https://github.com/zeta-chain/node/pull/4291) - adjust inbound retry gas limit and stop tx broadcasting on mempool congestion
+
 ## Unreleased
 
 ### Breaking Changes

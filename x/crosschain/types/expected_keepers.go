@@ -43,6 +43,7 @@ type ObserverKeeper interface {
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []observertypes.NodeAccount)
 	SetNodeAccount(ctx sdk.Context, nodeAccount observertypes.NodeAccount)
 	IsInboundEnabled(ctx sdk.Context) (found bool)
+	IsV2ZetaEnabled(ctx sdk.Context) bool
 	GetCrosschainFlags(ctx sdk.Context) (val observertypes.CrosschainFlags, found bool)
 	GetKeygen(ctx sdk.Context) (val observertypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen observertypes.Keygen)

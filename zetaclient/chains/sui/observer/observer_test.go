@@ -8,27 +8,84 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	zetaerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var someArgStub = map[string]any{}
 
 func TestObserver(t *testing.T) {
+	t.Run("New Observer", func(t *testing.T) {
+		// ARRANGE
+		chain := chains.SuiMainnet
+		chainParams := mocks.MockChainParams(chain.ChainId, 10)
+
+		// Given gateway with multiple supported packages
+		packageID := "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff"
+		gatewayID := "0xba477ad7b87a31fde3d29c4e4512329d7340ec23e61f130ebb4d0169ba37e189"
+		withdrawCapID := "0x4a367f98d9299019e3d5bbc6ee1d41b5789172e14f7c63a881377766902438e2"
+		previousPackageID := "0x1db3a54b99c2741bf8b8aaa8266d6e7b6daf0c702a5ef5b0d6e9e6cf12527a90"
+		originalPackageID := "0xd84c71eaaff08377af842b2a6b0542f285ec29202b24361343bf8860254b5402"
+		gatewayAddress := sui.MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID)
+
+		// Given database
+		// Both last scanned tx (old cursor) and auxiliary strings (new cursors) are present in DB
+		database, err := db.NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+
+		// Given base observer and mock client
+		logger := base.Logger{}
+		baseObserver, err := base.NewObserver(chain, chainParams, nil, nil, 1000, nil, database, logger)
+		require.NoError(t, err)
+
+		// mock last tx scanned hash in db
+		err = baseObserver.WriteLastTxScannedToDB("last_tx_scanned_hash")
+		require.NoError(t, err)
+
+		// mock auxiliary strings in db
+		err = baseObserver.WriteAuxStringToDB(packageID, "cursor_1")
+		require.NoError(t, err)
+		err = baseObserver.WriteAuxStringToDB(previousPackageID, "cursor_2")
+		require.NoError(t, err)
+		err = baseObserver.WriteAuxStringToDB(originalPackageID, "cursor_3")
+		require.NoError(t, err)
+
+		// create gateway object from pair ID
+		gw, err := sui.NewGatewayFromPairID(gatewayAddress)
+		require.NoError(t, err)
+
+		// ACT
+		suiMock := mocks.NewSuiClient(t)
+		observer := New(baseObserver, suiMock, gw)
+
+		// ASSERT
+		// ensure both old cursor and new cursors are loaded from db
+		require.Equal(t, "last_tx_scanned_hash", observer.LastTxScanned())
+		require.Equal(t, "cursor_1", observer.GetAuxString(packageID))
+		require.Equal(t, "cursor_2", observer.GetAuxString(previousPackageID))
+		require.Equal(t, "cursor_3", observer.GetAuxString(originalPackageID))
+	})
+
 	t.Run("PostGasPrice", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
@@ -52,7 +109,7 @@ func TestObserver(t *testing.T) {
 			Return("", nil)
 
 		// ACT
-		err := ts.PostGasPrice(ts.ctx)
+		err := ts.ObserveGasPrice(ts.ctx)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -120,7 +177,9 @@ func TestObserver(t *testing.T) {
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// ACT
 		err := ts.ObserveInbound(ts.ctx)
@@ -164,6 +223,56 @@ func TestObserver(t *testing.T) {
 			ts.log.String(),
 			`cannot convert \"hello\" to big.Int: event parse error","message":"unable to parse event; skipping"`,
 		)
+	})
+
+	t.Run("ObserveInbound retry if vote inbound fails", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		evmBob := sample.EthAddress()
+
+		// Given a deposit event
+		packageID := ts.gateway.PackageID()
+		expectedQuery := client.EventQuery{
+			PackageID: packageID,
+			Module:    sui.GatewayModule,
+			Cursor:    "",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		txHash := "Tx_retry"
+		events := []models.SuiEventResponse{
+			ts.SampleEvent(packageID, txHash, string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+
+		// Given transaction block
+		ts.OnGetTx(txHash, "10000", true, false, nil)
+
+		// Given vote inbound RPC failure
+		ts.zetaMock.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", "", errors.New("rpc error"))
+
+		// Given CCTX not found
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check cursor is not updated
+		require.Equal(t, "", ts.GetAuxString(packageID))
+
+		// No inbound votes should be created
+		require.Empty(t, ts.inboundVotesBag)
 	})
 
 	t.Run("ObserveInbound restricted address", func(t *testing.T) {
@@ -254,7 +363,8 @@ func TestObserver(t *testing.T) {
 			}),
 		})
 
-		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
 
 		// Given votes catcher
 		ts.CatchInboundVotes()
@@ -287,13 +397,14 @@ func TestObserver(t *testing.T) {
 
 		ts.MockCCTXByNonce(cctx)
 
-		// Given outbound tracker
+		// Given outbound tracker containing two tx hashes, one of which is false
 		const digest = "0xSuiTxHash"
+		const digest2 = "0xSuiTxHashFalse"
 		tracker := cctypes.OutboundTracker{
 			Index:    "0xAAA",
 			ChainId:  ts.Chain().ChainId,
 			Nonce:    nonce,
-			HashList: []*cctypes.TxHash{{TxHash: digest}},
+			HashList: []*cctypes.TxHash{{TxHash: digest2}, {TxHash: digest}},
 		}
 
 		ts.MockOutboundTrackers([]cctypes.OutboundTracker{tracker})
@@ -345,8 +456,10 @@ func TestObserver(t *testing.T) {
 				},
 			},
 		}
+		tx2 := models.SuiTransactionBlockResponse{Digest: digest2}
 
-		ts.MockGetTxOnce(tx)
+		ts.MockGetTxOnce(tx, nil)
+		ts.MockGetTxOnce(tx2, errors.New("no tx found"))
 
 		// ACT
 		err = ts.ProcessOutboundTrackers(ts.ctx)
@@ -659,7 +772,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 		Compliance: log.Logger,
 	}
 
-	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
+	zetaRepo := zrepo.New(zetacore, chain, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, chainParams, zetaRepo, tss, 1000, nil,
+		database, logger)
 	require.NoError(t, err)
 
 	suiMock := mocks.NewSuiClient(t)
@@ -718,18 +833,31 @@ func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents 
 	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(res, nil).Once()
 }
 
-func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse) {
-	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, mock.Anything).Return(tx, nil).Once()
+func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse, err error) {
+	req := models.SuiGetTransactionBlockRequest{
+		Digest: tx.Digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEvents:  true,
+			ShowInput:   true,
+			ShowEffects: true,
+		},
+	}
+
+	if err == nil {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(tx, err).Once()
+	} else {
+		ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(models.SuiTransactionBlockResponse{}, err).Once()
+	}
 }
 
 func (ts *testSuite) CatchInboundVotes() {
-	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
+	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound, _ chan<- zetaerrors.ErrTxMonitor) (string, string, error) {
 		ts.inboundVotesBag = append(ts.inboundVotesBag, msg)
 		return "", "", nil
 	}
 
 	ts.zetaMock.
-		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
 }

@@ -9,15 +9,17 @@ import (
 	"math/big"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -34,11 +36,35 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ProcessInboundTrackers observes inbound trackers from zetacore
+// ProcessInboundTrackers processes inbound trackers from zetacore
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
 		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []types.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
@@ -64,11 +90,12 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 		ob.Logger().Inbound.Info().
 			Str(logs.FieldTx, tracker.TxHash).
+			Bool("is_internal", isInternal).
 			Msg("checking inbound tracker")
 
 		// try processing the tracker for v2 inbound
 		// filter error if event is not found, in this case we run v1 tracker process
-		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt); err != nil &&
+		if err := ob.ProcessInboundTrackerV2(ctx, tx, receipt, isInternal); err != nil &&
 			!errors.Is(err, ErrEventNotFound) && !errors.Is(err, ErrGatewayNotSet) {
 			return err
 		} else if err == nil {
@@ -79,11 +106,11 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		// try processing the tracker for v1 inbound
 		switch tracker.CoinType {
 		case coin.CoinType_Zeta:
-			_, err = ob.checkAndVoteInboundTokenZeta(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenZetaFromV1Tracker(ctx, tx, receipt, true, isInternal)
 		case coin.CoinType_ERC20:
-			_, err = ob.checkAndVoteInboundTokenERC20(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenERC20FromV1Tracker(ctx, tx, receipt, true, isInternal)
 		case coin.CoinType_Gas:
-			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenGas(ctx, tx, receipt, true, true, isInternal)
 		default:
 			return fmt.Errorf(
 				"unknown coin type %s for inbound %s chain %d",
@@ -96,6 +123,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return errors.Wrapf(err, "error checking and voting for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 		}
 	}
+
 	return nil
 }
 
@@ -260,6 +288,7 @@ func (ob *Observer) fetchLogs(ctx context.Context, startBlock, toBlock uint64) (
 
 // observeZetaSent queries the ZetaSent event from the connector contract and posts to zetacore
 // returns the last block successfully scanned
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeZetaSent(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -330,11 +359,11 @@ func (ob *Observer) observeZetaSent(
 		if msg == nil {
 			continue
 		}
-
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
 		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
-		if _, err = ob.PostVoteInbound(ctx, msg, gasLimit); err != nil {
-			// we have to re-scan from this block next time
-			return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
+		_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound, msg, gasLimit, ob.WatchMonitoringError)
+		if err != nil {
+			return beingScanned - 1, err // we have to re-scan from this block next time
 		}
 	}
 
@@ -344,6 +373,7 @@ func (ob *Observer) observeZetaSent(
 
 // observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetacore
 // returns the last block successfully scanned
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeERC20Deposited(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -414,10 +444,12 @@ func (ob *Observer) observeERC20Deposited(
 
 		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+			_, err = ob.ZetaRepo().VoteInbound(ctx, ob.Logger().Inbound,
+				msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 			if err != nil {
 				// we have to re-scan from this block next time
-				return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
+				return beingScanned - 1, err
 			}
 		}
 	}
@@ -442,12 +474,14 @@ func (ob *Observer) observeTSSReceive(ctx context.Context, startBlock, toBlock u
 	return toBlock, nil
 }
 
-// checkAndVoteInboundTokenZeta checks and votes on the given inbound Zeta token
-func (ob *Observer) checkAndVoteInboundTokenZeta(
+// checkAndVoteInboundTokenZetaFromV1Tracker checks and votes on the given inbound Zeta token
+// This is currently used for tracker votes only
+func (ob *Observer) checkAndVoteInboundTokenZetaFromV1Tracker(
 	ctx context.Context,
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	isInternalTracker bool,
 ) (string, error) {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
@@ -496,18 +530,27 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundMessagePassingExecutionGasLimit)
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundMessagePassingExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
 }
 
-// checkAndVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
-func (ob *Observer) checkAndVoteInboundTokenERC20(
+// checkAndVoteInboundTokenERC20FromV1Tracker checks and votes on the given inbound ERC20 token
+// This is currently used for tracker votes only
+func (ob *Observer) checkAndVoteInboundTokenERC20FromV1Tracker(
 	ctx context.Context,
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	isInternalTracker bool,
 ) (string, error) {
 	// check confirmations
 	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
@@ -552,18 +595,28 @@ func (ob *Observer) checkAndVoteInboundTokenERC20(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
 }
 
 // checkAndVoteInboundTokenGas checks and votes on the given inbound gas token
+// This is currently used for tracker and block-scan votes
 func (ob *Observer) checkAndVoteInboundTokenGas(
 	ctx context.Context,
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
+	fromTracker bool,
+	isInternalTracker bool,
 ) (string, error) {
 	// check confirmations
 	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
@@ -593,7 +646,18 @@ func (ob *Observer) checkAndVoteInboundTokenGas(
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+		if fromTracker {
+			metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+				Inc()
+		} else {
+			metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+		}
+		return ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 	}
 
 	return msg.Digest(), nil
@@ -646,7 +710,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		ob.Chain().ChainId,
 		"",
 		clienttypes.BytesToEthHex(event.Recipient),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.Hex(),
@@ -654,7 +718,7 @@ func (ob *Observer) buildInboundVoteMsgForDepositedEvent(
 		1_500_000,
 		coin.CoinType_ERC20,
 		event.Asset.String(),
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
@@ -718,7 +782,7 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 		event.DestinationGasLimit.Uint64(),
 		coin.CoinType_Zeta,
 		"",
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
@@ -767,7 +831,7 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		ob.Chain().ChainId,
 		sender.Hex(),
 		sender.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(tx.Value),
 		message,
 		tx.Hash,
@@ -775,7 +839,7 @@ func (ob *Observer) buildInboundVoteMsgForTokenSentToTSS(
 		90_000,
 		coin.CoinType_Gas,
 		"",
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		0, // not a smart contract call
 		types.InboundStatus_SUCCESS,
 	)
@@ -795,7 +859,7 @@ func (ob *Observer) observeTSSReceiveInBlock(ctx context.Context, blockNumber ui
 				return errors.Wrapf(err, "error getting receipt for inbound %s chain %d", tx.Hash, ob.Chain().ChainId)
 			}
 
-			_, err = ob.checkAndVoteInboundTokenGas(ctx, &tx, receipt, true)
+			_, err = ob.checkAndVoteInboundTokenGas(ctx, &tx, receipt, true, false, false)
 			if err != nil {
 				return errors.Wrapf(
 					err,

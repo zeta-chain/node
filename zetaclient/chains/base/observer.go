@@ -1,28 +1,25 @@
 package base
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -32,6 +29,12 @@ const (
 	// DefaultBlockCacheSize is the default number of blocks that the observer will keep in cache for performance (without RPC calls)
 	// Cached blocks can be used to get block information and verify transactions
 	DefaultBlockCacheSize = 1000
+
+	// MonitoringErrHandlerRoutineTimeout is the timeout for the handleMonitoring routine that waits for an error from the monitorVote channel
+	MonitoringErrHandlerRoutineTimeout = 5 * time.Minute
+
+	// defaultSampledLogInterval is the default interval for sampled logs
+	defaultSampledLogInterval = 10
 )
 
 // Observer is the base structure for chain observers, grouping the common logic for each chain observer client.
@@ -43,11 +46,11 @@ type Observer struct {
 	// chainParams contains the dynamic chain parameters of the observed chain
 	chainParams observertypes.ChainParams
 
-	// zetacoreClient is the client to interact with ZetaChain
-	zetacoreClient interfaces.ZetacoreClient
+	// zetaRepo is the repository that interacts with zetacore
+	zetaRepo *zrepo.ZetaRepo
 
 	// tssSigner is the TSS signer
-	tssSigner interfaces.TSSSigner
+	tssSigner tssrepo.TSSClient
 
 	// lastBlock is the last block height of the observed chain
 	lastBlock uint64
@@ -63,6 +66,10 @@ type Observer struct {
 	auxStringMap map[string]string
 
 	blockCache *lru.Cache
+
+	// internalInboundTrackers stores trackers for inbounds that failed to vote on due to broadcasting error (e.g. tx dropped)
+	// the contents of the map may vary from observer to observer, depending on individual situation
+	internalInboundTrackers map[string]*InternalInboundTracker
 
 	// db is the database to persist data
 	db *db.DB
@@ -86,8 +93,8 @@ type Observer struct {
 func NewObserver(
 	chain chains.Chain,
 	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tssSigner interfaces.TSSSigner,
+	zetaRepo *zrepo.ZetaRepo,
+	tssSigner tssrepo.TSSClient,
 	blockCacheSize int,
 	ts *metrics.TelemetryServer,
 	database *db.DB,
@@ -99,20 +106,21 @@ func NewObserver(
 	}
 
 	return &Observer{
-		chain:            chain,
-		chainParams:      chainParams,
-		zetacoreClient:   zetacoreClient,
-		tssSigner:        tssSigner,
-		lastBlock:        0,
-		lastBlockScanned: 0,
-		lastTxScanned:    "",
-		auxStringMap:     make(map[string]string),
-		ts:               ts,
-		db:               database,
-		blockCache:       blockCache,
-		mu:               &sync.Mutex{},
-		logger:           newObserverLogger(chain, logger),
-		stop:             make(chan struct{}),
+		chain:                   chain,
+		chainParams:             chainParams,
+		zetaRepo:                zetaRepo,
+		tssSigner:               tssSigner,
+		lastBlock:               0,
+		lastBlockScanned:        0,
+		lastTxScanned:           "",
+		auxStringMap:            make(map[string]string),
+		ts:                      ts,
+		db:                      database,
+		blockCache:              blockCache,
+		internalInboundTrackers: make(map[string]*InternalInboundTracker),
+		mu:                      &sync.Mutex{},
+		logger:                  newObserverLogger(chain, logger),
+		stop:                    make(chan struct{}),
 	}, nil
 }
 
@@ -181,13 +189,13 @@ func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.logger.Chain.Info().Any("chain_params", params).Msg("updated chain parameters")
 }
 
-// ZetacoreClient returns the zetacore client for the observer.
-func (ob *Observer) ZetacoreClient() interfaces.ZetacoreClient {
-	return ob.zetacoreClient
+// ZetaRepo returns the zrepo.ZetaRepo repository for the observer.
+func (ob *Observer) ZetaRepo() *zrepo.ZetaRepo {
+	return ob.zetaRepo
 }
 
 // TSS returns the tss signer for the observer.
-func (ob *Observer) TSS() interfaces.TSSSigner {
+func (ob *Observer) TSS() tssrepo.TSSClient {
 	return ob.tssSigner
 }
 
@@ -244,8 +252,11 @@ func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
 	defer ob.mu.Unlock()
 
 	if ob.lastTxScanned == "" {
-		ob.logger.Chain.Info().Str("tx", txHash).Msg("initializing last tx scanned")
+		ob.logger.Chain.Info().
+			Str(logs.FieldTx, txHash).
+			Msg("initializing last scanned transaction")
 	}
+
 	ob.lastTxScanned = txHash
 
 	return ob
@@ -466,70 +477,6 @@ func (ob *Observer) ReadAuxStringFromDB(key string) (string, error) {
 	return record.Value, nil
 }
 
-// PostVoteInbound posts a vote for the given vote message and returns the ballot.
-func (ob *Observer) PostVoteInbound(
-	ctx context.Context,
-	msg *crosschaintypes.MsgVoteInbound,
-	retryGasLimit uint64,
-) (string, error) {
-	const gasLimit = zetacore.PostVoteInboundGasLimit
-
-	var (
-		txHash   = msg.InboundHash
-		coinType = msg.CoinType
-	)
-
-	logger := ob.logger.Inbound.With().
-		Str(logs.FieldTx, txHash).
-		Stringer(logs.FieldCoinType, coinType).
-		Stringer("confirmation_mode", msg.ConfirmationMode).
-		Logger()
-
-	cctxIndex := msg.Digest()
-	// The cctx is created after the inbound ballot is finalized
-	// 1. if the cctx already exists, we could try voting if the ballot is present
-	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
-	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
-	if err == nil {
-		// The cctx exists we should still vote if the ballot is present
-		_, ballotErr := ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
-		if ballotErr != nil {
-			// Verify ballot is not found
-			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
-				// Query for ballot failed, the ballot does not exist we can return
-				logger.Info().Msg("inbound detected: CCTX exists but the ballot does not")
-				return cctxIndex, nil
-			}
-		}
-	}
-
-	// make sure the message is valid to avoid unnecessary retries
-	if err := msg.ValidateBasic(); err != nil {
-		logger.Warn().Err(err).Msg("invalid inbound vote message")
-		return "", nil
-	}
-
-	// post vote to zetacore
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
-
-	logger = logger.With().
-		Str(logs.FieldZetaTx, zetaHash).
-		Str(logs.FieldBallotIndex, ballot).
-		Logger()
-
-	switch {
-	case err != nil:
-		logger.Error().Err(err).Msg("inbound detected: error posting vote")
-		return "", err
-	case zetaHash == "":
-		logger.Info().Msg("inbound detected: already voted on ballot")
-	default:
-		logger.Info().Msg("inbound detected: vote posted")
-	}
-
-	return ballot, nil
-}
-
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
 func EnvVarLatestBlockByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_BLOCK", chain.ChainId)
@@ -561,5 +508,6 @@ func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {
 		Inbound:    log.With().Str(logs.FieldModule, logs.ModNameInbound).Logger(),
 		Outbound:   log.With().Str(logs.FieldModule, logs.ModNameOutbound).Logger(),
 		Compliance: complianceLog,
+		Sampled:    log.Sample(&zerolog.BasicSampler{N: defaultSampledLogInterval}),
 	}
 }

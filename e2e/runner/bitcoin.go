@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -18,13 +19,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
@@ -252,10 +254,20 @@ func (r *E2ERunner) WithdrawBTC(
 		r.ApproveBTCZRC20(r.GatewayZEVMAddr)
 	}
 
+	// convert P2WPKH/P2WSH addresses to uppercase, it should work without issue
+	var receiverStr string
+	switch to.(type) {
+	case *btcutil.AddressWitnessPubKeyHash,
+		*btcutil.AddressWitnessScriptHash:
+		receiverStr = strings.ToUpper(to.EncodeAddress())
+	default:
+		receiverStr = to.EncodeAddress()
+	}
+
 	// withdraw 'amount' of BTC through ZEVM gateway
 	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
-		[]byte(to.EncodeAddress()),
+		[]byte(receiverStr),
 		amount,
 		r.BTCZRC20Addr,
 		revertOptions,
@@ -541,8 +553,16 @@ func (r *E2ERunner) WaitForBitcoinTxInclusion(
 
 // BitcoinCalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
 func (r *E2ERunner) BitcoinCalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
+	// query chain params
+	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: r.GetBitcoinChainID()}
+	resp, err := r.Clients.Zetacore.Observer.GetChainParamsForChain(r.Ctx, query)
+	require.NoError(r, err)
+
+	// get fee rate multiplier
+	feeRateMultiplier := resp.ChainParams.GasPriceMultiplier.MustFloat64()
+
 	// calculate depositor fee
-	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, r.BitcoinParams)
+	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, feeRateMultiplier, r.BitcoinParams)
 	require.NoError(r, err)
 
 	// convert depositor fee to satoshis

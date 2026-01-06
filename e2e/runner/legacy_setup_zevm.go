@@ -11,6 +11,7 @@ import (
 // SetupLegacyZEVMContracts sets up the legacy contracts on ZEVM
 // In particular it deploys test contracts used with the protocol contracts v1
 func (r *E2ERunner) SetupLegacyZEVMContracts() {
+	r.Logger.Print("⚙️ Setting up ZEVM legacy protocol contracts")
 	// deploy TestDApp contract on zEVM
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(
 		r.ZEVMAuth,

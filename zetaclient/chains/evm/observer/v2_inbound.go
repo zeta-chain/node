@@ -11,7 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -20,7 +20,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -58,6 +60,8 @@ func (ob *Observer) isEventProcessable(
 
 // observeGatewayDeposit queries the gateway contract for deposit events
 // returns the last block successfully scanned
+//
+//	This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDeposit(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -71,7 +75,7 @@ func (ob *Observer) observeGatewayDeposit(
 	}
 
 	// parse and validate events
-	events := ob.parseAndValidateDepositEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	// post to zetacore
 	lastScanned := uint64(0)
@@ -103,10 +107,16 @@ func (ob *Observer) observeGatewayDeposit(
 			}
 		}
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -116,6 +126,7 @@ func (ob *Observer) observeGatewayDeposit(
 
 // parseAndValidateDepositEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -128,10 +139,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		}
 		depositedEvent, err := gatewayContract.ParseDeposited(ethlog)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, ethlog.TxHash).
 				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("invalid Deposit event")
+				Msg("failed to parse as Deposit event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -149,7 +160,27 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Info().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple Deposited events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
@@ -166,12 +197,12 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	}
 
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),
@@ -194,6 +225,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 // TODO: there are lot of similarities between this function and ObserveGatewayDeposit
 // logic should be factorized using interfaces and generics
 // https://github.com/zeta-chain/node/issues/2493
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -205,7 +237,7 @@ func (ob *Observer) observeGatewayCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 	lastScanned := uint64(0)
 	for _, event := range events {
 		if event.Raw.BlockNumber > lastScanned {
@@ -225,9 +257,15 @@ func (ob *Observer) observeGatewayCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (Call)")
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 		if err != nil {
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -236,6 +274,7 @@ func (ob *Observer) observeGatewayCall(
 
 // parseAndValidateCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -248,10 +287,10 @@ func (ob *Observer) parseAndValidateCallEvents(
 		}
 		calledEvent, err := gatewayContract.ParseCalled(log)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Call event")
+				Msg("failed to parse as Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -269,18 +308,40 @@ func (ob *Observer) parseAndValidateCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("Multiple Call events in same tx")
+
+			continue
+		}
+
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
 func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types.MsgVoteInbound {
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.ZeroUint(),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),
@@ -299,6 +360,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 
 // observeGatewayDepositAndCall queries the gateway contract for deposit and call events
 // returns the last block successfully scanned
+// This is currently used for creating votes from events observed via block scanning only
 func (ob *Observer) observeGatewayDepositAndCall(
 	ctx context.Context,
 	startBlock, toBlock uint64,
@@ -310,7 +372,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
 	}
 
-	events := ob.parseAndValidateDepositAndCallEvents(rawLogs, gatewayAddr, gatewayContract)
+	events := ob.parseAndValidateDepositAndCallEvents(ctx, rawLogs, gatewayAddr, gatewayContract)
 
 	lastScanned := uint64(0)
 	for _, event := range events {
@@ -334,10 +396,16 @@ func (ob *Observer) observeGatewayDepositAndCall(
 			Str("message", hex.EncodeToString(event.Payload)).
 			Msg("inbound detected (DepositAndCall)")
 
-		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+		_, err = ob.ZetaRepo().VoteInbound(ctx,
+			ob.Logger().Inbound,
+			&msg,
+			zetacore.PostVoteInboundExecutionGasLimit,
+			ob.WatchMonitoringError,
+		)
 		if err != nil {
 			// decrement the last scanned block so we have to re-scan from this block next time
-			return lastScanned - 1, errors.Wrap(err, "error posting vote inbound")
+			return lastScanned - 1, err
 		}
 	}
 
@@ -347,6 +415,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 
 // parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
 func (ob *Observer) parseAndValidateDepositAndCallEvents(
+	ctx context.Context,
 	ethlogs []ethtypes.Log,
 	gatewayAddr ethcommon.Address,
 	gatewayContract *gatewayevm.GatewayEVM,
@@ -360,10 +429,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		}
 		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
 		if err != nil {
-			ob.Logger().Inbound.Warn().
+			ob.Logger().Inbound.Debug().
 				Stringer(logs.FieldTx, ethlog.TxHash).
 				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("invalid DepositedAndCall event")
+				Msg("failed to parse as DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)
@@ -381,7 +450,27 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
-	return validEvents
+	// Check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple DepositedAndCalled events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
 }
 
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
@@ -390,12 +479,12 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
 
 	return *types.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.Sender.Hex(),
 		ob.Chain().ChainId,
 		"",
 		event.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),

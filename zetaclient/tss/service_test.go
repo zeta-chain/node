@@ -67,6 +67,10 @@ func TestService(t *testing.T) {
 			const blockHeight = 123
 			ts.keySignerMock.AddCall(ts.PubKeyBech32(), [][]byte{digest}, blockHeight, true, nil)
 
+			// Ensure signature is not cached
+			found := s.IsSignatureCached(3, [][]byte{digest})
+			require.False(t, found)
+
 			// ACT
 			// Sign a message
 			// - note that Sign() also contains sig verification
@@ -76,6 +80,10 @@ func TestService(t *testing.T) {
 			// ASSERT
 			require.NoError(t, err)
 			require.NotEmpty(t, sig)
+
+			// Ensure signature is cached
+			found = s.IsSignatureCached(3, [][]byte{digest})
+			require.True(t, found)
 		})
 	})
 
@@ -102,12 +110,20 @@ func TestService(t *testing.T) {
 		const blockHeight = 123
 		ts.keySignerMock.AddCall(ts.PubKeyBech32(), digests, blockHeight, true, nil)
 
+		// Ensure signature is not cached
+		found := s.IsSignatureCached(3, digests)
+		require.False(t, found)
+
 		// ACT
 		sig, err := s.SignBatch(ts.ctx, digests, blockHeight, 2, 3)
 
 		// ASSERT
 		require.NoError(t, err)
 		require.NotEmpty(t, sig)
+
+		// Ensure signature is cached
+		found = s.IsSignatureCached(3, digests)
+		require.True(t, found)
 	})
 }
 

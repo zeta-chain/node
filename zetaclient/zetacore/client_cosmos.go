@@ -29,3 +29,23 @@ func (c *Client) GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error) 
 
 	return resp.Balance.Amount, nil
 }
+
+// GetNumberOfUnconfirmedTxs returns the number of unconfirmed txs in the zetacore mempool
+func (c *Client) GetNumberOfUnconfirmedTxs(ctx context.Context) (int, error) {
+	resp, err := c.cometBFTClient.NumUnconfirmedTxs(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get number of unconfirmed txs")
+	}
+
+	return resp.Count, nil
+}
+
+// GetSyncStatus returns whether the zeta core node is syncing or not
+// returns true if syncing, false otherwise
+func (c *Client) GetSyncStatus(ctx context.Context) (bool, error) {
+	syncing, err := c.Clients.GetSyncing(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get syncing status")
+	}
+	return syncing, nil
+}

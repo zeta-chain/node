@@ -144,6 +144,7 @@ then
 fi
 
 echo "Creating keys for operator and hotkey for $HOSTNAME"
+# Ensure new-validator is marked as non-observer (it becomes observer via replacement or add-observer)
 if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
   source ~/add-keys.sh n
 else
@@ -178,10 +179,16 @@ fi
 if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   ZETACORED_REPLICAS=2
-  if host zetacore3 ; then
-    echo "zetacore3 exists, setting ZETACORED_REPLICAS to 4"
-    ZETACORED_REPLICAS=4
+  if host zetacore2; then
+    echo "zetacore2 exists, incrementing ZETACORED_REPLICAS"
+    ZETACORED_REPLICAS=$((ZETACORED_REPLICAS+1))
   fi
+  if host zetacore3; then
+    echo "zetacore3 exists, incrementing ZETACORED_REPLICAS"
+    ZETACORED_REPLICAS=$((ZETACORED_REPLICAS+1))
+  fi
+  echo "ZETACORED_REPLICAS = ${ZETACORED_REPLICAS}"
+
   # generate node list
   START=1
   # shellcheck disable=SC2100
@@ -213,10 +220,15 @@ then
     echo "zetacore-new-validator exists"
     ssh zetaclient-new-validator mkdir -p ~/.zetacored/
     while ! scp zetacore-new-validator:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_non_validator.json; do
-          echo "Waiting for os_info.json from node zetacore-new-validator"
-          sleep 1
-        done
+        echo "Waiting for os_info.json from node zetacore-new-validator"
+        sleep 1
+    done
     scp ~/.zetacored/os_info/os_non_validator.json zetaclient-new-validator:~/.zetacored/os.json
+  fi
+
+  if host zetaclient-dry ; then
+    echo "zetaclient-dry exists"
+    scp ~/.zetacored/os_info/os.json zetaclient-dry:~/.zetacored/os.json
   fi
 
   ssh zetaclient0 mkdir -p ~/.zetacored/
@@ -233,6 +245,11 @@ then
   fi
 
   # Update governance and other chain parameters for localnet
+  # Note: It should contains the precompile list as well in params using the following line:
+  # .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000100","0x0000000000000000000000000000000000000400","0x0000000000000000000000000000000000000800","0x0000000000000000000000000000000000000801","0x0000000000000000000000000000000000000802","0x0000000000000000000000000000000000000803","0x0000000000000000000000000000000000000804","0x0000000000000000000000000000000000000805"] |
+  # Currently adding this fails as the param is not recognized by <v33
+  # For simplicity it has been removed, but it should be added back once mainnet upgraded to v33 and we want to implement automated tests for precompiles
+  # https://github.com/zeta-chain/node/issues/4081
   jq '
     .app_state.gov.params.voting_period="30s" |
     .app_state.gov.params.quorum="0.1" |
@@ -247,14 +264,18 @@ then
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
+    .app_state.feemarket.params.base_fee_change_denominator = "300" |
+    .app_state.feemarket.params.elasticity_multiplier = "4" |
     .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000100", "0x0000000000000000000000000000000000000400", "0x0000000000000000000000000000000000000800", "0x0000000000000000000000000000000000000801", "0x0000000000000000000000000000000000000804", "0x0000000000000000000000000000000000000805", "0x0000000000000000000000000000000000000806"] |
-    .consensus.params.block.max_gas = "500000000"
+    .consensus.params.block.max_gas = "50000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
   # set admin account
   admin_amount=100000000000000000000000000azeta # DEFAULT_FUND_AMOUNT * 10
   fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh $admin_amount
+  # zetaclient_dry_account is used in the dry zetaclient . Although the account is not used for transactions we still need to fund to be able to activate the account in the auth module
+  fund_account zetaclient_dry_account zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax $admin_amount
 
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
@@ -263,6 +284,7 @@ then
   fund_account emergency_policy "$emergency_policy" $admin_amount
   fund_account admin_policy "$admin_policy" $admin_amount
   fund_account operational_policy "$operational_policy" $admin_amount
+
 
   jq --arg emergency "$emergency_policy" \
     --arg operational "$operational_policy" \
@@ -283,6 +305,7 @@ then
     ssh $NODE mkdir -p ~/.zetacored/config/gentx/peer/
     scp ~/.zetacored/config/gentx/* $NODE:~/.zetacored/config/gentx/peer/
   done
+
   # Create gentx files on other nodes and copy them to host node
   mkdir ~/.zetacored/config/gentx/z2gentx
   for NODE in "${NODELIST[@]}"; do
@@ -293,17 +316,17 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
-#  TODO : USE --modify flag to modify the genesis file when v18 is released
+  # TODO : USE --modify flag to modify the genesis file when v18 is released
   if [[ -n "$ZETACORED_IMPORT_GENESIS_DATA" ]]; then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
 
-# 4. Collect all the gentx files in zetacore0 and create the final genesis.json
+  # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
   zetacored validate-genesis
 
-# 5. Copy the final genesis.json to all the nodes
+  # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
@@ -334,13 +357,19 @@ fi
 # End of genesis creation steps . The steps below are common to all the nodes
 
 # Update persistent peers
-if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]
-then
+if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]; then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
+
+  if host zetaclient-dry ; then
+      ssh zetaclient-dry mkdir -p ~/.zetacored/keyring-test/
+      scp ~/.zetacored/keyring-test/* zetaclient-dry:~/.zetacored/keyring-test/
+      ssh zetaclient-dry mkdir -p ~/.zetacored/keyring-file/
+      scp ~/.zetacored/keyring-file/* zetaclient-dry:~/.zetacored/keyring-file/
+  fi
 
    pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
    pps=${pp:1:58}

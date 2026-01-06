@@ -8,9 +8,9 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/wzeta.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/node/x/fungible/types"

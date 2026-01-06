@@ -61,6 +61,35 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		require.Equal(t, types.CctxStatus_OutboundMined, newStatus)
 	})
 
+	t.Run("should return aborted status when V2 ZETA flows are disabled", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+		gatewayZEVM := keeper.NewCCTXGatewayZEVM(*k)
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("IsV2ZetaEnabled", mock.Anything).Return(false)
+
+		// mock up CCTX data
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
+		cctx.InboundParams.CoinType = coin.CoinType_Zeta
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+
+		// ACT
+		newStatus, err := gatewayZEVM.InitiateOutbound(
+			ctx,
+			keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true},
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, types.CctxStatus_Aborted, newStatus)
+		require.Contains(t, cctx.CctxStatus.StatusMessage, "V2 ZETA flows are disabled for deposits")
+	})
+
 	t.Run("should return aborted status on insufficient depositor fee", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{

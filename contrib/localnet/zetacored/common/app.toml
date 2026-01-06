@@ -44,7 +44,7 @@ halt-time = 0
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: Tendermint block pruning is dependant on this parameter in conunction
+# Note: Tendermint block pruning is dependent on this parameter in conunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -264,3 +264,12 @@ certificate-path = ""
 
 # Key path defines the key.pem file path for the TLS configuration.
 key-path = ""
+
+#######################################################
+###          Mempool Configuration Option          ###
+#######################################################
+[mempool]
+
+# Max number of transactions in the mempool.
+# Reference: https://docs.cosmos.network/main/user/run-node/run-node#configuring-the-node-using-apptoml-and-configtoml
+max-txs = "3000"

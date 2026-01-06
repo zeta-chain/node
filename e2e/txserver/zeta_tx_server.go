@@ -248,6 +248,26 @@ func (zts *ZetaTxServer) GetAccountMnemonic(index int) string {
 	return zts.mnemonic[index]
 }
 
+// GasLimit returns the gas limit of the tx factory
+func (zts *ZetaTxServer) GasLimit() uint64 {
+	return zts.txFactory.Gas()
+}
+
+// SetGasLimit sets the gas limit of the tx factory
+func (zts *ZetaTxServer) SetGasLimit(gas uint64) {
+	zts.txFactory = zts.txFactory.WithGas(gas)
+}
+
+// Fee returns the fee of the tx factory
+func (zts *ZetaTxServer) Fee() sdktypes.Coins {
+	return zts.txFactory.Fees()
+}
+
+// SetFee sets the fee of the tx factory
+func (zts *ZetaTxServer) SetFee(fee sdktypes.Coins) {
+	zts.txFactory = zts.txFactory.WithFees(fee.String())
+}
+
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
 // and waiting for blockTime for tx to be included in the block
 func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
@@ -278,12 +298,11 @@ func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdk
 			return nil, retry.Retry(err)
 		}
 
-		// increase gas and fees if multiple messages are provided
-		txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
-		txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
+		txBuilder.SetGasLimit(zts.txFactory.Gas())
+		txBuilder.SetFeeAmount(zts.txFactory.Fees())
 
 		// Sign tx
-		err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
+		err = tx.Sign(zts.ctx, zts.txFactory, account, txBuilder, true)
 		if err != nil {
 			return nil, retry.Retry(err)
 		}
@@ -593,10 +612,24 @@ func (zts *ZetaTxServer) DeployZRC20s(
 		},
 	)
 
+	// update the gas limit as this is a gas intensive operation
+	previousGasLimit := zts.GasLimit()
+	zts.SetGasLimit(20_000_000)
+	previousFee := zts.Fee()
+	parsedFees, err := sdktypes.ParseCoinsNormalized("200000000000000000azeta")
+	if err != nil {
+		return nil, fmt.Errorf("parse fee: %w", err)
+	}
+	zts.SetFee(parsedFees)
+
 	res, err := zts.BroadcastTx(deployerAccount, deployMsgsIface...)
 	if err != nil {
 		return nil, fmt.Errorf("deploy zrc20s: %w", err)
 	}
+
+	// restore previous gas limit
+	zts.SetGasLimit(previousGasLimit)
+	zts.SetFee(previousFee)
 
 	deployedEvents, ok := EventsOfType[*fungibletypes.EventZRC20Deployed](res.Events)
 	if !ok {
@@ -698,6 +731,16 @@ func (zts *ZetaTxServer) UpdateKeygen(height int64) error {
 		zts.GetAccountAddress(0),
 		keygenHeight,
 	))
+	return err
+}
+
+func (zts *ZetaTxServer) RemoveObserver(observer string) error {
+	account := zts.MustGetAccountAddressFromName(utils.AdminPolicyName)
+	_, err := zts.BroadcastTx(utils.AdminPolicyName,
+		observertypes.NewMsgRemoveObserver(
+			account,
+			observer,
+		))
 	return err
 }
 

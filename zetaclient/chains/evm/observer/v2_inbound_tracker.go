@@ -3,11 +3,14 @@ package observer
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	zctx "github.com/zeta-chain/node/zetaclient/context"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -23,6 +26,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
 	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
+	isInternalTracker bool,
 ) error {
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
@@ -41,7 +45,10 @@ func (ob *Observer) ProcessInboundTrackerV2(
 		)
 	}
 
+	// Check if multiple calls are enabled
+	allowMultipleCalls := zctx.EnableMultipleCallsFeatureFlag(ctx)
 	eventFound := false
+
 	for _, log := range receipt.Logs {
 		if log == nil || log.Address != gatewayAddr {
 			continue
@@ -61,9 +68,17 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
+
+			metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+				Inc()
 			msg := ob.newDepositInboundVote(eventDeposit)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}
@@ -82,9 +97,16 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
+			metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+				Inc()
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}
@@ -103,9 +125,16 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			) {
 				return fmt.Errorf("event from inbound tracker %s is not processable", tx.Hash)
 			}
+			metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+				Inc()
 			msg := ob.newCallInboundVote(eventCall)
-			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			if err != nil {
+			_, err = ob.ZetaRepo().VoteInbound(ctx,
+				ob.Logger().Inbound,
+				&msg,
+				zetacore.PostVoteInboundExecutionGasLimit,
+				ob.WatchMonitoringError,
+			)
+			if err != nil || !allowMultipleCalls {
 				return err
 			}
 		}

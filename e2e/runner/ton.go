@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	tonencoder "github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 )
 
 // we need to use this send mode due to how wallet V5 works
@@ -119,7 +119,7 @@ func (r *E2ERunner) TONDeposit(
 		return nil, err
 	}
 
-	txHash := rpc.TransactionToHashString(tx)
+	txHash := tonencoder.EncodeTx(tx)
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -189,7 +189,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	// Wait for tx
 	tx := r.tonWaitForTx(waitFrom, filter)
 
-	txHash := rpc.TransactionToHashString(tx)
+	txHash := tonencoder.EncodeTx(tx)
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -265,7 +265,7 @@ func (r *E2ERunner) TONCall(
 	// Wait for tx
 	tx := r.tonWaitForTx(waitFrom, filter)
 
-	txHash := rpc.TransactionToHashString(tx)
+	txHash := tonencoder.EncodeTx(tx)
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -389,7 +389,7 @@ func (r *E2ERunner) tonWaitForTx(from tonWaitFrom, filter func(tx *ton.Transacti
 			r.Logger.Info(
 				"tonWaitForInboundCCTX[%d]: Found matching transaction: %s",
 				attempts,
-				rpc.TransactionToHashString(tx),
+				tonencoder.EncodeTx(tx),
 			)
 
 			return tx

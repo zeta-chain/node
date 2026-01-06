@@ -43,6 +43,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/constant"
 	zevmserver "github.com/zeta-chain/node/server"
 	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
@@ -268,7 +269,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 
 	zevmserver.AddCommands(
 		rootCmd,
-		zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome),
+		ac.newApp,
+		app.DefaultNodeHome,
 		ac.appExport,
 		addModuleInitFlags,
 	)
@@ -280,6 +282,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		txCommand(),
 		docsCommand(),
 		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true),
+		zevmserver.DevNetCmd(ac.newApp),
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
@@ -345,8 +348,6 @@ type appCreator struct {
 	encCfg testutil.TestEncodingConfig
 }
 
-const DefaultMaxTxs = 3000
-
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -356,7 +357,7 @@ func (ac appCreator) newApp(
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
-		maxTxs = DefaultMaxTxs
+		maxTxs = constant.DefaultAppMempoolSize
 	}
 	signerExtractor := app.NewEthSignerExtractionAdapter(mempool.NewDefaultSignerExtractionAdapter())
 	mpool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{

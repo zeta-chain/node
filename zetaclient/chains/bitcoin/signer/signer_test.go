@@ -22,11 +22,13 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -66,7 +68,7 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create signer
-	baseSigner := base.NewSigner(chain, tss, baseLogger)
+	baseSigner := base.NewSigner(chain, tss, baseLogger, mode.StandardMode)
 	signer := New(baseSigner, rpcClient)
 
 	// create test suite and observer
@@ -186,7 +188,7 @@ func Test_P2PH(t *testing.T) {
 	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
-	// would ordinarily be the real transaction that is being spent.  It
+	// would ordinarily be the real transaction that is being spent. It
 	// contains a single output that pays to address in the amount of 1 BTC.
 	originTx := wire.NewMsgTx(wire.TxVersion)
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
@@ -202,7 +204,7 @@ func Test_P2PH(t *testing.T) {
 	// Create the transaction to redeem the fake transaction.
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
 
-	// Add the input(s) the redeeming transaction will spend.  There is no
+	// Add the input(s) the redeeming transaction will spend. There is no
 	// signature script at this point since it hasn't been created or signed
 	// yet, hence nil is provided for it.
 	prevOut = wire.NewOutPoint(&originTxHash, 0)
@@ -219,7 +221,7 @@ func Test_P2PH(t *testing.T) {
 		return privKey, true, nil
 	}
 	// Notice that the script database parameter is nil here since it isn't
-	// used.  It must be specified when pay-to-script-hash transactions are
+	// used. It must be specified when pay-to-script-hash transactions are
 	// being signed.
 	sigScript, err := txscript.SignTxOutput(&chaincfg.MainNetParams,
 		redeemTx, 0, originTx.TxOut[0].PkScript, txscript.SigHashAll,
@@ -255,7 +257,7 @@ func Test_P2WPH(t *testing.T) {
 	require.NoError(t, err)
 
 	// For this example, create a fake transaction that represents what
-	// would ordinarily be the real transaction that is being spent.  It
+	// would ordinarily be the real transaction that is being spent. It
 	// contains a single output that pays to address in the amount of 1 BTC.
 	originTx := wire.NewMsgTx(wire.TxVersion)
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
@@ -270,7 +272,7 @@ func Test_P2WPH(t *testing.T) {
 	// Create the transaction to redeem the fake transaction.
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
 
-	// Add the input(s) the redeeming transaction will spend.  There is no
+	// Add the input(s) the redeeming transaction will spend. There is no
 	// signature script at this point since it hasn't been created or signed
 	// yet, hence nil is provided for it.
 	prevOut = wire.NewOutPoint(&originTxHash, 0)
@@ -351,6 +353,8 @@ func makeCtx(t *testing.T) context.Context {
 		},
 		*sample.CrosschainFlags(),
 		sample.OperationalFlags(),
+		0,
+		0,
 	)
 	require.NoError(t, err, "unable to update app context")
 
@@ -372,7 +376,10 @@ func (s *testSuite) createObserver(t *testing.T) {
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create observer
-	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, baseLogger)
+	chain := s.Chain()
+	zetaRepo := zrepo.New(s.zetacoreClient, chain, mode.StandardMode)
+	baseObserver, err := base.NewObserver(chain, params, zetaRepo, s.tss, 100, ts, database,
+		baseLogger)
 	require.NoError(t, err)
 
 	s.observer, err = observer.New(baseObserver, s.client, s.Chain())
