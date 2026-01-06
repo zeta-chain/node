@@ -176,6 +176,11 @@ func (k Keeper) refundUnusedGas(
 	cctx *types.CrossChainTx,
 ) error {
 	outboundParams := cctx.GetCurrentOutboundParam()
+
+	if outboundParams.EffectiveGasPrice.IsNil() {
+		return nil
+	}
+
 	outboundTxFeePaid := math.NewUint(outboundParams.GasUsed).
 		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
 	userGasFeePaid := outboundParams.UserGasFeePaid
@@ -244,6 +249,10 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	OutboundParams types.OutboundParams,
 	chainID int64,
 ) error {
+	if OutboundParams.EffectiveGasPrice.IsNil() {
+		return nil
+	}
+
 	gasUsed := OutboundParams.GasUsed
 	gasLimit := OutboundParams.EffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
