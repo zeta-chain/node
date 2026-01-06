@@ -17,6 +17,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	zetaos "github.com/zeta-chain/node/pkg/os"
+	_ "github.com/zeta-chain/node/pkg/sdkconfig/default"
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -48,9 +49,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	clientCfg := cfg.GetZetacoreClientConfig()
+	//clientCfg := cfg.GetZetacoreClientConfig()
 	_, enableAutoDownload := os.LookupEnv("ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD")
-	supervisor, err := newZetaclientdSupervisor(clientCfg.GRPCURL, logger, enableAutoDownload)
+	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload)
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get supervisor")
 		os.Exit(1)

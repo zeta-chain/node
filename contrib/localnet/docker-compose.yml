@@ -36,7 +36,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: ${ZETACORED_START_PERIOD-30s}
-      start_interval: 1s
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -107,12 +106,16 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
+    extra_hosts:
+      - "zetaclient0.com:172.20.0.21"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - PPROF_ADDR=0.0.0.0:6061
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     restart: always
     ports:
       - "6061:6061" # pprof
@@ -120,6 +123,7 @@ services:
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient1:
     image: zetanode:latest
@@ -128,15 +132,24 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
+    extra_hosts:
+      - "zetaclient1.com:172.20.0.22"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6062
+      - CHAOS_PROFILE
+      - CHAOS_SEED
     restart: always
+    ports:
+      - "6062:6062" # pprof
+      - "8887:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient2:
     image: zetanode:latest
@@ -148,13 +161,23 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
+    extra_hosts:
+      - "zetaclient2.com:172.20.0.23"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6063
+      - CHAOS_PROFILE
+      - CHAOS_SEED
+    restart: always
+    ports:
+      - "6063:6063" # pprof
+      - "8888:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetaclient3:
     image: zetanode:latest
@@ -166,13 +189,23 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
+    extra_hosts:
+      - "zetaclient3.com:172.20.0.24"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6064
+      - CHAOS_PROFILE
+      - CHAOS_SEED
+    restart: always
+    ports:
+      - "6064:6064" # pprof
+      - "8889:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+      - ./chaosprofiles:/root/chaosprofiles
 
   zetacore-new-validator:
     image: zetanode:latest
@@ -180,7 +213,9 @@ services:
     hostname: zetacore-new-validator
     profiles:
       - tss
+      - replace-observer
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.15
@@ -188,6 +223,7 @@ services:
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
     volumes:
       - ssh:/root/.ssh
 
@@ -197,17 +233,113 @@ services:
     hostname: zetaclient-new-validator
     profiles:
       - tss
+      - replace-observer
       - all
+    restart: always
     networks:
       mynetwork:
         ipv4_address: 172.20.0.25
+    extra_hosts:
+      - "zetaclient-new-validator.com:172.20.0.25"
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
+      - PPROF_ADDR=0.0.0.0:6065
+      - OBSERVER_REPLACE_MODE=${OBSERVER_REPLACE_MODE-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
+    ports:
+      - "6065:6065" # pprof
+      - "8890:8886" # metrics
     volumes:
       - ssh:/root/.ssh
       - preparams:/root/preparams
+
+  zetaclient-dry:
+    image: zetanode:latest
+    container_name: zetaclient-dry
+    hostname: zetaclient-dry
+    profiles:
+      - dry
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.26
+    entrypoint: python3 -u /root/scripts_python/start-zetaclient-dry.py
+    environment:
+      - ZETACORE_HOST=${ZETACORE_HOST:-zetacore0}
+      - RPC_API_KEY_ALLTHATNODE=${RPC_API_KEY_ALLTHATNODE:-}
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password
+      - PPROF_ADDR=0.0.0.0:6066
+    ports:
+      - "6066:6066" # pprof
+      - "8891:8886" # metrics
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
+  testnet-node:
+    image: zetanode:latest
+    container_name: testnet-node
+    hostname: testnet-node
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.40
+    ports:
+      - "26756:26656" # P2P
+      - "26757:26657" # RPC
+      - "1417:1317"   # REST API
+      - "9190:9090"   # gRPC
+      - "8645:8545"   # EVM RPC
+      - "26760:26660" # Prometheus
+    environment:
+      - MONIKER=${TESTNET_MONIKER:-testNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=athens_7001-1
+    volumes:
+      - testnet_data:/root/.zetacored
+      - ~/zetacored_snapshot_testnet:/root/zetacored_snapshot_testnet:rw
+    profiles:
+      - all
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mainnet-node:
+    image: zetanode:latest
+    container_name: mainnet-node
+    hostname: mainnet-node
+    entrypoint: python3 -u /root/scripts_python/start-zetacored-livenode.py
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.41
+    ports:
+      - "26856:26656" # P2P
+      - "26857:26657" # RPC
+      - "1517:1317"   # REST API
+      - "9290:9090"   # gRPC
+      - "8745:8545"   # EVM RPC
+      - "26860:26660" # Prometheus
+    environment:
+      - MONIKER=${MAINNET_MONIKER:-mainnetNode}
+      - FORCE_DOWNLOAD=${FORCE_DOWNLOAD:-false}
+      - CHAIN_ID=zetachain_7000-1
+    profiles:
+      - all
+    volumes:
+      - mainnet_data:/root/.zetacored
+      - ~/zetacored_snapshot_mainnet:/root/zetacored_snapshot_mainnet:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   eth:
     image: ethereum/client-go:v1.14.0
@@ -259,7 +391,6 @@ services:
     profiles:
       - solana
       - all
-      - stress
     restart: always
     ports:
       - "8899:8899"
@@ -293,7 +424,6 @@ services:
     profiles:
       - sui
       - all
-      - stress
     ports:
       - "9000:9000" # RPC
     environment:
@@ -324,9 +454,11 @@ services:
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
+      - TSS_MIGRATION_FLAG=${TSS_MIGRATION_FLAG-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
       - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
       - UPGRADE_ZETACLIENT_ONLY=${UPGRADE_ZETACLIENT_ONLY-}
+      - REUSE_TSS_FROM=${REUSE_TSS_FROM-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
@@ -347,27 +479,27 @@ services:
       - ssh:/root/.ssh
 
   upgrade-orchestrator:
-   # must run from old node for api compatibility
-   image: zetanode:old
-   container_name: upgrade-orchestrator
-   hostname: upgrade-orchestrator
-   profiles:
-     - upgrade
-     - all
-   entrypoint: ["/root/start-upgrade-orchestrator.sh"]
-   networks:
-     mynetwork:
-       ipv4_address: 172.20.0.251
-   depends_on:
-     - zetacore0
-     - upgrade-host
-   environment:
-     - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
-   volumes:
-     - ssh:/root/.ssh
+    # must run from old node for api compatibility
+    image: zetanode:old
+    container_name: upgrade-orchestrator
+    hostname: upgrade-orchestrator
+    profiles:
+      - upgrade
+      - all
+    entrypoint: ["/root/start-upgrade-orchestrator.sh"]
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.251
+    depends_on:
+      - zetacore0
+      - upgrade-host
+    environment:
+      - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+    volumes:
+      - ssh:/root/.ssh
 
   grafana:
-    image: ghcr.io/zeta-chain/grafana-grafana:11.2.0
+    image: grafana/grafana:main
     container_name: grafana
     hostname: grafana
     profiles:
@@ -387,12 +519,14 @@ services:
       - prometheus
 
   prometheus:
-    image: ghcr.io/zeta-chain/prom-prometheus:v2.53.1
+    image: prom/prometheus:v3.6.0
     container_name: prometheus
     hostname: prometheus
     profiles:
       - monitoring
       - all
+    ports:
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -401,8 +535,31 @@ services:
     depends_on:
       - zetacore0
 
+  redis:
+    image: redis:7-alpine
+    container_name: zetachain-exporter-redis
+    hostname: zetachain-exporter-redis
+    profiles:
+      - monitoring
+      - all
+    ports:
+      - "6379:6379"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.36
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
   zetachain-exporter:
-    image: zetachain/zetachain-exporter:v2.0.6
+    image: zetachain/zetachain-exporter:v4.11.1
     container_name: zetachain-exporter
     hostname: zetachain-exporter
     profiles:
@@ -413,20 +570,29 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.32
+    volumes:
+      - ./config-localnet.json:/config.json
     environment:
-      - ETH_EVM_URL=http://eth:8545
-      - ZETA_EVM_URL=http://zetacore0:8545
-      - ZETA_LCD_URL=http://zetacore0:1317
-      - ZETA_TENDERMINT_URL=http://zetacore0:26657
-      - ETH_CHAIN_ID=1337
-      - ZETA_CHAIN_ID=7001
-      - REFRESH_INTERVAL=15
-      - FAST_REFRESH_INTERVAL=1
+      # Load configuration from file
+      - CONFIG_FILE=/config.json
+
+      
+      # Redis configuration
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_INSTANCE=localnet-1
+      
+      # Optional: Seed sample data for testing
+      # - SEED_MISSED_INBOUNDS_SAMPLE=1
     depends_on:
       zetacore0:
         condition: service_healthy
       eth:
         condition: service_started
+      redis:
+        condition: service_healthy
 
   loki:
     container_name: loki
@@ -475,5 +641,11 @@ services:
 
 volumes:
   ssh:
+  chaosprofiles:
   preparams:
   grafana_storage:
+  redis_data:
+  testnet_data:
+  mainnet_data:
+
+

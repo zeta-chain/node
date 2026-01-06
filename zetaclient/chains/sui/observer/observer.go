@@ -55,6 +55,13 @@ func New(baseObserver *base.Observer, suiClient SuiClient, gateway *sui.Gateway)
 
 	ob.LoadLastTxScanned()
 
+	// load cursors from auxiliary database for each supported package
+	ob.LoadAuxString(ob.gateway.PackageID())
+	ob.LoadAuxString(ob.gateway.Original().PackageID())
+	if ob.gateway.Previous() != nil {
+		ob.LoadAuxString(ob.gateway.Previous().PackageID())
+	}
+
 	return ob
 }
 
@@ -109,7 +116,7 @@ func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
 	return nil
 }
 
-// PostGasPrice posts Sui gas price to zetacore.
+// ObserveGasPrice posts Sui gas price to zetacore.
 // Note (1) that Sui changes gas per EPOCH (not block)
 // Note (2) that SuiXGetCurrentEpoch() is deprecated.
 //
@@ -121,13 +128,13 @@ func (ob *Observer) MigrateCursorForAuthenticatedCallUpgrade() error {
 // - "During regular network usage, users are NOT expected to pay tips"
 // - "Validators update the ReferencePrice every epoch (~24h)"
 // - "Storage price is updated infrequently through gov proposals"
-func (ob *Observer) PostGasPrice(ctx context.Context) error {
+func (ob *Observer) ObserveGasPrice(ctx context.Context) error {
 	checkpoint, err := ob.suiClient.GetLatestCheckpoint(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get latest checkpoint")
 	}
 
-	epochNum, err := uint64FromStr(checkpoint.Epoch)
+	epoch, err := uint64FromStr(checkpoint.Epoch)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse epoch number")
 	}
@@ -139,12 +146,17 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get ref gas price")
 	}
 
-	// no priority fee for Sui
+	// There's no concept of priority fee in Sui.
 	const priorityFee = 0
 
-	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
+	var (
+		logger     = ob.Logger().Chain
+		multiplier = ob.ChainParams().GasPriceMultiplier
+	)
+
+	_, err = ob.ZetaRepo().VoteGasPrice(ctx, logger, gasPrice, multiplier, priorityFee, epoch)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote for gas price")
+		return err
 	}
 
 	ob.setLatestGasPrice(gasPrice)

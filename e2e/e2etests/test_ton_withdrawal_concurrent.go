@@ -9,7 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -27,7 +27,7 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 
 	// Fire withdrawals. Note that zevm sender is r.ZEVMAuth
 	var wg sync.WaitGroup
-	for i := 0; i < recipientsCount; i++ {
+	for i := range recipientsCount {
 		// ARRANGE
 		// Given multiple recipients WITHOUT deployed wallet-contracts
 		// and withdrawal amounts between 1 and 5 TON

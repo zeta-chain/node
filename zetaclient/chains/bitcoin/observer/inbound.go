@@ -9,17 +9,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
-)
-
-const (
-	// maxNoAssetCallExcessAmount is the maximum excess amount beyond depositor fee for Bitcoin NoAssetCall
-	// A static value 100K satoshis (0.001 BTC) is used to prevent accidental funds loss exceeding $110 at the time of writing
-	maxNoAssetCallExcessAmount = 100_000
 )
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
@@ -31,11 +28,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 
+	// get fee rate multiplier
+	feeRateMultiplier, err := ob.ChainParams().GasPriceMultiplier.Float64()
+	if err != nil {
+		return errors.Wrapf(err, "invalid fee rate multiplier")
+	}
+
 	// scan SAFE confirmed blocks
 	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
 	if startBlockSafe < endBlockSafe {
 		// observe inbounds for the block range [startBlock, endBlock-1]
-		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1, feeRateMultiplier)
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -59,7 +62,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// scan FAST confirmed blocks if available
 	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
 	if endBlockSafe < endBlockFast {
-		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
+		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1, feeRateMultiplier)
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -74,7 +77,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 // observeInboundInBlockRange observes inbounds for given block range [startBlock, toBlock (inclusive)]
 // It returns the last successfully scanned block height, so the caller knows where to resume next time
-func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) observeInboundInBlockRange(
+	ctx context.Context,
+	startBlock, toBlock uint64,
+	feeRateMultiplier float64,
+) (uint64, error) {
 	for blockNumber := startBlock; blockNumber <= toBlock; blockNumber++ {
 		// query incoming gas asset to TSS address
 		// #nosec G115 always in range
@@ -98,6 +105,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 			res.Block.Tx,
 			uint64(res.Block.Height),
 			tssAddress,
+			feeRateMultiplier,
 			ob.logger.Inbound,
 			ob.netParams,
 		)
@@ -125,10 +133,16 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 					}
 				}
 
-				_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+				metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+				_, err = ob.ZetaRepo().VoteInbound(ctx,
+					ob.logger.Inbound,
+					msg,
+					zetacore.PostVoteInboundExecutionGasLimit,
+					ob.WatchMonitoringError,
+				)
 				if err != nil {
 					// we have to re-scan this block next time
-					return blockNumber - 1, errors.Wrapf(err, "error posting inbound vote for tx %s", event.TxHash)
+					return blockNumber - 1, errors.Wrapf(err, " (tx %s)", event.TxHash)
 				}
 			}
 		}
@@ -148,6 +162,7 @@ func FilterAndParseIncomingTx(
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
 	tssAddress string,
+	feeRateMultiplier float64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 ) ([]*BTCInboundEvent, error) {
@@ -165,6 +180,7 @@ func FilterAndParseIncomingTx(
 			tx,
 			tssAddress,
 			blockNumber,
+			feeRateMultiplier,
 			logger,
 			netParams,
 			common.CalcDepositorFee,
@@ -194,12 +210,13 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// decode event memo bytes
 	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
-	if err := event.DecodeMemoBytes(ob.Chain().ChainId); err != nil {
+	err := event.DecodeMemoBytes(ob.Chain().ChainId)
+	if err != nil {
 		logger.Info().
 			Err(err).
 			Str("memo", hex.EncodeToString(event.MemoBytes)).
 			Msg("invalid memo")
-		event.SetStatusAndErrMessage(crosschaintypes.InboundStatus_INVALID_MEMO, err.Error())
+		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
 	// check if the event is processable
@@ -214,26 +231,99 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 		return nil
 	}
 
-	return ob.NewInboundVoteFromEvent(event)
+	// create inbound vote message contract V1 for legacy memo
+	if event.MemoStd == nil {
+		return ob.NewInboundVoteFromLegacyMemo(event)
+	}
+
+	// create inbound vote message for standard memo
+	return ob.NewInboundVoteFromStdMemo(event)
 }
 
-// NewInboundVoteFromEvent creates a MsgVoteInbound message from a inbound event
-func (ob *Observer) NewInboundVoteFromEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
+// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
+func (ob *Observer) NewInboundVoteFromLegacyMemo(
+	event *BTCInboundEvent,
+) *crosschaintypes.MsgVoteInbound {
 	// determine confirmation mode
 	confirmationMode := crosschaintypes.ConfirmationMode_FAST
 	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
 	}
 
+	// build options
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+	}
+
+	// add error message if present
+	if event.ErrorMessage != "" {
+		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
+	}
+
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		event.FromAddress,
 		ob.Chain().ChainId,
 		event.FromAddress,
 		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		event.AmountForMsgVoteInbound,
-		event.Message(),
+		hex.EncodeToString(event.MemoBytes),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		coin.CoinType_Gas,
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		options...,
+	)
+}
+
+// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
+func (ob *Observer) NewInboundVoteFromStdMemo(
+	event *BTCInboundEvent,
+) *crosschaintypes.MsgVoteInbound {
+	// inject revert options specified by the memo
+	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
+	revertOptions := crosschaintypes.RevertOptions{
+		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
+		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
+	}
+
+	// check if the memo is a cross-chain call, or simple token deposit
+	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
+
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	// build options
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithRevertOptions(revertOptions),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+	}
+
+	// add error message if present
+	if event.ErrorMessage != "" {
+		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetaRepo().GetOperatorAddress(),
+		event.FromAddress,
+		ob.Chain().ChainId,
+		event.FromAddress,
+		event.MemoStd.Receiver.Hex(),
+		ob.ZetaRepo().ZetaChain().ChainId,
+		event.AmountForMsgVoteInbound,
+		hex.EncodeToString(event.MemoStd.Payload),
 		event.TxHash,
 		event.BlockNumber,
 		0,
@@ -244,8 +334,6 @@ func (ob *Observer) NewInboundVoteFromEvent(event *BTCInboundEvent) *crosschaint
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 		confirmationMode,
-		crosschaintypes.WithRevertOptions(event.RevertOptions()),
-		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall()),
-		crosschaintypes.WithErrorMessage(event.ErrorMessage),
+		options...,
 	)
 }

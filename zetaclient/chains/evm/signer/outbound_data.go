@@ -10,7 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -29,9 +29,8 @@ type OutboundData struct {
 	asset  ethcommon.Address
 	amount *big.Int
 
-	gas    Gas
-	nonce  uint64
-	height uint64
+	gas   Gas
+	nonce uint64
 
 	message []byte
 
@@ -53,7 +52,6 @@ type OutboundData struct {
 func NewOutboundData(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	height uint64,
 	logger zerolog.Logger,
 ) (*OutboundData, bool, error) {
 	if cctx == nil {
@@ -139,9 +137,8 @@ func NewOutboundData(
 		asset:  ethcommon.HexToAddress(cctx.InboundParams.Asset),
 		amount: outboundParams.Amount.BigInt(),
 
-		gas:    gas,
-		nonce:  outboundParams.TssNonce,
-		height: height,
+		gas:   gas,
+		nonce: outboundParams.TssNonce,
 
 		message: message,
 

@@ -1,0 +1,26 @@
+{
+    "BitcoinClient": {},
+    "EVMClient": {},
+    "SolanaClient": {
+        "GetAccountInfo": 10,
+        "GetAccountInfoWithOpts": 10,
+        "GetBalance": 10,
+        "GetBlockTime": 10,
+        "GetConfirmedTransactionWithOpts": 10,
+        "GetHealth": 30,
+        "GetLatestBlockhash": 10,
+        "GetRecentPrioritizationFees": 20,
+        "GetSignaturesForAddressWithOpts": 10,
+        "GetSlot": 10,
+        "GetTransaction": 10,
+        "GetVersion": 10,
+        "SendTransactionWithOpts": 20
+    },
+    "SuiClient": {},
+    "TONClient": {},
+    "TSSClient": {
+        "Sign": 5,
+        "SignBatch": 5
+    },
+    "ZetacoreClient": {}
+}

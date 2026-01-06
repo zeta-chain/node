@@ -14,7 +14,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -265,7 +265,6 @@ func GetCctxIndexFromString(index string) string {
 
 func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	r := newRandFromStringSeed(t, index)
-
 	return &types.CrossChainTx{
 		Creator:                 AccAddress(),
 		Index:                   GetCctxIndexFromString(index),
@@ -359,6 +358,24 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 		TxOrigin:    EthAddress().String(),
 		Asset:       "",
 		EventIndex:  EventIndex(),
+	}
+}
+
+func OutboundVote(t *testing.T) types.MsgVoteOutbound {
+	cctx := CrossChainTx(t, EthAddress().String())
+	return types.MsgVoteOutbound{
+		CctxHash:                          cctx.Index,
+		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
+		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
+		Status:                            chains.ReceiveStatus_success,
+		Creator:                           cctx.Creator,
+		ObservedOutboundHash:              common.BytesToHash(EthAddress().Bytes()).String(),
+		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
+		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
+		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
+		ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
+		CoinType:                          cctx.InboundParams.CoinType,
+		ConfirmationMode:                  cctx.GetCurrentOutboundParam().ConfirmationMode,
 	}
 }
 
@@ -481,27 +498,6 @@ func CCTXfromRand(r *rand.Rand,
 		ProtocolContractVersion: ProtocolVersionFromRand(r),
 	}
 	return cctx
-}
-
-func OutboundVoteSim(r *rand.Rand,
-	cctx types.CrossChainTx,
-) (types.CrossChainTx, types.MsgVoteOutbound) {
-	msg := types.MsgVoteOutbound{
-		CctxHash:                          cctx.Index,
-		OutboundTssNonce:                  cctx.GetCurrentOutboundParam().TssNonce,
-		OutboundChain:                     cctx.GetCurrentOutboundParam().ReceiverChainId,
-		Status:                            chains.ReceiveStatus_success,
-		Creator:                           cctx.Creator,
-		ObservedOutboundHash:              common.BytesToHash(EthAddressFromRand(r).Bytes()).String(),
-		ValueReceived:                     cctx.GetCurrentOutboundParam().Amount,
-		ObservedOutboundBlockHeight:       cctx.GetCurrentOutboundParam().ObservedExternalHeight,
-		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
-		ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
-		CoinType:                          cctx.InboundParams.CoinType,
-		ConfirmationMode:                  cctx.GetCurrentOutboundParam().ConfirmationMode,
-	}
-
-	return cctx, msg
 }
 
 func ZRC20Withdrawal(to []byte, value *big.Int) *zrc20.ZRC20Withdrawal {

@@ -6,12 +6,12 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/encoder"
 )
 
 func TestTONWithdraw(r *runner.E2ERunner, args []string) {
@@ -76,7 +76,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// Make sure that TON withdrawal CCTX contain outgoing message with exact withdrawal amount
-	lt, hash, err := rpc.TransactionHashFromString(cctx.GetCurrentOutboundParam().Hash)
+	lt, hash, err := encoder.DecodeHash(cctx.GetCurrentOutboundParam().Hash)
 	require.NoError(r, err)
 
 	txs, err := r.Clients.TON.GetTransactions(r.Ctx, 1, gw.AccountID(), lt, hash)

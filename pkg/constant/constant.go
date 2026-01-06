@@ -5,7 +5,7 @@ import "time"
 const (
 	// ZetaBlockTime is the block time of the ZetaChain network
 	// It's a rough estimate that can be used in non-critical path to estimate the time of a block
-	ZetaBlockTime = 4 * time.Second
+	ZetaBlockTime = 2 * time.Second
 
 	// DonationMessage is the message for donation transactions
 	// Transaction sent to the TSS or ERC20 Custody address containing this message are considered as a donation
@@ -33,4 +33,35 @@ const (
 
 	// OptionUnpause is the argument used in CmdUpdateERC20CustodyPauseStatus to unpause the ERC20 custody contract
 	OptionUnpause = "unpause"
+
+	// DefaultAppMempoolSize is the default size of ZetaChain mempool
+	DefaultAppMempoolSize = 3000
+	// TODO : Check if they are used
+	// CmdWhitelistERC20 is used for CCTX of type cmd to give the instruction to the TSS to whitelist an ERC20 on an exeternal chain
+
+	CmdWhitelistERC20 = "cmd_whitelist_erc20"
+
+	// CmdMigrateERC20CustodyFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
+	CmdMigrateERC20CustodyFunds = "cmd_migrate_erc20_custody_funds"
+
+	// CmdUpdateERC20CustodyPauseStatus is used for CCTX of type cmd to give the instruction to the TSS to update the pause status of the ERC20 custody contract
+	CmdUpdateERC20CustodyPauseStatus = "cmd_update_erc20_custody_pause_status"
+
+	// MaxNonceOffsetFactor is the factor to determine the maximum nonce offset between first pending CCTX and the CCTX being scheduled.
+	// By setting a maximum nonce offset, the CCTX scheduler will conditionally hold on and wait for older pending CCTXs to be processed
+	// before scheduling higher nonce CCTXs, to avoid missing any pending CCTXs.
+	//
+	// The missed pending CCTXs situation is like this:
+	//   - Pending nonces: [1000, 1020)
+	//   - Pending  CCTXs: [979, 980, 981, 982, 1000, 1001, ..., 1019], where 979 - 982 are missed.
+	//   - OutboundScheduleLookahead == 20
+	//   - MaxNonceOffsetFactor == 1.0, results in max nonce offset = 20 * 1.0 = 20
+	//
+	// In this case, the scheduler
+	//   - should process CCTXs with nonces [979, 980, 981, 982] because they are missed pending CCTXs.
+	//   - should NOT process CCTXs with nonces [1000, 1001, ..., 1019] because their nonces are much
+	//     higher that of the first pending CCTX (1000 - 979 > 20).
+	//
+	// NOTE: 1.0 means use the same value as lookahead for the maximum nonce offset.
+	MaxNonceOffsetFactor = 1.0
 )

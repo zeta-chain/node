@@ -13,10 +13,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -29,9 +29,9 @@ import (
 
 // ProcessOutboundTrackers processes outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetOutboundTrackers(ctx, ob.Chain().ChainId)
+	trackers, err := ob.ZetaRepo().GetOutboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "GetOutboundTrackers error")
+		return err
 	}
 
 	// keep last block up-to-date
@@ -98,10 +98,10 @@ func (ob *Observer) postVoteOutbound(
 ) {
 	chainID := ob.Chain().ChainId
 
-	signerAddress := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+	signerAddress := ob.ZetaRepo().GetOperatorAddress()
 
 	msg := crosschaintypes.NewMsgVoteOutbound(
-		signerAddress.String(),
+		signerAddress,
 		cctxIndex,
 		receipt.TxHash.Hex(),
 		receipt.BlockNumber.Uint64(),
@@ -128,23 +128,12 @@ func (ob *Observer) postVoteOutbound(
 		Stringer(logs.FieldTx, receipt.TxHash).
 		Logger()
 
-	// post vote to zetacore
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		logger.Error().Err(err).Msg("unable to post outbound vote")
-		return
-	}
-
-	// print vote tx hash and ballot
-	if zetaTxHash != "" {
-		logger.Info().
-			Str(logs.FieldZetaTx, zetaTxHash).
-			Str(logs.FieldBallotIndex, ballot).
-			Msg("posted outbound vote")
-	}
+	// NOTE: ignoring VoteOutbound's errors
+	_, _, _ = ob.ZetaRepo().VoteOutbound(ctx, logger, gasLimit, retryGasLimit, msg) //nolint:dogsled
 }
 
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
+// Note: EVM chain is now using batch keysign, so the 'continueKeysign' flag is no longer used.
 func (ob *Observer) VoteOutboundIfConfirmed(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,

@@ -11,8 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 
@@ -55,7 +57,8 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	logger := testlog.New(t)
 
-	baseSigner := base.NewSigner(chain, tss, base.Logger{Std: logger.Logger, Compliance: logger.Logger})
+	baseSigner := base.NewSigner(chain, tss,
+		base.Logger{Std: logger.Logger, Compliance: logger.Logger}, mode.StandardMode)
 
 	s, err := New(
 		baseSigner,
@@ -136,30 +139,66 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 }
 
 func TestSigner_TryProcessOutbound(t *testing.T) {
-	ctx := makeCtx(t)
+	t.Run("standard", func(t *testing.T) {
+		ctx := makeCtx(t)
 
-	// ARRANGE
-	// Setup evm signer
-	evmSigner := newTestSuite(t)
-	cctx := getCCTX(t)
+		// ARRANGE
+		// Setup evm signer
+		evmSigner := newTestSuite(t)
 
-	// Test with mock client that has keys
-	client := mocks.NewZetacoreClient(t).
-		WithKeys(&keys.Keys{}).
-		WithZetaChain().
-		WithPostVoteOutbound("", "")
+		// Setup txData struct
+		cctx := getCCTX(t)
+		nonce := cctx.GetCurrentOutboundParam().TssNonce
+		txData, _, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
+		require.NoError(t, err)
 
-	// mock evm client "NonceAt"
-	nonce := uint64(123)
-	evmSigner.evmServer.MockNonceAt(nonce)
+		// Test with mock client that has keys
+		client := mocks.NewZetacoreClient(t).
+			WithKeys(&keys.Keys{}).
+			WithZetaChain().
+			WithPostVoteOutbound("", "")
+		zetaRepo := zrepo.New(client, chains.Ethereum, mode.StandardMode)
 
-	// ACT
-	evmSigner.TryProcessOutbound(ctx, cctx, client, nonce)
+		// mock evm client "NonceAt"
+		evmSigner.evmServer.MockNonceAt(nonce)
 
-	// ASSERT
-	// Check if cctx was signed and broadcasted
-	list := evmSigner.GetReportedTxList()
-	require.Len(t, *list, 1)
+		// Mock the digest to be signed
+		digest := getGasWithdrawDigest(t, evmSigner.Signer, txData)
+		mockSignature(t, evmSigner.Signer, nonce, digest)
+
+		// ACT
+		evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
+
+		// ASSERT
+		// Check if cctx was signed and broadcasted
+		list := evmSigner.GetReportedTxList()
+		require.Len(t, *list, 1)
+	})
+
+	t.Run("dry", func(t *testing.T) {
+		ctx := makeCtx(t)
+
+		// ARRANGE
+		// Setup evm signer
+		evmSigner := newTestSuite(t)
+		evmSigner.ClientMode = mode.DryMode
+
+		cctx := getCCTX(t)
+
+		// Test with mock client that has keys
+		client := mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
+		zetaRepo := zrepo.New(client, chains.Ethereum, mode.DryMode)
+
+		// mock evm client "NonceAt"
+		nonce := uint64(123)
+		evmSigner.evmServer.MockNonceAt(nonce)
+
+		// ACT
+		evmSigner.TryProcessOutbound(ctx, cctx, zetaRepo, nonce)
+
+		// ASSERT
+		require.Empty(t, *evmSigner.GetReportedTxList())
+	})
 }
 
 func TestSigner_BroadcastOutbound(t *testing.T) {
@@ -170,17 +209,21 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	nonce := uint64(123)
-	txData, skip, err := NewOutboundData(ctx, cctx, nonce, zerolog.Logger{})
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
+
+	// Mock the digest to be signed
+	digest := getERC20WithdrawDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, nonce, digest)
 
 	// Mock evm client "NonceAt"
 	evmSigner.evmServer.MockNonceAt(nonce)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
-		tx, err := evmSigner.SignERC20Withdraw(ctx, txData)
+		tx, err := evmSigner.SignERC20Withdraw(txData)
 		require.NoError(t, err)
 
 		evmSigner.BroadcastOutbound(
@@ -188,7 +231,7 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 			tx,
 			cctx,
 			zerolog.Logger{},
-			mocks.NewZetacoreClient(t),
+			zrepo.New(mocks.NewZetacoreClient(t), chains.Ethereum, mode.StandardMode),
 			txData,
 		)
 
@@ -218,6 +261,8 @@ func makeCtx(t *testing.T) context.Context {
 		},
 		observertypes.CrosschainFlags{},
 		observertypes.OperationalFlags{},
+		0,
+		0,
 	)
 	require.NoError(t, err, "unable to update app context")
 

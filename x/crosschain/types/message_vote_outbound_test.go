@@ -142,7 +142,7 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx block height should change hash")
 
-	// observed outbound tx gas used used
+	// observed outbound tx gas used
 	msgNew = msg
 	msgNew.ObservedOutboundGasUsed = 43
 	hash2 = msgNew.Digest()

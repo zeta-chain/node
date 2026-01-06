@@ -2,21 +2,24 @@ package chains
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/params"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/cmd/zetatool/context"
+	zetacontext "github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -39,7 +42,7 @@ func resolveRPC(chain chains.Chain, cfg *config.Config) string {
 	}[chain.Network]
 }
 
-func GetEvmClient(ctx *context.Context, chain chains.Chain) (*ethclient.Client, error) {
+func GetEvmClient(ctx *zetacontext.Context, chain chains.Chain) (*ethclient.Client, error) {
 	evmRRC := resolveRPC(chain, ctx.GetConfig())
 	if evmRRC == "" {
 		return nil, fmt.Errorf("rpc not found for chain %d network %s", chain.ChainId, chain.Network)
@@ -52,7 +55,7 @@ func GetEvmClient(ctx *context.Context, chain chains.Chain) (*ethclient.Client, 
 }
 
 func GetEvmTx(
-	ctx *context.Context,
+	ctx *zetacontext.Context,
 	evmClient *ethclient.Client,
 	inboundHash string,
 	chain chains.Chain,
@@ -262,4 +265,28 @@ func CallInboundVoteV2(event *gatewayevm.GatewayEVMCalled,
 		crosschaintypes.ConfirmationMode_SAFE,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 	)
+}
+
+// GetEVMBalance fetches the native token balance for an address on an EVM chain
+func GetEVMBalance(ctx context.Context, rpcURL string, address ethcommon.Address) (*big.Int, error) {
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	return client.BalanceAt(ctx, address, nil)
+}
+
+// FormatEVMBalance converts wei to ETH with 9 decimal places
+func FormatEVMBalance(wei *big.Int) string {
+	if wei == nil {
+		return "0.000000000"
+	}
+
+	weiFloat := new(big.Float).SetInt(wei)
+	divisor := new(big.Float).SetInt(big.NewInt(params.Ether))
+	eth := new(big.Float).Quo(weiFloat, divisor)
+
+	return eth.Text('f', 9)
 }

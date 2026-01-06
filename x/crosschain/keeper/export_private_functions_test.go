@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 )
 
 // These functions are exported for testing purposes

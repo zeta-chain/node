@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -26,7 +26,7 @@ func (r *E2ERunner) EnsureNoTrackers() {
 	require.Empty(r, res.OutboundTracker, "there should be no trackers at the end of the test")
 }
 
-// EnsureZeroBalanceAddressZEVM ensures that the balance of the restricted address is zero in the ZEVM
+// EnsureZeroBalanceOnRestrictedAddressZEVM ensures that the balance of the restricted address is zero in the ZEVM
 func (r *E2ERunner) EnsureZeroBalanceOnRestrictedAddressZEVM() {
 	restrictedAddress := ethcommon.HexToAddress(sample.RestrictedEVMAddressTest)
 

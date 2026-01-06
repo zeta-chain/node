@@ -283,6 +283,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 		// We add a hardcoded message here as the error from the connected chain is not available,
 		err := k.processFailedOutboundOnExternalChain(ctx, cctx, oldStatus, errors.New("outbound failed to be executed on connected chain"), cctx.GetCurrentOutboundParam().Amount)
 		if err != nil {
+			cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 			cctx.SetAbort(types.StatusMessages{
 				StatusMessage:        "outbound failed and revert failed on connected chain",
 				ErrorMessageOutbound: ccctxerror.NewCCTXErrorJSONMessage("outbound failed to be executed on connected chain", nil),

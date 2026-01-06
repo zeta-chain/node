@@ -8,7 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/runner"

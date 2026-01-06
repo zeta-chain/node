@@ -38,6 +38,7 @@ func GetBtcEventWithWitness(
 	tx btcjson.TxRawResult,
 	tssAddress string,
 	blockNumber uint64,
+	feeRateMultiplier float64,
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
@@ -80,9 +81,24 @@ func GetBtcEventWithWitness(
 	}
 
 	// calculate depositor fee
-	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, netParams)
+	depositorFee, err := feeCalculator(ctx, bitcoinClient, &tx, feeRateMultiplier, netParams)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
+	}
+
+	// deduct depositor fee
+	// to allow developers to track failed deposit caused by insufficient depositor fee,
+	// the error message will be forwarded to zetacore to register a failed CCTX
+	var (
+		status       = types.InboundStatus_SUCCESS
+		errorMessage string
+	)
+	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
+	if err != nil {
+		amount = 0
+		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		errorMessage = err.Error()
+		logger.Error().Err(err).Fields(lf).Msg("unable to deduct depositor fee")
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
@@ -107,14 +123,13 @@ func GetBtcEventWithWitness(
 	return &BTCInboundEvent{
 		FromAddress:  fromAddress,
 		ToAddress:    tssAddress,
-		Value:        tx.Vout[0].Value,
+		Value:        amount,
 		DepositorFee: depositorFee,
 		MemoBytes:    memo,
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
-		// placeholder status, whether successful or not will be determined later by memo contents
-		Status:       types.InboundStatus_SUCCESS,
-		ErrorMessage: "",
+		Status:       status,
+		ErrorMessage: errorMessage,
 	}, nil
 }
 
@@ -211,6 +226,15 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 	}
 
 	return nil
+}
+
+// DeductDepositorFee returns the inbound amount after deducting the depositor fee.
+// returns an error if the deposited amount is lower than the depositor fee.
+func DeductDepositorFee(deposited, depositorFee float64) (float64, error) {
+	if deposited < depositorFee {
+		return 0, fmt.Errorf("deposited amount %v is less than depositor fee %v", deposited, depositorFee)
+	}
+	return deposited - depositorFee, nil
 }
 
 func isValidRecipient(

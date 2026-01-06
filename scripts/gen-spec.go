@@ -6,7 +6,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -215,7 +214,7 @@ func readAllFilesFromDocsSpec(docsSpecDir, moduleName string) []FileData {
 		}
 
 		// #nosec G304 -- path is validated to be within moduleDir above
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			fmt.Printf("Error reading file %q: %v\n", path, err)
 			return nil

@@ -90,7 +90,7 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 		return s.messageContext.objectID, nil
 	}
 
-	s.Logger().Std.Info().Msg("messageContext cache expired, fetching new objectID")
+	s.Logger().Std.Info().Msg("MessageContext cache expired, fetching new objectID")
 
 	objectID, err := s.getMessageContextID(ctx)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 
 	s.messageContext.set(objectID)
 
-	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("messageContext objectID fetched")
+	s.Logger().Std.Info().Str("sui_object_id", objectID).Msg("MessageContext objectID fetched")
 
 	return objectID, nil
 }

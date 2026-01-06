@@ -13,10 +13,11 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/tssrepo"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -32,7 +33,7 @@ func Test_NewSigner(t *testing.T) {
 		chain        chains.Chain
 		chainParams  observertypes.ChainParams
 		solanaClient signer.SolanaClient
-		tssSigner    interfaces.TSSSigner
+		tssSigner    tssrepo.TSSClient
 		relayerKey   *keys.RelayerKey
 		ts           *metrics.TelemetryServer
 		logger       base.Logger
@@ -89,7 +90,7 @@ func Test_NewSigner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			baseSigner := base.NewSigner(tt.chain, tt.tssSigner, tt.logger)
+			baseSigner := base.NewSigner(tt.chain, tt.tssSigner, tt.logger, mode.StandardMode)
 			s, err := signer.New(baseSigner, tt.solanaClient, tt.chainParams.GatewayAddress, tt.relayerKey)
 			if tt.errMessage != "" {
 				require.ErrorContains(t, err, tt.errMessage)
@@ -111,7 +112,7 @@ func Test_SetGatewayAddress(t *testing.T) {
 
 	// helper functor to create signer
 	signerCreator := func() *signer.Signer {
-		baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
+		baseSigner := base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 		s, err := signer.New(baseSigner, nil, chainParams.GatewayAddress, nil)
 		require.NoError(t, err)
 
@@ -161,7 +162,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	mckClient := mocks.NewSolanaRPCClient(t)
 	mckClient.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
-	baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
+	baseSigner := base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 
 	// create signer and set relayer balance metrics
 	s, err := signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
@@ -179,7 +180,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	}, nil)
 
 	// create signer and set relayer balance metrics again
-	baseSigner = base.NewSigner(chain, nil, base.DefaultLogger())
+	baseSigner = base.NewSigner(chain, nil, base.DefaultLogger(), mode.StandardMode)
 	s, err = signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)

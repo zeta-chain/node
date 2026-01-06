@@ -51,7 +51,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 			return nil, errors.Wrap(err, "error creating increment nonce instruction")
 		}
 
-		tx, err := signer.signTx(ctx, inst, 0)
+		tx, err := signer.signTx(ctx, inst, 0, nil, nil)
 		if err != nil {
 			return nil, errors.Wrap(err, "error signing increment nonce instruction")
 		}

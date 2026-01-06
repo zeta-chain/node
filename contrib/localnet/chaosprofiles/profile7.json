@@ -1,0 +1,27 @@
+{
+    "BitcoinClient": {},
+    "EVMClient": {},
+    "SolanaClient": {},
+    "SuiClient": {
+        "GetLatestCheckpoint": 10,
+        "GetObjectParsedData": 10,
+        "GetOwnedObjectID": 10,
+        "GetSuiCoinObjectRefs": 10,
+        "HealthCheck": 30,
+        "InspectTransactionBlock": 10,
+        "MoveCall": 10,
+        "QueryModuleEvents": 10,
+        "SuiExecuteTransactionBlock": 10,
+        "SuiGetTransactionBlock": 10,
+        "SuiMultiGetObjects": 10,
+        "SuiXGetDynamicFieldObject": 10,
+        "SuiXGetLatestSuiSystemState": 10,
+        "SuiXGetReferenceGasPrice": 20
+    },
+    "TONClient": {},
+    "TSSClient": {
+        "Sign": 5,
+        "SignBatch": 5
+    },
+    "ZetacoreClient": {}
+}

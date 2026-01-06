@@ -4,7 +4,7 @@ import (
 	"math/big"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -38,13 +38,21 @@ func TestZetaDepositAndCall(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: deposit and call should succeed
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	// check the balance was updated
-	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
+		// check the payload was received on the contract
+		r.AssertTestDAppZEVMCalled(true, payload, sender, amount)
+
+		// check the balance was updated
+		newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
+		require.NoError(r, err)
+		require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
+	} else {
+		// V2 ZETA flows disabled: deposit should be aborted
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+		require.Contains(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
+	}
 }

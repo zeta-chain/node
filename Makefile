@@ -1,7 +1,7 @@
 .PHONY: build
 
 PACKAGE_NAME := github.com/zeta-chain/node
-NODE_VERSION := $(shell ./version.sh)
+NODE_VERSION ?= $(shell ./version.sh)
 NODE_COMMIT := $(shell [ -z "${NODE_COMMIT}" ] && git log -1 --format='%H' || echo ${NODE_COMMIT} )
 DOCKER ?= docker
 # allow setting of NODE_COMPOSE_ARGS to pass additional args to docker compose
@@ -11,6 +11,10 @@ DOCKER_COMPOSE ?= $(DOCKER) compose -f docker-compose.yml $(NODE_COMPOSE_ARGS)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
+OLD_ZETACORED_VERSION := v36.0.1
+OLD_ZETACLIENTD_VERSION := zetaclient_v37.0.3
+OLD_ZETAE2E_VERSION := $(OLD_ZETACORED_VERSION)
+OLD_ZETACORED_VERSION_MAJOR := $(shell echo $(OLD_ZETACORED_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
 GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
@@ -46,6 +50,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export TSS_MIGRATION_FLAG := $(TSS_MIGRATION_FLAG)
 export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
@@ -70,6 +75,8 @@ go.sum: go.mod
 
 test: clean-test-dir run-test
 
+test-clean : clean-test-dir clean-testcache run-test
+
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
@@ -89,6 +96,9 @@ clean-test-dir:
 	@rm -rf x/crosschain/client/integrationtests/.zetacored
 	@rm -rf x/crosschain/client/querytests/.zetacored
 	@rm -rf x/observer/client/querytests/.zetacored
+
+clean-testcache:
+	@go clean -testcache
 
 ###############################################################################
 ###                          Install commands                               ###
@@ -143,11 +153,24 @@ chain-stop:
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
+devnet-fork:
+	@echo "--> Running devnet fork script..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%)
+
+DEVNET_UPGRADE_VERSION := v37.0.0
+devnet-fork-upgrade:
+	@echo "--> Running devnet fork script with upgrade..."
+	@python3 contrib/devnet/devnet_fork.py --node-version $(OLD_ZETACORED_VERSION:v%=%) --upgrade-version $(DEVNET_UPGRADE_VERSION)
+
+download-snapshot:
+	@echo "--> Downloading and caching snapshot..."
+	@python3 contrib/localnet/scripts_python/download_snapshot.py --chain-id $(or $(CHAIN_ID),athens_7001-1) --force
+
 ###############################################################################
 ###                                 Linting            	                    ###
 ###############################################################################
 
-# Make sure LATEST golangci-lint is installed 
+# Make sure LATEST golangci-lint is installed
 # go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
 lint-deps:
 	@if ! command -v golangci-lint &> /dev/null; then \
@@ -208,13 +231,13 @@ docs-zetacored:
 	@bash ./scripts/gen-docs-zetacored.sh
 .PHONY: docs-zetacored
 
-mocks:
-	@echo "--> Generating mocks"
-	@bash ./scripts/mocks-generate.sh
-.PHONY: mocks
+go-generate:
+	@echo "--> Generating Go files"
+	@bash ./scripts/go-generate.sh
+.PHONY: go-generate
 
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
+generate: proto-gen openapi specs typescript docs-zetacored go-generate fmt
 .PHONY: generate
 
 
@@ -222,13 +245,19 @@ generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 ###                         Localnet                          				###
 ###############################################################################
 e2e-images: zetanode orchestrator
-start-localnet: e2e-images start-localnet-skip-build
+start-localnet: e2e-images solana start-localnet-skip-build
 
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
 	export E2E_ARGS="${E2E_ARGS} --setup-solana --setup-sui --setup-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile ton up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) \
+		--profile solana \
+		--profile sui \
+		--profile ton \
+		--profile monitoring \
+		--profile dry \
+		up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
@@ -271,6 +300,23 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
+
+start-e2e-test-4nodes: e2e-images
+	@echo "--> Starting e2e test with 4 nodes"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-replace-observer: e2e-images solana
+	@echo "--> Starting e2e with observer replacement"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui" && \
+	export LOCALNET_MODE=replace-observer && \
+	export OBSERVER_REPLACE_MODE=true && \
+	export REUSE_TSS_FROM=zetaclient2 && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile replace-observer --profile sui --profile solana up -d
+
+start-e2e-v2ZETA-test: e2e-images
+	@echo "--> Starting e2e test with V2 ZETA flows enabled"
+	export E2E_ARGS="${E2E_ARGS} --v2-zeta-flows" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-skip-consensus-overwrite-test: e2e-images
@@ -299,18 +345,18 @@ start-e2e-performance-test-1k: e2e-images solana
 
 start-stress-test-eth: e2e-images
 	@echo "--> Starting stress test for eth"
-	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	export E2E_ARGS="${E2E_ARGS} --test-stress-zevm --test-stress-eth --iterations=1000" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress --profile monitoring --profile dry up -d
 
 start-stress-test-solana: e2e-images solana
 	@echo "--> Starting stress test for solana"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile stress up -d
 
 start-stress-test-sui: e2e-images
 	@echo "--> Starting stress test for sui"
 	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
 	@echo "--> Starting e2e import-data test"
@@ -324,31 +370,71 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-tss-migration-test: e2e-images solana
-	@echo "--> Starting tss migration test"
+start-tss-migration-add-observer: e2e-images solana
+	@echo "--> Starting tss migration test with add observer"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui --test-ton" && \
+	export TSS_MIGRATION_FLAG="--tss-migration-add-observer" && \
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana --profile sui --profile ton up -d
+
+start-tss-migration-remove-observer: e2e-images solana
+	@echo "--> Starting tss migration test with remove observer"
+	export E2E_ARGS="${E2E_ARGS} --test-solana --test-sui --test-ton" && \
+	export TSS_MIGRATION_FLAG="--tss-migration-remove-observer" && \
+	export LOCALNET_MODE=tss-migrate && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile stress --profile solana --profile sui --profile ton up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile dry up -d
 
 start-ton-test: e2e-images
 	@echo "--> Starting TON test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-ton" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton --profile dry up -d
 
 start-sui-test: e2e-images
 	@echo "--> Starting sui test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-sui" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui --profile dry up -d
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
+###############################################################################
+###                         Chaos Tests              						###
+###############################################################################
+chaos-all: stop-localnet
+	@CHAOS_PROFILE=1 $(MAKE) start-e2e-test
+
+chaos-stress-eth: stop-localnet
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=90m --receipt-timeout=30m --cctx-timeout=30m" && \
+	CHAOS_PROFILE=9 $(MAKE) start-stress-test-eth
+
+chaos-inbound: stop-localnet
+	@export E2E_ARGS="${E2E_ARGS} --test-timeout=60m --receipt-timeout=20m --cctx-timeout=20m" && \
+	CHAOS_PROFILE=2 $(MAKE) start-e2e-test
+
+chaos-outbound: stop-localnet
+	@CHAOS_PROFILE=3 $(MAKE) start-e2e-test
+
+chaos-btc: stop-localnet
+	@CHAOS_PROFILE=4 $(MAKE) start-e2e-test
+
+chaos-eth: stop-localnet
+	@CHAOS_PROFILE=5 $(MAKE) start-e2e-test
+
+chaos-solana: stop-localnet
+	@CHAOS_PROFILE=6 $(MAKE) start-solana-test
+
+chaos-sui: stop-localnet
+	@CHAOS_PROFILE=7 $(MAKE) start-sui-test
+
+chaos-ton: stop-localnet
+	CHAOS_PROFILE=8 $(MAKE) start-ton-test
 
 ###############################################################################
 ###                         Upgrade Tests              						###
@@ -360,7 +446,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v36' \
+		--build-arg OLD_ZETACORED_VERSION='release/$(OLD_ZETACORED_VERSION_MAJOR)' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
@@ -368,7 +454,9 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v36.0.0' \
+	--build-arg OLD_ZETACORED_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACORED_VERSION)' \
+	--build-arg OLD_ZETACLIENTD_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETACLIENTD_VERSION)' \
+	--build-arg OLD_ZETAE2E_VERSION='https://github.com/zeta-chain/node/releases/download/$(OLD_ZETAE2E_VERSION)' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
@@ -379,25 +467,18 @@ endif
 start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=260 && \
-	export USE_ZETAE2E_ANTE=true && \
+	export UPGRADE_HEIGHT=300 && \
+ 	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="--test-solana --test-sui" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana --profile sui -f docker-compose-upgrade.yml up -d
-
-start-upgrade-test-light: zetanode-upgrade
-	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
-	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=60 && \
-	export USE_ZETAE2E_ANTE=true && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 # test zetaclientd-only light upgrade , the test does not wait for the upgrade height , but it is still used to signify that this is a light upgrade[height < 100 == light upgrade]
 start-upgrade-test-zetaclient-light: zetanode-upgrade
 	@echo "--> Starting zetaclientd-only light upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=60 && \
-	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="--upgrade-contracts" && \
+	export USE_ZETAE2E_ANTE=true && \
 	export UPGRADE_ZETACLIENT_ONLY=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient -f docker-compose-upgrade.yml up -d
 
@@ -406,17 +487,23 @@ start-upgrade-test-zetaclient: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=260 && \
-	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="--test-solana --test-sui" && \
 	export UPGRADE_ZETACLIENT_ONLY=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade-zetaclient --profile solana --profile sui -f docker-compose-upgrade.yml up -d
 
-start-upgrade-test-admin: zetanode-upgrade
-	@echo "--> Starting admin upgrade test"
+start-upgrade-test-light: zetanode-upgrade
+	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=60 && \
 	export USE_ZETAE2E_ANTE=true && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
+
+start-upgrade-test-admin: zetanode-upgrade
+	@echo "--> Starting admin upgrade test"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
+	export USE_ZETAE2E_ANTE=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
@@ -424,13 +511,14 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	export UPGRADE_HEIGHT=240 && \
+	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-connector-migration-test: zetanode-upgrade
 	@echo "--> Starting migration test for v2 connector contracts"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
+	export UPGRADE_HEIGHT=60 && \
+	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-connector-migration --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
@@ -508,6 +596,30 @@ test-sim-after-import-long
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
+release-snapshot-zetacore:
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-snapshot-zetaclient:
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate --skip=publish --snapshot
+
+release-zetacore:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetacore.yaml --clean --skip=validate
+
+release-zetaclient:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	$(GORELEASER) --config .goreleaser-zetaclient.yaml --clean --skip=validate
+
+### Legacy release commands
+# TODO: Remove once new separated zetaclientd/zetacored is fully adopted
+# https://github.com/zeta-chain/node/issues/4327
+
 release-snapshot:
 	$(GORELEASER) --clean --skip=validate --skip=publish --snapshot
 
@@ -535,9 +647,52 @@ stop-eth-node-mainnet:
 clean-eth-node-mainnet:
 	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
+# Start mainnet node with cached snapshot (if available)
+mainnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Start mainnet node with forced snapshot download
+mainnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d mainnet-node
+
+# Stop and remove mainnet node
+mainnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down mainnet-node
+
+###############################################################################
+###                         Local Testnet Development             			###
+###############################################################################
+
+# Start testnet node with cached snapshot (if available)
+testnet-node:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
+
+# Start testnet node with forced snapshot download
+testnet-node-force:
+	@$(MAKE) zetanode NODE_VERSION=$(OLD_VERSION:v%=%)
+	cd contrib/localnet/ && FORCE_DOWNLOAD=true $(DOCKER) compose -p localnet -f docker-compose.yml up -d testnet-node
+
+# Stop and remove testnet node
+testnet-node-stop:
+	cd contrib/localnet/ && $(DOCKER) compose -p localnet -f docker-compose.yml down testnet-node
+
 ###############################################################################
 ###                               Debug Tools                               ###
 ###############################################################################
+
+# Start dry run zetaclientd in dry mode
+# Usage: make zetaclient-dry ZETACORE_HOST=mainnet-node RPC_API_KEY_ALLTHATNODE=<your-api-key>
+# Use zetaclientd version to build images for zetaclientd-dry
+# ZETACLIENT_DRY_VERSION can be overridden
+# make zetaclient-dry ZETACORE_HOST=testnet-node RPC_API_KEY_ALLTHATNODE=<api key> ZETACLIENT_DRY_VERSION=v38.0.0
+ZETACLIENT_DRY_VERSION ?= $(subst zetaclient_,,$(OLD_ZETACLIENTD_VERSION))
+zetaclient-dry:
+	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(ZETACLIENT_DRY_VERSION) --target latest-runtime -f ./Dockerfile-localnet .
+	cd contrib/localnet/ && ZETACORE_HOST=$(ZETACORE_HOST) RPC_API_KEY_ALLTHATNODE=$(RPC_API_KEY_ALLTHATNODE) $(DOCKER) compose -p localnet -f docker-compose.yml up -d zetaclient-dry
+
 
 filter-missed-btc: install-zetatool
 	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json

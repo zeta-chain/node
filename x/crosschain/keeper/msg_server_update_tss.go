@@ -39,8 +39,9 @@ func (k msgServer) UpdateTssAddress(
 
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 
-	// Each connected chain should have its own tss migrator
-	if len(k.GetChainsSupportingTSSMigration(ctx)) != len(tssMigrators) {
+	// Each connected chain that needs funds migration should have its own tss migrator
+	// Solana, Sui, Ton do not need funds migration; updating TSS address is enough
+	if len(k.TSSFundsMigrationChains(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(
 			types.ErrUnableToUpdateTss,
 			"cannot update tss address incorrect number of migrations have been created and completed",
@@ -49,7 +50,7 @@ func (k msgServer) UpdateTssAddress(
 
 	// GetAllTssFundMigrators would return the migrators created for the current migration
 	// if any of the migrations is still pending we should not allow the tss address to be updated
-	// we can wait for all migrations to complete before updating; this includes btc and eth chains.
+	// we can wait for all migrations to complete before updating; this includes btc and evm chains.
 	for _, tssMigrator := range tssMigrators {
 		migratorTx, found := k.GetCrossChainTx(ctx, tssMigrator.MigrationCctxIndex)
 		if !found {
@@ -73,18 +74,18 @@ func (k msgServer) UpdateTssAddress(
 	return &types.MsgUpdateTssAddressResponse{}, nil
 }
 
-// GetChainsSupportingTSSMigration returns the chains that support tss migration.
+// TSSFundsMigrationChains returns the chains that support tss migration.
 // Chains that support tss migration are chains that have the following properties:
 // 1. External chains
 // 2. Gateway observer
-// 3. Consensus is bitcoin or ethereum (Other consensus types are not supported)
-func (k *Keeper) GetChainsSupportingTSSMigration(ctx sdk.Context) []chains.Chain {
+// 3. VM is EVM, or Consensus is bitcoin (Solana, Sui, TON are excluded as they do not require funds migration)
+func (k *Keeper) TSSFundsMigrationChains(ctx sdk.Context) []chains.Chain {
 	supportedChains := k.zetaObserverKeeper.GetSupportedChains(ctx)
 	return chains.CombineFilterChains([][]chains.Chain{
 		chains.FilterChains(supportedChains, []chains.ChainFilter{
 			chains.FilterExternalChains,
 			chains.FilterByGateway(chains.CCTXGateway_observers),
-			chains.FilterByConsensus(chains.Consensus_ethereum),
+			chains.FilterByVM(chains.Vm_evm),
 		}...),
 		chains.FilterChains(supportedChains, []chains.ChainFilter{
 			chains.FilterExternalChains,

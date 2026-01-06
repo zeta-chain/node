@@ -1,12 +1,14 @@
 package v6_test
 
 import (
-	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
 	"testing"
+
+	v6 "github.com/zeta-chain/node/x/authority/migrations/v6"
 
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
+
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
@@ -16,7 +18,10 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		list := types.DefaultAuthorizationsList()
+		// Ensure the target authorization is missing so migration should add it
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgRemoveObserver")
 		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgWhitelistAsset")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act

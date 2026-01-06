@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -131,12 +132,16 @@ func TestClientLive(t *testing.T) {
 		block, err := ts.GetBlockVerboseByStr(ts.ctx, hashStr)
 		require.NoError(t, err)
 
+		// get fee rate multiplier
+		feeRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+
 		inbounds, err := observer.FilterAndParseIncomingTx(
 			ts.ctx,
 			ts.Client,
 			block.Tx,
 			uint64(block.Height),
 			testutils.TSSAddressBTCMainnet,
+			feeRateMultiplier,
 			ts.Logger,
 			net,
 		)
@@ -166,6 +171,9 @@ func TestClientLive(t *testing.T) {
 		block, err := ts.GetBlockVerboseByStr(ts.ctx, hashStr)
 		require.NoError(t, err)
 
+		// get fee rate multiplier
+		feeRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+
 		// filter incoming tx
 		inbounds, err := observer.FilterAndParseIncomingTx(
 			ts.ctx,
@@ -173,6 +181,7 @@ func TestClientLive(t *testing.T) {
 			block.Tx,
 			uint64(block.Height),
 			"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
+			feeRateMultiplier,
 			ts.Logger,
 			&chaincfg.TestNet3Params,
 		)
@@ -473,19 +482,22 @@ func TestClientLive(t *testing.T) {
 		rawResult, err := ts.GetRawTransactionVerbose(ts.ctx, hash)
 		require.NoError(t, err)
 
+		// get fee rate multiplier
+		feeRateMultiplier := observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64()
+
 		t.Run("should return default depositor fee", func(t *testing.T) {
-			depositorFee, err := btc.CalcDepositorFee(ts.ctx, ts.Client, rawResult, &chaincfg.RegressionNetParams)
+			depositorFee, err := btc.CalcDepositorFee(ts.ctx, ts.Client, rawResult, feeRateMultiplier, &chaincfg.RegressionNetParams)
 			require.NoError(t, err)
 			require.Equal(t, btc.DefaultDepositorFee, depositorFee)
 		})
 
 		t.Run("should return correct depositor fee for a given tx", func(t *testing.T) {
-			depositorFee, err := btc.CalcDepositorFee(ts.ctx, ts.Client, rawResult, &chaincfg.MainNetParams)
+			depositorFee, err := btc.CalcDepositorFee(ts.ctx, ts.Client, rawResult, feeRateMultiplier, &chaincfg.MainNetParams)
 			require.NoError(t, err)
 
 			// the actual fee rate is 860 sat/vByte
 			// #nosec G115 always in range
-			expectedRate := int64(float64(860) * common.BTCOutboundGasPriceMultiplier)
+			expectedRate := int64(float64(860) * observertypes.DefaultBTCOutboundGasPriceMultiplier.MustFloat64())
 			expectedFee := btc.DepositorFee(expectedRate)
 			require.Equal(t, expectedFee, depositorFee)
 		})

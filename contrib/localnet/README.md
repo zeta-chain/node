@@ -1,8 +1,7 @@
 # ZetaChain Local Net Development & Testing Environment
 This directory contains a set of scripts to help you quickly set up a 
 local ZetaChain network for development and testing purposes. 
-The scripts are based on the Docker 
-and Docker Compose.
+The scripts are based on Docker and Docker Compose.
 
 As a development testing environment, the setup aims to be
 flexible, close to real world, and with fast turnaround
@@ -12,6 +11,7 @@ The `docker-compose.yml` file defines a network with:
 
 * 2 zetacore nodes
 * 2 zetaclient nodes
+* 1 zetaclient dry node
 * 1 go-ethereum private net node (act as GOERLI testnet, with chainid 1337)
 * 1 bitcoin core private node (planned; not yet done)
 * 1 orchestrator node which coordinates E2E tests. 
@@ -21,11 +21,13 @@ The following Docker compose files can extend the default localnet setup:
 - `docker-compose-stresstest.yml`: Spin up more nodes and clients for testing performance of the network.
 - `docker-compose-upgrade.yml`: Spin up a network with a upgrade proposal defined at a specific height.
 
-Finally, `docker-compose-monitoring.yml` can be run separately to spin up a local grafana and prometheus setup to monitor the network.
+Finally, `docker-compose-monitoring.yml` can be run separately to spin up a local grafana and
+prometheus setup to monitor the network.
 
 ## Running Localnet
 
-Running the localnet requires `zetanode` Docker image. The following command should be run at the root of the repo:
+Running the localnet requires `zetanode` Docker image.
+The following command should be run at the root of the repo:
 
 ```
 make zetanode
@@ -43,9 +45,28 @@ To stop the localnet:
 docker-compose down
 ```
 
+### Running in chaos mode
+
+You can use the `CHAOS_SEED` and `CHAOS_PROFILE` environment variables to run the localnet
+ZetaClient nodes in chaos mode.
+
+```
+CHAOS_SEED=12345 CHAOS_PROFILE=1 docker-compose up -d
+```
+
+The `CHAOS_PROFILE` variable defines which profile from `contrib/localnet/chaosprofiles` is going
+to be used to setup chaos mode.
+
+Also, the `CHAOS_SEED` variable is optional.
+
+```
+CHAOS_PROFILE=1 docker-compose up -d
+```
+
 ## Orchestrator
 
-The `orchestrator` directory contains the orchestrator node which coordinates E2E tests. The orchestrator is responsible for:
+The `orchestrator` directory contains the orchestrator node which coordinates E2E tests.
+The orchestrator is responsible for:
 
 - Initializing accounts on the local Ethereum network.
 - Using `zetae2e` CLI to run the tests.

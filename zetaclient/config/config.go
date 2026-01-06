@@ -4,7 +4,6 @@ package config
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,6 +28,11 @@ const folder string = "config"
 
 // Save saves ZetaClient config
 func Save(config *Config, path string) error {
+	// validate config
+	if err := config.Validate(); err != nil {
+		return errors.Wrapf(err, "config file validation failed")
+	}
+
 	folderPath := filepath.Join(path, folder)
 	err := os.MkdirAll(folderPath, 0o750)
 	if err != nil {
@@ -76,14 +80,16 @@ func Load(basePath string) (Config, error) {
 	if cfg.KeyringBackend == KeyringBackendUndefined {
 		cfg.KeyringBackend = KeyringBackendTest
 	}
-	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
-		return Config{}, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
-	}
 
 	// fields sanitization
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	cfg.ZetaCoreHome = basePath
+
+	// validate config
+	if err := cfg.Validate(); err != nil {
+		return Config{}, errors.Wrapf(err, "config file validation failed")
+	}
 
 	return cfg, nil
 }

@@ -231,7 +231,7 @@ func DecodeScript(script []byte) ([]byte, bool, error) {
 }
 
 // EncodeAddress returns a human-readable payment address given a ripemd160 hash
-// and netID which encodes the bitcoin network and address type.  It is used
+// and netID which encodes the bitcoin network and address type. It is used
 // in both pay-to-pubkey-hash (P2PKH) and pay-to-script-hash (P2SH) address
 // encoding.
 // Note: this function is a copy of the function in btcutil/address.go
@@ -264,7 +264,7 @@ func DecodeSenderFromScript(pkScript []byte, net *chaincfg.Params) (string, erro
 }
 
 // DecodeTSSVout decodes receiver and amount from a given TSS vout
-func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chain) (string, int64, error) {
+func DecodeTSSVout(vout btcjson.Vout, receiverExpected btcutil.Address, chain chains.Chain) (string, int64, error) {
 	// parse amount
 	amount, err := GetSatoshis(vout.Value)
 	if err != nil {
@@ -277,15 +277,9 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 		return "", 0, errors.Wrapf(err, "error GetBTCChainParams for chain %d", chain.ChainId)
 	}
 
-	// decode cctx receiver address
-	addr, err := chains.DecodeBtcAddress(receiverExpected, chain.ChainId)
-	if err != nil {
-		return "", 0, errors.Wrapf(err, "error decoding receiver %s", receiverExpected)
-	}
-
 	// parse receiver address from vout
 	var receiverVout string
-	switch addr.(type) {
+	switch receiverExpected.(type) {
 	case *btcutil.AddressTaproot:
 		receiverVout, err = DecodeScriptP2TR(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressWitnessScriptHash:
@@ -297,7 +291,7 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chai
 	case *btcutil.AddressPubKeyHash:
 		receiverVout, err = DecodeScriptP2PKH(vout.ScriptPubKey.Hex, chainParams)
 	default:
-		return "", 0, fmt.Errorf("unsupported receiver address type: %T", addr)
+		return "", 0, fmt.Errorf("unsupported receiver address type: %T", receiverExpected)
 	}
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error decoding TSS vout")

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os/exec"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -26,9 +24,6 @@ func Test(t *testing.T) { TestingT(t) }
 var _ = Suite(&MetricsSuite{})
 
 func (ms *MetricsSuite) SetUpSuite(c *C) {
-	if err := killProcessOnPort(8886); err != nil {
-		c.Logf("Warning: failed to kill process on port 8886: %v", err)
-	}
 	m, err := NewMetrics()
 	c.Assert(err, IsNil)
 	go m.Start(context.Background())
@@ -47,7 +42,6 @@ func (ms *MetricsSuite) TestCurryWith(c *C) {
 }
 
 func (ms *MetricsSuite) Test_RPCCount(c *C) {
-
 	GetFilterLogsPerChain.WithLabelValues("chain1").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
@@ -94,47 +88,44 @@ func (ms *MetricsSuite) Test_RelayerKeyBalance(c *C) {
 	c.Assert(balance, Equals, 2.1564)
 }
 
-// killProcessOnPort kills any process listening on the specified port
-func killProcessOnPort(port int) error {
-	var cmd *exec.Cmd
+func (ms *MetricsSuite) Test_InboundVotesMetrics(c *C) {
+	InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum").Inc()
+	InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum").Inc()
 
-	if runtime.GOOS == "windows" {
-		// Windows: netstat -ano | findstr :PORT | taskkill
-		netstatCmd := exec.Command("netstat", "-ano")
-		findstrCmd := exec.Command("findstr", fmt.Sprintf(":%d", port))
+	InboundVotesPostedWith500KGasLimitTotal.WithLabelValues("bitcoin").Inc()
+	InboundVotesPostedWith7MGasLimitTotal.WithLabelValues("ethereum").Inc()
 
-		pipe, err := netstatCmd.StdoutPipe()
-		if err != nil {
-			return err
-		}
-		findstrCmd.Stdin = pipe
+	SuccessfulInboundVotesTotal.WithLabelValues("ethereum").Inc()
+	SuccessfulInboundVotesTotal.WithLabelValues("bitcoin").Inc()
+	SuccessfulInboundVotesTotal.WithLabelValues("bitcoin").Inc()
 
-		if err := netstatCmd.Start(); err != nil {
-			return err
-		}
+	ActiveInternalTrackers.WithLabelValues("ethereum").Set(5.0)
+	TransactionsAddedToInternalTrackerTotal.WithLabelValues("bitcoin").Inc()
 
-		output, err := findstrCmd.Output()
-		if err != nil {
-			netstatCmd.Wait()
-			return nil // No process found
-		}
-		netstatCmd.Wait()
+	InboundObservationsBlockScanTotal.WithLabelValues("ethereum").Inc()
+	InboundObservationsTrackerTotal.WithLabelValues("bitcoin", "true").Inc()
 
-		lines := strings.Split(string(output), "\n")
-		for _, line := range lines {
-			fields := strings.Fields(line)
-			if len(fields) >= 5 {
-				pid := fields[len(fields)-1]
-				if pid != "0" {
-					exec.Command("taskkill", "/F", "/PID", pid).Run()
-				}
-			}
-		}
-	} else {
-		// Unix-like systems: lsof -ti:PORT | xargs kill -9
-		cmd = exec.Command("sh", "-c", fmt.Sprintf("kill -9 $(lsof -ti:%d) 2>/dev/null || true", port))
-		cmd.Run() // Ignore errors since the process might not exist
-	}
+	outOfGasCount := testutil.ToFloat64(InboundVotesWithOutOfGasErrorsTotal.WithLabelValues("ethereum"))
+	c.Assert(outOfGasCount, Equals, 2.0)
 
-	return nil
+	regularGasCount := testutil.ToFloat64(InboundVotesPostedWith500KGasLimitTotal.WithLabelValues("bitcoin"))
+	c.Assert(regularGasCount, Equals, 1.0)
+
+	executionGasCount := testutil.ToFloat64(InboundVotesPostedWith7MGasLimitTotal.WithLabelValues("ethereum"))
+	c.Assert(executionGasCount, Equals, 1.0)
+
+	successfulCount := testutil.ToFloat64(SuccessfulInboundVotesTotal.WithLabelValues("bitcoin"))
+	c.Assert(successfulCount, Equals, 2.0)
+
+	activeTrackers := testutil.ToFloat64(ActiveInternalTrackers.WithLabelValues("ethereum"))
+	c.Assert(activeTrackers, Equals, 5.0)
+
+	trackerTransactions := testutil.ToFloat64(TransactionsAddedToInternalTrackerTotal.WithLabelValues("bitcoin"))
+	c.Assert(trackerTransactions, Equals, 1.0)
+
+	blockScanObs := testutil.ToFloat64(InboundObservationsBlockScanTotal.WithLabelValues("ethereum"))
+	c.Assert(blockScanObs, Equals, 1.0)
+
+	trackerObs := testutil.ToFloat64(InboundObservationsTrackerTotal.WithLabelValues("bitcoin", "true"))
+	c.Assert(trackerObs, Equals, 1.0)
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/pkg/constant"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -48,6 +48,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 			SafeInboundCount:  confirmation,
 			SafeOutboundCount: confirmation,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 }
 

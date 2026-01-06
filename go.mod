@@ -14,7 +14,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/errors v1.12.0 // indirect
-	github.com/cometbft/cometbft v0.38.17
+	github.com/cometbft/cometbft v0.38.19
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.53.4
@@ -50,7 +50,6 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
@@ -292,6 +291,7 @@ require (
 require (
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/block-vision/sui-go-sdk v1.0.6
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -307,6 +307,7 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.3
+	github.com/zeta-chain/protocol-contracts-evm v1.0.2-athens3.0.20260106080948-62189c92b766
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 	go.uber.org/mock v0.5.2
 )
@@ -362,8 +363,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240616162244-4768e80dfb9a // indirect
 	github.com/coming-chat/go-sui/v2 v2.0.1
-	github.com/consensys/bavard v0.1.27 // indirect
-	github.com/consensys/gnark-crypto v0.16.0 // indirect
+	github.com/consensys/gnark-crypto v0.18.1 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
 	github.com/creachadair/atomicfile v0.3.7 // indirect
 	github.com/creachadair/tomledit v0.0.28 // indirect
@@ -383,7 +383,6 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
-	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
@@ -396,7 +395,6 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.58.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
-	rsc.io/tmplfunc v0.0.3 // indirect
 )
 
 replace (
@@ -417,5 +415,9 @@ replace (
 
 	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250917210719-515bbca4d348
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+	github.com/gagliardetto/solana-go => github.com/zeta-chain/solana-go v0.0.0-20250919220552-6800a0427762
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
+
+// protocol-contracts was renamed to protocol-contracts-evm; redirect to old module path
+//github.com/zeta-chain/protocol-contracts-evm => github.com/zeta-chain/protocol-contracts v0.0.0-20250909184950-6034c08e5870
 )

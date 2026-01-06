@@ -1,212 +1,212 @@
 {
-    "annotations": {
-      "list": [
-        {
-          "builtIn": 1,
-          "datasource": {
-            "type": "grafana",
-            "uid": "-- Grafana --"
-          },
-          "enable": true,
-          "hide": true,
-          "iconColor": "rgba(0, 211, 255, 1)",
-          "name": "Annotations & Alerts",
-          "target": {
-            "limit": 100,
-            "matchAny": false,
-            "tags": [],
-            "type": "dashboard"
-          },
-          "type": "dashboard"
-        }
-      ]
-    },
-    "description": "Easily browse logs for containers and filter by time",
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": 5,
-    "links": [],
-    "liveNow": false,
-    "panels": [
+  "annotations": {
+    "list": [
       {
+        "builtIn": 1,
         "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
+          "type": "grafana",
+          "uid": "prometheus"
         },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Easily browse logs for containers and filter by time",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 5,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "custom": {
-              "axisCenteredZero": false,
-              "axisColorMode": "text",
-              "axisLabel": "",
-              "axisPlacement": "auto",
-              "barAlignment": 0,
-              "drawStyle": "line",
-              "fillOpacity": 0,
-              "gradientMode": "none",
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "viz": false
-              },
-              "lineInterpolation": "linear",
-              "lineWidth": 1,
-              "pointSize": 5,
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "showPoints": "auto",
-              "spanNulls": false,
-              "stacking": {
-                "group": "A",
-                "mode": "none"
-              },
-              "thresholdsStyle": {
-                "mode": "off"
-              }
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
             },
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 80
-                }
-              ]
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
           },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 6,
-          "w": 24,
-          "x": 0,
-          "y": 0
-        },
-        "id": 5,
-        "options": {
-          "legend": {
-            "calcs": [],
-            "displayMode": "list",
-            "placement": "bottom",
-            "showLegend": true
-          },
-          "tooltip": {
-            "mode": "single",
-            "sort": "none"
-          }
-        },
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "PBFA97CFB590B2093"
-            },
-            "editorMode": "builder",
-            "expr": "zetaclient_pending_txs_total",
-            "legendFormat": "__auto",
-            "range": true,
-            "refId": "A"
-          }
-        ],
-        "title": "Pending TXs total",
-        "type": "timeseries"
-      },
-      {
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
-        "gridPos": {
-          "h": 10,
-          "w": 24,
-          "x": 0,
-          "y": 6
-        },
-        "id": 2,
-        "options": {
-          "dedupStrategy": "signature",
-          "enableLogDetails": true,
-          "prettifyLogMessage": false,
-          "showCommonLabels": false,
-          "showLabels": false,
-          "showTime": true,
-          "sortOrder": "Descending",
-          "wrapLogMessage": false
-        },
-        "pluginVersion": "9.1.7",
-        "repeat": "log_containers",
-        "repeatDirection": "v",
-        "targets": [
-          {
-            "datasource": {
-              "type": "loki",
-              "uid": "P8E80F9AEF21F6940"
-            },
-            "editorMode": "builder",
-            "expr": "{container=\"$log_containers\"}",
-            "queryType": "range",
-            "refId": "A"
-          }
-        ],
-        "title": "${log_containers}",
-        "type": "logs"
-      }
-    ],
-    "refresh": "5s",
-    "schemaVersion": 37,
-    "style": "dark",
-    "tags": [],
-    "templating": {
-      "list": [
-        {
-          "current": {
-            "selected": true,
-            "text": [
-              "zetaclient0",
-              "zetacore0"
-            ],
-            "value": [
-              "zetaclient0",
-              "zetacore0"
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
             ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
           },
+          "editorMode": "builder",
+          "expr": "zetaclient_pending_txs_total",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Localnet - Pending TXs total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "dedupStrategy": "signature",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "9.1.7",
+      "repeat": "log_containers",
+      "repeatDirection": "v",
+      "targets": [
+        {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "prometheus"
           },
-          "definition": "label_values(container)",
-          "hide": 0,
-          "includeAll": true,
-          "multi": true,
-          "name": "log_containers",
-          "options": [],
-          "query": "label_values(container)",
-          "refresh": 1,
-          "regex": "",
-          "skipUrlSync": false,
-          "sort": 0,
-          "type": "query"
+          "editorMode": "builder",
+          "expr": "{container=\"$log_containers\"}",
+          "queryType": "range",
+          "refId": "A"
         }
-      ]
-    },
-    "time": {
-      "from": "now-30m",
-      "to": "now"
-    },
-    "timepicker": {},
-    "timezone": "",
-    "title": "Log Browser",
-    "uid": "QD_fGXuSk",
-    "version": 6,
-    "weekStart": ""
-  }
+      ],
+      "title": "Localnet - ${log_containers}",
+      "type": "logs"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "zetaclient0",
+            "zetacore0"
+          ],
+          "value": [
+            "zetaclient0",
+            "zetacore0"
+          ]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(container)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "log_containers",
+        "options": [],
+        "query": "label_values(container)",
+        "refresh": "30s",
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Localnet - Log Browser",
+  "uid": "localnet-log-browser",
+  "version": 6,
+  "weekStart": ""
+}

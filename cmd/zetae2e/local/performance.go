@@ -35,6 +35,57 @@ func updateTestCountArg(tests []runner.E2ETest, count int) {
 	}
 }
 
+// zevmPerformanceRoutine runs performance tests for direct zevm interactions
+func zevmPerformanceRoutine(
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	verbose bool,
+	testNames []string,
+	account config.Account,
+	count int,
+) func() error {
+	return func() (err error) {
+		// initialize runner for ether test
+		r, err := initTestRunner(
+			"ether",
+			conf,
+			deployerRunner,
+			account,
+			runner.NewLogger(verbose, color.FgRed, "perf_zevm"),
+		)
+		if err != nil {
+			return err
+		}
+
+		if r.ReceiptTimeout == 0 {
+			r.ReceiptTimeout = 15 * time.Minute
+		}
+		if r.CctxTimeout == 0 {
+			r.CctxTimeout = 15 * time.Minute
+		}
+
+		r.Logger.Print("🏃 starting zevm performance tests")
+		startTime := time.Now()
+
+		tests, err := r.GetE2ETestsToRunByName(
+			e2etests.AllE2ETests,
+			testNames...,
+		)
+		if err != nil {
+			return fmt.Errorf("zevm performance test failed: %v", err)
+		}
+		updateTestCountArg(tests, count)
+
+		if err := r.RunE2ETests(tests); err != nil {
+			return fmt.Errorf("zevm performance test failed: %v", err)
+		}
+
+		r.Logger.Print("🍾 ZEVM performance test completed in %s", time.Since(startTime).String())
+
+		return err
+	}
+}
+
 // ethereumDepositPerformanceRoutine runs performance tests for Ether deposit
 func ethereumDepositPerformanceRoutine(
 	conf config.Config,
@@ -54,6 +105,13 @@ func ethereumDepositPerformanceRoutine(
 		)
 		if err != nil {
 			return err
+		}
+
+		if r.ReceiptTimeout == 0 {
+			r.ReceiptTimeout = 15 * time.Minute
+		}
+		if r.CctxTimeout == 0 {
+			r.CctxTimeout = 15 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting Ethereum deposit performance tests")
@@ -106,12 +164,12 @@ func ethereumWithdrawPerformanceRoutine(
 			r.CctxTimeout = 15 * time.Minute
 		}
 
-		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")
-		startTime := time.Now()
-
 		// depositing the necessary tokens on ZetaChain
 		txEtherDeposit := r.DepositEtherToDeployer()
 		r.WaitForMinedCCTX(txEtherDeposit)
+
+		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")
+		startTime := time.Now()
 
 		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
@@ -278,10 +336,10 @@ func suiDepositPerformanceRoutine(
 		}
 
 		if r.ReceiptTimeout == 0 {
-			r.ReceiptTimeout = 15 * time.Second
+			r.ReceiptTimeout = 15 * time.Minute
 		}
 		if r.CctxTimeout == 0 {
-			r.CctxTimeout = 15 * time.Second
+			r.CctxTimeout = 15 * time.Minute
 		}
 
 		r.Logger.Print("🏃 starting sui deposit performance tests")

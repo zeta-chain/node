@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -15,12 +17,14 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 var (
-	errTxNotFound = errors.New("no tx found")
-	errCompliance = errors.New("compliance check failed")
+	errTxNotFound  = errors.New("no tx found")
+	errCompliance  = errors.New("compliance check failed")
+	errVoteInbound = errors.New("vote inbound error")
 )
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
@@ -64,19 +68,20 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 		Str("package", packageID).
 		Str("cursor", cursor).
 		Int("events", len(events)).
-		Msg("Processing inbound events")
+		Msg("processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, event, nil)
+		err := ob.processInboundEvent(ctx, event, nil, false, false)
 
 		switch {
-		case errors.Is(err, errTxNotFound):
+		case errors.Is(err, errTxNotFound),
+			errors.Is(err, errVoteInbound):
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("tx not found or not finalized; pausing")
+				Msg("tx not found or vote inbound failed; retrying")
 			return nil
 		case errors.Is(err, errCompliance):
 			// skip restricted tx and update the cursor
@@ -101,17 +106,41 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 
 // ProcessInboundTrackers processes trackers for inbound transactions.
 func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
-
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	trackers, err := ob.ZetaRepo().GetInboundTrackers(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get inbound trackers")
+		return err
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, false)
+}
+
+// ProcessInternalTrackers processes internal inbound trackers
+func (ob *Observer) ProcessInternalTrackers(ctx context.Context) error {
+	trackers := ob.GetInboundInternalTrackers(ctx, time.Now())
+	if len(trackers) > 0 {
+		ob.Logger().Inbound.Info().Int("total_count", len(trackers)).Msg("processing internal trackers")
+	}
+
+	return ob.observeInboundTrackers(ctx, trackers, true)
+}
+
+// observeInboundTrackers observes given inbound trackers
+func (ob *Observer) observeInboundTrackers(
+	ctx context.Context,
+	trackers []cctypes.InboundTracker,
+	isInternal bool,
+) error {
+	// take at most MaxInternalTrackersPerScan for each scan
+	if len(trackers) > config.MaxInboundTrackersPerScan {
+		trackers = trackers[:config.MaxInboundTrackersPerScan]
 	}
 
 	for _, tracker := range trackers {
-		if err := ob.processInboundTracker(ctx, tracker); err != nil {
-			ob.Logger().Inbound.Err(err).
+		if err := ob.processInboundTracker(ctx, tracker, isInternal); err != nil {
+			ob.Logger().Inbound.
+				Err(err).
 				Str(logs.FieldTx, tracker.TxHash).
+				Bool("is_internal", isInternal).
 				Msg("unable to process inbound tracker")
 		}
 	}
@@ -130,6 +159,8 @@ func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
+	fromTracker bool,
+	isInternalTracker bool,
 ) error {
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
@@ -163,16 +194,24 @@ func (ob *Observer) processInboundEvent(
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
 
-	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	logger := ob.Logger().Inbound
+	if fromTracker {
+		metrics.InboundObservationsTrackerTotal.WithLabelValues(ob.Chain().Name, strconv.FormatBool(isInternalTracker)).
+			Inc()
+	} else {
+		metrics.InboundObservationsBlockScanTotal.WithLabelValues(ob.Chain().Name).Inc()
+	}
+	_, err = ob.ZetaRepo().
+		VoteInbound(ctx, logger, msg, zetacore.PostVoteInboundExecutionGasLimit, ob.WatchMonitoringError)
 	if err != nil {
-		return errors.Wrap(err, "unable to post vote inbound")
+		return fmt.Errorf("%w: %w", errVoteInbound, err)
 	}
 
 	return nil
 }
 
 // processInboundTracker queries tx with its events by tracker and then votes.
-func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
+func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker, isInternal bool) error {
 	req := models.SuiGetTransactionBlockRequest{
 		Digest: tracker.TxHash,
 		Options: models.SuiTransactionBlockOptions{
@@ -187,7 +226,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 	}
 
 	for _, event := range tx.Events {
-		if err := ob.processInboundEvent(ctx, event, &tx); err != nil {
+		if err := ob.processInboundEvent(ctx, event, &tx, true, isInternal); err != nil {
 			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
 		}
 	}
@@ -242,12 +281,12 @@ func (ob *Observer) constructInboundVote(
 	}
 
 	return cctypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		ob.ZetaRepo().GetOperatorAddress(),
 		deposit.Sender,
 		ob.Chain().ChainId,
 		deposit.Sender,
 		deposit.Receiver.String(),
-		ob.ZetacoreClient().Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
 		deposit.Amount,
 		hex.EncodeToString(deposit.Payload),
 		event.TxHash,

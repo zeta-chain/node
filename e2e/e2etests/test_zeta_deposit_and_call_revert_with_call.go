@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -32,19 +32,27 @@ func TestZetaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 		OnRevertGasLimit: big.NewInt(200000),
 	})
 
-	// wait for the cctx to be reverted
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	r.Logger.CCTX(*cctx, "zeta_deposit_and_call_revert_with_call")
 
-	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
+	if r.IsV2ZETAEnabled() {
+		// V2 ZETA flows enabled: deposit and call should revert
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
-		&bind.CallOpts{},
-		[]byte(payload),
-	)
-	require.NoError(r, err)
-	require.Equal(r, r.EVMAuth.From, senderForMsg)
+		// check the payload was received on the contract
+		r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
+
+		// check expected sender was used
+		senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
+			&bind.CallOpts{},
+			[]byte(payload),
+		)
+		require.NoError(r, err)
+		require.Equal(r, r.EVMAuth.From, senderForMsg)
+	} else {
+		// V2 ZETA flows disabled: deposit should be aborted
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
+		require.Contains(r, cctx.CctxStatus.StatusMessage, crosschaintypes.ErrZetaThroughGateway.Error())
+	}
 }

@@ -16,9 +16,11 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/mode"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
@@ -42,17 +44,19 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	zetacoreClient := mocks.NewZetacoreClient(t)
-	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+	zetacoreClient.
+		WithKeys(&keys.Keys{OperatorAddress: []byte("something")}).
+		WithZetaChain().
+		WithPostVoteInbound("", "")
 
-	zetacoreClient.MockGetCctxByHash(nil)
-	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
-	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.MockGetCctxByHash("anything", nil)
 	zetacoreClient.MockGetBallotByID(mock.Anything, nil)
+	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
 
 	baseObserver, err := base.NewObserver(
 		chain,
 		*chainParams,
-		zetacoreClient,
+		zrepo.New(zetacoreClient, chain, mode.StandardMode),
 		nil,
 		1000,
 		nil,
@@ -87,12 +91,13 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
 			chain.ChainId,
 			zerolog.Nop(),
+			nil, // no pre-resolved transaction
 		)
 		require.NoError(t, err)
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
 
-		err = ob.VoteInboundEvents(context.TODO(), events)
+		err = ob.VoteInboundEvents(context.TODO(), events, false, false)
 		require.NoError(t, err)
 	})
 }
@@ -135,7 +140,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 		}
 
 		// ACT
-		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
+		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -162,7 +167,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 		}
 
 		// ACT
-		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop())
+		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -171,7 +176,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 	})
 
 	t.Run("should not filter reverted inbound deposit SOL", func(t *testing.T) {
-		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop())
+		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop(), nil)
 		require.Error(t, err)
 	})
 }
@@ -190,7 +195,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	baseObserver, err := base.NewObserver(
 		chain,
 		*params,
-		zetacoreClient,
+		zrepo.New(zetacoreClient, chain, mode.StandardMode),
 		nil,
 		1000,
 		nil,

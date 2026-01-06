@@ -30,7 +30,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file zetachain/zetacore/observer/tx.proto.
  */
 export const file_zetachain_zetacore_observer_tx: GenFile = /*@__PURE__*/
-  fileDesc("CiR6ZXRhY2hhaW4vemV0YWNvcmUvb2JzZXJ2ZXIvdHgucHJvdG8SG3pldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlciK4AQoRTXNnVXBkYXRlT2JzZXJ2ZXISDwoHY3JlYXRvchgBIAEoCRIcChRvbGRfb2JzZXJ2ZXJfYWRkcmVzcxgCIAEoCRIcChRuZXdfb2JzZXJ2ZXJfYWRkcmVzcxgDIAEoCRJICg11cGRhdGVfcmVhc29uGAQgASgOMjEuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk9ic2VydmVyVXBkYXRlUmVhc29uOgyC57AqB2NyZWF0b3IiGwoZTXNnVXBkYXRlT2JzZXJ2ZXJSZXNwb25zZSKqAQoSTXNnVm90ZUJsb2NrSGVhZGVyEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSEgoKYmxvY2tfaGFzaBgDIAEoDBIOCgZoZWlnaHQYBCABKAMSPwoGaGVhZGVyGAUgASgLMikuemV0YWNoYWluLnpldGFjb3JlLnBrZy5wcm9vZnMuSGVhZGVyRGF0YUIEyN4fADoMguewKgdjcmVhdG9yIkwKGk1zZ1ZvdGVCbG9ja0hlYWRlclJlc3BvbnNlEhYKDmJhbGxvdF9jcmVhdGVkGAEgASgIEhYKDnZvdGVfZmluYWxpemVkGAIgASgIInQKFE1zZ1VwZGF0ZUNoYWluUGFyYW1zEg8KB2NyZWF0b3IYASABKAkSPQoLY2hhaW5QYXJhbXMYAiABKAsyKC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuQ2hhaW5QYXJhbXM6DILnsCoHY3JlYXRvciIeChxNc2dVcGRhdGVDaGFpblBhcmFtc1Jlc3BvbnNlIvUCCh9Nc2dVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSGAoQZ2FzX3ByaWNlX3RpY2tlchgDIAEoBBIWCg5pbmJvdW5kX3RpY2tlchgEIAEoBBIXCg9vdXRib3VuZF90aWNrZXIYBSABKAQSGQoRd2F0Y2hfdXR4b190aWNrZXIYBiABKAQSIgoab3V0Ym91bmRfc2NoZWR1bGVfaW50ZXJ2YWwYByABKAMSIwobb3V0Ym91bmRfc2NoZWR1bGVfbG9va2FoZWFkGAggASgDElIKE2NvbmZpcm1hdGlvbl9wYXJhbXMYCSABKAsyLy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuQ29uZmlybWF0aW9uUGFyYW1zQgTI3h8AEh4KFmRpc2FibGVfdHNzX2Jsb2NrX3NjYW4YCiABKAg6DILnsCoHY3JlYXRvciIpCidNc2dVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zUmVzcG9uc2UiRwoUTXNnUmVtb3ZlQ2hhaW5QYXJhbXMSDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAzoMguewKgdjcmVhdG9yIh4KHE1zZ1JlbW92ZUNoYWluUGFyYW1zUmVzcG9uc2UiiwEKDk1zZ0FkZE9ic2VydmVyEg8KB2NyZWF0b3IYASABKAkSGAoQb2JzZXJ2ZXJfYWRkcmVzcxgCIAEoCRIhChl6ZXRhY2xpZW50X2dyYW50ZWVfcHVia2V5GAMgASgJEh0KFWFkZF9ub2RlX2FjY291bnRfb25seRgEIAEoCDoMguewKgdjcmVhdG9yIhgKFk1zZ0FkZE9ic2VydmVyUmVzcG9uc2UifQoMTXNnVm90ZUJsYW1lEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSPAoKYmxhbWVfaW5mbxgDIAEoCzIiLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5CbGFtZUIEyN4fADoMguewKgdjcmVhdG9yIhYKFE1zZ1ZvdGVCbGFtZVJlc3BvbnNlIj8KD01zZ1VwZGF0ZUtleWdlbhIPCgdjcmVhdG9yGAEgASgJEg0KBWJsb2NrGAIgASgDOgyC57AqB2NyZWF0b3IiGQoXTXNnVXBkYXRlS2V5Z2VuUmVzcG9uc2UieQoTTXNnUmVzZXRDaGFpbk5vbmNlcxIPCgdjcmVhdG9yGAEgASgJEhAKCGNoYWluX2lkGAIgASgDEhcKD2NoYWluX25vbmNlX2xvdxgDIAEoAxIYChBjaGFpbl9ub25jZV9oaWdoGAQgASgDOgyC57AqB2NyZWF0b3IiHQobTXNnUmVzZXRDaGFpbk5vbmNlc1Jlc3BvbnNlIpkBCgpNc2dWb3RlVFNTEg8KB2NyZWF0b3IYASABKAkSEgoKdHNzX3B1YmtleRgCIAEoCRIaChJrZXlnZW5femV0YV9oZWlnaHQYAyABKAMSPAoGc3RhdHVzGAQgASgOMiwuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jaGFpbnMuUmVjZWl2ZVN0YXR1czoMguewKgdjcmVhdG9yIlwKEk1zZ1ZvdGVUU1NSZXNwb25zZRIWCg5iYWxsb3RfY3JlYXRlZBgBIAEoCBIWCg52b3RlX2ZpbmFsaXplZBgCIAEoCBIWCg5rZXlnZW5fc3VjY2VzcxgDIAEoCCJdCg1Nc2dFbmFibGVDQ1RYEg8KB2NyZWF0b3IYASABKAkSFQoNZW5hYmxlSW5ib3VuZBgCIAEoCBIWCg5lbmFibGVPdXRib3VuZBgDIAEoCDoMguewKgdjcmVhdG9yIhcKFU1zZ0VuYWJsZUNDVFhSZXNwb25zZSJgCg5Nc2dEaXNhYmxlQ0NUWBIPCgdjcmVhdG9yGAEgASgJEhYKDmRpc2FibGVJbmJvdW5kGAIgASgIEhcKD2Rpc2FibGVPdXRib3VuZBgDIAEoCDoMguewKgdjcmVhdG9yIhgKFk1zZ0Rpc2FibGVDQ1RYUmVzcG9uc2UimAEKHk1zZ1VwZGF0ZUdhc1ByaWNlSW5jcmVhc2VGbGFncxIPCgdjcmVhdG9yGAEgASgJElcKFWdhc1ByaWNlSW5jcmVhc2VGbGFncxgCIAEoCzIyLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5HYXNQcmljZUluY3JlYXNlRmxhZ3NCBMjeHwA6DILnsCoHY3JlYXRvciIoCiZNc2dVcGRhdGVHYXNQcmljZUluY3JlYXNlRmxhZ3NSZXNwb25zZSKKAQoZTXNnVXBkYXRlT3BlcmF0aW9uYWxGbGFncxIPCgdjcmVhdG9yGAEgASgJEk4KEW9wZXJhdGlvbmFsX2ZsYWdzGAIgASgLMi0uemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk9wZXJhdGlvbmFsRmxhZ3NCBMjeHwA6DILnsCoHY3JlYXRvciIjCiFNc2dVcGRhdGVPcGVyYXRpb25hbEZsYWdzUmVzcG9uc2UiTQoaTXNnRGlzYWJsZUZhc3RDb25maXJtYXRpb24SDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAzoMguewKgdjcmVhdG9yIiQKIk1zZ0Rpc2FibGVGYXN0Q29uZmlybWF0aW9uUmVzcG9uc2Uyjw8KA01zZxJvCgtBZGRPYnNlcnZlchIrLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dBZGRPYnNlcnZlchozLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dBZGRPYnNlcnZlclJlc3BvbnNlEngKDlVwZGF0ZU9ic2VydmVyEi4uemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9ic2VydmVyGjYuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9ic2VydmVyUmVzcG9uc2USgQEKEVVwZGF0ZUNoYWluUGFyYW1zEjEuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZUNoYWluUGFyYW1zGjkuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZUNoYWluUGFyYW1zUmVzcG9uc2USgQEKEVJlbW92ZUNoYWluUGFyYW1zEjEuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1JlbW92ZUNoYWluUGFyYW1zGjkuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1JlbW92ZUNoYWluUGFyYW1zUmVzcG9uc2USaQoJVm90ZUJsYW1lEikuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1ZvdGVCbGFtZRoxLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dWb3RlQmxhbWVSZXNwb25zZRJyCgxVcGRhdGVLZXlnZW4SLC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlS2V5Z2VuGjQuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZUtleWdlblJlc3BvbnNlEnsKD1ZvdGVCbG9ja0hlYWRlchIvLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dWb3RlQmxvY2tIZWFkZXIaNy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVm90ZUJsb2NrSGVhZGVyUmVzcG9uc2USfgoQUmVzZXRDaGFpbk5vbmNlcxIwLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dSZXNldENoYWluTm9uY2VzGjguemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1Jlc2V0Q2hhaW5Ob25jZXNSZXNwb25zZRJjCgdWb3RlVFNTEicuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1ZvdGVUU1MaLy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVm90ZVRTU1Jlc3BvbnNlEmwKCkVuYWJsZUNDVFgSKi56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnRW5hYmxlQ0NUWBoyLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dFbmFibGVDQ1RYUmVzcG9uc2USbwoLRGlzYWJsZUNDVFgSKy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnRGlzYWJsZUNDVFgaMy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnRGlzYWJsZUNDVFhSZXNwb25zZRKTAQoXRGlzYWJsZUZhc3RDb25maXJtYXRpb24SNy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnRGlzYWJsZUZhc3RDb25maXJtYXRpb24aPy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnRGlzYWJsZUZhc3RDb25maXJtYXRpb25SZXNwb25zZRKfAQobVXBkYXRlR2FzUHJpY2VJbmNyZWFzZUZsYWdzEjsuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZUdhc1ByaWNlSW5jcmVhc2VGbGFncxpDLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVHYXNQcmljZUluY3JlYXNlRmxhZ3NSZXNwb25zZRKQAQoWVXBkYXRlT3BlcmF0aW9uYWxGbGFncxI2LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVPcGVyYXRpb25hbEZsYWdzGj4uemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9wZXJhdGlvbmFsRmxhZ3NSZXNwb25zZRKiAQocVXBkYXRlT3BlcmF0aW9uYWxDaGFpblBhcmFtcxI8LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zGkQuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9wZXJhdGlvbmFsQ2hhaW5QYXJhbXNSZXNwb25zZRoFgOewKgFC5QEKH2NvbS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXJCB1R4UHJvdG9QAVorZ2l0aHViLmNvbS96ZXRhLWNoYWluL25vZGUveC9vYnNlcnZlci90eXBlc6ICA1paT6oCG1pldGFjaGFpbi5aZXRhY29yZS5PYnNlcnZlcsoCG1pldGFjaGFpblxaZXRhY29yZVxPYnNlcnZlcuICJ1pldGFjaGFpblxaZXRhY29yZVxPYnNlcnZlclxHUEJNZXRhZGF0YeoCHVpldGFjaGFpbjo6WmV0YWNvcmU6Ok9ic2VydmVyYgZwcm90bzM", [file_gogoproto_gogo, file_zetachain_zetacore_observer_blame, file_zetachain_zetacore_observer_crosschain_flags, file_zetachain_zetacore_observer_observer, file_zetachain_zetacore_observer_chain_params, file_zetachain_zetacore_observer_pending_nonces, file_zetachain_zetacore_observer_tss, file_zetachain_zetacore_observer_operational, file_zetachain_zetacore_observer_confirmation_params, file_zetachain_zetacore_pkg_chains_chains, file_zetachain_zetacore_pkg_proofs_proofs, file_cosmos_msg_v1_msg]);
+  fileDesc("CiR6ZXRhY2hhaW4vemV0YWNvcmUvb2JzZXJ2ZXIvdHgucHJvdG8SG3pldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlciK4AQoRTXNnVXBkYXRlT2JzZXJ2ZXISDwoHY3JlYXRvchgBIAEoCRIcChRvbGRfb2JzZXJ2ZXJfYWRkcmVzcxgCIAEoCRIcChRuZXdfb2JzZXJ2ZXJfYWRkcmVzcxgDIAEoCRJICg11cGRhdGVfcmVhc29uGAQgASgOMjEuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk9ic2VydmVyVXBkYXRlUmVhc29uOgyC57AqB2NyZWF0b3IiGwoZTXNnVXBkYXRlT2JzZXJ2ZXJSZXNwb25zZSKqAQoSTXNnVm90ZUJsb2NrSGVhZGVyEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSEgoKYmxvY2tfaGFzaBgDIAEoDBIOCgZoZWlnaHQYBCABKAMSPwoGaGVhZGVyGAUgASgLMikuemV0YWNoYWluLnpldGFjb3JlLnBrZy5wcm9vZnMuSGVhZGVyRGF0YUIEyN4fADoMguewKgdjcmVhdG9yIkwKGk1zZ1ZvdGVCbG9ja0hlYWRlclJlc3BvbnNlEhYKDmJhbGxvdF9jcmVhdGVkGAEgASgIEhYKDnZvdGVfZmluYWxpemVkGAIgASgIInQKFE1zZ1VwZGF0ZUNoYWluUGFyYW1zEg8KB2NyZWF0b3IYASABKAkSPQoLY2hhaW5QYXJhbXMYAiABKAsyKC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuQ2hhaW5QYXJhbXM6DILnsCoHY3JlYXRvciIeChxNc2dVcGRhdGVDaGFpblBhcmFtc1Jlc3BvbnNlIvUCCh9Nc2dVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSGAoQZ2FzX3ByaWNlX3RpY2tlchgDIAEoBBIWCg5pbmJvdW5kX3RpY2tlchgEIAEoBBIXCg9vdXRib3VuZF90aWNrZXIYBSABKAQSGQoRd2F0Y2hfdXR4b190aWNrZXIYBiABKAQSIgoab3V0Ym91bmRfc2NoZWR1bGVfaW50ZXJ2YWwYByABKAMSIwobb3V0Ym91bmRfc2NoZWR1bGVfbG9va2FoZWFkGAggASgDElIKE2NvbmZpcm1hdGlvbl9wYXJhbXMYCSABKAsyLy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuQ29uZmlybWF0aW9uUGFyYW1zQgTI3h8AEh4KFmRpc2FibGVfdHNzX2Jsb2NrX3NjYW4YCiABKAg6DILnsCoHY3JlYXRvciIpCidNc2dVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zUmVzcG9uc2UiRwoUTXNnUmVtb3ZlQ2hhaW5QYXJhbXMSDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAzoMguewKgdjcmVhdG9yIh4KHE1zZ1JlbW92ZUNoYWluUGFyYW1zUmVzcG9uc2UiiwEKDk1zZ0FkZE9ic2VydmVyEg8KB2NyZWF0b3IYASABKAkSGAoQb2JzZXJ2ZXJfYWRkcmVzcxgCIAEoCRIhChl6ZXRhY2xpZW50X2dyYW50ZWVfcHVia2V5GAMgASgJEh0KFWFkZF9ub2RlX2FjY291bnRfb25seRgEIAEoCDoMguewKgdjcmVhdG9yIhgKFk1zZ0FkZE9ic2VydmVyUmVzcG9uc2UiTAoRTXNnUmVtb3ZlT2JzZXJ2ZXISDwoHY3JlYXRvchgBIAEoCRIYChBvYnNlcnZlcl9hZGRyZXNzGAIgASgJOgyC57AqB2NyZWF0b3IiGwoZTXNnUmVtb3ZlT2JzZXJ2ZXJSZXNwb25zZSJ9CgxNc2dWb3RlQmxhbWUSDwoHY3JlYXRvchgBIAEoCRIQCghjaGFpbl9pZBgCIAEoAxI8CgpibGFtZV9pbmZvGAMgASgLMiIuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLkJsYW1lQgTI3h8AOgyC57AqB2NyZWF0b3IiFgoUTXNnVm90ZUJsYW1lUmVzcG9uc2UiPwoPTXNnVXBkYXRlS2V5Z2VuEg8KB2NyZWF0b3IYASABKAkSDQoFYmxvY2sYAiABKAM6DILnsCoHY3JlYXRvciIZChdNc2dVcGRhdGVLZXlnZW5SZXNwb25zZSJ5ChNNc2dSZXNldENoYWluTm9uY2VzEg8KB2NyZWF0b3IYASABKAkSEAoIY2hhaW5faWQYAiABKAMSFwoPY2hhaW5fbm9uY2VfbG93GAMgASgDEhgKEGNoYWluX25vbmNlX2hpZ2gYBCABKAM6DILnsCoHY3JlYXRvciIdChtNc2dSZXNldENoYWluTm9uY2VzUmVzcG9uc2UimQEKCk1zZ1ZvdGVUU1MSDwoHY3JlYXRvchgBIAEoCRISCgp0c3NfcHVia2V5GAIgASgJEhoKEmtleWdlbl96ZXRhX2hlaWdodBgDIAEoAxI8CgZzdGF0dXMYBCABKA4yLC56ZXRhY2hhaW4uemV0YWNvcmUucGtnLmNoYWlucy5SZWNlaXZlU3RhdHVzOgyC57AqB2NyZWF0b3IiXAoSTXNnVm90ZVRTU1Jlc3BvbnNlEhYKDmJhbGxvdF9jcmVhdGVkGAEgASgIEhYKDnZvdGVfZmluYWxpemVkGAIgASgIEhYKDmtleWdlbl9zdWNjZXNzGAMgASgIIl0KDU1zZ0VuYWJsZUNDVFgSDwoHY3JlYXRvchgBIAEoCRIVCg1lbmFibGVJbmJvdW5kGAIgASgIEhYKDmVuYWJsZU91dGJvdW5kGAMgASgIOgyC57AqB2NyZWF0b3IiFwoVTXNnRW5hYmxlQ0NUWFJlc3BvbnNlImAKDk1zZ0Rpc2FibGVDQ1RYEg8KB2NyZWF0b3IYASABKAkSFgoOZGlzYWJsZUluYm91bmQYAiABKAgSFwoPZGlzYWJsZU91dGJvdW5kGAMgASgIOgyC57AqB2NyZWF0b3IiGAoWTXNnRGlzYWJsZUNDVFhSZXNwb25zZSKYAQoeTXNnVXBkYXRlR2FzUHJpY2VJbmNyZWFzZUZsYWdzEg8KB2NyZWF0b3IYASABKAkSVwoVZ2FzUHJpY2VJbmNyZWFzZUZsYWdzGAIgASgLMjIuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLkdhc1ByaWNlSW5jcmVhc2VGbGFnc0IEyN4fADoMguewKgdjcmVhdG9yIigKJk1zZ1VwZGF0ZUdhc1ByaWNlSW5jcmVhc2VGbGFnc1Jlc3BvbnNlIooBChlNc2dVcGRhdGVPcGVyYXRpb25hbEZsYWdzEg8KB2NyZWF0b3IYASABKAkSTgoRb3BlcmF0aW9uYWxfZmxhZ3MYAiABKAsyLS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuT3BlcmF0aW9uYWxGbGFnc0IEyN4fADoMguewKgdjcmVhdG9yIiMKIU1zZ1VwZGF0ZU9wZXJhdGlvbmFsRmxhZ3NSZXNwb25zZSJNChpNc2dEaXNhYmxlRmFzdENvbmZpcm1hdGlvbhIPCgdjcmVhdG9yGAEgASgJEhAKCGNoYWluX2lkGAIgASgDOgyC57AqB2NyZWF0b3IiJAoiTXNnRGlzYWJsZUZhc3RDb25maXJtYXRpb25SZXNwb25zZSJOChRNc2dVcGRhdGVWMlpldGFGbG93cxIPCgdjcmVhdG9yGAEgASgJEhcKD2lzVjJaZXRhRW5hYmxlZBgCIAEoCDoMguewKgdjcmVhdG9yIh4KHE1zZ1VwZGF0ZVYyWmV0YUZsb3dzUmVzcG9uc2UyjREKA01zZxJvCgtBZGRPYnNlcnZlchIrLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dBZGRPYnNlcnZlchozLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dBZGRPYnNlcnZlclJlc3BvbnNlEngKDlJlbW92ZU9ic2VydmVyEi4uemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1JlbW92ZU9ic2VydmVyGjYuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1JlbW92ZU9ic2VydmVyUmVzcG9uc2USeAoOVXBkYXRlT2JzZXJ2ZXISLi56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlT2JzZXJ2ZXIaNi56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlT2JzZXJ2ZXJSZXNwb25zZRKBAQoRVXBkYXRlQ2hhaW5QYXJhbXMSMS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlQ2hhaW5QYXJhbXMaOS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlQ2hhaW5QYXJhbXNSZXNwb25zZRKBAQoRUmVtb3ZlQ2hhaW5QYXJhbXMSMS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnUmVtb3ZlQ2hhaW5QYXJhbXMaOS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnUmVtb3ZlQ2hhaW5QYXJhbXNSZXNwb25zZRJpCglWb3RlQmxhbWUSKS56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVm90ZUJsYW1lGjEuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1ZvdGVCbGFtZVJlc3BvbnNlEnIKDFVwZGF0ZUtleWdlbhIsLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVLZXlnZW4aNC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlS2V5Z2VuUmVzcG9uc2USewoPVm90ZUJsb2NrSGVhZGVyEi8uemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1ZvdGVCbG9ja0hlYWRlcho3LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dWb3RlQmxvY2tIZWFkZXJSZXNwb25zZRJ+ChBSZXNldENoYWluTm9uY2VzEjAuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1Jlc2V0Q2hhaW5Ob25jZXMaOC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnUmVzZXRDaGFpbk5vbmNlc1Jlc3BvbnNlEmMKB1ZvdGVUU1MSJy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVm90ZVRTUxovLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dWb3RlVFNTUmVzcG9uc2USbAoKRW5hYmxlQ0NUWBIqLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dFbmFibGVDQ1RYGjIuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ0VuYWJsZUNDVFhSZXNwb25zZRJvCgtEaXNhYmxlQ0NUWBIrLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dEaXNhYmxlQ0NUWBozLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dEaXNhYmxlQ0NUWFJlc3BvbnNlEpMBChdEaXNhYmxlRmFzdENvbmZpcm1hdGlvbhI3LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dEaXNhYmxlRmFzdENvbmZpcm1hdGlvbho/LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dEaXNhYmxlRmFzdENvbmZpcm1hdGlvblJlc3BvbnNlEp8BChtVcGRhdGVHYXNQcmljZUluY3JlYXNlRmxhZ3MSOy56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlR2FzUHJpY2VJbmNyZWFzZUZsYWdzGkMuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZUdhc1ByaWNlSW5jcmVhc2VGbGFnc1Jlc3BvbnNlEpABChZVcGRhdGVPcGVyYXRpb25hbEZsYWdzEjYuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9wZXJhdGlvbmFsRmxhZ3MaPi56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlT3BlcmF0aW9uYWxGbGFnc1Jlc3BvbnNlEqIBChxVcGRhdGVPcGVyYXRpb25hbENoYWluUGFyYW1zEjwuemV0YWNoYWluLnpldGFjb3JlLm9ic2VydmVyLk1zZ1VwZGF0ZU9wZXJhdGlvbmFsQ2hhaW5QYXJhbXMaRC56ZXRhY2hhaW4uemV0YWNvcmUub2JzZXJ2ZXIuTXNnVXBkYXRlT3BlcmF0aW9uYWxDaGFpblBhcmFtc1Jlc3BvbnNlEoEBChFVcGRhdGVWMlpldGFGbG93cxIxLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVWMlpldGFGbG93cxo5LnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlci5Nc2dVcGRhdGVWMlpldGFGbG93c1Jlc3BvbnNlGgWA57AqAULlAQofY29tLnpldGFjaGFpbi56ZXRhY29yZS5vYnNlcnZlckIHVHhQcm90b1ABWitnaXRodWIuY29tL3pldGEtY2hhaW4vbm9kZS94L29ic2VydmVyL3R5cGVzogIDWlpPqgIbWmV0YWNoYWluLlpldGFjb3JlLk9ic2VydmVyygIbWmV0YWNoYWluXFpldGFjb3JlXE9ic2VydmVy4gInWmV0YWNoYWluXFpldGFjb3JlXE9ic2VydmVyXEdQQk1ldGFkYXRh6gIdWmV0YWNoYWluOjpaZXRhY29yZTo6T2JzZXJ2ZXJiBnByb3RvMw", [file_gogoproto_gogo, file_zetachain_zetacore_observer_blame, file_zetachain_zetacore_observer_crosschain_flags, file_zetachain_zetacore_observer_observer, file_zetachain_zetacore_observer_chain_params, file_zetachain_zetacore_observer_pending_nonces, file_zetachain_zetacore_observer_tss, file_zetachain_zetacore_observer_operational, file_zetachain_zetacore_observer_confirmation_params, file_zetachain_zetacore_pkg_chains_chains, file_zetachain_zetacore_pkg_proofs_proofs, file_cosmos_msg_v1_msg]);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateObserver
@@ -327,6 +327,41 @@ export const MsgAddObserverResponseSchema: GenMessage<MsgAddObserverResponse> = 
   messageDesc(file_zetachain_zetacore_observer_tx, 11);
 
 /**
+ * @generated from message zetachain.zetacore.observer.MsgRemoveObserver
+ */
+export type MsgRemoveObserver = Message<"zetachain.zetacore.observer.MsgRemoveObserver"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string observer_address = 2;
+   */
+  observerAddress: string;
+};
+
+/**
+ * Describes the message zetachain.zetacore.observer.MsgRemoveObserver.
+ * Use `create(MsgRemoveObserverSchema)` to create a new message.
+ */
+export const MsgRemoveObserverSchema: GenMessage<MsgRemoveObserver> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_observer_tx, 12);
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgRemoveObserverResponse
+ */
+export type MsgRemoveObserverResponse = Message<"zetachain.zetacore.observer.MsgRemoveObserverResponse"> & {
+};
+
+/**
+ * Describes the message zetachain.zetacore.observer.MsgRemoveObserverResponse.
+ * Use `create(MsgRemoveObserverResponseSchema)` to create a new message.
+ */
+export const MsgRemoveObserverResponseSchema: GenMessage<MsgRemoveObserverResponse> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_observer_tx, 13);
+
+/**
  * @generated from message zetachain.zetacore.observer.MsgVoteBlame
  */
 export type MsgVoteBlame = Message<"zetachain.zetacore.observer.MsgVoteBlame"> & {
@@ -351,7 +386,7 @@ export type MsgVoteBlame = Message<"zetachain.zetacore.observer.MsgVoteBlame"> &
  * Use `create(MsgVoteBlameSchema)` to create a new message.
  */
 export const MsgVoteBlameSchema: GenMessage<MsgVoteBlame> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 12);
+  messageDesc(file_zetachain_zetacore_observer_tx, 14);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgVoteBlameResponse
@@ -364,7 +399,7 @@ export type MsgVoteBlameResponse = Message<"zetachain.zetacore.observer.MsgVoteB
  * Use `create(MsgVoteBlameResponseSchema)` to create a new message.
  */
 export const MsgVoteBlameResponseSchema: GenMessage<MsgVoteBlameResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 13);
+  messageDesc(file_zetachain_zetacore_observer_tx, 15);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateKeygen
@@ -386,7 +421,7 @@ export type MsgUpdateKeygen = Message<"zetachain.zetacore.observer.MsgUpdateKeyg
  * Use `create(MsgUpdateKeygenSchema)` to create a new message.
  */
 export const MsgUpdateKeygenSchema: GenMessage<MsgUpdateKeygen> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 14);
+  messageDesc(file_zetachain_zetacore_observer_tx, 16);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateKeygenResponse
@@ -399,7 +434,7 @@ export type MsgUpdateKeygenResponse = Message<"zetachain.zetacore.observer.MsgUp
  * Use `create(MsgUpdateKeygenResponseSchema)` to create a new message.
  */
 export const MsgUpdateKeygenResponseSchema: GenMessage<MsgUpdateKeygenResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 15);
+  messageDesc(file_zetachain_zetacore_observer_tx, 17);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgResetChainNonces
@@ -431,7 +466,7 @@ export type MsgResetChainNonces = Message<"zetachain.zetacore.observer.MsgResetC
  * Use `create(MsgResetChainNoncesSchema)` to create a new message.
  */
 export const MsgResetChainNoncesSchema: GenMessage<MsgResetChainNonces> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 16);
+  messageDesc(file_zetachain_zetacore_observer_tx, 18);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgResetChainNoncesResponse
@@ -444,7 +479,7 @@ export type MsgResetChainNoncesResponse = Message<"zetachain.zetacore.observer.M
  * Use `create(MsgResetChainNoncesResponseSchema)` to create a new message.
  */
 export const MsgResetChainNoncesResponseSchema: GenMessage<MsgResetChainNoncesResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 17);
+  messageDesc(file_zetachain_zetacore_observer_tx, 19);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgVoteTSS
@@ -476,7 +511,7 @@ export type MsgVoteTSS = Message<"zetachain.zetacore.observer.MsgVoteTSS"> & {
  * Use `create(MsgVoteTSSSchema)` to create a new message.
  */
 export const MsgVoteTSSSchema: GenMessage<MsgVoteTSS> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 18);
+  messageDesc(file_zetachain_zetacore_observer_tx, 20);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgVoteTSSResponse
@@ -503,7 +538,7 @@ export type MsgVoteTSSResponse = Message<"zetachain.zetacore.observer.MsgVoteTSS
  * Use `create(MsgVoteTSSResponseSchema)` to create a new message.
  */
 export const MsgVoteTSSResponseSchema: GenMessage<MsgVoteTSSResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 19);
+  messageDesc(file_zetachain_zetacore_observer_tx, 21);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgEnableCCTX
@@ -530,7 +565,7 @@ export type MsgEnableCCTX = Message<"zetachain.zetacore.observer.MsgEnableCCTX">
  * Use `create(MsgEnableCCTXSchema)` to create a new message.
  */
 export const MsgEnableCCTXSchema: GenMessage<MsgEnableCCTX> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 20);
+  messageDesc(file_zetachain_zetacore_observer_tx, 22);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgEnableCCTXResponse
@@ -543,7 +578,7 @@ export type MsgEnableCCTXResponse = Message<"zetachain.zetacore.observer.MsgEnab
  * Use `create(MsgEnableCCTXResponseSchema)` to create a new message.
  */
 export const MsgEnableCCTXResponseSchema: GenMessage<MsgEnableCCTXResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 21);
+  messageDesc(file_zetachain_zetacore_observer_tx, 23);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgDisableCCTX
@@ -570,7 +605,7 @@ export type MsgDisableCCTX = Message<"zetachain.zetacore.observer.MsgDisableCCTX
  * Use `create(MsgDisableCCTXSchema)` to create a new message.
  */
 export const MsgDisableCCTXSchema: GenMessage<MsgDisableCCTX> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 22);
+  messageDesc(file_zetachain_zetacore_observer_tx, 24);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgDisableCCTXResponse
@@ -583,7 +618,7 @@ export type MsgDisableCCTXResponse = Message<"zetachain.zetacore.observer.MsgDis
  * Use `create(MsgDisableCCTXResponseSchema)` to create a new message.
  */
 export const MsgDisableCCTXResponseSchema: GenMessage<MsgDisableCCTXResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 23);
+  messageDesc(file_zetachain_zetacore_observer_tx, 25);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags
@@ -605,7 +640,7 @@ export type MsgUpdateGasPriceIncreaseFlags = Message<"zetachain.zetacore.observe
  * Use `create(MsgUpdateGasPriceIncreaseFlagsSchema)` to create a new message.
  */
 export const MsgUpdateGasPriceIncreaseFlagsSchema: GenMessage<MsgUpdateGasPriceIncreaseFlags> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 24);
+  messageDesc(file_zetachain_zetacore_observer_tx, 26);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlagsResponse
@@ -618,7 +653,7 @@ export type MsgUpdateGasPriceIncreaseFlagsResponse = Message<"zetachain.zetacore
  * Use `create(MsgUpdateGasPriceIncreaseFlagsResponseSchema)` to create a new message.
  */
 export const MsgUpdateGasPriceIncreaseFlagsResponseSchema: GenMessage<MsgUpdateGasPriceIncreaseFlagsResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 25);
+  messageDesc(file_zetachain_zetacore_observer_tx, 27);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalFlags
@@ -640,7 +675,7 @@ export type MsgUpdateOperationalFlags = Message<"zetachain.zetacore.observer.Msg
  * Use `create(MsgUpdateOperationalFlagsSchema)` to create a new message.
  */
 export const MsgUpdateOperationalFlagsSchema: GenMessage<MsgUpdateOperationalFlags> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 26);
+  messageDesc(file_zetachain_zetacore_observer_tx, 28);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalFlagsResponse
@@ -653,7 +688,7 @@ export type MsgUpdateOperationalFlagsResponse = Message<"zetachain.zetacore.obse
  * Use `create(MsgUpdateOperationalFlagsResponseSchema)` to create a new message.
  */
 export const MsgUpdateOperationalFlagsResponseSchema: GenMessage<MsgUpdateOperationalFlagsResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 27);
+  messageDesc(file_zetachain_zetacore_observer_tx, 29);
 
 /**
  * MsgDisableFastConfirmation is used to disable fast confirmation for given
@@ -678,7 +713,7 @@ export type MsgDisableFastConfirmation = Message<"zetachain.zetacore.observer.Ms
  * Use `create(MsgDisableFastConfirmationSchema)` to create a new message.
  */
 export const MsgDisableFastConfirmationSchema: GenMessage<MsgDisableFastConfirmation> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 28);
+  messageDesc(file_zetachain_zetacore_observer_tx, 30);
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgDisableFastConfirmationResponse
@@ -691,7 +726,44 @@ export type MsgDisableFastConfirmationResponse = Message<"zetachain.zetacore.obs
  * Use `create(MsgDisableFastConfirmationResponseSchema)` to create a new message.
  */
 export const MsgDisableFastConfirmationResponseSchema: GenMessage<MsgDisableFastConfirmationResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_observer_tx, 29);
+  messageDesc(file_zetachain_zetacore_observer_tx, 31);
+
+/**
+ * MsgUpdateV2ZetaFlows is used to update the V2 ZETA gateway flows flag.
+ *
+ * @generated from message zetachain.zetacore.observer.MsgUpdateV2ZetaFlows
+ */
+export type MsgUpdateV2ZetaFlows = Message<"zetachain.zetacore.observer.MsgUpdateV2ZetaFlows"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: bool isV2ZetaEnabled = 2;
+   */
+  isV2ZetaEnabled: boolean;
+};
+
+/**
+ * Describes the message zetachain.zetacore.observer.MsgUpdateV2ZetaFlows.
+ * Use `create(MsgUpdateV2ZetaFlowsSchema)` to create a new message.
+ */
+export const MsgUpdateV2ZetaFlowsSchema: GenMessage<MsgUpdateV2ZetaFlows> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_observer_tx, 32);
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateV2ZetaFlowsResponse
+ */
+export type MsgUpdateV2ZetaFlowsResponse = Message<"zetachain.zetacore.observer.MsgUpdateV2ZetaFlowsResponse"> & {
+};
+
+/**
+ * Describes the message zetachain.zetacore.observer.MsgUpdateV2ZetaFlowsResponse.
+ * Use `create(MsgUpdateV2ZetaFlowsResponseSchema)` to create a new message.
+ */
+export const MsgUpdateV2ZetaFlowsResponseSchema: GenMessage<MsgUpdateV2ZetaFlowsResponse> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_observer_tx, 33);
 
 /**
  * Msg defines the Msg service.
@@ -706,6 +778,14 @@ export const Msg: GenService<{
     methodKind: "unary";
     input: typeof MsgAddObserverSchema;
     output: typeof MsgAddObserverResponseSchema;
+  },
+  /**
+   * @generated from rpc zetachain.zetacore.observer.Msg.RemoveObserver
+   */
+  removeObserver: {
+    methodKind: "unary";
+    input: typeof MsgRemoveObserverSchema;
+    output: typeof MsgRemoveObserverResponseSchema;
   },
   /**
    * @generated from rpc zetachain.zetacore.observer.Msg.UpdateObserver
@@ -818,6 +898,14 @@ export const Msg: GenService<{
     methodKind: "unary";
     input: typeof MsgUpdateOperationalChainParamsSchema;
     output: typeof MsgUpdateOperationalChainParamsResponseSchema;
+  },
+  /**
+   * @generated from rpc zetachain.zetacore.observer.Msg.UpdateV2ZetaFlows
+   */
+  updateV2ZetaFlows: {
+    methodKind: "unary";
+    input: typeof MsgUpdateV2ZetaFlowsSchema;
+    output: typeof MsgUpdateV2ZetaFlowsResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_zetachain_zetacore_observer_tx, 0);

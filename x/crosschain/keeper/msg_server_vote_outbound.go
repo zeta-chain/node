@@ -176,6 +176,11 @@ func (k Keeper) refundUnusedGas(
 	cctx *types.CrossChainTx,
 ) error {
 	outboundParams := cctx.GetCurrentOutboundParam()
+
+	if outboundParams.EffectiveGasPrice.IsNil() {
+		return nil
+	}
+
 	outboundTxFeePaid := math.NewUint(outboundParams.GasUsed).
 		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
 	userGasFeePaid := outboundParams.UserGasFeePaid
@@ -244,6 +249,10 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	OutboundParams types.OutboundParams,
 	chainID int64,
 ) error {
+	if OutboundParams.EffectiveGasPrice.IsNil() {
+		return nil
+	}
+
 	gasUsed := OutboundParams.GasUsed
 	gasLimit := OutboundParams.EffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
@@ -288,8 +297,13 @@ func PercentOf(n math.Uint, percent uint64) math.Uint {
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
 	// #nosec G115 always in range
 	for _, outboundParams := range cctx.OutboundParams {
-		k.GetObserverKeeper().
-			RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
+		// Only remove from pending nonces if the outbound has been executed/finalized.
+		// This prevents removing the nonce for a newly created revert outbound that
+		// hasn't been signed yet.
+		if outboundParams.TxFinalizationStatus == types.TxFinalizationStatus_Executed {
+			k.GetObserverKeeper().
+				RemoveFromPendingNonces(ctx, outboundParams.TssPubkey, outboundParams.ReceiverChainId, int64(outboundParams.TssNonce))
+		}
 		k.RemoveOutboundTrackerFromStore(ctx, outboundParams.ReceiverChainId, outboundParams.TssNonce)
 	}
 	// This should set nonce to cctx only if a new revert is created.

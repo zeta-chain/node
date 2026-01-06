@@ -16,9 +16,9 @@ func TestKeeper_GetRewardsDistributions(t *testing.T) {
 		params.TssSignerEmissionPercentage = "0.25"
 		val, obs, tss := types.GetRewardsDistributions(params)
 
-		require.EqualValues(t, "4810474537037037037", val.String()) // 0.5 * block reward
-		require.EqualValues(t, "2405237268518518518", obs.String()) // 0.25 * block reward
-		require.EqualValues(t, "2405237268518518518", tss.String()) // 0.25 * block reward
+		require.EqualValues(t, "1687885802469135802", val.String()) // 0.5 * block reward
+		require.EqualValues(t, "843942901234567901", obs.String())  // 0.25 * block reward
+		require.EqualValues(t, "843942901234567901", tss.String())  // 0.25 * block reward
 	})
 
 	t.Run("Return zero in case of invalid string", func(t *testing.T) {

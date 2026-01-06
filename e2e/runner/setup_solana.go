@@ -29,7 +29,7 @@ func (r *E2ERunner) SetupSolanaAccount() {
 
 // SetupSolana sets Solana contracts and params
 func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivateKey string) {
-	r.Logger.Print("⚙️ initializing gateway program on Solana")
+	r.Logger.Print("⚙️ Setting up Solana gateway")
 
 	// set Solana contracts
 	r.GatewayProgram = solana.MustPublicKeyFromBase58(gatewayID)
@@ -203,6 +203,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 			SafeInboundCount:  32,
 			SafeOutboundCount: 32,
 		},
+		GasPriceMultiplier: observertypes.DefaultGasPriceMultiplier,
 	}
 
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {

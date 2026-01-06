@@ -3,72 +3,218 @@ package config_test
 import (
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/sdkconfig"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
-func Test_GetZetacoreClientConfig(t *testing.T) {
-	signerName := "signerA"
+func TestValidate(t *testing.T) {
+	var sampleTestConfig = config.Config{
+		KeyringBackend:     "test",
+		ChainID:            "athens_7001-1",
+		ZetaCoreURL:        "127.0.0.1",
+		AuthzGranter:       "zeta1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+		AuthzHotkey:        "hotkey",
+		ConfigUpdateTicker: 6,
+	}
+
+	// set SDK config to use "zeta" address prefix
+	sdkconfig.SetDefault(false)
 
 	tests := []struct {
-		name    string
-		cfg     config.Config
-		want    config.ZetacoreClientConfig
-		wantErr bool
+		name        string
+		config      config.Config
+		expectError bool
+		errorMsg    string
 	}{
 		{
-			name: "should resolve zetacore client config from IP address",
-			cfg: func() config.Config {
-				cfg := config.New(false)
-				cfg.ZetacoreIP = "127.0.0.1"
-				cfg.AuthzHotkey = signerName
-				return cfg
-			}(),
-			want: config.ZetacoreClientConfig{
-				GRPCURL:     "127.0.0.1:9090",
-				WSRemote:    "http://127.0.0.1:26657",
-				SignerName:  signerName,
-				GRPCDialOpt: config.CredsInsecureGRPC,
-			},
+			name:   "valid config",
+			config: sampleTestConfig,
 		},
 		{
-			name: "should resolve zetacore client config from hostname",
-			cfg: func() config.Config {
-				cfg := config.New(false)
-				cfg.ZetacoreURLGRPC = "zetachain.lavenderfive.com:443"
-				cfg.ZetacoreURLWSS = "wss://rpc.lavenderfive.com:443/zetachain/websocket"
-				cfg.AuthzHotkey = signerName
+			name: "invalid public IP address",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.PublicIP = "192.168.1"
 				return cfg
 			}(),
-			want: config.ZetacoreClientConfig{
-				GRPCURL:     "zetachain.lavenderfive.com:443",
-				WSRemote:    "https://rpc.lavenderfive.com:443/zetachain",
-				SignerName:  signerName,
-				GRPCDialOpt: config.CredsTLSGRPC,
-			},
+			errorMsg: "reason: invalid public IP, got: 192.168.1",
 		},
 		{
-			name: "localnet zetacore container names should work",
-			cfg: func() config.Config {
-				cfg := config.New(false)
-				cfg.ZetacoreIP = "zetacore0"
-				cfg.AuthzHotkey = signerName
+			name: "invalid public DNS name",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.PublicDNS = "invalid..dns"
 				return cfg
 			}(),
-			want: config.ZetacoreClientConfig{
-				GRPCURL:     "zetacore0:9090",
-				WSRemote:    "http://zetacore0:26657",
-				SignerName:  signerName,
-				GRPCDialOpt: config.CredsInsecureGRPC,
-			},
+			errorMsg: "reason: invalid public DNS, got: invalid..dns",
+		},
+		{
+			name: "invalid chain ID",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ChainID = "zeta1nvalid"
+				return cfg
+			}(),
+			errorMsg: "reason: invalid chain id, got: zeta1nvalid",
+		},
+		{
+			name: "invalid zetacore URL",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ZetaCoreURL = "     "
+				return cfg
+			}(),
+			errorMsg: "reason: invalid zetacore URL, got:     ",
+		},
+		{
+			name: "invalid granter address",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.AuthzGranter = "cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs" // not ZetaChain address
+				return cfg
+			}(),
+			errorMsg: "reason: invalid bech32 granter address, got: cosmos1dkzcws63tttgd0alp6cesk2hlqagukauypc3qs",
+		},
+		{
+			name: "empty AuthzHotkey (grantee) name",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.AuthzHotkey = ""
+				return cfg
+			}(),
+			errorMsg: "reason: grantee name is empty",
+		},
+		{
+			name: "invalid log level",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.LogLevel = 6
+				return cfg
+			}(),
+			errorMsg: "reason: log level must be between 0 and 5, got: 6",
+		},
+		{
+			name: "invalid config update ticker",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ConfigUpdateTicker = 0
+				return cfg
+			}(),
+			errorMsg: "reason: config update ticker is 0",
+		},
+		{
+			name: "invalid keyring backend",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.KeyringBackend = "invalid"
+				return cfg
+			}(),
+			errorMsg: "reason: invalid keyring backend, got: invalid",
+		},
+		{
+			name: "invalid max base fee",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.MaxBaseFee = -1
+				return cfg
+			}(),
+			errorMsg: "reason: max base fee cannot be negative, got: -1",
+		},
+		{
+			name: "invalid mempool congestion threshold",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.MempoolCongestionThreshold = -1
+				return cfg
+			}(),
+			errorMsg: "reason: mempool congestion threshold cannot be negative, got: -1",
+		},
+		{
+			name: "empty ChaosProfilePath",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ClientMode = mode.ChaosMode
+				return cfg
+			}(),
+			errorMsg: "ChaosProfilePath is a required field",
+		},
+		{
+			name: "invalid ChaosProfilePath",
+			config: func() config.Config {
+				cfg := sampleTestConfig
+				cfg.ClientMode = mode.ChaosMode
+				cfg.ChaosProfilePath = "invalid/path"
+				return cfg
+			}(),
+			errorMsg: `invalid ChaosProfilePath "invalid/path"`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.cfg.GetZetacoreClientConfig()
-			require.Equal(t, tt.want, got)
+			err := tt.config.Validate()
+			if tt.errorMsg != "" {
+				require.ErrorContains(t, err, tt.errorMsg)
+				return
+			}
+			require.NoError(t, err, "expected no error, got %v", err)
+		})
+	}
+}
+
+func Test_ResolvePublicIP(t *testing.T) {
+	tests := []struct {
+		name     string
+		cfg      config.Config
+		expectIP string
+		errorMsg string
+	}{
+		{
+			name: "public IP is set",
+			cfg: config.Config{
+				PublicIP:  "127.0.0.1",
+				PublicDNS: "my.zetaclient.com",
+			},
+			expectIP: "127.0.0.1",
+		},
+		{
+			name:     "no public IP or DNS is set",
+			cfg:      config.Config{},
+			errorMsg: "no public IP or DNS is provided",
+		},
+		{
+			name: "only public DNS is set",
+			cfg: config.Config{
+				// a real world example (Blockdaemon):
+				// cjisrdnil456rejvnhd0.bdnodes.net => 202.8.10.137
+				PublicDNS: "localhost",
+			},
+			expectIP: "127.0.0.1",
+		},
+		{
+			name: "unable to resolve public DNS",
+			cfg: config.Config{
+				PublicDNS: "my.zetaclient.com",
+			},
+			errorMsg: "unable to resolve IP addresses for public DNS \"my.zetaclient.com\"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			publicIP, err := tt.cfg.ResolvePublicIP(zerolog.Nop())
+			if tt.errorMsg != "" {
+				require.Empty(t, publicIP)
+				require.ErrorContains(t, err, tt.errorMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expectIP, publicIP)
 		})
 	}
 }
@@ -79,6 +225,32 @@ func Test_GetRelayerKeyPath(t *testing.T) {
 
 	// should return default relayer key path
 	require.Equal(t, config.DefaultRelayerKeyPath, cfg.GetRelayerKeyPath())
+}
+
+func Test_GetMaxBaseFee(t *testing.T) {
+	t.Run("should return zero max base fee", func(t *testing.T) {
+		cfg := config.New(false)
+		require.Zero(t, cfg.GetMaxBaseFee())
+	})
+
+	t.Run("should return configured max base fee", func(t *testing.T) {
+		cfg := config.New(false)
+		cfg.MaxBaseFee = 1000
+		require.EqualValues(t, 1000, cfg.GetMaxBaseFee())
+	})
+}
+
+func Test_GetMempoolCongestionThreshold(t *testing.T) {
+	t.Run("should return zero mempool congestion threshold", func(t *testing.T) {
+		cfg := config.New(false)
+		require.Zero(t, cfg.GetMempoolCongestionThreshold())
+	})
+
+	t.Run("should return configured mempool congestion threshold", func(t *testing.T) {
+		cfg := config.New(false)
+		cfg.MempoolCongestionThreshold = 5000
+		require.EqualValues(t, 5000, cfg.GetMempoolCongestionThreshold())
+	})
 }
 
 func Test_GetEVMConfig(t *testing.T) {

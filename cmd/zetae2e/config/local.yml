@@ -85,6 +85,10 @@ additional_accounts:
     bech32_address: "zeta1gjr8tgtm6aa995x059kk69z7z4duuz762zqess"
     evm_address: "0x448675A17bD77A52d0cFa16D6D145e155bCe0bDa"
     private_key: "6D5893BF8F5CC8E9759368252E5DB7E2A435803D5E6FDB3609385B2BBEB07A2A"
+  user_rpc:
+    bech32_address: "zeta13ue85afsyx90j55gpturzka785tvfaypf7xzxc"
+    evm_address: "0x8f327A7530218aF952880AF8315BbE3D16C4F481"
+    private_key: "8d0516a72bd3be609ae93d01beecf288d5871e7ebfac26cdf1e82ba25edfb8bc"
 policy_accounts:
   emergency_policy_account:
     bech32_address: "zeta16m2cnrdwtgweq4njc6t470vl325gw4kp6s7tap"
@@ -132,10 +136,13 @@ contracts:
     connector_zevm: "0x239e96c8f17C85c30100AC26F635Ea15f23E9c67"
     wzeta: "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
     test_dapp: "0xA8D5060feb6B456e886F023709A2795373691E63"
-    gateway: "0xa825eAa55b497AF892faca73a3797046C10B7c23"
-    test_dapp_v2: "0xBFF76e77D56B3C1202107f059425D56f0AEF87Ed"
+    gateway: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+    test_dapp_v2: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
     sol_zrc20: "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
     spl_zrc20: "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+    ton_zrc20: "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
+    sui_zrc20: "0x91d4F0D54090Df2D81e834c3c8CE71C6c865e79F"
+    sui_token_zrc20: "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0"
   evm:
     zeta_eth: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
     connector_eth: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
@@ -146,8 +153,12 @@ contracts:
     test_dapp_v2: "0xa825eAa55b497AF892faca73a3797046C10B7c23"
   solana:
     gateway_program_id: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
-    spl: ""
   ton:
     # e.g. "0:31503e3dd1df464216e4c4ca0eee3a40b812822c8539823e009b0720fab527b5"
     # unique on each e2e as it's partially derived from TSS address
-    gateway_account_id: ""
+    gateway_account_id: "0:871c8fe297ec5d6a1081593e108afba1cfa2e03686718d1972ea5c8556e452dd"
+  sui:
+    gateway_package_id: "0x0171d387f933f5ba2fe0ef3cf6ba30c1e9fc97601b1c50d7cdd8e7e353f81bf3"
+    gateway_object_id: "0xf644700b5242f2b684e53c3224f71aa4c9cd22a1d0c5b4244836d84c1679ba47"
+    gateway_upgrade_cap: "0x43729a401e9cfe574de8a4f404d5be71127fce063682ec11817b75a735ee1357"
+

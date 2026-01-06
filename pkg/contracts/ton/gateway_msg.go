@@ -27,6 +27,8 @@ const (
 const (
 	OpWithdraw      Op = 200
 	OpIncreaseSeqno Op = 205
+	OpUpdateTSS     Op = 202
+	OpResetSeqno    Op = 206
 )
 
 // ExitCode represents an error code. Might be TVM or custom.
@@ -50,6 +52,41 @@ func (d Donation) AsBody() (*boc.Cell, error) {
 	err := ErrCollect(
 		b.WriteUint(uint64(OpDonate), sizeOpCode),
 		b.WriteUint(0, sizeQueryID),
+	)
+
+	return b, err
+}
+
+// UpdateTSS represents an admin operation to update the TSS address on the gateway.
+// This is an authority operation that must be sent by the gateway admin.
+type UpdateTSS struct {
+	NewTSSAddress eth.Address
+}
+
+// AsBody casts struct as internal message body.
+func (u UpdateTSS) AsBody() (*boc.Cell, error) {
+	b := boc.NewCell()
+	err := ErrCollect(
+		b.WriteUint(uint64(OpUpdateTSS), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteBytes(u.NewTSSAddress.Bytes()),
+	)
+
+	return b, err
+}
+
+// ResetSeqno represents an admin operation to reset the gateway's seqno (nonce).
+type ResetSeqno struct {
+	NewSeqno uint32
+}
+
+// AsBody casts struct as internal message body.
+func (r ResetSeqno) AsBody() (*boc.Cell, error) {
+	b := boc.NewCell()
+	err := ErrCollect(
+		b.WriteUint(uint64(OpResetSeqno), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteUint(uint64(r.NewSeqno), sizeSeqno),
 	)
 
 	return b, err

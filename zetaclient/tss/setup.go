@@ -207,8 +207,13 @@ func NewServer(
 		return nil, errors.New("tss password is empty")
 	case privateKey == nil:
 		return nil, errors.New("private key is nil")
-	case cfg.PublicIP == "":
-		logger.Warn().Msg("public IP is empty")
+	case cfg.PublicIP == "" && cfg.PublicDNS == "":
+		logger.Warn().Msg("no public IP or DNS is provided")
+	}
+
+	publicIP, err := cfg.ResolvePublicIP(logger)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to resolve public IP")
 	}
 
 	tssPath, err := resolveTSSPath(cfg.TssPath, logger)
@@ -224,7 +229,7 @@ func NewServer(
 			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
-		ExternalIP:       cfg.PublicIP,
+		ExternalIP:       publicIP,
 		Port:             Port,
 		BootstrapPeers:   bootstrapPeers,
 		WhitelistedPeers: whitelistPeers,

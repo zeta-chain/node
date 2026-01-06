@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // tssMigrationTestRoutine runs TSS migration related e2e tests
@@ -19,6 +20,7 @@ func tssMigrationTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	expectedTssCount int,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
@@ -51,37 +53,61 @@ func tssMigrationTestRoutine(
 		if err != nil {
 			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
+		tssMigrationTestRunner.WaitForTSSGeneration(int64(expectedTssCount))
 
 		if err := tssMigrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
 		tssMigrationTestRunner.CheckBTCTSSBalance()
-
 		tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
-
 		return nil
 	}
 }
 
-func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
+func triggerTSSMigration(
+	deployerRunner *runner.E2ERunner,
+	logger *runner.Logger,
+	verbose bool,
+	conf config.Config,
+	testSolana bool,
+	testSui bool,
+	testTon bool,
+) {
 	migrationStartTime := time.Now()
 	logger.Print("🏁 starting tss migration")
 
-	response, err := deployerRunner.CctxClient.LastZetaHeight(
+	tssList, err := deployerRunner.ObserverClient.TssHistory(
 		deployerRunner.Ctx,
-		&crosschaintypes.QueryLastZetaHeightRequest{},
+		&observertypes.QueryTssHistoryRequest{},
 	)
 	require.NoError(deployerRunner, err)
-	err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
-	require.NoError(deployerRunner, err)
+	// Increase this number to generate more than 1 TSS.
+	// The migration always happens to the latest one, this is set on zetacore directly
+	numberOfTssToGenerate := 1
+	expectedTssCount := numberOfTssToGenerate + len(tssList.TssList)
 
-	// Generate new TSS
-	noError(waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0))
+	// Generate new TSS address(es)
+	for i := 0; i < numberOfTssToGenerate; i++ {
+		logger.Print("🔑 generating TSS %d/%d", i+1, numberOfTssToGenerate)
+
+		response, err := deployerRunner.CctxClient.LastZetaHeight(
+			deployerRunner.Ctx,
+			&crosschaintypes.QueryLastZetaHeightRequest{},
+		)
+		require.NoError(deployerRunner, err)
+		err = deployerRunner.ZetaTxServer.UpdateKeygen(response.Height)
+		require.NoError(deployerRunner, err)
+
+		// Generate new TSS
+		noError(
+			waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0),
+		)
+	}
 
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
 	// The zetaclient restarts required for this process are managed by the background workers in zetaclient (TSSListener)
-	fn := tssMigrationTestRoutine(conf, deployerRunner, verbose, e2etests.TestMigrateTSSName)
+	fn := tssMigrationTestRoutine(conf, deployerRunner, verbose, expectedTssCount, e2etests.TestMigrateTSSName)
 
 	if err := fn(); err != nil {
 		logger.Print("❌ %v", err)
@@ -95,8 +121,20 @@ func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger
 	deployerRunner.UpdateTSSAddressForConnectorNative()
 	deployerRunner.UpdateTSSAddressForERC20custody()
 	deployerRunner.UpdateTSSAddressForGateway()
-	deployerRunner.UpdateTSSAddressSolana(
-		conf.Contracts.Solana.GatewayProgramID.String(),
-		conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	if testSolana {
+		deployerRunner.UpdateTSSAddressSolana(
+			conf.Contracts.Solana.GatewayProgramID.String(),
+			conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	}
+	if testSui {
+		deployerRunner.UpdateTSSAddressSui(conf.RPCs.SuiFaucet)
+	}
+
+	if testTon {
+		deployerRunner.UpdateTSSAddressTON(
+			conf.Contracts.TON.GatewayAccountID.String(),
+			conf.RPCs.TONFaucet,
+		)
+	}
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

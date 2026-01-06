@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/montanaflynn/stats"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -44,7 +44,6 @@ func TestStressSuiWithdraw(r *runner.E2ERunner, args []string) {
 	revertOptions := gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
 	for i := range numWithdrawals {
 		// each goroutine captures its own copy of i
-		i := i
 		tx := r.SuiWithdraw(signer.Address(), amount, r.SUIZRC20Addr, revertOptions)
 
 		// wait for receipt before next withdrawal to avoid race condition

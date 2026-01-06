@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -40,6 +39,7 @@ const (
 	flagTestEthStress          = "test-stress-eth"
 	flagTestSolanaStress       = "test-stress-solana"
 	flagTestSuiStress          = "test-stress-sui"
+	flagTestZEVMStress         = "test-stress-zevm"
 	flagIterations             = "iterations"
 	flagTestSolana             = "test-solana"
 	flagTestSui                = "test-sui"
@@ -51,7 +51,10 @@ const (
 	flagLight                  = "light"
 	flagSetupOnly              = "setup-only"
 	flagSkipSetup              = "skip-setup"
-	flagTestTSSMigration       = "test-tss-migration"
+	flagTSSMigrationAddObs     = "tss-migration-add-observer"
+	flagTSSMigrationRemoveObs  = "tss-migration-remove-observer"
+	flagReplaceObserver        = "replace-observer"
+	flagReuseTSSFrom           = "reuse-tss-from"
 	flagSkipBitcoinSetup       = "skip-bitcoin-setup"
 	flagSkipHeaderProof        = "skip-header-proof"
 	flagTestLegacy             = "test-legacy"
@@ -61,10 +64,14 @@ const (
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
+	flagTestTimeout            = "test-timeout"
+	flagV2ZETAFlows            = "v2-zeta-flows"
+	flagReceiptTimeout         = "receipt-timeout"
+	flagCctxTimeout            = "cctx-timeout"
+	previousVersion            = "v32.0.2"
 )
 
 var (
-	TestTimeout        = 20 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
 	noError            = testutil.NoError
 )
@@ -85,6 +92,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestEthStress, false, "set to true to run eth stress tests")
 	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run Solana stress tests")
 	cmd.Flags().Bool(flagTestSuiStress, false, "set to true to run sui stress tests")
+	cmd.Flags().Bool(flagTestZEVMStress, false, "set to true to run direct zevm stress tests")
 	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run Solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
@@ -99,7 +107,11 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
 	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 	cmd.Flags().Bool(flagSkipHeaderProof, false, "set to true to skip header proof tests")
-	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
+	cmd.Flags().Bool(flagTSSMigrationAddObs, false, "set to true to add a new observer before TSS migration")
+	cmd.Flags().Bool(flagTSSMigrationRemoveObs, false, "set to true to remove an observer before TSS migration")
+	cmd.Flags().Bool(flagReplaceObserver, false, "set to true to run observer replacement flow after tests")
+	cmd.Flags().
+		String(flagReuseTSSFrom, "zetaclient2", "zetaclient container to reuse TSS/hotkey from for observer replacement")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
 	cmd.Flags().
@@ -109,6 +121,10 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 	cmd.Flags().
 		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().Bool(flagV2ZETAFlows, false, "set to true to enable V2 ZETA gateway flows")
+	cmd.Flags().Duration(flagTestTimeout, DefaultTestTimeout, "overall timeout for the e2e tests")
+	cmd.Flags().Duration(flagReceiptTimeout, DefaultReceiptTimeout, "timeout for waiting for transaction receipts")
+	cmd.Flags().Duration(flagCctxTimeout, DefaultCctxTimeout, "timeout for waiting for CCTX to reach desired status")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -128,6 +144,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testEthStress          = must(cmd.Flags().GetBool(flagTestEthStress))
 		testSolanaStress       = must(cmd.Flags().GetBool(flagTestSolanaStress))
 		testSuiStress          = must(cmd.Flags().GetBool(flagTestSuiStress))
+		testZEVMStress         = must(cmd.Flags().GetBool(flagTestZEVMStress))
 		iterations             = must(cmd.Flags().GetInt(flagIterations))
 		testSolana             = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON                = must(cmd.Flags().GetBool(flagTestTON))
@@ -142,16 +159,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipBitcoinSetup       = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
 		skipHeaderProof        = must(cmd.Flags().GetBool(flagSkipHeaderProof))
 		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		tssMigrationAddObs     = must(cmd.Flags().GetBool(flagTSSMigrationAddObs))
+		tssMigrationRemoveObs  = must(cmd.Flags().GetBool(flagTSSMigrationRemoveObs))
+		replaceObs             = must(cmd.Flags().GetBool(flagReplaceObserver))
+		reuseTSSFrom           = must(cmd.Flags().GetString(flagReuseTSSFrom))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
+		v2ZETAFlows            = must(cmd.Flags().GetBool(flagV2ZETAFlows))
 
-		testStress        = testEthStress || testSolanaStress || testSuiStress
-		shouldSetupSolana = setupSolana || testSolana || testStress
-		shouldSetupSui    = setupSui || testSui || testStress
+		testStress        = testEthStress || testSolanaStress || testSuiStress || testZEVMStress
+		shouldSetupSolana = setupSolana || testSolana || testSolanaStress
+		shouldSetupSui    = setupSui || testSui || testSuiStress
 		shouldSetupTON    = setupTON || testTON
 	)
 
@@ -173,22 +194,22 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
-	// skip regular tests if stress tests are enabled
+	timeouts := RegularTestTimeouts(cmd)
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
-
-		if iterations > 100 {
-			TestTimeout = time.Hour
-		}
+		timeouts = StressTestTimeouts(cmd, iterations)
 	}
+
+	logger.Print("⏱️  Test timeouts: TestTimeout=%s, ReceiptTimeout=%s, CctxTimeout=%s",
+		timeouts.TestTimeout, timeouts.ReceiptTimeout, timeouts.CctxTimeout)
 
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
 
 	// initialize context
-	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
+	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), timeouts.TestTimeout, ErrTopLevelTimeout)
 	defer timeoutCancel()
 	ctx, cancel := context.WithCancelCause(ctx)
 
@@ -246,7 +267,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(deployerRunner.FundEmissionsPool())
 
 		// wait for keygen to be completed
-		// if setup is skipped, we assume that the keygen is already completed
+		//  if the setup is skipped, we assume that the keygen is already completed
 		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
@@ -260,6 +281,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}))
 	}
 
+	if v2ZETAFlows {
+		noError(deployerRunner.EnableV2ZETAFlows())
+	}
+
 	// setting up the networks
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
@@ -268,7 +293,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// setup TSS address and setup deployer wallet
 		deployerRunner.SetupBitcoinAccounts(true)
 
-		//setup protocol contracts v1 as they are still supported for now
+		//setup evm contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
@@ -311,7 +336,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.AddPostUpgradeHandler(runner.V36Version, func() {
-		deployerRunner.Logger.Print("Running post-upgrade setup for %s", runner.V36Version)
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup()
@@ -331,6 +355,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		noError(config.WriteConfig(configOut, newConfig))
 
 		logger.Print("✅ config file written in %s", configOut)
+	}
+
+	if deployerRunner.ReceiptTimeout == 0 {
+		deployerRunner.ReceiptTimeout = timeouts.ReceiptTimeout
+	}
+	if deployerRunner.CctxTimeout == 0 {
+		deployerRunner.CctxTimeout = timeouts.CctxTimeout
 	}
 
 	deployerRunner.PrintContractAddresses()
@@ -360,6 +391,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		eg.Go(rpcTestRoutine(
+			conf,
+			deployerRunner,
+			verbose,
+			e2etests.TestZEVMRPCName,
+		))
 	}
 
 	if testAdmin {
@@ -367,6 +404,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestUpdateZRC20NameName,
 			e2etests.TestZetaclientSignerOffsetName,
 			e2etests.TestZetaclientRestartHeightName,
+			e2etests.TestZetaclientMinimumVersionName,
 			e2etests.TestWhitelistERC20Name,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeZRC20Name,
@@ -396,6 +434,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			testEthStress,
 			testSolanaStress,
 			testSuiStress,
+			testZEVMStress,
 			&eg,
 		)
 	}
@@ -421,8 +460,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !deployerRunner.IsRunningUpgrade() && !light {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositThroughProgramName,
+				e2etests.TestSolanaDepositThroughProgramAddressLookupTableName,
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestSolanaWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
 				e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
 				e2etests.TestZEVMToSolanaCallName,
@@ -444,6 +485,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallAddressLookupTableName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
 				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 				// TODO move under admin tests
@@ -611,20 +653,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// https://github.com/zeta-chain/node/issues/4038
 	// https://github.com/zeta-chain/node/issues/4315
 	runSuiGatewayUpgradeTests := func() bool {
-		if deployerRunner.IsRunningZetaclientOnlyUpgrade() {
-			return false
-		}
-		// do not if we are running and upgrade and this is the second run
-		if deployerRunner.IsRunningUpgrade() && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
-			return false
-		}
-		// do not run if we are running TSS migration tests and this is the second run
-		if testTSSMigration && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
+		if deployerRunner.IsRunningZetaclientOnlyUpgrade() || runner.IsSecondRun() {
 			return false
 		}
 		return testSui
 	}
-
 	// Run gateway upgrade tests for external chains
 	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
 		TestSolana: testSolana,
@@ -645,9 +678,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	if testTSSMigration {
+	if tssMigrationAddObs {
 		addNewObserver(deployerRunner)
-		triggerTSSMigration(deployerRunner, logger, verbose, conf)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana, testSui, testTON)
+	}
+
+	if tssMigrationRemoveObs {
+		err = deployerRunner.RemoveObserver()
+		noError(err)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf, testSolana, testSui, testTON)
+	}
+
+	// replace an observer with a new one without needing to do a tss migration
+	if replaceObs {
+		replaceObserver(deployerRunner, reuseTSSFrom)
 	}
 
 	// Verify that there are no trackers left over after tests complete
@@ -693,8 +737,22 @@ func runE2EStressTests(
 	testEthStress bool,
 	testSolanaStress bool,
 	testSuiStress bool,
+	testZEVMStress bool,
 	eg *errgroup.Group,
 ) {
+	if testZEVMStress {
+		eg.Go(
+			zevmPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressZEVMName},
+				deployerRunner.Account,
+				iterations,
+			),
+		)
+	}
+
 	if testEthStress {
 		eg.Go(
 			ethereumDepositPerformanceRoutine(
@@ -822,7 +880,21 @@ func waitKeygenHeight(
 		logger.Info("Last ZetaHeight: %d", response.Height)
 
 		if response.Height >= keygenHeight+bufferBlocks {
-			return nil
+			// Check keygen status before exiting
+			keygenResp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
+			if err != nil {
+				logger.Error("observerClient.Keygen error: %s", err)
+				continue
+			}
+			if keygenResp.Keygen == nil {
+				logger.Error("keygen is nil")
+				continue
+			}
+			if keygenResp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess {
+				logger.Print("✅ keygen successful")
+				return nil
+			}
+			logger.Info("keygen status: %s, waiting...", keygenResp.Keygen.Status.String())
 		}
 	}
 }

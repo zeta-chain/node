@@ -18,6 +18,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
@@ -41,7 +43,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -59,7 +61,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no ZetaSent event", func(t *testing.T) {
@@ -77,7 +79,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
+		ballot, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, true, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -98,7 +100,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
+		_, err := ob.checkAndVoteInboundTokenZetaFromV1Tracker(ob.ctx, tx, receipt, true, false)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")
@@ -126,7 +128,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -144,7 +146,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, false, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no Deposit event", func(t *testing.T) {
@@ -162,7 +164,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
+		ballot, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, true, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -184,7 +186,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
+		_, err := ob.checkAndVoteInboundTokenERC20FromV1Tracker(ob.ctx, tx, receipt, true, false)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")
@@ -213,7 +215,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false, false, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -225,7 +227,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		_, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false, false, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if receiver is not TSS", func(t *testing.T) {
@@ -237,7 +239,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false, false, false)
 		require.ErrorContains(t, err, "not TSS address")
 		require.Equal(t, "", ballot)
 	})
@@ -250,7 +252,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false, false, false)
 		require.ErrorContains(t, err, "not a successful tx")
 		require.Equal(t, "", ballot)
 	})
@@ -263,7 +265,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false, false, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -447,26 +449,27 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name               string
-		mockEVMClient      func(m *mocks.ObserverEvmClient)
+		mockEVMClient      func(m *mocks.EVMClient)
 		mockZetacoreClient func(m *mocks.ZetacoreClient)
 		errMsg             string
 	}{
 		{
 			name: "should observe TSS receive in block",
-			mockEVMClient: func(m *mocks.ObserverEvmClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number and receipt to mock client
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			mockZetacoreClient: func(m *mocks.ZetacoreClient) {
-				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, errors.New("not found"))
+				err := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
 			},
 			errMsg: "",
 		},
 		{
 			name: "should not observe on error getting block",
-			mockEVMClient: func(m *mocks.ObserverEvmClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number to allow construction of observer
 				m.On("BlockNumber", mock.Anything).Unset()
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Unset()
@@ -478,7 +481,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 		},
 		{
 			name: "should not observe on error getting receipt",
-			mockEVMClient: func(m *mocks.ObserverEvmClient) {
+			mockEVMClient: func(m *mocks.EVMClient) {
 				// feed block number but RPC error on getting receipt
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
@@ -497,7 +500,6 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			if tt.mockEVMClient != nil {
 				tt.mockEVMClient(ob.evmMock)
 			}
-
 			if tt.mockZetacoreClient != nil {
 				tt.mockZetacoreClient(ob.zetacore)
 			}

@@ -13,16 +13,17 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/mode"
 )
 
 // Signer Sui outbound transaction signer.
 type Signer struct {
 	*base.Signer
 
-	zetacoreClient interfaces.ZetacoreClient
-	suiClient      SuiClient
+	zetaRepo  *zrepo.ZetaRepo
+	suiClient SuiClient
 
 	gateway        *sui.Gateway
 	withdrawCap    *tssOwnedObject
@@ -34,8 +35,8 @@ type SuiClient interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 
 	SuiXGetDynamicFieldObject(
-		context.Context,
-		models.SuiXGetDynamicFieldObjectRequest,
+		_ context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
 	) (models.SuiObjectResponse, error)
 
 	GetOwnedObjectID(_ context.Context,
@@ -56,11 +57,6 @@ type SuiClient interface {
 
 	MoveCall(context.Context, models.MoveCallRequest) (models.TxnMetaData, error)
 
-	SuiExecuteTransactionBlock(
-		context.Context,
-		models.SuiExecuteTransactionBlockRequest,
-	) (models.SuiTransactionBlockResponse, error)
-
 	InspectTransactionBlock(
 		context.Context,
 		models.SuiDevInspectTransactionBlockRequest,
@@ -70,17 +66,23 @@ type SuiClient interface {
 		context.Context,
 		models.SuiGetTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
+
+	// This is a mutating function that does not get called when zetaclient is in dry-mode.
+	SuiExecuteTransactionBlock(
+		context.Context,
+		models.SuiExecuteTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
 }
 
 // New Signer constructor.
 func New(baseSigner *base.Signer,
-	zetacoreClient interfaces.ZetacoreClient,
+	zetaRepo *zrepo.ZetaRepo,
 	suiClient SuiClient,
 	gateway *sui.Gateway,
 ) *Signer {
 	return &Signer{
 		Signer:         baseSigner,
-		zetacoreClient: zetacoreClient,
+		zetaRepo:       zetaRepo,
 		suiClient:      suiClient,
 		gateway:        gateway,
 		withdrawCap:    &tssOwnedObject{},
@@ -140,6 +142,11 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	if err := sui.ValidateAddress(receiver); err != nil {
 		validReceiver = false
 		logger.Error().Err(err).Str("receiver", receiver).Msg("invalid receiver address")
+	}
+
+	if s.ClientMode.IsDryMode() {
+		logger.Info().Stringer(logs.FieldMode, mode.DryMode).Msg("skipping outbound processing")
+		return nil
 	}
 
 	// broadcast tx according to compliance check result

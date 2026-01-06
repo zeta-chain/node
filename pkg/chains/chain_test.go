@@ -236,7 +236,6 @@ func TestChain_EncodeAddress(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			s, err := tc.chain.EncodeAddress(tc.b)
 			if tc.wantErr {

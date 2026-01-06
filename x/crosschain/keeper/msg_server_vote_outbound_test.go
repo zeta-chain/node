@@ -86,6 +86,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 	tt := []struct {
 		name                               string
 		userGasFeePaidIsNil                bool
+		effectiveGasPriceIsNil             bool
 		gasUsed                            uint64
 		effectiveGasPrice                  math.Int
 		effectiveGasLimit                  uint64
@@ -339,10 +340,32 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectRefundRemainingFeesCall:   false,
 			fundStabilityPoolExpectedAmount: big.NewInt(475),
 		},
+		{
+			name:                          "legacy: no panic and no call if effectiveGasPrice is nil",
+			userGasFeePaidIsNil:           true,
+			effectiveGasPriceIsNil:        true,
+			effectiveGasLimit:             100,
+			gasUsed:                       50,
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+		},
+		{
+			name:                          "updated flow: no panic and no call if effectiveGasPrice is nil",
+			userGasFeePaidIsNil:           false,
+			effectiveGasPriceIsNil:        true,
+			receiverChainID:               ethChainID,
+			senderChainID:                 zetaChainID,
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			gasUsed:                       50,
+			userGasFeePaid:                math.NewUint(1000),
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+		},
 	}
 
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx := keepertest.CrosschainKeeperAllMocks(t)
 			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
@@ -352,7 +375,12 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			// Setup outbound params
 			outbound := sample.OutboundParams(r)
 			outbound.GasUsed = tc.gasUsed
-			outbound.EffectiveGasPrice = tc.effectiveGasPrice
+			if !tc.effectiveGasPriceIsNil {
+				outbound.EffectiveGasPrice = tc.effectiveGasPrice
+			} else {
+				var nilInt math.Int
+				outbound.EffectiveGasPrice = nilInt
+			}
 			outbound.EffectiveGasLimit = tc.effectiveGasLimit
 			outbound.ReceiverChainId = tc.receiverChainID
 			if !tc.userGasFeePaidIsNil {
@@ -618,7 +646,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 
 		//Successfully mock SaveOutbound
 		expectedNumberOfOutboundParams := 2
-		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss, expectedNumberOfOutboundParams)
+		keepertest.MockSaveOutboundNewRevertCreated(observerMock, ctx, cctx, tss)
 		oldParamsLen := len(cctx.OutboundParams)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		msg := types.MsgVoteOutbound{
@@ -705,9 +733,8 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		require.Equal(t, msg.Digest(), c.OutboundParams[0].BallotIndex)
 		require.Equal(t, "", c.GetCurrentOutboundParam().BallotIndex)
 		// The message processing fails during the creation of the revert tx
-		// So the original outbound tx is executed and the revert tx is not finalized.
-		// The cctx status is Aborted
-		require.Equal(t, types.TxFinalizationStatus_NotFinalized, c.GetCurrentOutboundParam().TxFinalizationStatus)
+		// Both outbounds are set to Executed when CCTX is aborted to ensure proper cleanup of pending nonces.
+		require.Equal(t, types.TxFinalizationStatus_Executed, c.GetCurrentOutboundParam().TxFinalizationStatus)
 		require.Equal(t, types.TxFinalizationStatus_Executed, c.OutboundParams[oldParamsLen-1].TxFinalizationStatus)
 	})
 
@@ -878,6 +905,8 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		// Set TxFinalizationStatus to Executed so the nonce is removed from pending nonces
+		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
 			Index:    "",
 			ChainId:  cctx.GetCurrentOutboundParam().ReceiverChainId,
@@ -930,6 +959,8 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		// setup state for crosschain and observer modules
 		cctx := sample.CrossChainTx(t, "test")
 		for _, outboundParams := range cctx.OutboundParams {
+			// Set TxFinalizationStatus to Executed so the nonces are removed from pending nonces
+			outboundParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 			k.SetOutboundTracker(ctx, types.OutboundTracker{
 				Index:    "",
 				ChainId:  outboundParams.ReceiverChainId,

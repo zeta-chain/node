@@ -17,10 +17,18 @@ func MigrateStore(
 	keeper authorityKeeper,
 ) error {
 	var (
-		authorizationList      = types.DefaultAuthorizationsList()
+		authorizationList           = types.DefaultAuthorizationsList()
+		removeObserverAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgRemoveObserver",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
 		whitelistAuthorization = types.Authorization{
 			MsgUrl:           "/zetachain.zetacore.crosschain.MsgWhitelistAsset",
 			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
+		updateV2ZetaFlowsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateV2ZetaFlows",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
 		}
 	)
 
@@ -29,16 +37,15 @@ func MigrateStore(
 		authorizationList = al
 	}
 
-	// Add the new authorization
+	authorizationList.SetAuthorization(removeObserverAuthorization)
 	authorizationList.SetAuthorization(whitelistAuthorization)
+	authorizationList.SetAuthorization(updateV2ZetaFlowsAuthorization)
 
 	// Validate the authorization list
 	err := authorizationList.Validate()
 	if err != nil {
 		return err
 	}
-
-	// Set the new authorization list
 	keeper.SetAuthorizationList(ctx, authorizationList)
 	return nil
 }
