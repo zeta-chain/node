@@ -18,9 +18,7 @@ import (
 )
 
 func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
-	var (
-		outboundChain = ctx.GetInboundChain()
-	)
+	outboundChain := c.OutboundChain
 
 	// We do not need to handle the case for zeta chain as the outbound is confirmed in the same block.
 	switch {
@@ -68,8 +66,8 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 			continue
 		}
 		// Signer is unused
-		c := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-		confirmed, err := c.IsTxConfirmed(goCtx, hash, chainParams.OutboundConfirmationSafe())
+		evmZetaClient := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
+		confirmed, err := evmZetaClient.IsTxConfirmed(goCtx, hash, chainParams.OutboundConfirmationSafe())
 		if err != nil {
 			continue
 		}

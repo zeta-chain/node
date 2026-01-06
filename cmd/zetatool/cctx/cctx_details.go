@@ -58,13 +58,13 @@ func (c *TrackingDetails) UpdateCCTXStatus(ctx *context.Context) {
 		goCtx          = ctx.GetContext()
 	)
 
-	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
+	cctxRes, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 		return
 	}
 
-	c.UpdateStatusFromZetacoreCCTX(CCTX.CctxStatus.Status)
+	c.UpdateStatusFromZetacoreCCTX(cctxRes.CctxStatus.Status)
 }
 
 // UpdateCCTXOutboundDetails updates the TrackingDetails with the outbound chain and nonce
@@ -73,16 +73,17 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 		zetacoreClient = ctx.GetZetaCoreClient()
 		goCtx          = ctx.GetContext()
 	)
-	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
+	cctxRes, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
+		return
 	}
-	outboundParams := CCTX.GetCurrentOutboundParam()
+	outboundParams := cctxRes.GetCurrentOutboundParam()
 	if outboundParams == nil {
 		c.Message = "outbound params not found"
 		return
 	}
-	chainID := CCTX.GetCurrentOutboundParam().ReceiverChainId
+	chainID := cctxRes.GetCurrentOutboundParam().ReceiverChainId
 
 	// This is almost impossible to happen as the cctx would not have been created if the chain was not supported
 	chain, found := chains.GetChainFromChainID(chainID, []chains.Chain{})
@@ -90,7 +91,7 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 		c.Message = fmt.Sprintf("receiver chain not supported,chain id: %d", chainID)
 	}
 	c.OutboundChain = chain
-	c.OutboundTssNonce = CCTX.GetCurrentOutboundParam().TssNonce
+	c.OutboundTssNonce = cctxRes.GetCurrentOutboundParam().TssNonce
 }
 
 // UpdateHashListAndPendingStatus updates the TrackingDetails with the hash list and updates pending status

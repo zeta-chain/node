@@ -378,8 +378,6 @@ func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) erro
 	return nil
 }
 
-func compareAddress(a string, b string) bool {
-	lowerA := strings.ToLower(a)
-	lowerB := strings.ToLower(b)
-	return strings.EqualFold(lowerA, lowerB)
+func compareAddress(a, b string) bool {
+	return strings.EqualFold(a, b)
 }
