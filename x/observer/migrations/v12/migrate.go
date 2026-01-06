@@ -25,9 +25,7 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		return err
 	}
 
-	if err := UpdateCrosschainFlags(ctx, observerKeeper); err != nil {
-		return err
-	}
+	UpdateCrosschainFlags(ctx, observerKeeper)
 
 	return nil
 }
@@ -60,7 +58,7 @@ func UpdateChainParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 }
 
 // UpdateCrosschainFlags disables V2 ZETA flows in the crosschain flags.
-func UpdateCrosschainFlags(ctx sdk.Context, observerKeeper observerKeeper) error {
+func UpdateCrosschainFlags(ctx sdk.Context, observerKeeper observerKeeper) {
 	flags, found := observerKeeper.GetCrosschainFlags(ctx)
 	if !found {
 		flags = *types.DefaultCrosschainFlags()
@@ -68,8 +66,6 @@ func UpdateCrosschainFlags(ctx sdk.Context, observerKeeper observerKeeper) error
 
 	flags.IsV2ZetaEnabled = false
 	observerKeeper.SetCrosschainFlags(ctx, flags)
-
-	return nil
 }
 
 // GetGasPriceMultiplierForChain returns the gas price multiplier for the given chain
