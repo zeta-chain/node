@@ -25,6 +25,8 @@ type CometBFTClient struct {
 
 	subscribers     map[string]chan<- coretypes.ResultEvent
 	subscribersLock sync.Mutex
+
+	numUnconfirmedTxs int
 }
 
 func (c *CometBFTClient) BroadcastTxCommit(
@@ -92,6 +94,20 @@ func (c *CometBFTClient) SetTxResult(txResult *coretypes.ResultTx) *CometBFTClie
 
 func (c *CometBFTClient) SetError(err error) *CometBFTClient {
 	c.err = err
+	return c
+}
+
+func (c *CometBFTClient) NumUnconfirmedTxs(_ context.Context) (*coretypes.ResultUnconfirmedTxs, error) {
+	if c.err != nil {
+		return nil, c.err
+	}
+	return &coretypes.ResultUnconfirmedTxs{
+		Count: c.numUnconfirmedTxs,
+	}, nil
+}
+
+func (c *CometBFTClient) SetNumUnconfirmedTxs(count int) *CometBFTClient {
+	c.numUnconfirmedTxs = count
 	return c
 }
 
