@@ -14,8 +14,6 @@ GOPATH ?= '$(HOME)/go'
 OLD_ZETACORED_VERSION := v36.0.1
 OLD_ZETACLIENTD_VERSION := zetaclient_v37.0.3
 OLD_ZETAE2E_VERSION := $(OLD_ZETACORED_VERSION)
-#UPGRADE VERSION is currently used for devnet fork script only, since we do not have a zetacored release for v37 yet
-DEVNET_UPGRADE_VERSION := v37.0.0
 OLD_ZETACORED_VERSION_MAJOR := $(shell echo $(OLD_ZETACORED_VERSION) | cut -d. -f1)
 
 # common goreaser command definition
