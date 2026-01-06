@@ -129,7 +129,6 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	// get fee rate multiplier, fallback to default if not set in chain params
 	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
 	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
 		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
@@ -173,12 +172,12 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %w", err)
 	}
-	// create evm client for the observation chain
+
 	tx, receipt, err := zetatoolchains.GetEvmTx(ctx, evmClient, inboundHash, inboundChain)
 	if err != nil {
 		return fmt.Errorf("failed to get tx: %w", err)
 	}
-	// Signer is unused
+
 	zetaEvmClient := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
 	isConfirmed, err := zetaEvmClient.IsTxConfirmed(goCtx, inboundHash, chainParams.InboundConfirmationSafe())
 	if err != nil {
@@ -195,12 +194,10 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	}
 
 	msg := &crosschaintypes.MsgVoteInbound{}
-	// Create inbound vote message based on the cointype and protocol version
 
 	switch {
 	case compareAddress(tx.To().Hex(), chainParams.ConnectorContractAddress):
 		{
-			// build inbound vote message and post vote
 			addrConnector := ethcommon.HexToAddress(chainParams.ConnectorContractAddress)
 			connector, err := zetaconnector.NewZetaConnectorNonEth(addrConnector, evmClient)
 			if err != nil {
@@ -324,7 +321,6 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
-	// Process address lookup tables before filtering events
 	resolvedTx := observer.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
 
 	events, err := observer.FilterInboundEvents(txResult,
@@ -340,7 +336,6 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 
 	msg := &crosschaintypes.MsgVoteInbound{}
 
-	// build inbound vote message from events and post to zetacore
 	for _, event := range events {
 		msg, err = zetatoolchains.VoteMsgFromSolEvent(event, zetaChainID)
 		if err != nil {

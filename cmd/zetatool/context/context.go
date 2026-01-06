@@ -34,8 +34,7 @@ func NewContext(ctx context.Context, inboundChainID int64, inboundHash string, c
 	if err != nil {
 		return nil, fmt.Errorf("failed to create zetacore client: %w", err)
 	}
-	// logger is used when calling internal zetaclient functions which need a logger.
-	// we do not need to log those messages for this tool
+
 	logger := zerolog.New(zerolog.ConsoleWriter{
 		Out:        zerolog.Nop(),
 		TimeFormat: time.RFC3339,

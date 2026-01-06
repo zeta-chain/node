@@ -17,7 +17,6 @@ import (
 // VoteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
 func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 	zetaChainID int64) (*crosschaintypes.MsgVoteInbound, error) {
-	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
 		event.Sender,
@@ -42,15 +41,12 @@ func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 }
 
 // GetSolanaGatewayBalance fetches the SOL balance of the gateway PDA
-// The gateway PDA holds all deposited SOL funds
 func GetSolanaGatewayBalance(ctx context.Context, rpcURL string, gatewayAddress string) (uint64, error) {
-	// Parse gateway address and derive PDA
 	_, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse gateway address: %w", err)
 	}
 
-	// Create Solana RPC client
 	client := solrpc.New(rpcURL)
 
 	result, err := client.GetBalance(ctx, pda, solrpc.CommitmentFinalized)

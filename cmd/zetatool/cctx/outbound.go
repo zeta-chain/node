@@ -20,7 +20,6 @@ import (
 func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
 	outboundChain := c.OutboundChain
 
-	// We do not need to handle the case for zeta chain as the outbound is confirmed in the same block.
 	switch {
 	case outboundChain.IsEVMChain():
 		return c.checkEvmOutboundTx(ctx)
@@ -49,23 +48,17 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	// create evm client for the observation chain
 	evmClient, err := zetatoolchains.GetEvmClient(ctx, outboundChain)
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %w", err)
 	}
 
 	foundConfirmedTx := false
-
-	// If one of the hash is confirmed, we update the status to pending voting
-	// There might be a condition where we have multiple txs and the wrong tx is confirmed.
-	// To verify that we need, check CCTX data
 	for _, hash := range txHashList {
 		tx, _, err := zetatoolchains.GetEvmTx(ctx, evmClient, hash, outboundChain)
 		if err != nil {
 			continue
 		}
-		// Signer is unused
 		evmZetaClient := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
 		confirmed, err := evmZetaClient.IsTxConfirmed(goCtx, hash, chainParams.OutboundConfirmationSafe())
 		if err != nil {

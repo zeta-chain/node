@@ -61,7 +61,6 @@ func GetEvmTx(
 	chain chains.Chain,
 ) (*ethtypes.Transaction, *ethtypes.Receipt, error) {
 	goCtx := ctx.GetContext()
-	// Fetch transaction from the inbound
 	hash := ethcommon.HexToHash(inboundHash)
 	tx, isPending, err := evmClient.TransactionByHash(goCtx, hash)
 	if err != nil {
@@ -81,7 +80,6 @@ func ZetaTokenVoteV1(
 	event *zetaconnector.ZetaConnectorNonEthZetaSent,
 	observationChain int64,
 ) *crosschaintypes.MsgVoteInbound {
-	// note that this is most likely zeta chain
 	destChain, found := chains.GetChainFromChainID(event.DestinationChainId.Int64(), []chains.Chain{})
 	if !found {
 		return nil
@@ -116,7 +114,6 @@ func Erc20VoteV1(
 	observationChain int64,
 	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
-	// donation check
 	if bytes.Equal(event.Message, []byte(constant.DonationMessage)) {
 		return nil
 	}
@@ -175,13 +172,11 @@ func GasVoteV1(
 func DepositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 	senderChainID int64,
 	zetacoreChainID int64) *crosschaintypes.MsgVoteInbound {
-	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
 
-	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
 	isCrossChainCall := len(event.Payload) > 0
 
 	return crosschaintypes.NewMsgVoteInbound(
@@ -211,7 +206,6 @@ func DepositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 func DepositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 	senderChainID int64,
 	zetacoreChainID int64) *crosschaintypes.MsgVoteInbound {
-	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas

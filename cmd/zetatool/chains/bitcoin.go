@@ -88,13 +88,11 @@ func BitcoinBallotIdentifier(
 func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	senderChainID int64,
 	zetacoreChainID int64) (cctxIdentifier string, err error) {
-	// decode event memo bytes
 	err = event.DecodeMemoBytes(senderChainID)
 	if err != nil {
 		return
 	}
 
-	// convert the amount to integer (satoshis)
 	amountSats, err := common.GetSatoshis(event.Value)
 	if err != nil {
 		return
@@ -158,12 +156,10 @@ func voteFromStdMemo(
 	senderChainID int64,
 	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
-	// zetacore will create a revert outbound that points to the custom revert address.
 	revertOptions := crosschaintypes.RevertOptions{
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 	}
 
-	// check if the memo is a cross-chain call, or simple token deposit
 	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
 
 	return crosschaintypes.NewMsgVoteInbound(
