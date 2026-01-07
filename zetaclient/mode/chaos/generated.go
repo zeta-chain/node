@@ -3,9 +3,6 @@ package chaos
 
 import (
 	m2 "context"
-	m20 "math/big"
-	m18 "time"
-
 	m28 "github.com/block-vision/sui-go-sdk/models"
 	m13 "github.com/btcsuite/btcd/btcjson"
 	m17 "github.com/btcsuite/btcd/btcutil"
@@ -40,6 +37,8 @@ import (
 	m0 "github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	m7 "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	m36 "github.com/zeta-chain/node/zetaclient/tss"
+	m20 "math/big"
+	m18 "time"
 )
 
 // ------------------------------------------------------------------------------------------------
