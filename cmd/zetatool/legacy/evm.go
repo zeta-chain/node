@@ -1,4 +1,4 @@
-package ballots
+package legacy
 
 import (
 	"bytes"

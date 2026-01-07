@@ -54,11 +54,11 @@ func (c *TrackingDetails) DebugPrint() string {
 // UpdateCCTXStatus updates the TrackingDetails with status from zetacore
 func (c *TrackingDetails) UpdateCCTXStatus(ctx *context.Context) {
 	var (
-		zetacoreReader = ctx.GetZetacoreReader()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 	)
 
-	cctxRes, err := zetacoreReader.GetCctxByHash(goCtx, c.CCTXIdentifier)
+	cctxRes, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 		return
@@ -70,10 +70,10 @@ func (c *TrackingDetails) UpdateCCTXStatus(ctx *context.Context) {
 // UpdateCCTXOutboundDetails updates the TrackingDetails with the outbound chain and nonce
 func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 	var (
-		zetacoreReader = ctx.GetZetacoreReader()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 	)
-	cctxRes, err := zetacoreReader.GetCctxByHash(goCtx, c.CCTXIdentifier)
+	cctxRes, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 		return
@@ -97,13 +97,13 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 // If the tracker is not found, it means the outbound is not broadcast yet; we are waiting for the tss to sign the outbound
 func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	var (
-		zetacoreReader = ctx.GetZetacoreReader()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 		outboundChain  = c.OutboundChain
 		outboundNonce  = c.OutboundTssNonce
 	)
 
-	tracker, err := zetacoreReader.GetOutboundTracker(goCtx, outboundChain.ChainId, outboundNonce)
+	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain.ChainId, outboundNonce)
 	if err == nil && tracker != nil {
 		c.updateOutboundConfirmation()
 		var hashList []string

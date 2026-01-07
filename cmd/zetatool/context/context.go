@@ -15,7 +15,7 @@ import (
 type Context struct {
 	ctx            context.Context
 	config         *config.Config
-	zetacoreReader clients.ZetacoreReader
+	zetacoreClient clients.ZetacoreClient
 	inboundHash    string
 	inboundChain   chains.Chain
 	logger         zerolog.Logger
@@ -31,7 +31,7 @@ func NewContext(ctx context.Context, inboundChainID int64, inboundHash string, c
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
 
-	zetacoreReader, err := clients.NewZetacoreReaderAdapter(cfg.ZetaChainRPC)
+	zetacoreClient, err := clients.NewZetacoreClientAdapter(cfg.ZetaChainRPC)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func NewContext(ctx context.Context, inboundChainID int64, inboundHash string, c
 	return &Context{
 		ctx:            ctx,
 		config:         cfg,
-		zetacoreReader: zetacoreReader,
+		zetacoreClient: zetacoreClient,
 		inboundChain:   observationChain,
 		inboundHash:    inboundHash,
 		logger:         logger,
@@ -58,8 +58,8 @@ func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *Context) GetZetacoreReader() clients.ZetacoreReader {
-	return c.zetacoreReader
+func (c *Context) GetZetacoreClient() clients.ZetacoreClient {
+	return c.zetacoreClient
 }
 
 func (c *Context) GetInboundHash() string {

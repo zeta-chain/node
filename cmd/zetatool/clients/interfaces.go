@@ -18,6 +18,7 @@ type EVMClient interface {
 	TransactionByHash(ctx context.Context, hash string) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(ctx context.Context, hash string) (*ethtypes.Receipt, error)
 	ChainID(ctx context.Context) (*big.Int, error)
+	BlockNumber(ctx context.Context) (uint64, error)
 }
 
 // BitcoinClient defines the interface for Bitcoin chain interactions
@@ -32,9 +33,19 @@ type SolanaClient interface {
 	GetTransaction(ctx context.Context, signature solana.Signature) (*solrpc.GetTransactionResult, error)
 }
 
-// ZetacoreReader defines the read-only interface for querying ZetaCore.
+// SuiClient defines the interface for Sui chain interactions
+type SuiClient interface {
+	GetBalance(ctx context.Context, address string) (uint64, error)
+}
+
+// TONClient defines the interface for TON chain interactions
+type TONClient interface {
+	GetAccountBalance(ctx context.Context, address string) (uint64, error)
+}
+
+// ZetacoreClient defines the read-only interface for querying ZetaCore.
 // This interface contains only the methods that zetatool needs for CCTX tracking.
-type ZetacoreReader interface {
+type ZetacoreClient interface {
 	// CCTX queries
 	GetCctxByHash(ctx context.Context, hash string) (*crosschaintypes.CrossChainTx, error)
 	InboundHashToCctxData(ctx context.Context, hash string) (*crosschaintypes.QueryInboundHashToCctxDataResponse, error)

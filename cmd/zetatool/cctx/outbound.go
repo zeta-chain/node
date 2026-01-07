@@ -37,16 +37,16 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 	var (
 		txHashList     = c.OutboundTrackerHashList
 		outboundChain  = c.OutboundChain
-		zetacoreReader = ctx.GetZetacoreReader()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 	)
 
-	chainParams, err := zetacoreReader.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
+	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	evmClient, err := zetatoolclients.NewEVMClientForChain(outboundChain, ctx.GetConfig())
+	evmClient, err := zetatoolclients.NewEVMClientAdapter(outboundChain, ctx.GetConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %w", err)
 	}
@@ -101,13 +101,13 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 	var (
 		txHashList     = c.OutboundTrackerHashList
 		outboundChain  = c.OutboundChain
-		zetacoreReader = ctx.GetZetacoreReader()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 		cfg            = ctx.GetConfig()
 		logger         = ctx.GetLogger()
 	)
 
-	chainParams, err := zetacoreReader.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
+	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
