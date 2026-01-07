@@ -7,15 +7,15 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/cmd/zetatool/clients"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
-	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
 type Context struct {
 	ctx            context.Context
 	config         *config.Config
-	zetaCoreClient zetacorerpc.Clients
+	zetacoreReader clients.ZetacoreReader
 	inboundHash    string
 	inboundChain   chains.Chain
 	logger         zerolog.Logger
@@ -30,9 +30,10 @@ func NewContext(ctx context.Context, inboundChainID int64, inboundHash string, c
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
-	zetacoreClient, err := zetacorerpc.NewCometBFTClients(cfg.ZetaChainRPC)
+
+	zetacoreReader, err := clients.NewZetacoreReaderAdapter(cfg.ZetaChainRPC)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create zetacore client: %w", err)
+		return nil, err
 	}
 
 	logger := zerolog.New(zerolog.ConsoleWriter{
@@ -42,7 +43,7 @@ func NewContext(ctx context.Context, inboundChainID int64, inboundHash string, c
 	return &Context{
 		ctx:            ctx,
 		config:         cfg,
-		zetaCoreClient: zetacoreClient,
+		zetacoreReader: zetacoreReader,
 		inboundChain:   observationChain,
 		inboundHash:    inboundHash,
 		logger:         logger,
@@ -57,8 +58,8 @@ func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *Context) GetZetaCoreClient() zetacorerpc.Clients {
-	return c.zetaCoreClient
+func (c *Context) GetZetacoreReader() clients.ZetacoreReader {
+	return c.zetacoreReader
 }
 
 func (c *Context) GetInboundHash() string {

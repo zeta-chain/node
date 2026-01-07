@@ -53,16 +53,3 @@ func NetworkTypeFromChain(chain chains.Chain) string {
 		return "mainnet"
 	}
 }
-
-// ListAvailableChains returns a formatted string of all available chains
-func ListAvailableChains() string {
-	allChains := chains.CombineDefaultChainsList([]chains.Chain{})
-	var sb strings.Builder
-
-	sb.WriteString("Available chains:\n")
-	for _, chain := range allChains {
-		sb.WriteString(fmt.Sprintf("  %s (ID: %d)\n", chain.Name, chain.ChainId))
-	}
-
-	return sb.String()
-}

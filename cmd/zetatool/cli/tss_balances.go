@@ -10,7 +10,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/cmd/zetatool/chains"
+	"github.com/zeta-chain/node/cmd/zetatool/clients"
 	zetatoolcommon "github.com/zeta-chain/node/cmd/zetatool/common"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
@@ -179,7 +179,7 @@ func printTSSBalances(
 		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
 
-	btcChainID := chains.GetBTCChainID(network)
+	btcChainID := clients.GetBTCChainID(network)
 	req := &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
 		FinalizedZetaHeight: tss.FinalizedZetaHeight,
 		BitcoinChainId:      btcChainID,
@@ -232,7 +232,7 @@ func printTSSBalances(
 		wg.Add(1)
 		go func(c pkgchains.Chain, rpcURL string) {
 			defer wg.Done()
-			balance, err := chains.GetEVMBalance(ctx, rpcURL, evmAddr)
+			balance, err := clients.GetEVMBalance(ctx, rpcURL, evmAddr)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -245,7 +245,7 @@ func printTSSBalances(
 			results <- chainBalance{
 				Chain:   c.Name,
 				Address: evmAddr.Hex(),
-				Balance: chains.FormatEVMBalance(balance),
+				Balance: clients.FormatEVMBalance(balance),
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
@@ -267,7 +267,7 @@ func printTSSBalances(
 				}
 				return
 			}
-			balance, err := chains.GetBTCBalance(ctx, btcAddr, c.ChainId)
+			balance, err := clients.GetBTCBalance(ctx, btcAddr, c.ChainId)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -302,7 +302,7 @@ func printTSSBalances(
 		wg.Add(1)
 		go func(c pkgchains.Chain, rpcURL string) {
 			defer wg.Done()
-			balance, err := chains.GetSuiBalance(ctx, rpcURL, suiAddr)
+			balance, err := clients.GetSuiBalance(ctx, rpcURL, suiAddr)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -315,7 +315,7 @@ func printTSSBalances(
 			results <- chainBalance{
 				Chain:   c.Name,
 				Address: suiAddr,
-				Balance: chains.FormatSuiBalance(balance),
+				Balance: clients.FormatSuiBalance(balance),
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
@@ -362,7 +362,7 @@ func printTSSBalances(
 				return
 			}
 
-			balance, err := chains.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
+			balance, err := clients.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -376,7 +376,7 @@ func printTSSBalances(
 			results <- chainBalance{
 				Chain:   c.Name,
 				Address: gatewayAddress,
-				Balance: chains.FormatSolanaBalance(balance),
+				Balance: clients.FormatSolanaBalance(balance),
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}
@@ -423,7 +423,7 @@ func printTSSBalances(
 				return
 			}
 
-			balance, err := chains.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
+			balance, err := clients.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -437,7 +437,7 @@ func printTSSBalances(
 			results <- chainBalance{
 				Chain:   c.Name,
 				Address: gatewayAddress,
-				Balance: chains.FormatTONBalance(balance),
+				Balance: clients.FormatTONBalance(balance),
 				Symbol:  getSymbolForChain(c),
 				VM:      c.Vm,
 			}

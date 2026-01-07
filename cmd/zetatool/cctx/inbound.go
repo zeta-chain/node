@@ -4,23 +4,28 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
-	zetatoolchains "github.com/zeta-chain/node/cmd/zetatool/chains"
+	"github.com/zeta-chain/node/cmd/zetatool/ballots"
+	zetatoolclients "github.com/zeta-chain/node/cmd/zetatool/clients"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/chains"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/x/observer/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	zetaevmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
+	solobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
@@ -89,7 +94,7 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		inboundChain   = ctx.GetInboundChain()
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreReader = ctx.GetZetacoreReader()
 		zetaChainID    = ctx.GetConfig().ZetaChainID
 		cfg            = ctx.GetConfig()
 		logger         = ctx.GetLogger()
@@ -108,47 +113,96 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		RPCParams:   params.Name,
 	}
 
-	rpcClient, err := client.New(connCfg, inboundChain.ChainId, logger)
+	btcClient, err := client.New(connCfg, inboundChain.ChainId, logger)
 	if err != nil {
 		return fmt.Errorf("unable to create rpc client: %w", err)
 	}
 
-	err = rpcClient.Ping(goCtx)
+	err = btcClient.Ping(goCtx)
 	if err != nil {
 		return fmt.Errorf("error ping the bitcoin server: %w", err)
 	}
 
-	res, err := zetacoreClient.Observer.GetTssAddress(goCtx, &types.QueryGetTssAddressRequest{})
+	tssBtcAddress, err := zetacoreReader.GetBTCTSSAddress(goCtx, inboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get tss address: %w", err)
 	}
-	tssBtcAddress := res.GetBtc()
 
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
+	chainParams, err := zetacoreReader.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	feeRateMultiplier := types.DefaultGasPriceMultiplier.MustFloat64()
+	feeRateMultiplier := observertypes.DefaultGasPriceMultiplier.MustFloat64()
 	if !chainParams.GasPriceMultiplier.IsNil() && chainParams.GasPriceMultiplier.IsPositive() {
 		feeRateMultiplier = chainParams.GasPriceMultiplier.MustFloat64()
 	}
 
-	cctxIdentifier, isConfirmed, err := zetatoolchains.BitcoinBallotIdentifier(
-		ctx,
-		rpcClient,
-		params,
+	confirmationCount := chainParams.InboundConfirmationSafe()
+
+	// Fetch transaction from Bitcoin RPC
+	hash, err := chainhash.NewHashFromStr(inboundHash)
+	if err != nil {
+		return fmt.Errorf("invalid tx hash: %w", err)
+	}
+
+	tx, err := btcClient.GetRawTransactionVerbose(goCtx, hash)
+	if err != nil {
+		return fmt.Errorf("failed to get transaction: %w", err)
+	}
+
+	isConfirmed := tx.Confirmations >= confirmationCount
+
+	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
+	if err != nil {
+		return fmt.Errorf("invalid block hash: %w", err)
+	}
+
+	blockVb, err := btcClient.GetBlockVerbose(goCtx, blockHash)
+	if err != nil {
+		return fmt.Errorf("failed to get block: %w", err)
+	}
+
+	// Build inbound event
+	event, err := btcobserver.GetBtcEventWithWitness(
+		goCtx,
+		btcClient,
+		*tx,
 		tssBtcAddress,
+		uint64(blockVb.Height), // #nosec G115 always positive
 		feeRateMultiplier,
-		inboundHash,
-		inboundChain.ChainId,
-		zetaChainID,
-		chainParams.InboundConfirmationSafe(),
+		zerolog.New(zerolog.Nop()),
+		params,
+		common.CalcDepositorFee,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to get bitcoin ballot identifier: %w", err)
+		return fmt.Errorf("failed to build btc event: %w", err)
 	}
-	c.CCTXIdentifier = cctxIdentifier
+	if event == nil {
+		return fmt.Errorf("no event built for btc sent to TSS")
+	}
+
+	// Decode memo and resolve amount using zetaclient's event methods
+	if err := event.DecodeMemoBytes(inboundChain.ChainId); err != nil {
+		return fmt.Errorf("failed to decode memo: %w", err)
+	}
+	if err := event.ResolveAmountForMsgVoteInbound(); err != nil {
+		return fmt.Errorf("failed to resolve amount: %w", err)
+	}
+
+	// Build vote message using zetaclient's standalone function
+	msg := btcobserver.NewBtcInboundVote(
+		event,
+		inboundChain.ChainId,
+		zetaChainID,
+		"",
+		crosschaintypes.ConfirmationMode_SAFE,
+	)
+	if msg == nil {
+		return fmt.Errorf("failed to create vote message for bitcoin inbound")
+	}
+
+	c.CCTXIdentifier = msg.Digest()
 	c.updateInboundConfirmation(isConfirmed)
 	return nil
 }
@@ -158,36 +212,35 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		inboundChain   = ctx.GetInboundChain()
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreReader = ctx.GetZetacoreReader()
 		zetaChainID    = ctx.GetConfig().ZetaChainID
 		goCtx          = ctx.GetContext()
 	)
 
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
+	chainParams, err := zetacoreReader.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	evmClient, err := zetatoolchains.GetEvmClient(ctx, inboundChain)
+	evmClient, err := zetatoolclients.NewEVMClientForChain(inboundChain, ctx.GetConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %w", err)
 	}
 
-	tx, receipt, err := zetatoolchains.GetEvmTx(ctx, evmClient, inboundHash, inboundChain)
+	tx, receipt, err := zetatoolclients.GetEvmTx(goCtx, evmClient, inboundHash, inboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get tx: %w", err)
 	}
 
-	zetaEvmClient := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-	isConfirmed, err := zetaEvmClient.IsTxConfirmed(goCtx, inboundHash, chainParams.InboundConfirmationSafe())
+	isConfirmed, err := zetatoolclients.IsTxConfirmed(goCtx, evmClient, inboundHash, chainParams.InboundConfirmationSafe())
 	if err != nil {
 		return fmt.Errorf("unable to confirm tx: %w", err)
 	}
-	res, err := zetacoreClient.Observer.GetTssAddress(goCtx, &types.QueryGetTssAddressRequest{})
+
+	tssEthAddress, err := zetacoreReader.GetEVMTSSAddress(goCtx)
 	if err != nil {
 		return fmt.Errorf("failed to get tss address: %w", err)
 	}
-	tssEthAddress := res.GetEth()
 
 	if tx.To() == nil {
 		return fmt.Errorf("invalid transaction,to field is empty %s", inboundHash)
@@ -206,7 +259,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			for _, log := range receipt.Logs {
 				event, err := connector.ParseZetaSent(*log)
 				if err == nil && event != nil {
-					msg = zetatoolchains.ZetaTokenVoteV1(event, inboundChain.ChainId)
+					msg = ballots.ZetaTokenVoteV1(event, inboundChain.ChainId)
 				}
 			}
 		}
@@ -224,7 +277,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			for _, log := range receipt.Logs {
 				zetaDeposited, err := custody.ParseDeposited(*log)
 				if err == nil && zetaDeposited != nil {
-					msg = zetatoolchains.Erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
+					msg = ballots.Erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
 				}
 			}
 		}
@@ -237,7 +290,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			if err != nil {
 				return fmt.Errorf("failed to get tx sender: %w", err)
 			}
-			msg = zetatoolchains.GasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
+			msg = ballots.GasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
 		}
 	default:
 		{
@@ -253,23 +306,40 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 				}
 				eventDeposit, err := gateway.ParseDeposited(*log)
 				if err == nil {
-					msg = zetatoolchains.DepositInboundVoteV2(eventDeposit, inboundChain.ChainId, zetaChainID)
+					voteMsg := evmobserver.NewDepositInboundVote(
+						eventDeposit,
+						inboundChain.ChainId,
+						zetaChainID,
+						"",
+						chainParams.ZetaTokenContractAddress,
+						crosschaintypes.ConfirmationMode_SAFE,
+					)
+					msg = &voteMsg
 					foundLog = true
 					break
 				}
 				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 				if err == nil {
-					msg = zetatoolchains.DepositAndCallInboundVoteV2(
+					voteMsg := evmobserver.NewDepositAndCallInboundVote(
 						eventDepositAndCall,
 						inboundChain.ChainId,
 						zetaChainID,
+						"",
+						chainParams.ZetaTokenContractAddress,
 					)
+					msg = &voteMsg
 					foundLog = true
 					break
 				}
 				eventCall, err := gateway.ParseCalled(*log)
 				if err == nil {
-					msg = zetatoolchains.CallInboundVoteV2(eventCall, inboundChain.ChainId, zetaChainID)
+					voteMsg := evmobserver.NewCallInboundVote(
+						eventCall,
+						inboundChain.ChainId,
+						zetaChainID,
+						"",
+					)
+					msg = &voteMsg
 					foundLog = true
 					break
 				}
@@ -289,7 +359,7 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		inboundChain   = ctx.GetInboundChain()
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreReader = ctx.GetZetacoreReader()
 		zetaChainID    = ctx.GetConfig().ZetaChainID
 		cfg            = ctx.GetConfig()
 		logger         = ctx.GetLogger()
@@ -311,7 +381,7 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("error getting transaction: %w", err)
 	}
 
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
+	chainParams, err := zetacoreReader.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
@@ -321,9 +391,9 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
-	resolvedTx := observer.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
+	resolvedTx := solobserver.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
 
-	events, err := observer.FilterInboundEvents(txResult,
+	events, err := solobserver.FilterInboundEvents(txResult,
 		gatewayID,
 		inboundChain.ChainId,
 		logger,
@@ -334,13 +404,18 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("failed to filter solana inbound events: %w", err)
 	}
 
-	msg := &crosschaintypes.MsgVoteInbound{}
+	var msg *crosschaintypes.MsgVoteInbound
 
 	for _, event := range events {
-		msg, err = zetatoolchains.VoteMsgFromSolEvent(event, zetaChainID)
-		if err != nil {
-			return fmt.Errorf("failed to create vote message: %w", err)
-		}
+		msg = solobserver.NewSolanaInboundVote(
+			event,
+			zetaChainID,
+			"",
+		)
+	}
+
+	if msg == nil {
+		return fmt.Errorf("no valid solana inbound event found")
 	}
 
 	c.CCTXIdentifier = msg.Digest()
@@ -353,22 +428,19 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreReader = ctx.GetZetacoreReader()
 		goCtx          = ctx.GetContext()
 	)
 
-	inboundHashToCCTX, err := zetacoreClient.Crosschain.InboundHashToCctx(
-		goCtx, &crosschaintypes.QueryGetInboundHashToCctxRequest{
-			InboundHash: inboundHash,
-		})
+	inboundHashToCCTX, err := zetacoreReader.InboundHashToCctxData(goCtx, inboundHash)
 	if err != nil {
 		return fmt.Errorf("inbound chain is zetachain , cctx should be available in the same block: %w", err)
 	}
-	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) < 1 {
+	if len(inboundHashToCCTX.CrossChainTxs) < 1 {
 		return fmt.Errorf("inbound hash does not have any cctx linked %s", inboundHash)
 	}
 
-	c.CCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]
+	c.CCTXIdentifier = inboundHashToCCTX.CrossChainTxs[0].Index
 	c.Status = PendingOutbound
 	return nil
 }
