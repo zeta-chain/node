@@ -8,11 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
-	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	zetatoolclients "github.com/zeta-chain/node/cmd/zetatool/clients"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
@@ -21,13 +17,9 @@ import (
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	solobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
-	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
-	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
 // CheckInbound checks the inbound chain,gets the inbound ballot identifier and updates the TrackingDetails
@@ -106,14 +98,7 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		return fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
 	}
 
-	connCfg := zetaclientConfig.BTCConfig{
-		RPCUsername: cfg.BtcUser,
-		RPCPassword: cfg.BtcPassword,
-		RPCHost:     cfg.BtcHost,
-		RPCParams:   params.Name,
-	}
-
-	btcClient, err := client.New(connCfg, inboundChain.ChainId, logger)
+	btcClient, err := zetatoolclients.NewBitcoinClientAdapter(cfg, inboundChain, logger)
 	if err != nil {
 		return fmt.Errorf("unable to create rpc client: %w", err)
 	}
@@ -163,17 +148,15 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 		return fmt.Errorf("failed to get block: %w", err)
 	}
 
-	// Build inbound event
-	event, err := btcobserver.GetBtcEventWithWitness(
+	// Build inbound event using the adapter method
+	event, err := btcClient.GetBtcEventWithWitness(
 		goCtx,
-		btcClient,
 		*tx,
 		tssBtcAddress,
 		uint64(blockVb.Height), // #nosec G115 always positive
 		feeRateMultiplier,
 		zerolog.New(zerolog.Nop()),
 		params,
-		common.CalcDepositorFee,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to build btc event: %w", err)
@@ -251,13 +234,8 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	switch {
 	case compareAddress(tx.To().Hex(), chainParams.ConnectorContractAddress):
 		{
-			addrConnector := ethcommon.HexToAddress(chainParams.ConnectorContractAddress)
-			connector, err := zetaconnector.NewZetaConnectorNonEth(addrConnector, evmClient.Unwrap())
-			if err != nil {
-				return fmt.Errorf("failed to get connector contract: %w", err)
-			}
 			for _, log := range receipt.Logs {
-				event, err := connector.ParseZetaSent(*log)
+				event, err := evmClient.ParseConnectorZetaSent(*log, chainParams.ConnectorContractAddress)
 				if err == nil && event != nil {
 					msg = legacy.ZetaTokenVoteV1(event, inboundChain.ChainId)
 				}
@@ -265,17 +243,12 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 		}
 	case compareAddress(tx.To().Hex(), chainParams.Erc20CustodyContractAddress):
 		{
-			addrCustody := ethcommon.HexToAddress(chainParams.Erc20CustodyContractAddress)
-			custody, err := erc20custody.NewERC20Custody(addrCustody, evmClient.Unwrap())
-			if err != nil {
-				return fmt.Errorf("failed to get custody contract: %w", err)
-			}
-			sender, err := evmClient.Unwrap().TransactionSender(goCtx, tx, receipt.BlockHash, receipt.TransactionIndex)
+			sender, err := evmClient.TransactionSender(goCtx, tx, receipt.BlockHash, receipt.TransactionIndex)
 			if err != nil {
 				return fmt.Errorf("failed to get tx sender: %w", err)
 			}
 			for _, log := range receipt.Logs {
-				zetaDeposited, err := custody.ParseDeposited(*log)
+				zetaDeposited, err := evmClient.ParseCustodyDeposited(*log, chainParams.Erc20CustodyContractAddress)
 				if err == nil && zetaDeposited != nil {
 					msg = legacy.Erc20VoteV1(zetaDeposited, sender, inboundChain.ChainId, zetaChainID)
 				}
@@ -286,7 +259,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			if receipt.Status != ethtypes.ReceiptStatusSuccessful {
 				return fmt.Errorf("tx failed on chain %d", inboundChain.ChainId)
 			}
-			sender, err := evmClient.Unwrap().TransactionSender(goCtx, tx, receipt.BlockHash, receipt.TransactionIndex)
+			sender, err := evmClient.TransactionSender(goCtx, tx, receipt.BlockHash, receipt.TransactionIndex)
 			if err != nil {
 				return fmt.Errorf("failed to get tx sender: %w", err)
 			}
@@ -295,16 +268,12 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	default:
 		{
 			gatewayAddr := ethcommon.HexToAddress(chainParams.GatewayAddress)
-			gateway, err := gatewayevm.NewGatewayEVM(gatewayAddr, evmClient.Unwrap())
-			if err != nil {
-				return fmt.Errorf("failed to get gateway contract: %w", err)
-			}
 			foundLog := false
 			for _, log := range receipt.Logs {
 				if log == nil || log.Address != gatewayAddr {
 					continue
 				}
-				eventDeposit, err := gateway.ParseDeposited(*log)
+				eventDeposit, err := evmClient.ParseGatewayDeposited(*log, chainParams.GatewayAddress)
 				if err == nil {
 					voteMsg := evmobserver.NewDepositInboundVote(
 						eventDeposit,
@@ -318,7 +287,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 					foundLog = true
 					break
 				}
-				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
+				eventDepositAndCall, err := evmClient.ParseGatewayDepositedAndCalled(*log, chainParams.GatewayAddress)
 				if err == nil {
 					voteMsg := evmobserver.NewDepositAndCallInboundVote(
 						eventDepositAndCall,
@@ -331,7 +300,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 					foundLog = true
 					break
 				}
-				eventCall, err := gateway.ParseCalled(*log)
+				eventCall, err := evmClient.ParseGatewayCalled(*log, chainParams.GatewayAddress)
 				if err == nil {
 					voteMsg := evmobserver.NewCallInboundVote(
 						eventCall,
@@ -365,18 +334,18 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		logger         = ctx.GetLogger()
 		goCtx          = ctx.GetContext()
 	)
-	solClient := solrpc.New(cfg.SolanaRPC)
-	if solClient == nil {
-		return fmt.Errorf("error creating rpc client")
+
+	solClient, err := zetatoolclients.NewSolanaClientAdapter(cfg.SolanaRPC)
+	if err != nil {
+		return fmt.Errorf("error creating rpc client: %w", err)
 	}
-	solRepo := solrepo.New(solClient)
 
 	signature, err := solana.SignatureFromBase58(inboundHash)
 	if err != nil {
 		return fmt.Errorf("error parsing signature: %w", err)
 	}
 
-	txResult, err := solRepo.GetTransaction(goCtx, signature)
+	txResult, err := solClient.GetTransaction(goCtx, signature)
 	if err != nil {
 		return fmt.Errorf("error getting transaction: %w", err)
 	}
@@ -391,9 +360,9 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
-	resolvedTx := solobserver.ProcessTransactionResultWithAddressLookups(goCtx, txResult, solClient, logger, signature)
+	resolvedTx := solClient.ProcessTransactionResultWithAddressLookups(goCtx, txResult, logger, signature)
 
-	events, err := solobserver.FilterInboundEvents(txResult,
+	events, err := solClient.FilterInboundEvents(txResult,
 		gatewayID,
 		inboundChain.ChainId,
 		logger,

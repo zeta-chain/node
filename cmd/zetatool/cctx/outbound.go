@@ -5,14 +5,9 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/gagliardetto/solana-go"
-	solrpc "github.com/gagliardetto/solana-go/rpc"
 
 	zetatoolclients "github.com/zeta-chain/node/cmd/zetatool/clients"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
-	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
 func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
@@ -75,16 +70,15 @@ func (c *TrackingDetails) checkSolanaOutboundTx(ctx *context.Context) error {
 		cfg        = ctx.GetConfig()
 	)
 
-	foundConfirmedTx := false
-	solClient := solrpc.New(cfg.SolanaRPC)
-	if solClient == nil {
-		return fmt.Errorf("error creating rpc client")
+	solClient, err := zetatoolclients.NewSolanaClientAdapter(cfg.SolanaRPC)
+	if err != nil {
+		return fmt.Errorf("error creating rpc client: %w", err)
 	}
-	solRepo := solrepo.New(solClient)
 
+	foundConfirmedTx := false
 	for _, hash := range txHashList {
 		signature := solana.MustSignatureFromBase58(hash)
-		_, err := solRepo.GetTransaction(goCtx, signature)
+		_, err := solClient.GetTransaction(goCtx, signature)
 		if err != nil {
 			continue
 		}
@@ -113,19 +107,7 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 	}
 	confirmationCount := chainParams.OutboundConfirmationSafe()
 
-	params, err := chains.BitcoinNetParamsFromChainID(outboundChain.ChainId)
-	if err != nil {
-		return fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
-	}
-
-	connCfg := zetaclientConfig.BTCConfig{
-		RPCUsername: cfg.BtcUser,
-		RPCPassword: cfg.BtcPassword,
-		RPCHost:     cfg.BtcHost,
-		RPCParams:   params.Name,
-	}
-
-	btcClient, err := client.New(connCfg, outboundChain.ChainId, logger)
+	btcClient, err := zetatoolclients.NewBitcoinClientAdapter(cfg, outboundChain, logger)
 	if err != nil {
 		return fmt.Errorf("unable to create rpc client: %w", err)
 	}

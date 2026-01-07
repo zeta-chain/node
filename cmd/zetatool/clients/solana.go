@@ -6,14 +6,18 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	"github.com/rs/zerolog"
 
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
+	solobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
+	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // SolanaClientAdapter wraps solrepo.SolanaRepo to implement SolanaClient interface
 type SolanaClientAdapter struct {
-	repo *solrepo.SolanaRepo
+	client *solrpc.Client
+	repo   *solrepo.SolanaRepo
 }
 
 // NewSolanaClientAdapter creates a new SolanaClientAdapter
@@ -26,7 +30,8 @@ func NewSolanaClientAdapter(rpcURL string) (*SolanaClientAdapter, error) {
 	repo := solrepo.New(client)
 
 	return &SolanaClientAdapter{
-		repo: repo,
+		client: client,
+		repo:   repo,
 	}, nil
 }
 
@@ -35,9 +40,25 @@ func (s *SolanaClientAdapter) GetTransaction(ctx context.Context, signature sola
 	return s.repo.GetTransaction(ctx, signature)
 }
 
-// GetRawRepo returns the underlying SolanaRepo for advanced operations
-func (s *SolanaClientAdapter) GetRawRepo() *solrepo.SolanaRepo {
-	return s.repo
+// ProcessTransactionResultWithAddressLookups resolves address lookups in a transaction
+func (s *SolanaClientAdapter) ProcessTransactionResultWithAddressLookups(
+	ctx context.Context,
+	txResult *solrpc.GetTransactionResult,
+	logger zerolog.Logger,
+	signature solana.Signature,
+) *solana.Transaction {
+	return solobserver.ProcessTransactionResultWithAddressLookups(ctx, txResult, s.client, logger, signature)
+}
+
+// FilterInboundEvents filters inbound events from a transaction result
+func (s *SolanaClientAdapter) FilterInboundEvents(
+	txResult *solrpc.GetTransactionResult,
+	gatewayID solana.PublicKey,
+	chainID int64,
+	logger zerolog.Logger,
+	tx *solana.Transaction,
+) ([]*clienttypes.InboundEvent, error) {
+	return solobserver.FilterInboundEvents(txResult, gatewayID, chainID, logger, tx)
 }
 
 // GetSolanaGatewayBalance fetches the SOL balance of the gateway PDA

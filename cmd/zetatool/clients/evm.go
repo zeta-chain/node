@@ -10,6 +10,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/params"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -53,9 +56,54 @@ func (a *EVMClientAdapter) BlockNumber(ctx context.Context) (uint64, error) {
 	return a.client.BlockNumber(ctx)
 }
 
-// Unwrap returns the underlying ethclient.Client for use with contract bindings
-func (a *EVMClientAdapter) Unwrap() *ethclient.Client {
-	return a.client
+// TransactionSender returns the sender of a transaction
+func (a *EVMClientAdapter) TransactionSender(ctx context.Context, tx *ethtypes.Transaction, blockHash ethcommon.Hash, txIndex uint) (ethcommon.Address, error) {
+	return a.client.TransactionSender(ctx, tx, blockHash, txIndex)
+}
+
+// ParseConnectorZetaSent parses a ZetaSent event from the connector contract
+func (a *EVMClientAdapter) ParseConnectorZetaSent(log ethtypes.Log, connectorAddr string) (*zetaconnector.ZetaConnectorNonEthZetaSent, error) {
+	connector, err := zetaconnector.NewZetaConnectorNonEth(ethcommon.HexToAddress(connectorAddr), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create connector contract: %w", err)
+	}
+	return connector.ParseZetaSent(log)
+}
+
+// ParseCustodyDeposited parses a Deposited event from the custody contract
+func (a *EVMClientAdapter) ParseCustodyDeposited(log ethtypes.Log, custodyAddr string) (*erc20custody.ERC20CustodyDeposited, error) {
+	custody, err := erc20custody.NewERC20Custody(ethcommon.HexToAddress(custodyAddr), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create custody contract: %w", err)
+	}
+	return custody.ParseDeposited(log)
+}
+
+// ParseGatewayDeposited parses a Deposited event from the gateway contract
+func (a *EVMClientAdapter) ParseGatewayDeposited(log ethtypes.Log, gatewayAddr string) (*gatewayevm.GatewayEVMDeposited, error) {
+	gateway, err := gatewayevm.NewGatewayEVM(ethcommon.HexToAddress(gatewayAddr), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gateway contract: %w", err)
+	}
+	return gateway.ParseDeposited(log)
+}
+
+// ParseGatewayDepositedAndCalled parses a DepositedAndCalled event from the gateway contract
+func (a *EVMClientAdapter) ParseGatewayDepositedAndCalled(log ethtypes.Log, gatewayAddr string) (*gatewayevm.GatewayEVMDepositedAndCalled, error) {
+	gateway, err := gatewayevm.NewGatewayEVM(ethcommon.HexToAddress(gatewayAddr), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gateway contract: %w", err)
+	}
+	return gateway.ParseDepositedAndCalled(log)
+}
+
+// ParseGatewayCalled parses a Called event from the gateway contract
+func (a *EVMClientAdapter) ParseGatewayCalled(log ethtypes.Log, gatewayAddr string) (*gatewayevm.GatewayEVMCalled, error) {
+	gateway, err := gatewayevm.NewGatewayEVM(ethcommon.HexToAddress(gatewayAddr), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gateway contract: %w", err)
+	}
+	return gateway.ParseCalled(log)
 }
 
 // ResolveEVMRPC returns the RPC URL for a given EVM chain

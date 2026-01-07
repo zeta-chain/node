@@ -8,12 +8,15 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -89,9 +92,27 @@ func (b *BitcoinClientAdapter) GetBlockVerbose(ctx context.Context, blockHash *c
 	return b.client.GetBlockVerbose(ctx, blockHash)
 }
 
-// GetRawClient returns the underlying btcclient.Client for advanced operations
-func (b *BitcoinClientAdapter) GetRawClient() *btcclient.Client {
-	return b.client
+// GetBtcEventWithWitness builds a BTC inbound event from a transaction
+func (b *BitcoinClientAdapter) GetBtcEventWithWitness(
+	ctx context.Context,
+	tx btcjson.TxRawResult,
+	tssAddress string,
+	blockNumber uint64,
+	feeRateMultiplier float64,
+	logger zerolog.Logger,
+	netParams *chaincfg.Params,
+) (*btcobserver.BTCInboundEvent, error) {
+	return btcobserver.GetBtcEventWithWitness(
+		ctx,
+		b.client,
+		tx,
+		tssAddress,
+		blockNumber,
+		feeRateMultiplier,
+		logger,
+		netParams,
+		common.CalcDepositorFee,
+	)
 }
 
 // GetBTCBalance fetches the BTC balance for a given address using mempool.space API
