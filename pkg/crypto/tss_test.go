@@ -1,16 +1,15 @@
 package crypto
 
 import (
-	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"testing"
 
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 

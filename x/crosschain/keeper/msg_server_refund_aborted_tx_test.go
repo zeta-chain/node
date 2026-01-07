@@ -1,13 +1,12 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/node/pkg/constant"
 	"testing"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
