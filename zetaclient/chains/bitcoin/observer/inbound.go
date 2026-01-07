@@ -337,3 +337,47 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		options...,
 	)
 }
+
+// NewBtcInboundVote creates a MsgVoteInbound from a BTCInboundEvent.
+// This is a standalone function that can be used by external packages like zetatool.
+// The event must have DecodeMemoBytes() and ResolveAmountForMsgVoteInbound() called before this.
+func NewBtcInboundVote(
+	event *BTCInboundEvent,
+	senderChainID int64,
+	zetaChainID int64,
+	operatorAddress string,
+	confirmationMode crosschaintypes.ConfirmationMode,
+) *crosschaintypes.MsgVoteInbound {
+	// build options using event helper methods
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithRevertOptions(event.RevertOptions()),
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall()),
+	}
+
+	// add error message if present
+	if event.ErrorMessage != "" {
+		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		operatorAddress,
+		event.FromAddress,
+		senderChainID,
+		event.FromAddress,
+		event.ToAddress,
+		zetaChainID,
+		event.AmountForMsgVoteInbound,
+		event.Message(),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		event.CoinType(),
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		options...,
+	)
+}

@@ -1,4 +1,4 @@
-package chains
+package clients
 
 import (
 	"context"
