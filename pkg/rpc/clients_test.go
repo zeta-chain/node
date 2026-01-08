@@ -453,6 +453,36 @@ func TestZetacore_GetNodeInfo(t *testing.T) {
 	require.Equal(t, expectedOutput, *resp)
 }
 
+func TestZetacore_GetSyncing(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("node is syncing", func(t *testing.T) {
+		expectedOutput := cmtservice.GetSyncingResponse{Syncing: true}
+		input := cmtservice.GetSyncingRequest{}
+		method := "/cosmos.base.tendermint.v1beta1.Service/GetSyncing"
+		setupMockServer(t, cmtservice.RegisterServiceServer, method, input, expectedOutput)
+
+		client := setupZetacoreClients(t)
+
+		resp, err := client.GetSyncing(ctx)
+		require.NoError(t, err)
+		require.True(t, resp)
+	})
+
+	t.Run("node is not syncing", func(t *testing.T) {
+		expectedOutput := cmtservice.GetSyncingResponse{Syncing: false}
+		input := cmtservice.GetSyncingRequest{}
+		method := "/cosmos.base.tendermint.v1beta1.Service/GetSyncing"
+		setupMockServer(t, cmtservice.RegisterServiceServer, method, input, expectedOutput)
+
+		client := setupZetacoreClients(t)
+
+		resp, err := client.GetSyncing(ctx)
+		require.NoError(t, err)
+		require.False(t, resp)
+	})
+}
+
 func TestZetacore_GetBaseGasPrice(t *testing.T) {
 	ctx := context.Background()
 

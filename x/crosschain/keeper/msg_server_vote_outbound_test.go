@@ -86,6 +86,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 	tt := []struct {
 		name                               string
 		userGasFeePaidIsNil                bool
+		effectiveGasPriceIsNil             bool
 		gasUsed                            uint64
 		effectiveGasPrice                  math.Int
 		effectiveGasLimit                  uint64
@@ -339,6 +340,29 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			expectRefundRemainingFeesCall:   false,
 			fundStabilityPoolExpectedAmount: big.NewInt(475),
 		},
+		{
+			name:                          "legacy: no panic and no call if effectiveGasPrice is nil",
+			userGasFeePaidIsNil:           true,
+			effectiveGasPriceIsNil:        true,
+			effectiveGasLimit:             100,
+			gasUsed:                       50,
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+		},
+		{
+			name:                          "updated flow: no panic and no call if effectiveGasPrice is nil",
+			userGasFeePaidIsNil:           false,
+			effectiveGasPriceIsNil:        true,
+			receiverChainID:               ethChainID,
+			senderChainID:                 zetaChainID,
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			gasUsed:                       50,
+			userGasFeePaid:                math.NewUint(1000),
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+		},
 	}
 
 	for _, tc := range tt {
@@ -351,7 +375,12 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			// Setup outbound params
 			outbound := sample.OutboundParams(r)
 			outbound.GasUsed = tc.gasUsed
-			outbound.EffectiveGasPrice = tc.effectiveGasPrice
+			if !tc.effectiveGasPriceIsNil {
+				outbound.EffectiveGasPrice = tc.effectiveGasPrice
+			} else {
+				var nilInt math.Int
+				outbound.EffectiveGasPrice = nilInt
+			}
 			outbound.EffectiveGasLimit = tc.effectiveGasLimit
 			outbound.ReceiverChainId = tc.receiverChainID
 			if !tc.userGasFeePaidIsNil {
