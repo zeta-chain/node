@@ -198,6 +198,13 @@ func (inst *IncrementNonceInstructionParams) TokenAmount() uint64 {
 
 // ParseInstructionIncrementNonce tries to parse the instruction as a 'increment_nonce'.
 // It returns nil if the instruction can't be parsed as a 'increment_nonce'.
+//
+// Warning:
+// 'borsh.Deserialize' may cause OOM issue if the data being parsed is NOT a valid 'IncrementNonceInstructionParams'
+// If the data happens to carry a big value for dynamically-sized string field when being parsed, it will cause big
+// memory allocation and potentially trigger OOM. Parsing invalid data should be avoided whenever possible.
+//
+// See string deserialization: https://github.com/near/borsh-go/blob/5cdb82ee95522aa3e8f7b38cd617b7536d649177/borsh.go#L155-L159
 func ParseInstructionIncrementNonce(
 	instruction solana.CompiledInstruction,
 ) (*IncrementNonceInstructionParams, error) {
