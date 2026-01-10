@@ -221,7 +221,7 @@ func (c Config) Validate() error {
 	return nil
 }
 
-// ResolvePublicDNS4 resolves the public DNS to an IPv4 address when public IP isn't set.
+// ResolvePublicIP resolves the public DNS to an IPv4 address when public IP isn't set.
 // For simplicity, the 1st resolved IPv4 address is used if multiple IP addresses are found.
 func (c Config) ResolvePublicIP(logger zerolog.Logger) (string, error) {
 	// return public IP if already set
