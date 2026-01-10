@@ -234,7 +234,7 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Addres
 	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
-// SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
+// SuiCreateExampleWACPayloadForRevert creates a payload that triggers a revert in the 'on_call'
 // function in Sui the example package
 func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {
 	// only the CCTX's coinType is needed, no additional arguments
