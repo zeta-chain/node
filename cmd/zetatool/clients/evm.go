@@ -189,7 +189,7 @@ func IsTxConfirmed(ctx context.Context, client EVMClient, txHash string, confirm
 	}
 
 	txBlock := receipt.BlockNumber.Uint64()
-	return currentBlock >= txBlock+confirmations, nil
+	return 1+(currentBlock-txBlock) >= confirmations, nil
 }
 
 // GetEVMBalance fetches the native token balance for an address on an EVM chain

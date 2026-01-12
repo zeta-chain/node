@@ -35,7 +35,7 @@ func TestDetermineCoinType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, determineCoinType(tt.asset, zetaTokenAddress), "Coin type mismatch for %s", tt.name)
+			require.Equal(t, tt.expected, DetermineCoinType(tt.asset, zetaTokenAddress), "Coin type mismatch for %s", tt.name)
 		})
 	}
 }

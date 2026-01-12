@@ -83,13 +83,14 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 		c.Message = "outbound params not found"
 		return
 	}
-	chainID := cctxRes.GetCurrentOutboundParam().ReceiverChainId
+	chainID := outboundParams.ReceiverChainId
 	chain, found := chains.GetChainFromChainID(chainID, []chains.Chain{})
 	if !found {
-		c.Message = fmt.Sprintf("receiver chain not supported,chain id: %d", chainID)
+		c.Message = fmt.Sprintf("receiver chain not supported, chain id: %d", chainID)
+		return
 	}
 	c.OutboundChain = chain
-	c.OutboundTssNonce = cctxRes.GetCurrentOutboundParam().TssNonce
+	c.OutboundTssNonce = outboundParams.TssNonce
 }
 
 // UpdateHashListAndPendingStatus updates the TrackingDetails with the hash list and updates pending status

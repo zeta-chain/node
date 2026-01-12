@@ -88,8 +88,8 @@ func GasVoteV1(
 	zetacoreChainID int64,
 ) *crosschaintypes.MsgVoteInbound {
 	message := string(tx.Data())
-	data, _ := hex.DecodeString(message)
-	if bytes.Equal(data, []byte(constant.DonationMessage)) {
+	data, err := hex.DecodeString(message)
+	if err == nil && bytes.Equal(data, []byte(constant.DonationMessage)) {
 		return nil
 	}
 

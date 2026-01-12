@@ -72,6 +72,9 @@ func GetSolanaGatewayBalance(ctx context.Context, rpcURL string, gatewayAddress 
 	}
 
 	client := solrpc.New(rpcURL)
+	if client == nil {
+		return 0, fmt.Errorf("failed to create solana rpc client")
+	}
 
 	result, err := client.GetBalance(ctx, pda, solrpc.CommitmentFinalized)
 	if err != nil {

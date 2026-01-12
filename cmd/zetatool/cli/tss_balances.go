@@ -169,7 +169,10 @@ func printTSSBalances(
 		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
 
-	btcChainID := clients.GetBTCChainID(network)
+	btcChainID, err := clients.GetBTCChainID(network)
+	if err != nil {
+		return fmt.Errorf("failed to get BTC chain ID: %w", err)
+	}
 	req := &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
 		FinalizedZetaHeight: tss.FinalizedZetaHeight,
 		BitcoinChainId:      btcChainID,

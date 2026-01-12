@@ -379,77 +379,6 @@ func (ob *Observer) observeGatewayDepositAndCall(
 	return toBlock, nil
 }
 
-// parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
-func (ob *Observer) parseAndValidateDepositAndCallEvents(
-	ctx context.Context,
-	ethlogs []ethtypes.Log,
-	gatewayAddr ethcommon.Address,
-	gatewayContract *gatewayevm.GatewayEVM,
-) []*gatewayevm.GatewayEVMDepositedAndCalled {
-	// collect and sort validEvents by block number, then tx index, then log index (ascending)
-	validEvents := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
-	for _, ethlog := range ethlogs {
-		err := common.ValidateEvmTxLog(&ethlog, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
-		if err != nil {
-			continue
-		}
-		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
-		if err != nil {
-			ob.Logger().Inbound.Debug().
-				Stringer(logs.FieldTx, ethlog.TxHash).
-				Uint64(logs.FieldBlock, ethlog.BlockNumber).
-				Msg("failed to parse as DepositedAndCall event")
-			continue
-		}
-		validEvents = append(validEvents, depositAndCallEvent)
-	}
-
-	// order events by height, tx index and event index (ascending)
-	// this ensures the first event is observed if there are multiple in the same tx
-	sort.SliceStable(validEvents, func(i, j int) bool {
-		if validEvents[i].Raw.BlockNumber == validEvents[j].Raw.BlockNumber {
-			if validEvents[i].Raw.TxIndex == validEvents[j].Raw.TxIndex {
-				return validEvents[i].Raw.Index < validEvents[j].Raw.Index
-			}
-			return validEvents[i].Raw.TxIndex < validEvents[j].Raw.TxIndex
-		}
-		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
-	})
-
-	// Check if multiple calls are enabled
-	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
-		return validEvents
-	}
-
-	// if not, default to previous behavior
-	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
-	guard := make(map[string]bool)
-	for _, event := range validEvents {
-		// guard against multiple events in the same tx
-		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple DepositedAndCalled events in same tx")
-			continue
-		}
-		guard[event.Raw.TxHash.Hex()] = true
-		filtered = append(filtered, event)
-	}
-
-	return filtered
-}
-
-// newDepositAndCallInboundVote creates a MsgVoteInbound message for a DepositAndCall event
-func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
-	return NewDepositAndCallInboundVote(
-		event,
-		ob.Chain().ChainId,
-		ob.ZetaRepo().ZetaChain().ChainId,
-		ob.ZetaRepo().GetOperatorAddress(),
-		ob.ChainParams().ZetaTokenContractAddress,
-	)
-}
-
 // DetermineCoinType determines the coin type of the inbound event based on asset address
 func DetermineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
 	if crypto.IsEmptyAddress(asset) {
@@ -459,11 +388,6 @@ func DetermineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.Co
 		return coin.CoinType_Zeta
 	}
 	return coin.CoinType_ERC20
-}
-
-// determineCoinType is kept for backwards compatibility
-func determineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
-	return DetermineCoinType(asset, zetaTokenAddress)
 }
 
 // NewDepositInboundVote creates a MsgVoteInbound for a GatewayEVM Deposit event.
@@ -556,7 +480,7 @@ func NewDepositAndCallInboundVote(
 		hex.EncodeToString(event.Payload),
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
-		1_500_000,
+		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coinType,
 		event.Asset.Hex(),
 		uint64(event.Raw.Index),
@@ -566,5 +490,76 @@ func NewDepositAndCallInboundVote(
 		types.ConfirmationMode_SAFE,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
+	)
+}
+
+// parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
+func (ob *Observer) parseAndValidateDepositAndCallEvents(
+	ctx context.Context,
+	ethlogs []ethtypes.Log,
+	gatewayAddr ethcommon.Address,
+	gatewayContract *gatewayevm.GatewayEVM,
+) []*gatewayevm.GatewayEVMDepositedAndCalled {
+	// collect and sort validEvents by block number, then tx index, then log index (ascending)
+	validEvents := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	for _, ethlog := range ethlogs {
+		err := common.ValidateEvmTxLog(&ethlog, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
+		if err != nil {
+			continue
+		}
+		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(ethlog)
+		if err != nil {
+			ob.Logger().Inbound.Debug().
+				Stringer(logs.FieldTx, ethlog.TxHash).
+				Uint64(logs.FieldBlock, ethlog.BlockNumber).
+				Msg("failed to parse as DepositedAndCall event")
+			continue
+		}
+		validEvents = append(validEvents, depositAndCallEvent)
+	}
+
+	// order events by height, tx index and event index (ascending)
+	// this ensures the first event is observed if there are multiple in the same tx
+	sort.SliceStable(validEvents, func(i, j int) bool {
+		if validEvents[i].Raw.BlockNumber == validEvents[j].Raw.BlockNumber {
+			if validEvents[i].Raw.TxIndex == validEvents[j].Raw.TxIndex {
+				return validEvents[i].Raw.Index < validEvents[j].Raw.Index
+			}
+			return validEvents[i].Raw.TxIndex < validEvents[j].Raw.TxIndex
+		}
+		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
+	})
+
+	// Check if multiple calls are enabled
+	if zctx.EnableMultipleCallsFeatureFlag(ctx) {
+		return validEvents
+	}
+
+	// if not, default to previous behavior
+	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	guard := make(map[string]bool)
+	for _, event := range validEvents {
+		// guard against multiple events in the same tx
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple DepositedAndCalled events in same tx")
+			continue
+		}
+		guard[event.Raw.TxHash.Hex()] = true
+		filtered = append(filtered, event)
+	}
+
+	return filtered
+}
+
+// newDepositAndCallInboundVote creates a MsgVoteInbound message for a DepositAndCall event
+func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
+	return NewDepositAndCallInboundVote(
+		event,
+		ob.Chain().ChainId,
+		ob.ZetaRepo().ZetaChain().ChainId,
+		ob.ZetaRepo().GetOperatorAddress(),
+		ob.ChainParams().ZetaTokenContractAddress,
 	)
 }

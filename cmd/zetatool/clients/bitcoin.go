@@ -176,15 +176,15 @@ func getMempoolAddressAPIURL(chainID int64, address string) string {
 }
 
 // GetBTCChainID returns the Bitcoin chain ID for the given network
-func GetBTCChainID(network string) int64 {
+func GetBTCChainID(network string) (int64, error) {
 	switch network {
 	case config.NetworkMainnet:
-		return 8332
+		return 8332, nil
 	case config.NetworkTestnet:
-		return 18332
+		return 18332, nil
 	case config.NetworkLocalnet:
-		return 18444
+		return 18444, nil
 	default:
-		panic("invalid network")
+		return 0, fmt.Errorf("invalid network: %s", network)
 	}
 }
