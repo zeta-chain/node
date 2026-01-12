@@ -115,26 +115,29 @@ func (b *Bitcoin) group() scheduler.Group {
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
 func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
+	zetaRepo := b.observer.ZetaRepo()
+
+	// skip stale block event in channel if any
+	blockHeight, stale, err := b.signer.CheckBlockEvent(ctx, zetaRepo)
+	if err != nil {
+		return errors.Wrap(err, "unable to check stale block event")
+	} else if stale {
+		return nil
+	}
+
 	if err := b.updateChainParams(ctx); err != nil {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get zeta block from context")
-	}
-
-	time.Sleep(delay)
-
 	// #nosec G115 always in range
-	zetaHeight := uint64(zetaBlock.Block.Height)
+	zetaHeight := uint64(blockHeight)
 	chain := b.observer.Chain()
 	chainID := chain.ChainId
 	lookahead := b.observer.ChainParams().OutboundScheduleLookahead
 	// #nosec G115 positive
 	scheduleInterval := uint64(b.observer.ChainParams().OutboundScheduleInterval)
 
-	cctxList, err := b.observer.ZetaRepo().GetPendingCCTXs(ctx)
+	cctxList, err := zetaRepo.GetPendingCCTXs(ctx)
 	if err != nil {
 		return err
 	}
