@@ -25,8 +25,8 @@ const (
 	collectBatchRetries = 2
 )
 
-// IsStaleBlockEvent checks if the block event is stale and returns (zeta_height, is_stale, error).
-func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo) (int64, bool, error) {
+// CheckBlockEvent checks if the block event is stale and returns (zeta_height, is_stale, error).
+func (s *Signer) CheckBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo) (int64, bool, error) {
 	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
 		return 0, false, errors.Wrap(err, "unable to get block event from context")
@@ -49,7 +49,7 @@ func (s *Signer) IsStaleBlockEvent(ctx context.Context, zetaRepo *zrepo.ZetaRepo
 		return zetaHeight, true, nil
 	}
 
-	// adjust keysign timing if set in operational flags
+	// if the event is not stale, it applies the keysign delay configured in operational flags
 	time.Sleep(delay)
 
 	return zetaHeight, false, nil

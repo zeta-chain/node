@@ -22,7 +22,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-func Test_IsStaleBlockEvent(t *testing.T) {
+func Test_CheckBlockEvent(t *testing.T) {
 	tests := []struct {
 		name                string
 		eventHeight         int64
@@ -97,7 +97,7 @@ func Test_IsStaleBlockEvent(t *testing.T) {
 			}
 
 			// ACT
-			height, isStale, err := signer.IsStaleBlockEvent(ctx, zetaRepo)
+			height, isStale, err := signer.CheckBlockEvent(ctx, zetaRepo)
 
 			// ASSERT
 			if tc.errorMsg != "" {

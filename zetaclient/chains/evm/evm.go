@@ -114,7 +114,7 @@ func (e *EVM) group() scheduler.Group {
 // scheduleCCTX schedules outbound transactions on each ZetaChain block.
 func (e *EVM) scheduleCCTX(ctx context.Context) error {
 	// skip stale block event if any
-	if _, stale, err := e.signer.IsStaleBlockEvent(ctx, e.observer.ZetaRepo()); err != nil {
+	if _, stale, err := e.signer.CheckBlockEvent(ctx, e.observer.ZetaRepo()); err != nil {
 		return errors.Wrap(err, "unable to check stale block event")
 	} else if stale {
 		return nil
@@ -193,7 +193,7 @@ func (e *EVM) scheduleKeysign(ctx context.Context) error {
 	zetaRepo := e.observer.ZetaRepo()
 
 	// skip stale block event if any
-	zetaHeight, stale, err := s.IsStaleBlockEvent(ctx, zetaRepo)
+	zetaHeight, stale, err := s.CheckBlockEvent(ctx, zetaRepo)
 	if err != nil {
 		return errors.Wrap(err, "unable to check stale block event")
 	} else if stale {

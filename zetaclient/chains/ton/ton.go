@@ -113,7 +113,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 	zetaRepo := t.observer.ZetaRepo()
 
 	// skip stale block event in channel if any
-	blockHeight, stale, err := t.signer.IsStaleBlockEvent(ctx, zetaRepo)
+	blockHeight, stale, err := t.signer.CheckBlockEvent(ctx, zetaRepo)
 	if err != nil {
 		return errors.Wrap(err, "unable to check stale block event")
 	} else if stale {
