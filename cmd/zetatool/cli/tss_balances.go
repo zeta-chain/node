@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/clients"
+	zetatoolcommon "github.com/zeta-chain/node/cmd/zetatool/common"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/rpc"
@@ -46,25 +47,35 @@ var networkSymbols = map[pkgchains.Network]string{
 // NewTSSBalancesCMD creates a new command to check TSS address balances across all chains
 func NewTSSBalancesCMD() *cobra.Command {
 	return &cobra.Command{
-		Use:   "tss-balances <network>",
+		Use:   "tss-balances <chain>",
 		Short: "Check TSS address balances across all chains",
 		Long: `Check the balance of TSS (Threshold Signature Scheme) addresses across all supported chains.
 
-The network argument must be one of: mainnet, testnet, localnet, devnet
+The chain argument can be:
+  - A chain ID (e.g., 7000, 1, 56)
+  - A chain name (e.g., zeta_mainnet, eth_mainnet)
 
-Example:
-  zetatool tss-balances mainnet
-  zetatool tss-balances testnet
-  zetatool tss-balances localnet --config custom_config.json`,
+The network type (mainnet/testnet/etc) is inferred from the chain.
+
+Examples:
+  zetatool tss-balances 7000
+  zetatool tss-balances zeta_mainnet
+  zetatool tss-balances zeta_testnet --config custom_config.json`,
 		Args: cobra.ExactArgs(1),
 		RunE: getTSSBalances,
 	}
 }
 
 func getTSSBalances(cmd *cobra.Command, args []string) error {
-	network := args[0]
+	chainArg := args[0]
 
-	// Use custom rpc config if provided
+	chain, err := zetatoolcommon.ResolveChain(chainArg)
+	if err != nil {
+		return fmt.Errorf("failed to resolve chain %q: %w", chainArg, err)
+	}
+
+	network := zetatoolcommon.NetworkTypeFromChain(chain)
+
 	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
 		return fmt.Errorf("failed to read value for flag %s: %w", config.FlagConfig, err)
