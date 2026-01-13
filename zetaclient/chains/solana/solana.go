@@ -108,23 +108,26 @@ func (s *Solana) group() scheduler.Group {
 
 // scheduleCCTX schedules solana outbound keysign
 func (s *Solana) scheduleCCTX(ctx context.Context) error {
+	zetaRepo := s.observer.ZetaRepo()
+
+	// skip stale block event in channel if any
+	blockHeight, stale, err := s.signer.CheckBlockEvent(ctx, zetaRepo)
+	if err != nil {
+		return errors.Wrap(err, "unable to check stale block event")
+	} else if stale {
+		return nil
+	}
+
 	if err := s.updateChainParams(ctx); err != nil {
 		return errors.Wrap(err, "unable to update chain params")
 	}
-
-	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to get zeta block from context")
-	}
-
-	time.Sleep(delay)
 
 	var (
 		chain   = s.observer.Chain()
 		chainID = chain.ChainId
 
 		// #nosec G115 positive
-		zetaHeight = uint64(zetaBlock.Block.Height)
+		zetaHeight = uint64(blockHeight)
 
 		// #nosec G115 positive
 		interval           = uint64(s.observer.ChainParams().OutboundScheduleInterval)
@@ -133,7 +136,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		needsProcessingCtr = 0
 	)
 
-	cctxList, err := s.observer.ZetaRepo().GetPendingCCTXs(ctx)
+	cctxList, err := zetaRepo.GetPendingCCTXs(ctx)
 	if err != nil {
 		return err
 	}
