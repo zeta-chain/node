@@ -110,18 +110,21 @@ func (t *TON) group() scheduler.Group {
 // scheduleCCTX schedules cross-chain tx processing.
 // It loads pending cctx from zetacore, then tries to sign and broadcast them.
 func (t *TON) scheduleCCTX(ctx context.Context) error {
+	zetaRepo := t.observer.ZetaRepo()
+
+	// skip stale block event in channel if any
+	blockHeight, stale, err := t.signer.CheckBlockEvent(ctx, zetaRepo)
+	if err != nil {
+		return errors.Wrap(err, "unable to check stale block event")
+	} else if stale {
+		return nil
+	}
+
 	if err := t.updateChainParams(ctx); err != nil {
 		return errors.Wrap(err, "failed to update chain parameters")
 	}
 
-	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get zeta block from context")
-	}
-
-	time.Sleep(delay)
-
-	cctxs, err := t.observer.ZetaRepo().GetPendingCCTXs(ctx)
+	cctxs, err := zetaRepo.GetPendingCCTXs(ctx)
 	if err != nil {
 		return err
 	}
@@ -133,7 +136,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	var (
 		// #nosec G115 always in range
-		zetaHeight = uint64(zetaBlock.Block.Height)
+		zetaHeight = uint64(blockHeight)
 		chainID    = t.observer.Chain().ChainId
 
 		// #nosec G115 positive
