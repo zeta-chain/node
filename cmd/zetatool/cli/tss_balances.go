@@ -262,6 +262,7 @@ func printTSSBalances(
 
 	evmAddr := common.HexToAddress(tssAddrRes.Eth)
 	btcAddr := tssAddrRes.Btc
+	suiAddr := tssAddrRes.Sui
 
 	// Filter external chains and group by VM type
 	var evmChains, btcChains, solanaChains, tonChains, suiChains []pkgchains.Chain
@@ -365,39 +366,193 @@ func printTSSBalances(
 	}
 
 	for _, chain := range suiChains {
-		results <- chainBalance{
-			Chain:              chain.Name,
-			Address:            "N/A",
-			Balance:            "N/A",
-			MigrationAmount:    "N/A",
-			MigrationAmountRaw: "N/A",
-			Symbol:             getSymbolForChain(chain),
-			VM:                 chain.Vm,
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
+			results <- chainBalance{
+				Chain:              chain.Name,
+				Address:            suiAddr,
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
+			}
+			continue
 		}
+		wg.Add(1)
+		go func(c pkgchains.Chain, rpcURL string) {
+			defer wg.Done()
+			balance, err := clients.GetSuiBalance(ctx, rpcURL, suiAddr)
+			if err != nil {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            suiAddr,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
+				}
+				return
+			}
+			results <- chainBalance{
+				Chain:              c.Name,
+				Address:            suiAddr,
+				Balance:            clients.FormatSuiBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
+			}
+		}(chain, chainRPC)
 	}
 
 	for _, chain := range solanaChains {
-		results <- chainBalance{
-			Chain:              chain.Name,
-			Address:            "N/A",
-			Balance:            "N/A",
-			MigrationAmount:    "N/A",
-			MigrationAmountRaw: "N/A",
-			Symbol:             getSymbolForChain(chain),
-			VM:                 chain.Vm,
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
+			results <- chainBalance{
+				Chain:              chain.Name,
+				Address:            "N/A",
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
+			}
+			continue
 		}
+		wg.Add(1)
+		go func(c pkgchains.Chain, rpcURL string) {
+			defer wg.Done()
+			chainParamsReq := &observertypes.QueryGetChainParamsForChainRequest{
+				ChainId: c.ChainId,
+			}
+			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
+			if err != nil {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              fmt.Sprintf("failed to get chain params: %v", err),
+				}
+				return
+			}
+
+			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
+			if gatewayAddress == "" {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              "Gateway address not configured",
+				}
+				return
+			}
+
+			balance, err := clients.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
+			if err != nil {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            gatewayAddress,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
+				}
+				return
+			}
+
+			results <- chainBalance{
+				Chain:              c.Name,
+				Address:            gatewayAddress,
+				Balance:            clients.FormatSolanaBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
+			}
+		}(chain, chainRPC)
 	}
 
 	for _, chain := range tonChains {
-		results <- chainBalance{
-			Chain:              chain.Name,
-			Address:            "N/A",
-			Balance:            "N/A",
-			MigrationAmount:    "N/A",
-			MigrationAmountRaw: "N/A",
-			Symbol:             getSymbolForChain(chain),
-			VM:                 chain.Vm,
+		chainRPC := getRPCForChain(cfg, chain)
+		if chainRPC == "" {
+			results <- chainBalance{
+				Chain:              chain.Name,
+				Address:            "N/A",
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
+			}
+			continue
 		}
+		wg.Add(1)
+		go func(c pkgchains.Chain, rpcURL string) {
+			defer wg.Done()
+			chainParamsReq := &observertypes.QueryGetChainParamsForChainRequest{
+				ChainId: c.ChainId,
+			}
+			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
+			if err != nil {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              fmt.Sprintf("failed to get chain params: %v", err),
+				}
+				return
+			}
+
+			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
+			if gatewayAddress == "" {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              "Gateway address not configured",
+				}
+				return
+			}
+
+			balance, err := clients.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
+			if err != nil {
+				results <- chainBalance{
+					Chain:              c.Name,
+					Address:            gatewayAddress,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
+				}
+				return
+			}
+
+			results <- chainBalance{
+				Chain:              c.Name,
+				Address:            gatewayAddress,
+				Balance:            clients.FormatTONBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
+			}
+		}(chain, chainRPC)
 	}
 
 	go func() {
