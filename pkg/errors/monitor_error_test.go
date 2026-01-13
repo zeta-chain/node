@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/coin"
 	pkgerrors "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -37,7 +38,13 @@ func Test_ErrTxMonitor(t *testing.T) {
 				ZetaTxHash: "test-hash-2",
 				Msg:        msg,
 			},
-			expectError: fmt.Sprintf("monitoring error: %v, inbound hash: %s, zeta tx hash: %s, ballot index: %s", err, msg.InboundHash, "test-hash-2", msg.Digest()),
+			expectError: fmt.Sprintf(
+				"monitoring error: %v, inbound hash: %s, zeta tx hash: %s, ballot index: %s",
+				err,
+				msg.InboundHash,
+				"test-hash-2",
+				msg.Digest(),
+			),
 		},
 	}
 

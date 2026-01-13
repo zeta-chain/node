@@ -4,28 +4,25 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	utiltx "github.com/cosmos/evm/testutil/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/trie"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/bytes"
-	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
-
-	utiltx "github.com/cosmos/evm/testutil/tx"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/node/rpc/types"
 	"github.com/zeta-chain/node/testutil/sample"
-
-	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *TestSuite) TestBlockNumber() {

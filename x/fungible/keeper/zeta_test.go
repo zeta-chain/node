@@ -5,11 +5,10 @@ import (
 	"math/big"
 	"testing"
 
-	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/stretchr/testify/mock"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -51,7 +50,11 @@ func TestKeeper_ExecuteWithMintedZeta(t *testing.T) {
 		require.False(t, ok)
 		require.True(t, executedOperation)
 
-		require.Equal(t, sdkmath.ZeroInt(), sdkk.BankKeeper.GetBalance(ctx, types.ModuleAddress, config.BaseDenom).Amount)
+		require.Equal(
+			t,
+			sdkmath.ZeroInt(),
+			sdkk.BankKeeper.GetBalance(ctx, types.ModuleAddress, config.BaseDenom).Amount,
+		)
 	})
 }
 

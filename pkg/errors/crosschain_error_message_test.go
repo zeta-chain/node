@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 )
 

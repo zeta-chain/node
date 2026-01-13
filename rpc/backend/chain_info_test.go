@@ -4,22 +4,19 @@ import (
 	"fmt"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/abci/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	utiltx "github.com/cosmos/evm/testutil/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cometbft/cometbft/abci/types"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	utiltx "github.com/cosmos/evm/testutil/tx"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/node/rpc/types"
-
-	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *TestSuite) TestBaseFee() {
@@ -436,10 +433,20 @@ func (s *TestSuite) TestFeeHistory() {
 			1,
 			1,
 			&rpc.FeeHistoryResult{
-				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
-				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(new(big.Int).SetBits([]big.Word{}))},
+				OldestBlock: (*hexutil.Big)(big.NewInt(1)),
+				BaseFee: []*hexutil.Big{
+					(*hexutil.Big)(big.NewInt(0)),
+					(*hexutil.Big)(new(big.Int).SetBits([]big.Word{})),
+				},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
@@ -470,7 +477,14 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
@@ -501,7 +515,14 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(0))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
@@ -534,7 +555,14 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(0)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
@@ -565,7 +593,14 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(0)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
@@ -586,7 +621,13 @@ func (s *TestSuite) TestFeeHistory() {
 					tendermintBlockResult *tmrpctypes.ResultBlockResults,
 					targetOneFeeHistory *rpc.OneFeeHistory,
 				) error {
-					err := s.backend.ProcessBlock(tendermintBlock, ethBlock, rewardPercentiles, tendermintBlockResult, targetOneFeeHistory)
+					err := s.backend.ProcessBlock(
+						tendermintBlock,
+						ethBlock,
+						rewardPercentiles,
+						tendermintBlockResult,
+						targetOneFeeHistory,
+					)
 					s.Require().NoError(err)
 					targetOneFeeHistory.NextBaseFee = tc.targetNewBaseFees[called]
 					called++

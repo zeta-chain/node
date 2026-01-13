@@ -11,8 +11,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/zeta-chain/node/pkg/chains"
 	. "gopkg.in/check.v1"
+
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 type MetricsSuite struct {

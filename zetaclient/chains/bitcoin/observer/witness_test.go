@@ -12,11 +12,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -91,7 +91,8 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -136,7 +137,8 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -177,12 +179,17 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
-			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
+			ErrorMessage: fmt.Sprintf(
+				"deposited amount %v is less than depositor fee %v",
+				depositedAmount,
+				depositorFee,
+			),
 		}
 
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -224,8 +231,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
 		anyCommitAddress := "bc1qf0stfhtxnchsvgpnhhmmxlx9722sfatq02uhn4"
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(anyCommitAddress, nil)
-		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(anyCommitAddress, nil)
+		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -271,8 +280,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
 		anyCommitAddress := "bc1qf0stfhtxnchsvgpnhhmmxlx9722sfatq02uhn4"
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(anyCommitAddress, nil)
-		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(anyCommitAddress, nil)
+		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -347,7 +358,8 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		// mock up rpc client to return sender address
 		sender := "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -371,7 +383,8 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// mock up rpc client to return rpc error
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("rpc error"))
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", errors.New("rpc error"))
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -431,7 +444,8 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// mock up rpc client to return TSS pkScript
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(tssAddress, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(tssAddress, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -472,12 +486,17 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
 			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
-			ErrorMessage: fmt.Sprintf("deposited amount %v is less than depositor fee %v", depositedAmount, depositorFee),
+			ErrorMessage: fmt.Sprintf(
+				"deposited amount %v is less than depositor fee %v",
+				depositedAmount,
+				depositorFee,
+			),
 		}
 
 		// mock up rpc client to return sender address
 		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(sender, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(sender, nil)
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(
@@ -508,8 +527,10 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		// mock up rpc client to return error when getting inscription initiator
 		rpcClient := mocks.NewBitcoinClient(t)
 		anyCommitAddress := "bc1qf0stfhtxnchsvgpnhhmmxlx9722sfatq02uhn4"
-		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).Return(anyCommitAddress, nil)
-		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).Return("", errors.New("rpc error"))
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return(anyCommitAddress, nil)
+		rpcClient.On("GetTransactionInitiator", mock.Anything, preHash, mock.Anything, mock.Anything).
+			Return("", errors.New("rpc error"))
 
 		// get BTC event
 		event, err := GetBtcEventWithWitness(

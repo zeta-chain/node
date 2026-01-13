@@ -1,16 +1,18 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
-	"testing"
 )
 
 func TestMsgServer_UpdateZRC20Name(t *testing.T) {

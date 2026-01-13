@@ -11,6 +11,7 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
@@ -402,7 +403,13 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 
 	// append withdraw cap ID, previous package ID and original package ID if provided
 	if cfg.withdrawCapID != "" && cfg.previousPackageID != "" && cfg.originalPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
+		chainParams.GatewayAddress = fmt.Sprintf(
+			"%s,%s,%s,%s",
+			chainParams.GatewayAddress,
+			cfg.withdrawCapID,
+			cfg.previousPackageID,
+			cfg.originalPackageID,
+		)
 	}
 
 	suiMock := mocks.NewSuiClient(t)

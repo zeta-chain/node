@@ -6,10 +6,9 @@ import (
 
 	"cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"

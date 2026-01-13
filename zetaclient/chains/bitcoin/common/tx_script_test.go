@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
@@ -510,7 +511,11 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
 
-		receiverExpected := addressDecoder(t, "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", chain.ChainId)
+		receiverExpected := addressDecoder(
+			t,
+			"bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9",
+			chain.ChainId,
+		)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
 		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
@@ -522,7 +527,11 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53"
 		rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2WSH", txHash)
 
-		receiverExpected := addressDecoder(t, "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc", chain.ChainId)
+		receiverExpected := addressDecoder(
+			t,
+			"bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc",
+			chain.ChainId,
+		)
 		receiver, amount, err := common.DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
 		require.NoError(t, err)
 		require.Equal(t, receiverExpected.EncodeAddress(), receiver)
@@ -573,7 +582,11 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 	txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 
 	rawResult := testutils.LoadBTCTxRawResult(t, TestDataDir, chain.ChainId, "P2TR", txHash)
-	receiverExpected := addressDecoder(t, "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", chain.ChainId)
+	receiverExpected := addressDecoder(
+		t,
+		"bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9",
+		chain.ChainId,
+	)
 
 	t.Run("should return error on invalid amount", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]

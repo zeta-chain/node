@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	testkeeper "github.com/zeta-chain/node/testutil/keeper"
 )
 

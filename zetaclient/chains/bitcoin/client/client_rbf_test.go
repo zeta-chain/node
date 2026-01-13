@@ -19,6 +19,7 @@ import (
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"

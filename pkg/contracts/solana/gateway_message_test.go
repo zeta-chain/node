@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil"
