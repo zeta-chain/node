@@ -41,7 +41,9 @@ func UpdateChainParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 		if chainParams != nil {
 			chain, foundChain := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
 			if !foundChain {
-				return errorsmod.Wrapf(types.ErrSupportedChains, "chain %d not found", chainParams.ChainId)
+				ctx.Logger().Warn("skipping chain params update for removed chain",
+					"chain_id", chainParams.ChainId)
+				continue
 			}
 			chainParams.GasPriceMultiplier = GetGasPriceMultiplierForChain(chain)
 			chainParams.StabilityPoolPercentage = 100
