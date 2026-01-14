@@ -31,22 +31,30 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 }
 
 // UpdateChainParams updates the chain params with gas price multiplier and stability pool percentage.
+// It also removes chain params for chains that no longer exist in the chain list.
 func UpdateChainParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 	allChainParams, found := observerKeeper.GetChainParamsList(ctx)
 	if !found {
 		return errorsmod.Wrap(types.ErrChainParamsNotFound, "failed to get chain params")
 	}
 
+	// Filter out removed chains and update valid ones
+	var updatedChainParams []*types.ChainParams
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams != nil {
 			chain, foundChain := chains.GetChainFromChainID(chainParams.ChainId, []chains.Chain{})
 			if !foundChain {
-				return errorsmod.Wrapf(types.ErrSupportedChains, "chain %d not found", chainParams.ChainId)
+				ctx.Logger().Warn("removing orphaned chain params for removed chain",
+					"chain_id", chainParams.ChainId)
+				continue
 			}
 			chainParams.GasPriceMultiplier = GetGasPriceMultiplierForChain(chain)
 			chainParams.StabilityPoolPercentage = 100
+			updatedChainParams = append(updatedChainParams, chainParams)
 		}
 	}
+
+	allChainParams.ChainParams = updatedChainParams
 
 	if err := allChainParams.Validate(); err != nil {
 		return errorsmod.Wrap(types.ErrInvalidChainParams, err.Error())

@@ -64,20 +64,30 @@ func TestMigrateStore(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})
 
-	t.Run("returns error when chain not found in chain params", func(t *testing.T) {
+	t.Run("removes orphaned chain params for removed chain", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		// set chain params with invalid chain ID
-		testChainParams := getTestChainParams()
-		testChainParams.ChainParams[0].ChainId = 999999999
+		// set valid chain params plus one removed chain (1001 not in static list)
+		testChainParams := types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				sample.ChainParams(1),    // valid chain
+				sample.ChainParams(1001), // removed chain - not in static list
+			},
+		}
 		k.SetChainParamsList(ctx, testChainParams)
 
-		// ACT
+		// ACT - should remove orphaned chain params and succeed
 		err := v12.MigrateStore(ctx, *k)
 
 		// ASSERT
-		require.ErrorIs(t, err, types.ErrSupportedChains)
+		require.NoError(t, err)
+
+		// verify removed chain params were removed
+		newChainParams, found := k.GetChainParamsList(ctx)
+		require.True(t, found)
+		require.Len(t, newChainParams.ChainParams, 1)
+		require.Equal(t, int64(1), newChainParams.ChainParams[0].ChainId)
 	})
 
 	t.Run("returns error when chain params validation fails", func(t *testing.T) {
@@ -152,17 +162,30 @@ func TestUpdateChainParams(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})
 
-	t.Run("returns error if chain not found", func(t *testing.T) {
+	t.Run("removes orphaned chain params for removed chain", func(t *testing.T) {
+		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		testChainParams := getTestChainParams()
-		testChainParams.ChainParams[0].ChainId = 1000000000
+		// set valid chain params plus one removed chain
+		testChainParams := types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				sample.ChainParams(1),    // valid chain
+				sample.ChainParams(1001), // removed chain - not in static list
+			},
+		}
 		k.SetChainParamsList(ctx, testChainParams)
 
+		// ACT - should remove orphaned chain params and succeed
 		err := v12.UpdateChainParams(ctx, *k)
 
-		require.ErrorIs(t, err, types.ErrSupportedChains)
-		require.ErrorContains(t, err, "chain 1000000000 not found")
+		// ASSERT
+		require.NoError(t, err)
+
+		// verify removed chain params were removed
+		newChainParams, found := k.GetChainParamsList(ctx)
+		require.True(t, found)
+		require.Len(t, newChainParams.ChainParams, 1)
+		require.Equal(t, int64(1), newChainParams.ChainParams[0].ChainId)
 	})
 
 	t.Run("returns error if chain params validation fails", func(t *testing.T) {
