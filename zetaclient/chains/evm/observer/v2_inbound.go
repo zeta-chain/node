@@ -185,38 +185,19 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
-	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
-
-	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
-	isCrossChainCall := len(event.Payload) > 0
-
 	// determine confirmation mode
 	confirmationMode := types.ConfirmationMode_FAST
 	if ob.IsBlockConfirmedForInboundSafe(event.Raw.BlockNumber) {
 		confirmationMode = types.ConfirmationMode_SAFE
 	}
 
-	return *types.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
-		event.Sender.Hex(),
+	return NewDepositInboundVote(
+		event,
 		ob.Chain().ChainId,
-		"",
-		event.Receiver.Hex(),
 		ob.ZetaRepo().ZetaChain().ChainId,
-		sdkmath.NewUintFromBigInt(event.Amount),
-		hex.EncodeToString(event.Payload),
-		event.Raw.TxHash.Hex(),
-		event.Raw.BlockNumber,
-		zetacore.PostVoteInboundCallOptionsGasLimit,
-		coinType,
-		event.Asset.Hex(),
-		uint64(event.Raw.Index),
-		types.ProtocolContractVersion_V2,
-		false, // currently not relevant since calls are not arbitrary
-		types.InboundStatus_SUCCESS,
+		ob.ZetaRepo().GetOperatorAddress(),
+		ob.ChainParams().ZetaTokenContractAddress,
 		confirmationMode,
-		types.WithEVMRevertOptions(event.RevertOptions),
-		types.WithCrossChainCall(isCrossChainCall),
 	)
 }
 
@@ -335,26 +316,11 @@ func (ob *Observer) parseAndValidateCallEvents(
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
 func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types.MsgVoteInbound {
-	return *types.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
-		event.Sender.Hex(),
+	return NewCallInboundVote(
+		event,
 		ob.Chain().ChainId,
-		"",
-		event.Receiver.Hex(),
 		ob.ZetaRepo().ZetaChain().ChainId,
-		sdkmath.ZeroUint(),
-		hex.EncodeToString(event.Payload),
-		event.Raw.TxHash.Hex(),
-		event.Raw.BlockNumber,
-		zetacore.PostVoteInboundCallOptionsGasLimit,
-		coin.CoinType_NoAssetCall,
-		"",
-		uint64(event.Raw.Index),
-		types.ProtocolContractVersion_V2,
-		false, // currently not relevant since calls are not arbitrary
-		types.InboundStatus_SUCCESS,
-		types.ConfirmationMode_SAFE,
-		types.WithEVMRevertOptions(event.RevertOptions),
+		ob.ZetaRepo().GetOperatorAddress(),
 	)
 }
 
@@ -411,6 +377,120 @@ func (ob *Observer) observeGatewayDepositAndCall(
 
 	// successfully processed all events in [startBlock, toBlock]
 	return toBlock, nil
+}
+
+// DetermineCoinType determines the coin type of the inbound event based on asset address
+func DetermineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
+	if crypto.IsEmptyAddress(asset) {
+		return coin.CoinType_Gas
+	}
+	if strings.EqualFold(asset.Hex(), zetaTokenAddress) {
+		return coin.CoinType_Zeta
+	}
+	return coin.CoinType_ERC20
+}
+
+// NewDepositInboundVote creates a MsgVoteInbound for a GatewayEVM Deposit event.
+// This is a standalone function that can be used by external packages like zetatool.
+func NewDepositInboundVote(
+	event *gatewayevm.GatewayEVMDeposited,
+	senderChainID int64,
+	zetaChainID int64,
+	operatorAddress string,
+	zetaTokenAddress string,
+	confirmationMode types.ConfirmationMode,
+) types.MsgVoteInbound {
+	coinType := DetermineCoinType(event.Asset, zetaTokenAddress)
+	isCrossChainCall := len(event.Payload) > 0
+
+	return *types.NewMsgVoteInbound(
+		operatorAddress,
+		event.Sender.Hex(),
+		senderChainID,
+		"",
+		event.Receiver.Hex(),
+		zetaChainID,
+		sdkmath.NewUintFromBigInt(event.Amount),
+		hex.EncodeToString(event.Payload),
+		event.Raw.TxHash.Hex(),
+		event.Raw.BlockNumber,
+		zetacore.PostVoteInboundCallOptionsGasLimit,
+		coinType,
+		event.Asset.Hex(),
+		uint64(event.Raw.Index),
+		types.ProtocolContractVersion_V2,
+		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
+		confirmationMode,
+		types.WithEVMRevertOptions(event.RevertOptions),
+		types.WithCrossChainCall(isCrossChainCall),
+	)
+}
+
+// NewCallInboundVote creates a MsgVoteInbound for a GatewayEVM Call event.
+// This is a standalone function that can be used by external packages like zetatool.
+func NewCallInboundVote(
+	event *gatewayevm.GatewayEVMCalled,
+	senderChainID int64,
+	zetaChainID int64,
+	operatorAddress string,
+) types.MsgVoteInbound {
+	return *types.NewMsgVoteInbound(
+		operatorAddress,
+		event.Sender.Hex(),
+		senderChainID,
+		"",
+		event.Receiver.Hex(),
+		zetaChainID,
+		sdkmath.ZeroUint(),
+		hex.EncodeToString(event.Payload),
+		event.Raw.TxHash.Hex(),
+		event.Raw.BlockNumber,
+		zetacore.PostVoteInboundCallOptionsGasLimit,
+		coin.CoinType_NoAssetCall,
+		"",
+		uint64(event.Raw.Index),
+		types.ProtocolContractVersion_V2,
+		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
+		types.WithEVMRevertOptions(event.RevertOptions),
+	)
+}
+
+// NewDepositAndCallInboundVote creates a MsgVoteInbound for a GatewayEVM DepositAndCall event.
+// This is a standalone function that can be used by external packages like zetatool.
+func NewDepositAndCallInboundVote(
+	event *gatewayevm.GatewayEVMDepositedAndCalled,
+	senderChainID int64,
+	zetaChainID int64,
+	operatorAddress string,
+	zetaTokenAddress string,
+) types.MsgVoteInbound {
+	coinType := DetermineCoinType(event.Asset, zetaTokenAddress)
+
+	return *types.NewMsgVoteInbound(
+		operatorAddress,
+		event.Sender.Hex(),
+		senderChainID,
+		"",
+		event.Receiver.Hex(),
+		zetaChainID,
+		sdkmath.NewUintFromBigInt(event.Amount),
+		hex.EncodeToString(event.Payload),
+		event.Raw.TxHash.Hex(),
+		event.Raw.BlockNumber,
+		zetacore.PostVoteInboundCallOptionsGasLimit,
+		coinType,
+		event.Asset.Hex(),
+		uint64(event.Raw.Index),
+		types.ProtocolContractVersion_V2,
+		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
+		types.WithEVMRevertOptions(event.RevertOptions),
+		types.WithCrossChainCall(true),
+	)
 }
 
 // parseAndValidateDepositAndCallEvents collects and sorts events by block number, tx index, and log index
@@ -473,43 +553,13 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	return filtered
 }
 
-// newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
+// newDepositAndCallInboundVote creates a MsgVoteInbound message for a DepositAndCall event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
-	// if event.Asset is zero, it's a native token
-	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
-
-	return *types.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
-		event.Sender.Hex(),
+	return NewDepositAndCallInboundVote(
+		event,
 		ob.Chain().ChainId,
-		"",
-		event.Receiver.Hex(),
 		ob.ZetaRepo().ZetaChain().ChainId,
-		sdkmath.NewUintFromBigInt(event.Amount),
-		hex.EncodeToString(event.Payload),
-		event.Raw.TxHash.Hex(),
-		event.Raw.BlockNumber,
-		1_500_000,
-		coinType,
-		event.Asset.Hex(),
-		uint64(event.Raw.Index),
-		types.ProtocolContractVersion_V2,
-		false, // currently not relevant since calls are not arbitrary
-		types.InboundStatus_SUCCESS,
-		types.ConfirmationMode_SAFE,
-		types.WithEVMRevertOptions(event.RevertOptions),
-		types.WithCrossChainCall(true),
+		ob.ZetaRepo().GetOperatorAddress(),
+		ob.ChainParams().ZetaTokenContractAddress,
 	)
-}
-
-// determineCoinType determines the coin type of the inbound event
-func determineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
-	coinType := coin.CoinType_ERC20
-	if crypto.IsEmptyAddress(asset) {
-		return coin.CoinType_Gas
-	}
-	if strings.EqualFold(asset.Hex(), zetaTokenAddress) {
-		return coin.CoinType_Zeta
-	}
-	return coinType
 }

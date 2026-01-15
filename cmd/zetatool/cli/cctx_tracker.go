@@ -3,22 +3,32 @@ package cli
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/cctx"
+	"github.com/zeta-chain/node/cmd/zetatool/common"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	zetatoolcontext "github.com/zeta-chain/node/cmd/zetatool/context"
 )
 
 func NewTrackCCTXCMD() *cobra.Command {
 	return &cobra.Command{
-		Use:   "track-cctx [inboundHash] [chainID]",
+		Use:   "track-cctx [inboundHash] [chain]",
 		Short: "track a cross chain transaction",
-		RunE:  TrackCCTX,
-		Args:  cobra.ExactArgs(2),
+		Long: `Track a cross chain transaction by its inbound hash and chain.
+
+The chain argument can be either:
+  - A chain ID (e.g., 7000, 1, 56)
+  - A chain name (e.g., zeta_mainnet, eth_mainnet, bsc_mainnet)
+
+Examples:
+  zetatool track-cctx 0x1234... 7000
+  zetatool track-cctx 0x1234... zeta_mainnet
+  zetatool track-cctx 0x1234... eth_mainnet`,
+		RunE: TrackCCTX,
+		Args: cobra.ExactArgs(2),
 	}
 }
 
@@ -30,10 +40,11 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 	)
 
 	inboundHash := args[0]
-	inboundChainID, err := strconv.ParseInt(args[1], 10, 64)
+	inboundChain, err := common.ResolveChain(args[1])
 	if err != nil {
-		return fmt.Errorf("failed to parse chain id")
+		return fmt.Errorf("failed to resolve chain %q: %w", args[1], err)
 	}
+	inboundChainID := inboundChain.ChainId
 	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
 		return fmt.Errorf("failed to read value for flag %s , err %w", config.FlagConfig, err)

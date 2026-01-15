@@ -301,33 +301,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		return nil
 	}
 
-	options := []crosschaintypes.InboundVoteOption{crosschaintypes.WithCrossChainCall(event.IsCrossChainCall)}
-	if event.RevertOptions != nil {
-		options = append(options, crosschaintypes.WithSOLRevertOptions(*event.RevertOptions))
-	}
-
-	// create inbound vote message
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
-		event.Sender,
-		event.SenderChainID,
-		event.Sender,
-		event.Receiver,
-		ob.ZetaRepo().ZetaChain().ChainId,
-		cosmosmath.NewUint(event.Amount),
-		hex.EncodeToString(event.Memo),
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		event.CoinType,
-		event.Asset,
-		uint64(event.Index),
-		crosschaintypes.ProtocolContractVersion_V2,
-		false, // not used
-		crosschaintypes.InboundStatus_SUCCESS,
-		crosschaintypes.ConfirmationMode_SAFE,
-		options...,
-	)
+	return NewSolanaInboundVote(event, ob.ZetaRepo().ZetaChain().ChainId, ob.ZetaRepo().GetOperatorAddress())
 }
 
 // IsEventProcessable checks if the inbound event is processable
@@ -348,4 +322,40 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")
 		return false
 	}
+}
+
+// NewSolanaInboundVote creates a MsgVoteInbound from a Solana inbound event.
+func NewSolanaInboundVote(
+	event *clienttypes.InboundEvent,
+	zetaChainID int64,
+	operatorAddress string,
+) *crosschaintypes.MsgVoteInbound {
+	options := []crosschaintypes.InboundVoteOption{
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
+	}
+	if event.RevertOptions != nil {
+		options = append(options, crosschaintypes.WithSOLRevertOptions(*event.RevertOptions))
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		operatorAddress,
+		event.Sender,
+		event.SenderChainID,
+		event.Sender,
+		event.Receiver,
+		zetaChainID,
+		cosmosmath.NewUint(event.Amount),
+		hex.EncodeToString(event.Memo),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		event.CoinType,
+		event.Asset,
+		uint64(event.Index),
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // not used
+		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ConfirmationMode_SAFE,
+		options...,
+	)
 }

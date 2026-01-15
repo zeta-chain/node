@@ -9,8 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -205,11 +203,9 @@ func FilterAndParseIncomingTx(
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
 func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
-	// prepare logger
 	logger := ob.logger.Inbound.With().Str(logs.FieldTx, event.TxHash).Logger()
 
 	// decode event memo bytes
-	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
 		logger.Info().
@@ -226,88 +222,38 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// resolve the amount to be used in inbound vote message
 	if err := event.ResolveAmountForMsgVoteInbound(); err != nil {
-		// should never happen, otherwise skip this tx
 		logger.Error().Err(err).Msg("unable to resolve msg vote amount")
 		return nil
 	}
 
-	// create inbound vote message contract V1 for legacy memo
-	if event.MemoStd == nil {
-		return ob.NewInboundVoteFromLegacyMemo(event)
-	}
-
-	// create inbound vote message for standard memo
-	return ob.NewInboundVoteFromStdMemo(event)
-}
-
-// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteFromLegacyMemo(
-	event *BTCInboundEvent,
-) *crosschaintypes.MsgVoteInbound {
 	// determine confirmation mode
 	confirmationMode := crosschaintypes.ConfirmationMode_FAST
 	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
 	}
 
-	// build options
-	options := []crosschaintypes.InboundVoteOption{
-		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
-	}
-
-	// add error message if present
-	if event.ErrorMessage != "" {
-		options = append(options, crosschaintypes.WithErrorMessage(event.ErrorMessage))
-	}
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
-		event.FromAddress,
+	return NewBtcInboundVote(
+		event,
 		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
 		ob.ZetaRepo().ZetaChain().ChainId,
-		event.AmountForMsgVoteInbound,
-		hex.EncodeToString(event.MemoBytes),
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V2,
-		false, // no arbitrary call for deposit to ZetaChain
-		event.Status,
+		ob.ZetaRepo().GetOperatorAddress(),
 		confirmationMode,
-		options...,
 	)
 }
 
-// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
-func (ob *Observer) NewInboundVoteFromStdMemo(
+// NewBtcInboundVote creates a MsgVoteInbound from a BTCInboundEvent.
+// The event must have DecodeMemoBytes() and ResolveAmountForMsgVoteInbound() called before this.
+func NewBtcInboundVote(
 	event *BTCInboundEvent,
+	senderChainID int64,
+	zetaChainID int64,
+	operatorAddress string,
+	confirmationMode crosschaintypes.ConfirmationMode,
 ) *crosschaintypes.MsgVoteInbound {
-	// inject revert options specified by the memo
-	// 'CallOnRevert' and 'RevertGasLimit' are irrelevant to bitcoin inbound
-	revertOptions := crosschaintypes.RevertOptions{
-		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
-		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
-		RevertMessage: event.MemoStd.RevertOptions.RevertMessage,
-	}
-
-	// check if the memo is a cross-chain call, or simple token deposit
-	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
-
-	// determine confirmation mode
-	confirmationMode := crosschaintypes.ConfirmationMode_FAST
-	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
-		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
-	}
-
-	// build options
+	// build options using event helper methods
 	options := []crosschaintypes.InboundVoteOption{
-		crosschaintypes.WithRevertOptions(revertOptions),
-		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+		crosschaintypes.WithRevertOptions(event.RevertOptions()),
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall()),
 	}
 
 	// add error message if present
@@ -316,14 +262,14 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	}
 
 	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetaRepo().GetOperatorAddress(),
+		operatorAddress,
 		event.FromAddress,
-		ob.Chain().ChainId,
+		senderChainID,
 		event.FromAddress,
-		event.MemoStd.Receiver.Hex(),
-		ob.ZetaRepo().ZetaChain().ChainId,
+		event.ToAddress,
+		zetaChainID,
 		event.AmountForMsgVoteInbound,
-		hex.EncodeToString(event.MemoStd.Payload),
+		event.Message(),
 		event.TxHash,
 		event.BlockNumber,
 		0,
