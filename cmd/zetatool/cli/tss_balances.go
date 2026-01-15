@@ -10,21 +10,40 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
-	"github.com/zeta-chain/node/cmd/zetatool/chains"
+	"github.com/zeta-chain/node/cmd/zetatool/clients"
+	zetatoolcommon "github.com/zeta-chain/node/cmd/zetatool/common"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/rpc"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+)
+
+const (
+	// conservativeFeeRate is a conservative fee rate in sat/vB for migration calculations.
+	// We use 50 sat/vB which is 5x the default testnet rate to ensure outbound goes through.
+	conservativeFeeRate = 50
+
+	// reservedRBFFees is the amount reserved for potential RBF fee bumping (0.01 BTC)
+	reservedRBFFees = 0.01
+
+	// nonceMarkBuffer is a buffer for nonce mark output in BTC (0.00003 BTC = 3000 satoshis)
+	nonceMarkBuffer = 0.00003
+
+	// satoshisPerBTC is the number of satoshis in 1 BTC
+	satoshisPerBTC = 100_000_000
 )
 
 // chainBalance represents the balance information for a single chain
 type chainBalance struct {
-	Chain   string
-	Address string
-	Balance string
-	Symbol  string
-	Error   string
-	VM      pkgchains.Vm
+	Chain              string
+	Address            string
+	Balance            string
+	MigrationAmount    string
+	MigrationAmountRaw string // Raw amount in wei (EVM) or satoshis (BTC) for direct use in migration command
+	Symbol             string
+	Error              string
+	VM                 pkgchains.Vm
 }
 
 // networkSymbols maps chain network to its native token symbol
@@ -43,31 +62,56 @@ var networkSymbols = map[pkgchains.Network]string{
 	pkgchains.Network_sui:        "SUI",
 }
 
+const (
+	// FlagRawAmounts is the flag to show raw migration amounts in wei/satoshis
+	FlagRawAmounts = "raw-amounts"
+)
+
 // NewTSSBalancesCMD creates a new command to check TSS address balances across all chains
 func NewTSSBalancesCMD() *cobra.Command {
-	return &cobra.Command{
-		Use:   "tss-balances <network>",
+	cmd := &cobra.Command{
+		Use:   "tss-balances <chain>",
 		Short: "Check TSS address balances across all chains",
 		Long: `Check the balance of TSS (Threshold Signature Scheme) addresses across all supported chains.
 
-The network argument must be one of: mainnet, testnet, localnet, devnet
+The chain argument can be:
+  - A chain ID (e.g., 7000, 1, 56)
+  - A chain name (e.g., zeta_mainnet, eth_mainnet)
 
-Example:
-  zetatool tss-balances mainnet
-  zetatool tss-balances testnet
-  zetatool tss-balances localnet --config custom_config.json`,
+The network type (mainnet/testnet/etc) is inferred from the chain.
+
+Examples:
+  zetatool tss-balances 7000
+  zetatool tss-balances zeta_mainnet
+  zetatool tss-balances zeta_testnet --config custom_config.json
+  zetatool tss-balances zeta_testnet --raw-amounts`,
 		Args: cobra.ExactArgs(1),
 		RunE: getTSSBalances,
 	}
+
+	cmd.Flags().Bool(FlagRawAmounts, false, "Show raw migration amounts in wei (EVM) or satoshis (BTC)")
+
+	return cmd
 }
 
 func getTSSBalances(cmd *cobra.Command, args []string) error {
-	network := args[0]
+	chainArg := args[0]
 
-	// Use custom rpc config if provided
+	chain, err := zetatoolcommon.ResolveChain(chainArg)
+	if err != nil {
+		return fmt.Errorf("failed to resolve chain %q: %w", chainArg, err)
+	}
+
+	network := zetatoolcommon.NetworkTypeFromChain(chain)
+
 	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
 		return fmt.Errorf("failed to read value for flag %s: %w", config.FlagConfig, err)
+	}
+
+	showRawAmounts, err := cmd.Flags().GetBool(FlagRawAmounts)
+	if err != nil {
+		return fmt.Errorf("failed to read value for flag %s: %w", FlagRawAmounts, err)
 	}
 
 	cfg, err := config.GetConfigByNetwork(network, configFile)
@@ -102,7 +146,7 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssHistoryRes.TssList))
 
-		if err := printTSSBalances(ctx, cfg, tss, network, zetacoreClient.Observer); err != nil {
+		if err := printTSSBalances(ctx, cfg, tss, network, zetacoreClient.Observer, showRawAmounts); err != nil {
 			fmt.Printf("Error fetching balances for TSS (height %d): %v\n", tss.FinalizedZetaHeight, err)
 			continue
 		}
@@ -117,6 +161,26 @@ func getSymbolForChain(chain pkgchains.Chain) string {
 		return symbol
 	}
 	return ""
+}
+
+// calculateBTCMigrationAmount calculates the maximum amount that can be migrated from a Bitcoin TSS address
+// after accounting for transaction fees, RBF reserve, and nonce mark.
+func calculateBTCMigrationAmount(balance float64) (migrationAmt float64) {
+	// Calculate estimated fee using conservative estimates:
+	// - OutboundBytesMax (1543 vB) for maximum transaction size
+	// - conservativeFeeRate (50 sat/vB) to account for network congestion
+	estimatedFee := float64(conservativeFeeRate*btccommon.OutboundBytesMax) / satoshisPerBTC
+
+	// Total overhead includes: estimated fee + RBF reserve + nonce mark buffer
+	totalOverhead := estimatedFee + reservedRBFFees + nonceMarkBuffer
+	migrationAmt = balance - totalOverhead
+
+	// Ensure migration amount is not negative
+	if migrationAmt < 0 {
+		migrationAmt = 0
+	}
+
+	return migrationAmt
 }
 
 // getRPCForChain returns the RPC URL for a given chain from config
@@ -156,11 +220,25 @@ func printTSSBalances(
 	tss observertypes.TSS,
 	network string,
 	observerClient observertypes.QueryClient,
+	showRawAmounts bool,
 ) error {
 	// Print TSS info
 	fmt.Println("TSS Information:")
 	fmt.Printf("  PubKey: %s\n", tss.TssPubkey)
 	fmt.Printf("  Finalized Height: %d\n", tss.FinalizedZetaHeight)
+	fmt.Println()
+
+	// Print Bitcoin fee estimation info
+	fmt.Println("Bitcoin Fee Estimation Parameters:")
+	fmt.Printf("  Conservative Fee Rate: %d sat/vB\n", conservativeFeeRate)
+	fmt.Printf("  Max Transaction Size: %d vB\n", btccommon.OutboundBytesMax)
+	fmt.Printf("  Estimated Fee: %.8f BTC\n", float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC)
+	fmt.Printf("  RBF Reserve: %.8f BTC\n", reservedRBFFees)
+	fmt.Printf("  Nonce Mark Buffer: %.8f BTC\n", nonceMarkBuffer)
+	fmt.Printf(
+		"  Total Overhead: %.8f BTC\n",
+		float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC+reservedRBFFees+nonceMarkBuffer,
+	)
 	fmt.Println()
 
 	// Query supported chains from zetacore
@@ -169,7 +247,10 @@ func printTSSBalances(
 		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
 
-	btcChainID := chains.GetBTCChainID(network)
+	btcChainID, err := clients.GetBTCChainID(network)
+	if err != nil {
+		return fmt.Errorf("failed to get BTC chain ID: %w", err)
+	}
 	req := &observertypes.QueryGetTssAddressByFinalizedHeightRequest{
 		FinalizedZetaHeight: tss.FinalizedZetaHeight,
 		BitcoinChainId:      btcChainID,
@@ -203,11 +284,10 @@ func printTSSBalances(
 		}
 	}
 
-	// Fetch balances in parallel
 	var wg sync.WaitGroup
 	results := make(chan chainBalance, len(supportedChainsRes.Chains))
 
-	// EVM chains - use TSS EVM address
+	// EVM chains - use TSS EVM address (migration amount equals balance, fees handled by zetacore)
 	for _, chain := range evmChains {
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
@@ -222,7 +302,7 @@ func printTSSBalances(
 		wg.Add(1)
 		go func(c pkgchains.Chain, rpcURL string) {
 			defer wg.Done()
-			balance, err := chains.GetEVMBalance(ctx, rpcURL, evmAddr)
+			balance, err := clients.GetEVMBalance(ctx, rpcURL, evmAddr)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -232,17 +312,19 @@ func printTSSBalances(
 				}
 				return
 			}
+			formattedBalance := clients.FormatEVMBalance(balance)
 			results <- chainBalance{
-				Chain:   c.Name,
-				Address: evmAddr.Hex(),
-				Balance: chains.FormatEVMBalance(balance),
-				Symbol:  getSymbolForChain(c),
-				VM:      c.Vm,
+				Chain:              c.Name,
+				Address:            evmAddr.Hex(),
+				Balance:            formattedBalance,
+				MigrationAmount:    formattedBalance, // Same as balance for EVM
+				MigrationAmountRaw: balance.String(), // Raw wei amount for migration command
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
 			}
 		}(chain, chainRPC)
 	}
 
-	// Bitcoin chains - use TSS BTC address
 	for _, chain := range btcChains {
 		wg.Add(1)
 		go func(c pkgchains.Chain) {
@@ -257,7 +339,7 @@ func printTSSBalances(
 				}
 				return
 			}
-			balance, err := chains.GetBTCBalance(ctx, btcAddr, c.ChainId)
+			balance, err := clients.GetBTCBalance(ctx, btcAddr, c.ChainId)
 			if err != nil {
 				results <- chainBalance{
 					Chain:   c.Name,
@@ -267,60 +349,75 @@ func printTSSBalances(
 				}
 				return
 			}
+			// Calculate migration amount after fee deduction
+			migrationAmt := calculateBTCMigrationAmount(balance)
+			// Convert migration amount to satoshis for raw value
+			migrationAmtSats := int64(migrationAmt * satoshisPerBTC)
 			results <- chainBalance{
-				Chain:   c.Name,
-				Address: btcAddr,
-				Balance: fmt.Sprintf("%.8f", balance),
-				Symbol:  getSymbolForChain(c),
-				VM:      c.Vm,
+				Chain:              c.Name,
+				Address:            btcAddr,
+				Balance:            fmt.Sprintf("%.8f", balance),
+				MigrationAmount:    fmt.Sprintf("%.8f", migrationAmt),
+				MigrationAmountRaw: fmt.Sprintf("%d", migrationAmtSats), // Raw satoshi amount for migration command
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
 			}
 		}(chain)
 	}
 
-	// Sui chains - use TSS Sui address
 	for _, chain := range suiChains {
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:   chain.Name,
-				Address: suiAddr,
-				VM:      chain.Vm,
-				Error:   "RPC not configured",
+				Chain:              chain.Name,
+				Address:            suiAddr,
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
 			}
 			continue
 		}
 		wg.Add(1)
 		go func(c pkgchains.Chain, rpcURL string) {
 			defer wg.Done()
-			balance, err := chains.GetSuiBalance(ctx, rpcURL, suiAddr)
+			balance, err := clients.GetSuiBalance(ctx, rpcURL, suiAddr)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: suiAddr,
-					VM:      c.Vm,
-					Error:   err.Error(),
+					Chain:              c.Name,
+					Address:            suiAddr,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
 				}
 				return
 			}
 			results <- chainBalance{
-				Chain:   c.Name,
-				Address: suiAddr,
-				Balance: chains.FormatSuiBalance(balance),
-				Symbol:  getSymbolForChain(c),
-				VM:      c.Vm,
+				Chain:              c.Name,
+				Address:            suiAddr,
+				Balance:            clients.FormatSuiBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
 			}
 		}(chain, chainRPC)
 	}
 
-	// Solana chains - use gateway PDA balance
 	for _, chain := range solanaChains {
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:   chain.Name,
-				Address: "N/A",
-				VM:      chain.Vm,
-				Error:   "RPC not configured",
+				Chain:              chain.Name,
+				Address:            "N/A",
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
 			}
 			continue
 		}
@@ -333,10 +430,13 @@ func printTSSBalances(
 			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: "N/A",
-					VM:      c.Vm,
-					Error:   fmt.Sprintf("failed to get chain params: %v", err),
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              fmt.Sprintf("failed to get chain params: %v", err),
 				}
 				return
 			}
@@ -344,44 +444,54 @@ func printTSSBalances(
 			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
 			if gatewayAddress == "" {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: "N/A",
-					VM:      c.Vm,
-					Error:   "Gateway address not configured",
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              "Gateway address not configured",
 				}
 				return
 			}
 
-			balance, err := chains.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
+			balance, err := clients.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: gatewayAddress,
-					VM:      c.Vm,
-					Error:   err.Error(),
+					Chain:              c.Name,
+					Address:            gatewayAddress,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
 				}
 				return
 			}
 
 			results <- chainBalance{
-				Chain:   c.Name,
-				Address: gatewayAddress,
-				Balance: chains.FormatSolanaBalance(balance),
-				Symbol:  getSymbolForChain(c),
-				VM:      c.Vm,
+				Chain:              c.Name,
+				Address:            gatewayAddress,
+				Balance:            clients.FormatSolanaBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
 			}
 		}(chain, chainRPC)
 	}
 
-	// TON chains - use gateway contract balance
 	for _, chain := range tonChains {
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:   chain.Name,
-				Address: "N/A",
-				VM:      chain.Vm,
-				Error:   "RPC not configured",
+				Chain:              chain.Name,
+				Address:            "N/A",
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(chain),
+				VM:                 chain.Vm,
+				Error:              "RPC not configured",
 			}
 			continue
 		}
@@ -394,10 +504,13 @@ func printTSSBalances(
 			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: "N/A",
-					VM:      c.Vm,
-					Error:   fmt.Sprintf("failed to get chain params: %v", err),
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              fmt.Sprintf("failed to get chain params: %v", err),
 				}
 				return
 			}
@@ -405,31 +518,39 @@ func printTSSBalances(
 			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
 			if gatewayAddress == "" {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: "N/A",
-					VM:      c.Vm,
-					Error:   "Gateway address not configured",
+					Chain:              c.Name,
+					Address:            "N/A",
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              "Gateway address not configured",
 				}
 				return
 			}
 
-			balance, err := chains.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
+			balance, err := clients.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					Address: gatewayAddress,
-					VM:      c.Vm,
-					Error:   err.Error(),
+					Chain:              c.Name,
+					Address:            gatewayAddress,
+					MigrationAmount:    "N/A",
+					MigrationAmountRaw: "N/A",
+					Symbol:             getSymbolForChain(c),
+					VM:                 c.Vm,
+					Error:              err.Error(),
 				}
 				return
 			}
 
 			results <- chainBalance{
-				Chain:   c.Name,
-				Address: gatewayAddress,
-				Balance: chains.FormatTONBalance(balance),
-				Symbol:  getSymbolForChain(c),
-				VM:      c.Vm,
+				Chain:              c.Name,
+				Address:            gatewayAddress,
+				Balance:            clients.FormatTONBalance(balance),
+				MigrationAmount:    "N/A",
+				MigrationAmountRaw: "N/A",
+				Symbol:             getSymbolForChain(c),
+				VM:                 c.Vm,
 			}
 		}(chain, chainRPC)
 	}
@@ -444,13 +565,13 @@ func printTSSBalances(
 		balances = append(balances, result)
 	}
 
-	printBalanceTable(balances)
+	printBalanceTable(balances, showRawAmounts)
 
 	return nil
 }
 
 // printBalanceTable prints the balance results in a formatted table
-func printBalanceTable(balances []chainBalance) {
+func printBalanceTable(balances []chainBalance, showRawAmounts bool) {
 	vmGroups := make(map[pkgchains.Vm][]chainBalance)
 	for _, b := range balances {
 		vmGroups[b.VM] = append(vmGroups[b.VM], b)
@@ -474,7 +595,12 @@ func printBalanceTable(balances []chainBalance) {
 
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"VM", "Chain", "Address", "Balance"})
+
+	if showRawAmounts {
+		t.AppendHeader(table.Row{"VM", "Chain", "Address", "Balance", "Migration Amount", "Migration Amount (Raw)"})
+	} else {
+		t.AppendHeader(table.Row{"VM", "Chain", "Address", "Balance", "Migration Amount"})
+	}
 
 	for _, vm := range vmOrder {
 		groupBalances, ok := vmGroups[vm]
@@ -488,16 +614,23 @@ func printBalanceTable(balances []chainBalance) {
 				addr = addr[:20] + "..." + addr[len(addr)-20:]
 			}
 
-			var balanceStr string
+			var balanceStr, migrationStr string
 			if b.Error != "" {
 				balanceStr = b.Error
+				migrationStr = b.Error
 			} else if b.Symbol != "" {
 				balanceStr = fmt.Sprintf("%s %s", b.Balance, b.Symbol)
+				migrationStr = fmt.Sprintf("%s %s", b.MigrationAmount, b.Symbol)
 			} else {
 				balanceStr = b.Balance
+				migrationStr = b.MigrationAmount
 			}
 
-			t.AppendRow(table.Row{vmLabels[vm], b.Chain, addr, balanceStr})
+			if showRawAmounts {
+				t.AppendRow(table.Row{vmLabels[vm], b.Chain, addr, balanceStr, migrationStr, b.MigrationAmountRaw})
+			} else {
+				t.AppendRow(table.Row{vmLabels[vm], b.Chain, addr, balanceStr, migrationStr})
+			}
 		}
 	}
 

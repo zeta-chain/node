@@ -4,17 +4,10 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
-	solrpc "github.com/gagliardetto/solana-go/rpc"
 
-	zetatoolchains "github.com/zeta-chain/node/cmd/zetatool/chains"
+	zetatoolclients "github.com/zeta-chain/node/cmd/zetatool/clients"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	zetaevmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
-	solrepo "github.com/zeta-chain/node/zetaclient/chains/solana/repo"
-	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
 func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
@@ -22,7 +15,6 @@ func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
 		outboundChain = ctx.GetInboundChain()
 	)
 
-	// We do not need to handle the case for zeta chain as the outbound is confirmed in the same block.
 	switch {
 	case outboundChain.IsEVMChain():
 		return c.checkEvmOutboundTx(ctx)
@@ -35,14 +27,11 @@ func (c *TrackingDetails) CheckOutbound(ctx *context.Context) error {
 	}
 }
 
-// checkEvmOutboundTx checks if the outbound transaction is confirmed on the outbound chain.
-// If it's confirmed, we update the status to PendingOutboundVoting or PendingRevertVoting. Which means that the confirmation is done and we are not waiting for observers to vote
-// Transition Status PendingConfirmation -> Status PendingVoting
 func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 	var (
 		txHashList     = c.OutboundTrackerHashList
 		outboundChain  = c.OutboundChain
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 	)
 
@@ -51,25 +40,15 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
-	// create evm client for the observation chain
-	evmClient, err := zetatoolchains.GetEvmClient(ctx, outboundChain)
+	evmClient, err := zetatoolclients.NewEVMClientAdapter(outboundChain, ctx.GetConfig())
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %w", err)
 	}
 
 	foundConfirmedTx := false
 
-	// If one of the hash is confirmed, we update the status to pending voting
-	// There might be a condition where we have multiple txs and the wrong tx is confirmed.
-	// To verify that we need, check CCTX data
 	for _, hash := range txHashList {
-		tx, _, err := zetatoolchains.GetEvmTx(ctx, evmClient, hash, outboundChain)
-		if err != nil {
-			continue
-		}
-		// Signer is unused
-		c := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-		confirmed, err := c.IsTxConfirmed(goCtx, hash, chainParams.OutboundConfirmationSafe())
+		confirmed, err := zetatoolclients.IsTxConfirmed(goCtx, evmClient, hash, chainParams.OutboundConfirmationSafe())
 		if err != nil {
 			continue
 		}
@@ -92,15 +71,14 @@ func (c *TrackingDetails) checkSolanaOutboundTx(ctx *context.Context) error {
 	)
 
 	foundConfirmedTx := false
-	solClient := solrpc.New(cfg.SolanaRPC)
-	if solClient == nil {
-		return fmt.Errorf("error creating rpc client")
+	solClient, err := zetatoolclients.NewSolanaClientAdapter(cfg.SolanaRPC)
+	if err != nil {
+		return fmt.Errorf("error creating rpc client: %w", err)
 	}
-	solRepo := solrepo.New(solClient)
 
 	for _, hash := range txHashList {
 		signature := solana.MustSignatureFromBase58(hash)
-		_, err := solRepo.GetTransaction(goCtx, signature)
+		_, err := solClient.GetTransaction(goCtx, signature)
 		if err != nil {
 			continue
 		}
@@ -117,7 +95,7 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 	var (
 		txHashList     = c.OutboundTrackerHashList
 		outboundChain  = c.OutboundChain
-		zetacoreClient = ctx.GetZetaCoreClient()
+		zetacoreClient = ctx.GetZetacoreClient()
 		goCtx          = ctx.GetContext()
 		cfg            = ctx.GetConfig()
 		logger         = ctx.GetLogger()
@@ -129,19 +107,7 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 	}
 	confirmationCount := chainParams.OutboundConfirmationSafe()
 
-	params, err := chains.BitcoinNetParamsFromChainID(outboundChain.ChainId)
-	if err != nil {
-		return fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
-	}
-
-	connCfg := zetaclientConfig.BTCConfig{
-		RPCUsername: cfg.BtcUser,
-		RPCPassword: cfg.BtcPassword,
-		RPCHost:     cfg.BtcHost,
-		RPCParams:   params.Name,
-	}
-
-	btcClient, err := client.New(connCfg, outboundChain.ChainId, logger)
+	btcClient, err := zetatoolclients.NewBitcoinClientAdapter(cfg, outboundChain, logger)
 	if err != nil {
 		return fmt.Errorf("unable to create rpc client: %w", err)
 	}

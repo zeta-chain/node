@@ -66,6 +66,7 @@ ignore:
   - ".github"
   - "app"
   - "cmd"
+  - "cmd/zetatool/**/*"
   - "contrib"
   - "docs"
   - "e2e"

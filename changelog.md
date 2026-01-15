@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Refactor
+
+* [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
+
 ## Release ReForge
 - zetacored: v37.0.0
 - zetaclientd: v38.0.0
