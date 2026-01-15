@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
@@ -899,6 +900,26 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 		// ASSERT
 		require.ErrorContains(t, err, "error deserializing instruction")
 		require.Nil(t, inst)
+	})
+
+	t.Run("try parsing execute data as increment nonce, potentially causing OOM", func(t *testing.T) {
+		// ARRANGE
+		instruction := solana.CompiledInstruction{}
+		instruction.Data = base58.Decode("H3UF2NoybtJj4qWbWhTYMkLNBaVRLTG7GTgkuAaPZ44uKXmaaSZG5Ae4iBXVYthsj6TP14r9x6RdHPcqZDsbLLHryzJHu5BTwNazcA9vQoMTKCP83ERxVM9dUR98BhVj5qSzd4VQZzZBYE8j6mnw7TkM7UEt97YwEUrKANfdvb3YXGN9BwS1CopZp2AeryWLEzKT7vghNT7su")
+
+		// ASSERT-1
+		// parse as execute instruction, should work fine
+		instExecute, err := contracts.ParseInstructionExecute(instruction)
+		require.NoError(t, err)
+		require.EqualValues(t, instExecute.GatewayNonce(), 2)
+		require.EqualValues(t, instExecute.TokenAmount(), 1000000)
+
+		// ASSERT-2
+		// parse as increment nonce instruction, should return error
+		// running below code for 10 times in zetaclient can easily trigger SIGKILL (OOM)
+		instIncrementNonce, err := contracts.ParseInstructionIncrementNonce(instruction)
+		require.ErrorContains(t, err, "failed to read required bytes")
+		require.Nil(t, instIncrementNonce)
 	})
 
 	t.Run("should return error on discriminator mismatch", func(t *testing.T) {

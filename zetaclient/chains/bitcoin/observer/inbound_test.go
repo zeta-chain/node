@@ -8,7 +8,6 @@ import (
 	"path"
 	"testing"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -16,9 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
-	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -223,128 +220,4 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinMainnet
-
-	// create test observer
-	ob := newTestSuite(t, chain)
-	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
-
-	t.Run("should create new inbound vote msg V2", func(t *testing.T) {
-		// create test event
-		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
-
-		// set Value (already has depositor fee deducted, see witness.go)
-		// Value in BTC
-		event.Value = 0.00001000 // 1000 satoshis (fee already deducted)
-
-		// resolve amount
-		err := event.ResolveAmountForMsgVoteInbound()
-		require.NoError(t, err)
-
-		// mock SAFE confirmed block
-		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
-
-		// expected vote
-		expectedVote := crosschaintypes.MsgVoteInbound{
-			Sender:             event.FromAddress,
-			SenderChainId:      chain.ChainId,
-			TxOrigin:           event.FromAddress,
-			Receiver:           event.ToAddress,
-			ReceiverChain:      ob.ZetaRepo().ZetaChain().ChainId,
-			Amount:             cosmosmath.NewUint(1000), // 1000 satoshis
-			Message:            hex.EncodeToString(event.MemoBytes),
-			InboundHash:        event.TxHash,
-			InboundBlockHeight: event.BlockNumber,
-			CallOptions: &crosschaintypes.CallOptions{
-				GasLimit: 0,
-			},
-			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
-			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // always empty with legacy memo
-			IsCrossChainCall:        true,
-			Status:                  crosschaintypes.InboundStatus_SUCCESS,
-			ConfirmationMode:        crosschaintypes.ConfirmationMode_SAFE,
-		}
-
-		// create new inbound vote V1
-		vote := ob.NewInboundVoteFromLegacyMemo(&event)
-		require.Equal(t, expectedVote, *vote)
-	})
-}
-
-func Test_NewInboundVoteFromStdMemo(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinMainnet
-
-	// create test observer
-	ob := newTestSuite(t, chain)
-	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
-
-	t.Run("should create new inbound vote msg with standard memo", func(t *testing.T) {
-		// create revert options
-		r := sample.Rand()
-		revertOptions := crosschaintypes.NewEmptyRevertOptions()
-		revertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, r, &chaincfg.MainNetParams).String()
-		revertOptions.AbortAddress = sample.EthAddress().Hex()
-		revertOptions.RevertMessage = []byte("some revert message")
-
-		// create test event with DepositAndCall opcode (to get CoinType_Gas)
-		receiver := sample.EthAddress()
-		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dymmy"), &memo.InboundMemo{
-			Header: memo.Header{
-				OpCode: memo.OpCodeDepositAndCall,
-			},
-			FieldsV0: memo.FieldsV0{
-				Receiver:      receiver,
-				Payload:       []byte("some payload"),
-				RevertOptions: revertOptions,
-			},
-		})
-
-		// set Value (already has depositor fee deducted, see witness.go)
-		// Value in BTC
-		event.Value = 0.00001000 // 1000 satoshis (fee already deducted)
-
-		// resolve amount
-		err := event.ResolveAmountForMsgVoteInbound()
-		require.NoError(t, err)
-
-		// mock SAFE confirmed block
-		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
-
-		// expected vote
-		memoBytesExpected := event.MemoStd.Payload
-		expectedVote := crosschaintypes.MsgVoteInbound{
-			Sender:             event.FromAddress,
-			SenderChainId:      chain.ChainId,
-			TxOrigin:           event.FromAddress,
-			Receiver:           event.MemoStd.Receiver.Hex(),
-			ReceiverChain:      ob.ZetaRepo().ZetaChain().ChainId,
-			Amount:             cosmosmath.NewUint(1000),              // 1000 satoshis
-			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
-			InboundHash:        event.TxHash,
-			InboundBlockHeight: event.BlockNumber,
-			CallOptions: &crosschaintypes.CallOptions{
-				GasLimit: 0,
-			},
-			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
-			RevertOptions: crosschaintypes.RevertOptions{
-				RevertAddress: revertOptions.RevertAddress, // should use revert address
-				AbortAddress:  revertOptions.AbortAddress,  // should use abort address
-				RevertMessage: revertOptions.RevertMessage, // should use revert message
-			},
-			IsCrossChainCall: true,
-			Status:           crosschaintypes.InboundStatus_SUCCESS,
-			ConfirmationMode: crosschaintypes.ConfirmationMode_SAFE,
-		}
-
-		// create new inbound vote V2 with standard memo
-		vote := ob.NewInboundVoteFromStdMemo(&event)
-		require.Equal(t, expectedVote, *vote)
-	})
 }

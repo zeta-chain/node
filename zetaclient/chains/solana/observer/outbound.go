@@ -21,6 +21,11 @@ import (
 )
 
 var (
+	incrementNonceParser = func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+		return contracts.ParseInstructionIncrementNonce(inst)
+	}
+
+	// gasOutboundParsers is a list of applicable parsers for outbound carrying coin type Gas
 	gasOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
 		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
 			return contracts.ParseInstructionWithdraw(inst)
@@ -31,8 +36,11 @@ var (
 		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
 			return contracts.ParseInstructionExecuteRevert(inst)
 		},
+		// increment nonce parser should be the last one to try to avoid potential OOM
+		incrementNonceParser,
 	}
 
+	// splOutboundParsers is a list of applicable parsers for outbound carrying coin type ERC20
 	splOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
 		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
 			return contracts.ParseInstructionWithdrawSPL(inst)
@@ -43,6 +51,25 @@ var (
 		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
 			return contracts.ParseInstructionExecuteSPLRevert(inst)
 		},
+		// increment nonce parser should be the last one to try to avoid potential OOM
+		incrementNonceParser,
+	}
+
+	// cmdOutboundParsers is a list of applicable parsers for outbound carrying coin type Cmd
+	// Note: there is no fallback to increment_nonce for Whitelist instruction
+	cmdOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionWhitelist(inst)
+		},
+	}
+
+	// noAssetCallOutboundParsers is a list of applicable parsers for outbound carrying coin type NoAssetCall
+	noAssetCallOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecute(inst)
+		},
+		// increment nonce parser should be the last one to try to avoid potential OOM
+		incrementNonceParser,
 	}
 )
 
@@ -325,15 +352,6 @@ func ParseGatewayInstruction(
 			continue
 		}
 
-		// try parsing increment_nonce
-		if parsed, err := contracts.ParseInstructionIncrementNonce(inst); err == nil {
-			if parsed.GatewayNonce() == expectedNonce {
-				matchCount++
-				candidateInst = parsed
-			}
-			continue
-		}
-
 		// try parsing based on coin type
 		var parsed contracts.OutboundInstruction
 		switch coinType {
@@ -342,9 +360,9 @@ func ParseGatewayInstruction(
 		case coin.CoinType_ERC20:
 			parsed, err = parseInstructionWith(inst, splOutboundParsers)
 		case coin.CoinType_Cmd:
-			parsed, err = contracts.ParseInstructionWhitelist(inst)
+			parsed, err = parseInstructionWith(inst, cmdOutboundParsers)
 		case coin.CoinType_NoAssetCall:
-			parsed, err = contracts.ParseInstructionExecute(inst)
+			parsed, err = parseInstructionWith(inst, noAssetCallOutboundParsers)
 		default:
 			err = fmt.Errorf("unsupported outbound coin type %s", coinType)
 		}

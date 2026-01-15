@@ -39,7 +39,7 @@ func TestDetermineCoinType(t *testing.T) {
 			require.Equal(
 				t,
 				tt.expected,
-				determineCoinType(tt.asset, zetaTokenAddress),
+				DetermineCoinType(tt.asset, zetaTokenAddress),
 				"Coin type mismatch for %s",
 				tt.name,
 			)
