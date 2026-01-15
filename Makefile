@@ -340,7 +340,7 @@ start-e2e-performance-test: e2e-images solana
 
 start-e2e-performance-test-1k: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="${E2E_ARGS}--test-stress-eth --test-stress-solana --test-stress-sui --iterations=1000" && \
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --test-stress-solana --test-stress-sui --iterations=1000" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana --profile sui --profile stress up -d
 
 start-stress-test-eth: e2e-images
