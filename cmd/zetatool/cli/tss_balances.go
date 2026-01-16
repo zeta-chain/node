@@ -36,7 +36,7 @@ const (
 
 // chainBalance represents the balance information for a single chain
 type chainBalance struct {
-	Chain              string
+	ChainName          string
 	ChainID            int64
 	Address            string
 	Balance            string
@@ -330,11 +330,11 @@ func printTSSBalances(
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:   chain.Name,
-				ChainID: chain.ChainId,
-				Address: evmAddr.Hex(),
-				VM:      chain.Vm,
-				Error:   "RPC not configured",
+				ChainName: chain.Name,
+				ChainID:   chain.ChainId,
+				Address:   evmAddr.Hex(),
+				VM:        chain.Vm,
+				Error:     "RPC not configured",
 			}
 			continue
 		}
@@ -344,17 +344,17 @@ func printTSSBalances(
 			balance, err := clients.GetEVMBalance(ctx, rpcURL, evmAddr)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					ChainID: c.ChainId,
-					Address: evmAddr.Hex(),
-					VM:      c.Vm,
-					Error:   err.Error(),
+					ChainName: c.Name,
+					ChainID:   c.ChainId,
+					Address:   evmAddr.Hex(),
+					VM:        c.Vm,
+					Error:     err.Error(),
 				}
 				return
 			}
 			formattedBalance := clients.FormatEVMBalance(balance)
 			results <- chainBalance{
-				Chain:              c.Name,
+				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            evmAddr.Hex(),
 				Balance:            formattedBalance,
@@ -373,22 +373,22 @@ func printTSSBalances(
 			// Skip Bitcoin for localnet (mempool.space doesn't support regtest)
 			if network == config.NetworkLocalnet {
 				results <- chainBalance{
-					Chain:   c.Name,
-					ChainID: c.ChainId,
-					Address: btcAddr,
-					VM:      c.Vm,
-					Error:   "Localnet not supported (uses regtest)",
+					ChainName: c.Name,
+					ChainID:   c.ChainId,
+					Address:   btcAddr,
+					VM:        c.Vm,
+					Error:     "Localnet not supported (uses regtest)",
 				}
 				return
 			}
 			balance, err := clients.GetBTCBalance(ctx, btcAddr, c.ChainId)
 			if err != nil {
 				results <- chainBalance{
-					Chain:   c.Name,
-					ChainID: c.ChainId,
-					Address: btcAddr,
-					VM:      c.Vm,
-					Error:   err.Error(),
+					ChainName: c.Name,
+					ChainID:   c.ChainId,
+					Address:   btcAddr,
+					VM:        c.Vm,
+					Error:     err.Error(),
 				}
 				return
 			}
@@ -397,7 +397,7 @@ func printTSSBalances(
 			// Convert migration amount to satoshis for raw value
 			migrationAmtSats := int64(migrationAmt * satoshisPerBTC)
 			results <- chainBalance{
-				Chain:              c.Name,
+				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            btcAddr,
 				Balance:            fmt.Sprintf("%.8f", balance),
@@ -413,7 +413,7 @@ func printTSSBalances(
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:              chain.Name,
+				ChainName:          chain.Name,
 				ChainID:            chain.ChainId,
 				Address:            suiAddr,
 				MigrationAmount:    "N/A",
@@ -430,7 +430,7 @@ func printTSSBalances(
 			balance, err := clients.GetSuiBalance(ctx, rpcURL, suiAddr)
 			if err != nil {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            suiAddr,
 					MigrationAmount:    "N/A",
@@ -442,7 +442,7 @@ func printTSSBalances(
 				return
 			}
 			results <- chainBalance{
-				Chain:              c.Name,
+				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            suiAddr,
 				Balance:            clients.FormatSuiBalance(balance),
@@ -458,7 +458,7 @@ func printTSSBalances(
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:              chain.Name,
+				ChainName:          chain.Name,
 				ChainID:            chain.ChainId,
 				Address:            "N/A",
 				MigrationAmount:    "N/A",
@@ -478,7 +478,7 @@ func printTSSBalances(
 			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
 			if err != nil {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            "N/A",
 					MigrationAmount:    "N/A",
@@ -493,7 +493,7 @@ func printTSSBalances(
 			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
 			if gatewayAddress == "" {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            "N/A",
 					MigrationAmount:    "N/A",
@@ -508,7 +508,7 @@ func printTSSBalances(
 			balance, err := clients.GetSolanaGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            gatewayAddress,
 					MigrationAmount:    "N/A",
@@ -521,7 +521,7 @@ func printTSSBalances(
 			}
 
 			results <- chainBalance{
-				Chain:              c.Name,
+				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            gatewayAddress,
 				Balance:            clients.FormatSolanaBalance(balance),
@@ -537,7 +537,7 @@ func printTSSBalances(
 		chainRPC := getRPCForChain(cfg, chain)
 		if chainRPC == "" {
 			results <- chainBalance{
-				Chain:              chain.Name,
+				ChainName:          chain.Name,
 				ChainID:            chain.ChainId,
 				Address:            "N/A",
 				MigrationAmount:    "N/A",
@@ -557,7 +557,7 @@ func printTSSBalances(
 			chainParamsRes, err := observerClient.GetChainParamsForChain(ctx, chainParamsReq)
 			if err != nil {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            "N/A",
 					MigrationAmount:    "N/A",
@@ -572,7 +572,7 @@ func printTSSBalances(
 			gatewayAddress := chainParamsRes.ChainParams.GatewayAddress
 			if gatewayAddress == "" {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            "N/A",
 					MigrationAmount:    "N/A",
@@ -587,7 +587,7 @@ func printTSSBalances(
 			balance, err := clients.GetTONGatewayBalance(ctx, rpcURL, gatewayAddress)
 			if err != nil {
 				results <- chainBalance{
-					Chain:              c.Name,
+					ChainName:          c.Name,
 					ChainID:            c.ChainId,
 					Address:            gatewayAddress,
 					MigrationAmount:    "N/A",
@@ -600,7 +600,7 @@ func printTSSBalances(
 			}
 
 			results <- chainBalance{
-				Chain:              c.Name,
+				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            gatewayAddress,
 				Balance:            clients.FormatTONBalance(balance),
@@ -668,7 +668,7 @@ func printBalanceTable(balances []chainBalance, showMigrationAmounts bool, showN
 	t.SetOutputMirror(os.Stdout)
 
 	// Build header based on flags
-	header := table.Row{"VM", "Chain", "Address", "Balance"}
+	header := table.Row{"VM", "Chain", "Chain ID", "Address", "Balance"}
 	if showMigrationAmounts {
 		header = append(header, "Migration Amount", "Migration Amount (Raw)")
 	}
@@ -702,7 +702,7 @@ func printBalanceTable(balances []chainBalance, showMigrationAmounts bool, showN
 			}
 
 			// Build row based on flags
-			row := table.Row{vmLabels[vm], b.Chain, addr, balanceStr}
+			row := table.Row{vmLabels[vm], b.ChainName, b.ChainID, addr, balanceStr}
 			if showMigrationAmounts {
 				row = append(row, migrationStr, b.MigrationAmountRaw)
 			}
