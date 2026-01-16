@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
+	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	utiltx "github.com/cosmos/evm/testutil/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -12,13 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	utiltx "github.com/cosmos/evm/testutil/tx"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/math"
 )
 
 func (s *TestSuite) TestResend() {

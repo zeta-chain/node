@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/contracts/testabort"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -19,7 +20,14 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
-func assertAbortContractCall(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, testAbortAddress common.Address, abortMessage []byte, expectedAsset common.Address) {
+func assertAbortContractCall(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	testAbortAddress common.Address,
+	abortMessage []byte,
+	expectedAsset common.Address,
+) {
 	testAbortABI, err := testabort.TestAbortMetaData.GetAbi()
 	require.NoError(t, err)
 	res, err := k.CallEVM(
@@ -250,107 +258,116 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 		assertAbortContractCall(t, ctx, k, testAbortAddress, abortMessage, zrc20)
 	})
 
-	t.Run("unable to process abort if the the universal contract is not abortable for coin-type ERC20", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+	t.Run(
+		"unable to process abort if the the universal contract is not abortable for coin-type ERC20",
+		func(t *testing.T) {
+			// ARRANGE
+			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+			_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := chains.DefaultChainsList()[0].ChainId
-		inboundSender := sample.EthAddress().String()
-		amount := big.NewInt(100)
-		outgoing := true
-		abortMessage := []byte("abort message")
-		assetAddress := sample.EthAddress().String()
+			chainID := chains.DefaultChainsList()[0].ChainId
+			inboundSender := sample.EthAddress().String()
+			amount := big.NewInt(100)
+			outgoing := true
+			abortMessage := []byte("abort message")
+			assetAddress := sample.EthAddress().String()
 
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
+			deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+			_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
 
-		abortAddress := sample.EthAddress()
+			abortAddress := sample.EthAddress()
 
-		// ACT
-		_, err := k.ProcessAbort(
-			ctx,
-			inboundSender,
-			amount,
-			outgoing,
-			chainID,
-			coin.CoinType_ERC20,
-			assetAddress,
-			abortAddress,
-			abortMessage,
-		)
+			// ACT
+			_, err := k.ProcessAbort(
+				ctx,
+				inboundSender,
+				amount,
+				outgoing,
+				chainID,
+				coin.CoinType_ERC20,
+				assetAddress,
+				abortAddress,
+				abortMessage,
+			)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+			// ASSERT
+			require.Error(t, err)
+		},
+	)
 
-	t.Run("unable to process abort if the the universal contract is not abortable for coin-type Gas", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+	t.Run(
+		"unable to process abort if the the universal contract is not abortable for coin-type Gas",
+		func(t *testing.T) {
+			// ARRANGE
+			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+			_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := chains.DefaultChainsList()[0].ChainId
-		inboundSender := sample.EthAddress().String()
-		amount := big.NewInt(100)
-		outgoing := true
-		abortMessage := []byte("abort message")
-		assetAddress := sample.EthAddress().String()
+			chainID := chains.DefaultChainsList()[0].ChainId
+			inboundSender := sample.EthAddress().String()
+			amount := big.NewInt(100)
+			outgoing := true
+			abortMessage := []byte("abort message")
+			assetAddress := sample.EthAddress().String()
 
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
+			deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+			_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
 
-		abortAddress := sample.EthAddress()
+			abortAddress := sample.EthAddress()
 
-		// ACT
-		_, err := k.ProcessAbort(
-			ctx,
-			inboundSender,
-			amount,
-			outgoing,
-			chainID,
-			coin.CoinType_Gas,
-			assetAddress,
-			abortAddress,
-			abortMessage,
-		)
+			// ACT
+			_, err := k.ProcessAbort(
+				ctx,
+				inboundSender,
+				amount,
+				outgoing,
+				chainID,
+				coin.CoinType_Gas,
+				assetAddress,
+				abortAddress,
+				abortMessage,
+			)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+			// ASSERT
+			require.Error(t, err)
+		},
+	)
 
-	t.Run("unable to process abort if the the universal contract is not abortable for coin-type Zeta", func(t *testing.T) {
-		// ARRANGE
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
-		_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+	t.Run(
+		"unable to process abort if the the universal contract is not abortable for coin-type Zeta",
+		func(t *testing.T) {
+			// ARRANGE
+			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+			_ = k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		chainID := chains.DefaultChainsList()[0].ChainId
-		inboundSender := sample.EthAddress().String()
-		amount := big.NewInt(100)
-		outgoing := true
-		abortMessage := []byte("abort message")
-		assetAddress := sample.EthAddress().String()
+			chainID := chains.DefaultChainsList()[0].ChainId
+			inboundSender := sample.EthAddress().String()
+			amount := big.NewInt(100)
+			outgoing := true
+			abortMessage := []byte("abort message")
+			assetAddress := sample.EthAddress().String()
 
-		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
+			deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+			_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
 
-		abortAddress := sample.EthAddress()
+			abortAddress := sample.EthAddress()
 
-		// ACT
-		_, err := k.ProcessAbort(
-			ctx,
-			inboundSender,
-			amount,
-			outgoing,
-			chainID,
-			coin.CoinType_Zeta,
-			assetAddress,
-			abortAddress,
-			abortMessage,
-		)
+			// ACT
+			_, err := k.ProcessAbort(
+				ctx,
+				inboundSender,
+				amount,
+				outgoing,
+				chainID,
+				coin.CoinType_Zeta,
+				assetAddress,
+				abortAddress,
+				abortMessage,
+			)
 
-		// ASSERT
-		require.Error(t, err)
-	})
+			// ASSERT
+			require.Error(t, err)
+		},
+	)
 
 	t.Run("should process Gas abort", func(t *testing.T) {
 		// ARRANGE

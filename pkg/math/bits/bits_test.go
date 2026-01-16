@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	zetabits "github.com/zeta-chain/node/pkg/math/bits"
 )
 

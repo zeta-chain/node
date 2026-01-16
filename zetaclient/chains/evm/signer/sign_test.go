@@ -9,9 +9,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
 	connectorevm "github.com/zeta-chain/protocol-contracts-evm/pkg/zetaconnector.base.sol"
+
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 )
 
 func TestSigner_SignConnectorOnReceive(t *testing.T) {

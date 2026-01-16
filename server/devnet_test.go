@@ -21,13 +21,21 @@ func TestGetBinaryInfo(t *testing.T) {
 		wantZetaClientd string
 	}{
 		{
-			name:            "v37 local",
-			upgradeVersion:  "v37",
-			goos:            runtime.GOOS,
-			goarch:          runtime.GOARCH,
-			wantPlatform:    runtime.GOOS + "/" + runtime.GOARCH,
-			wantZetacored:   fmt.Sprintf("https://github.com/zeta-chain/node/releases/download/v37/zetacored-%s-%s", runtime.GOOS, runtime.GOARCH),
-			wantZetaClientd: fmt.Sprintf("https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-%s-%s", runtime.GOOS, runtime.GOARCH),
+			name:           "v37 local",
+			upgradeVersion: "v37",
+			goos:           runtime.GOOS,
+			goarch:         runtime.GOARCH,
+			wantPlatform:   runtime.GOOS + "/" + runtime.GOARCH,
+			wantZetacored: fmt.Sprintf(
+				"https://github.com/zeta-chain/node/releases/download/v37/zetacored-%s-%s",
+				runtime.GOOS,
+				runtime.GOARCH,
+			),
+			wantZetaClientd: fmt.Sprintf(
+				"https://github.com/zeta-chain/node/releases/download/v37/zetaclientd-%s-%s",
+				runtime.GOOS,
+				runtime.GOARCH,
+			),
 		},
 	}
 

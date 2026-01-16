@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 	"github.com/zeta-chain/node/testutil/sample"
 )

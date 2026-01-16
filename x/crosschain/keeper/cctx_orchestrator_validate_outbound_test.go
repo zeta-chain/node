@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/node/e2e/contracts/dapp"
-
 	cosmoserror "cosmossdk.io/errors"
 	"github.com/cosmos/evm/x/vm/statedb"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
@@ -16,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"

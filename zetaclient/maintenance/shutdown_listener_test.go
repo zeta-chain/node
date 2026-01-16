@@ -9,6 +9,7 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )

@@ -7,6 +7,12 @@ import (
 	"strconv"
 	"testing"
 
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	utiltx "github.com/cosmos/evm/testutil/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -15,16 +21,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	utiltx "github.com/cosmos/evm/testutil/tx"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // QueryClient defines a mocked object that implements the Cosmos EVM GRPC
@@ -67,7 +65,11 @@ func RegisterTraceTransactionError(queryClient *mocks.EVMQueryClient, msgEthTx *
 }
 
 // TraceBlock
-func RegisterTraceBlock(queryClient *mocks.EVMQueryClient, txs []*evmtypes.MsgEthereumTx, traceConfig *evmtypes.TraceConfig) {
+func RegisterTraceBlock(
+	queryClient *mocks.EVMQueryClient,
+	txs []*evmtypes.MsgEthereumTx,
+	traceConfig *evmtypes.TraceConfig,
+) {
 	data := []byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}
 	if traceConfig == nil {
 		traceConfig = &evmtypes.TraceConfig{}

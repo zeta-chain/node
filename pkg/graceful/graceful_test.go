@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
@@ -154,7 +155,7 @@ func TestProcess(t *testing.T) {
 		assert.Contains(t, ts.logger.String(), "panic in service")
 
 		// Check that error contains exact line of panic
-		assert.Contains(t, ts.logger.String(), "graceful_test.go:144")
+		assert.Contains(t, ts.logger.String(), "graceful_test.go:145")
 	})
 
 	t.Run("Panic handling during shutdown", func(t *testing.T) {
@@ -176,7 +177,7 @@ func TestProcess(t *testing.T) {
 		assert.Contains(t, ts.logger.String(), "panic during shutdown")
 
 		// Check that error contains exact line of panic
-		assert.Contains(t, ts.logger.String(), "graceful_test.go:167")
+		assert.Contains(t, ts.logger.String(), "graceful_test.go:168")
 	})
 
 	t.Run("WaitForShutdown noop", func(t *testing.T) {

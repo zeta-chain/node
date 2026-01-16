@@ -5,10 +5,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/x/observer/keeper"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 

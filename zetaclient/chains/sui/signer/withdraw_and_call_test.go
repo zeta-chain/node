@@ -8,6 +8,7 @@ import (
 	"github.com/pattonkan/sui-go/sui"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -58,7 +59,14 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 	}{
 		{
 			name: "successful withdraw and call",
-			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef, []sui.ObjectRef{onCallObjRef}),
+			args: newTestWACPTBArgs(
+				t,
+				gatewayObjRef,
+				suiCoinObjRef,
+				withdrawCapObjRef,
+				msgContextObjRef,
+				[]sui.ObjectRef{onCallObjRef},
+			),
 		},
 		{
 			name: "successful withdraw and call with empty payload",
@@ -362,7 +370,13 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			ts.SuiMock.On("GetSuiCoinObjectRefs", ctx, mock.Anything, mock.Anything).Maybe().Return(suiCoinObjRefs, nil)
 
 			// ACT
-			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.msgContextID, tt.onCallObjectIDs, 100)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(
+				ctx,
+				tt.withdrawCapID,
+				tt.msgContextID,
+				tt.onCallObjectIDs,
+				100,
+			)
 
 			// ASSERT
 			if tt.errMsg != "" {

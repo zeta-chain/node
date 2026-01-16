@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -29,7 +30,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		_ = setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -170,7 +177,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		_ = setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -213,7 +226,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		_ = setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -255,7 +274,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -301,7 +326,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", assetAddress, "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -343,7 +374,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)
@@ -388,7 +425,13 @@ func TestKeeper_ProcessRevert(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
-		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+		testDAppV2, err := k.DeployContract(
+			ctx,
+			testdappv2.TestDAppV2MetaData,
+			true,
+			sample.EthAddress(),
+			sample.EthAddress(),
+		)
 		require.NoError(t, err)
 		require.NotEmpty(t, testDAppV2)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, testDAppV2)

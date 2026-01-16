@@ -6,6 +6,7 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

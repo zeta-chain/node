@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 

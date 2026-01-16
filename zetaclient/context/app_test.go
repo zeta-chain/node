@@ -7,12 +7,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/maps"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"golang.org/x/exp/maps"
 )
 
 func TestAppContext(t *testing.T) {

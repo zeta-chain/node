@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/pkg/crypto"
 )

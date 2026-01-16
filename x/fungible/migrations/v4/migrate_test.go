@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -101,7 +102,12 @@ func TestMigrateStore(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		logOutput := testLogger.String()
-		require.Contains(t, logOutput, "SUI gas ZRC20 burned from stability pool", "Expected log for successful burn of SUI gas ZRC20")
+		require.Contains(
+			t,
+			logOutput,
+			"SUI gas ZRC20 burned from stability pool",
+			"Expected log for successful burn of SUI gas ZRC20",
+		)
 		fetchedBalance, err = k.ZRC20BalanceOf(ctx, suiGasZRC20, stabilityPoolAddress)
 		require.NoError(t, err)
 		require.Equal(t, int64(0), fetchedBalance.Int64(), "SUI balance should be zero after migration")
@@ -134,7 +140,12 @@ func TestMigrateStore(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		logOutput := testLogger.String()
-		require.Contains(t, logOutput, "failed to query SUI gas coin ZRC20", "Expected error log for missing SUI gas coin")
+		require.Contains(
+			t,
+			logOutput,
+			"failed to query SUI gas coin ZRC20",
+			"Expected error log for missing SUI gas coin",
+		)
 	})
 
 	t.Run("logs error and returns nil if unable to burn tokens", func(t *testing.T) {
@@ -154,7 +165,12 @@ func TestMigrateStore(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		logOutput := testLogger.String()
-		require.Contains(t, logOutput, "failed to burn SUI gas ZRC20 from stability pool", "Expected error log for burn failure")
+		require.Contains(
+			t,
+			logOutput,
+			"failed to burn SUI gas ZRC20 from stability pool",
+			"Expected error log for burn failure",
+		)
 	})
 }
 
