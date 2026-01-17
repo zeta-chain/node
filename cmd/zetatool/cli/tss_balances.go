@@ -238,9 +238,8 @@ func fetchAllPendingNonces(
 	return res.PendingNonces, nil
 }
 
-// findPendingNonces finds the pending nonces for a specific chain and TSS from the list.
-// Returns ok=false if no matching PendingNonces entry is found.
-func findPendingNonces(
+// getPendingNoncesForChainAndTss finds the pending nonces for a specific chain and TSS from the list.
+func getPendingNoncesForChainAndTss(
 	allNonces []observertypes.PendingNonces,
 	chainID int64,
 	tssPubkey string,
@@ -269,18 +268,20 @@ func printTSSBalances(
 	fmt.Printf("  Finalized Height: %d\n", tss.FinalizedZetaHeight)
 	fmt.Println()
 
-	// Print Bitcoin fee estimation info
-	fmt.Println("Bitcoin Fee Estimation Parameters:")
-	fmt.Printf("  Conservative Fee Rate: %d sat/vB\n", conservativeFeeRate)
-	fmt.Printf("  Max Transaction Size: %d vB\n", btccommon.OutboundBytesMax)
-	fmt.Printf("  Estimated Fee: %.8f BTC\n", float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC)
-	fmt.Printf("  RBF Reserve: %.8f BTC\n", reservedRBFFees)
-	fmt.Printf("  Nonce Mark Buffer: %.8f BTC\n", nonceMarkBuffer)
-	fmt.Printf(
-		"  Total Overhead: %.8f BTC\n",
-		float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC+reservedRBFFees+nonceMarkBuffer,
-	)
-	fmt.Println()
+	// Print Bitcoin fee estimation info if showing migration amounts
+	if showMigrationAmounts {
+		fmt.Println("Bitcoin Fee Estimation Parameters:")
+		fmt.Printf("  Conservative Fee Rate: %d sat/vB\n", conservativeFeeRate)
+		fmt.Printf("  Max Transaction Size: %d vB\n", btccommon.OutboundBytesMax)
+		fmt.Printf("  Estimated Fee: %.8f BTC\n", float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC)
+		fmt.Printf("  RBF Reserve: %.8f BTC\n", reservedRBFFees)
+		fmt.Printf("  Nonce Mark Buffer: %.8f BTC\n", nonceMarkBuffer)
+		fmt.Printf(
+			"  Total Overhead: %.8f BTC\n",
+			float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC+reservedRBFFees+nonceMarkBuffer,
+		)
+		fmt.Println()
+	}
 
 	// Query supported chains from zetacore
 	supportedChainsRes, err := observerClient.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
@@ -633,7 +634,7 @@ func printTSSBalances(
 		} else {
 			for i := range balances {
 				if balances[i].ChainID != 0 {
-					nonceLow, nonceHigh, ok := findPendingNonces(allNonces, balances[i].ChainID, tss.TssPubkey)
+					nonceLow, nonceHigh, ok := getPendingNoncesForChainAndTss(allNonces, balances[i].ChainID, tss.TssPubkey)
 					if ok {
 						balances[i].PendingNonceLow = nonceLow
 						balances[i].PendingNonceHigh = nonceHigh
