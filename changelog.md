@@ -5,6 +5,7 @@
 ### Refactor
 
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
+* [4533](https://github.com/zeta-chain/node/pull/4533) - zetatools list pending nonces for supported chains.
 
 ## Release ReForge
 - zetacored: v37.0.0
