@@ -4,26 +4,24 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/evm/indexer"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/test-go/testify/mock"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cometbft/cometbft/types"
-
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/evm/indexer"
-	cosmosevmtypes "github.com/cosmos/evm/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 	"github.com/zeta-chain/node/testutil/sample"
-
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 )
 
 func (suite *TestSuite) TestGetSyntheticTransactionByHash() {
@@ -872,7 +870,20 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 			if tc.expPass {
 				s.Require().Equal(res["transactionHash"], hash)
 				s.Require().Equal(res["blockNumber"], hexutil.Uint64(tc.block.Height)) //nolint: gosec // G115
-				requiredFields := []string{"status", "cumulativeGasUsed", "logsBloom", "logs", "gasUsed", "blockHash", "blockNumber", "transactionIndex", "effectiveGasPrice", "from", "to", "type"}
+				requiredFields := []string{
+					"status",
+					"cumulativeGasUsed",
+					"logsBloom",
+					"logs",
+					"gasUsed",
+					"blockHash",
+					"blockNumber",
+					"transactionIndex",
+					"effectiveGasPrice",
+					"from",
+					"to",
+					"type",
+				}
 				for _, field := range requiredFields {
 					s.Require().NotNil(res[field], "field was empty %s", field)
 				}

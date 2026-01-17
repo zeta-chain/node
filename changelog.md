@@ -7,6 +7,10 @@
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
 * [4533](https://github.com/zeta-chain/node/pull/4533) - zetatools list pending nonces for supported chains.
 
+### Fixes
+
+* [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
+
 ## Release ReForge
 - zetacored: v37.0.0
 - zetaclientd: v38.0.0

@@ -1,9 +1,8 @@
 package signer
 
 import (
-	"testing"
-
 	"errors"
+	"testing"
 
 	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 	"github.com/stretchr/testify/require"

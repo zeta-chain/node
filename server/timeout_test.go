@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/testutil/sample"
 )
 

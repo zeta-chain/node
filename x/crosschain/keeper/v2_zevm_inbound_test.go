@@ -7,15 +7,15 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_GetZetaInboundDetails(t *testing.T) {
@@ -223,7 +223,8 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
 		gasLimit := big.NewInt(100000)
-		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(gasLimit, nil)
+		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).
+			Return(gasLimit, nil)
 
 		// ACT
 		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
@@ -310,7 +311,8 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		}
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
-		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(nil, errors.New("gas limit query failed"))
+		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).
+			Return(nil, errors.New("gas limit query failed"))
 
 		// ACT
 		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
@@ -347,7 +349,8 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
 		gasLimit := big.NewInt(100000)
-		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(gasLimit, nil)
+		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).
+			Return(gasLimit, nil)
 
 		// ACT
 		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)

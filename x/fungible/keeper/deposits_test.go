@@ -4,24 +4,23 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/node/e2e/contracts/testabort"
-
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/contracts/reverter"
+	"github.com/zeta-chain/node/e2e/contracts/testabort"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
@@ -62,7 +61,13 @@ func getTestDAppNoMessageIndex(
 
 // deployTestDAppV2 deploys the test dapp v2 contract and returns its address
 func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
-	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
+	testDAppV2, err := k.DeployContract(
+		ctx,
+		testdappv2.TestDAppV2MetaData,
+		true,
+		sample.EthAddress(),
+		sample.EthAddress(),
+	)
 	require.NoError(t, err)
 	require.NotEmpty(t, testDAppV2)
 	assertContractDeployment(t, evmk, ctx, testDAppV2)
@@ -699,7 +704,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		require.False(t, contractCall)
-		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, receiver.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
+		require.Equal(
+			t,
+			sdkk.BankKeeper.GetBalance(ctx, receiver.Bytes(), config.BaseDenom).Amount.Int64(),
+			amount.Int64(),
+		)
 	})
 
 	t.Run("should process no-call deposit, message should be ignored", func(t *testing.T) {
@@ -844,7 +853,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		require.True(t, contractCall)
-		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, testDapp.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
+		require.Equal(
+			t,
+			sdkk.BankKeeper.GetBalance(ctx, testDapp.Bytes(), config.BaseDenom).Amount.Int64(),
+			amount.Int64(),
+		)
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
 	})
 
@@ -884,7 +897,11 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		require.False(t, contractCall)
-		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, receiverAdddress.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
+		require.Equal(
+			t,
+			sdkk.BankKeeper.GetBalance(ctx, receiverAdddress.Bytes(), config.BaseDenom).Amount.Int64(),
+			amount.Int64(),
+		)
 	})
 
 	t.Run("should not process deposit for coinType Zeta if system contract is not present", func(t *testing.T) {

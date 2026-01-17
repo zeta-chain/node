@@ -8,10 +8,12 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
@@ -28,8 +30,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
-	grpccodes "google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 )
 
 var someArgStub = map[string]any{}
@@ -256,7 +256,8 @@ func TestObserver(t *testing.T) {
 		ts.OnGetTx(txHash, "10000", true, false, nil)
 
 		// Given vote inbound RPC failure
-		ts.zetaMock.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", "", errors.New("rpc error"))
+		ts.zetaMock.On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", "", errors.New("rpc error"))
 
 		// Given CCTX not found
 		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
@@ -752,7 +753,13 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 
 	// append withdraw cap ID, previous package ID and original package ID if provided
 	if cfg.withdrawCapID != "" && cfg.originalPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.previousPackageID, cfg.originalPackageID)
+		chainParams.GatewayAddress = fmt.Sprintf(
+			"%s,%s,%s,%s",
+			chainParams.GatewayAddress,
+			cfg.withdrawCapID,
+			cfg.previousPackageID,
+			cfg.originalPackageID,
+		)
 	}
 
 	zetacore := mocks.NewZetacoreClient(t).
@@ -812,7 +819,11 @@ func (ts *testSuite) SampleEvent(packageID, txHash, event string, kv map[string]
 	}
 }
 
-func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents bool, events []models.SuiEventResponse) {
+func (ts *testSuite) OnGetTx(
+	digest, checkpoint string,
+	showEffects, showEvents bool,
+	events []models.SuiEventResponse,
+) {
 	req := models.SuiGetTransactionBlockRequest{
 		Digest: digest,
 		Options: models.SuiTransactionBlockOptions{

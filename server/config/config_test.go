@@ -5,11 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
-
 	serverconfig "github.com/cosmos/evm/server/config"
 	"github.com/cosmos/evm/testutil/constants"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultConfig(t *testing.T) {

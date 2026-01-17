@@ -3,12 +3,11 @@ package backend
 import (
 	"encoding/json"
 
+	cmttypes "github.com/cometbft/cometbft/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	cmttypes "github.com/cometbft/cometbft/types"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/node/rpc/types"
 )

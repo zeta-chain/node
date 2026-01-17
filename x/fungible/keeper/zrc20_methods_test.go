@@ -7,9 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
+
 	"github.com/zeta-chain/node/testutil/sample"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 )
 
 func TestKeeper_ZRC20SetName(t *testing.T) {

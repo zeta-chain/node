@@ -11,6 +11,7 @@ import (
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	geth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 

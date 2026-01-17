@@ -17,7 +17,9 @@ func Test_ActiveMessageContextDynamicFieldName(t *testing.T) {
 	got, err := ActiveMessageContextDynamicFieldName()
 	require.NoError(t, err)
 
-	expectedJSON := json.RawMessage(`[97,99,116,105,118,101,95,109,101,115,115,97,103,101,95,99,111,110,116,101,120,116]`)
+	expectedJSON := json.RawMessage(
+		`[97,99,116,105,118,101,95,109,101,115,115,97,103,101,95,99,111,110,116,101,120,116]`,
+	)
 	require.Equal(t, expectedJSON, got)
 }
 
@@ -49,8 +51,14 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			wantSupportedPackageIDs: []string{packageID},
 		},
 		{
-			name:                    "valid pair id with 5 parts",
-			pair:                    MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+			name: "valid pair id with 5 parts",
+			pair: MakePairID(
+				packageID,
+				gatewayID,
+				withdrawCapID,
+				previousPackageID,
+				originalPackageID,
+			),
 			wantWithdrawCapID:       withdrawCapID,
 			wantPreviousPackageID:   previousPackageID,
 			wantOriginalPackageID:   originalPackageID,
@@ -131,12 +139,20 @@ func Test_MakePairID(t *testing.T) {
 
 	t.Run("original package id is not empty", func(t *testing.T) {
 		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID)
-		require.Equal(t, fmt.Sprintf("%s,%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID), gatewayAddress)
+		require.Equal(
+			t,
+			fmt.Sprintf("%s,%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+			gatewayAddress,
+		)
 	})
 
 	t.Run("original package id is not empty, but previous package id is empty", func(t *testing.T) {
 		gatewayAddress := MakePairID(packageID, gatewayID, withdrawCapID, "", originalPackageID)
-		require.Equal(t, fmt.Sprintf("%s,%s,%s,,%s", packageID, gatewayID, withdrawCapID, originalPackageID), gatewayAddress)
+		require.Equal(
+			t,
+			fmt.Sprintf("%s,%s,%s,,%s", packageID, gatewayID, withdrawCapID, originalPackageID),
+			gatewayAddress,
+		)
 	})
 }
 
@@ -172,7 +188,9 @@ func Test_Previous(t *testing.T) {
 	)
 
 	t.Run("previous package id is not empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+		gw, err := NewGatewayFromPairID(
+			MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+		)
 		require.NoError(t, err)
 
 		gwPrevious := gw.Previous()
@@ -200,7 +218,9 @@ func Test_Original(t *testing.T) {
 	)
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+		gw, err := NewGatewayFromPairID(
+			MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+		)
 		require.NoError(t, err)
 
 		gwOriginal := gw.Original()
@@ -245,7 +265,10 @@ func Test_UpdateIDs(t *testing.T) {
 	require.Empty(t, gw.originalPackageID)
 
 	// after update
-	require.NoError(t, gw.UpdateIDs(MakePairID(packageID2, gatewayID2, withdrawCapID, previousPackageID, originalPackageID)))
+	require.NoError(
+		t,
+		gw.UpdateIDs(MakePairID(packageID2, gatewayID2, withdrawCapID, previousPackageID, originalPackageID)),
+	)
 	require.Equal(t, packageID2, gw.PackageID())
 	require.Equal(t, gatewayID2, gw.ObjectID())
 	require.Equal(t, withdrawCapID, gw.WithdrawCapID())
@@ -265,7 +288,9 @@ func TestParseEvent(t *testing.T) {
 		txHash            = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw, err := NewGatewayFromPairID(MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID))
+	gw, err := NewGatewayFromPairID(
+		MakePairID(packageID, gatewayID, withdrawCapID, previousPackageID, originalPackageID),
+	)
 	require.NoError(t, err)
 
 	eventType := func(t string) string {

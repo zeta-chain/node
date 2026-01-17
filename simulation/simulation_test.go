@@ -27,6 +27,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/app"
 	zetasimulation "github.com/zeta-chain/node/simulation"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
