@@ -7,6 +7,7 @@ import (
 
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 

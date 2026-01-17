@@ -1,13 +1,14 @@
 package signer
 
 import (
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/coin"
 	"math/big"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 

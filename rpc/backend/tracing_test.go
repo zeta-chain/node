@@ -3,23 +3,20 @@ package backend
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
 	"github.com/cosmos/evm/indexer"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/crypto"
 )
 
 func (s *TestSuite) TestTraceTransaction() {

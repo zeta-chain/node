@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"

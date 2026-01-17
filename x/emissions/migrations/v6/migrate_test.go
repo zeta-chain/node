@@ -5,6 +5,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	v6 "github.com/zeta-chain/node/x/emissions/migrations/v6"
 	"github.com/zeta-chain/node/x/emissions/types"

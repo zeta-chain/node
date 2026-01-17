@@ -5,8 +5,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/x/emissions/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/zeta-chain/node/x/emissions/types"
 )
 
 func TestLegacyString(t *testing.T) {

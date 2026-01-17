@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keysign"
+
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/tss"

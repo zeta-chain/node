@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zeta-chain/node/zetaclient/common"
-
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 

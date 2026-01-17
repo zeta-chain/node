@@ -9,11 +9,11 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 	"golang.org/x/exp/rand"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/zrepo"
 )
 
 func Test_FetchUTXOs(t *testing.T) {

@@ -6,11 +6,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -20,11 +15,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

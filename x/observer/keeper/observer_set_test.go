@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/x/observer/types"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_GetObserverSet(t *testing.T) {
