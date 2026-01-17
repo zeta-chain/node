@@ -273,7 +273,10 @@ func printTSSBalances(
 		fmt.Println("Bitcoin Fee Estimation Parameters:")
 		fmt.Printf("  Conservative Fee Rate: %d sat/vB\n", conservativeFeeRate)
 		fmt.Printf("  Max Transaction Size: %d vB\n", btccommon.OutboundBytesMax)
-		fmt.Printf("  Estimated Fee: %.8f BTC\n", float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC)
+		fmt.Printf(
+			"  Estimated Fee: %.8f BTC\n",
+			float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC,
+		)
 		fmt.Printf("  RBF Reserve: %.8f BTC\n", reservedRBFFees)
 		fmt.Printf("  Nonce Mark Buffer: %.8f BTC\n", nonceMarkBuffer)
 		fmt.Printf(
