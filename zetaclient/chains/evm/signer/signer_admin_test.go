@@ -9,9 +9,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
+
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/erc20custody.sol"
 )
 
 func TestSigner_SignAdminTx(t *testing.T) {

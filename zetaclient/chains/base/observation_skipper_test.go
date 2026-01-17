@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -61,7 +62,15 @@ func Test_CheckSkipInbound(t *testing.T) {
 			ob := newTestSuite(t, chains.Ethereum)
 
 			// mock app context
-			appCtx := mockAppContext(t, chain, *ethParams, tt.isInboundEnabled, true, tt.isMempoolCongested, tt.isMaxFeeExceeded)
+			appCtx := mockAppContext(
+				t,
+				chain,
+				*ethParams,
+				tt.isInboundEnabled,
+				true,
+				tt.isMempoolCongested,
+				tt.isMaxFeeExceeded,
+			)
 
 			// ACT
 			result := CheckSkipInbound(ob.Observer, appCtx)
@@ -169,7 +178,13 @@ func Test_CheckSkipGasPrice(t *testing.T) {
 }
 
 // mockAppContext creates a mock AppContext for testing
-func mockAppContext(t *testing.T, chain chains.Chain, chainParams observertypes.ChainParams, isInboundEnabled, isOutboundEnabled, isMempoolCongested bool, isBaseFeeExceeded bool) *context.AppContext {
+func mockAppContext(
+	t *testing.T,
+	chain chains.Chain,
+	chainParams observertypes.ChainParams,
+	isInboundEnabled, isOutboundEnabled, isMempoolCongested bool,
+	isBaseFeeExceeded bool,
+) *context.AppContext {
 	// Create a mock config
 	cfg := config.New(false)
 	cfg.MaxBaseFee = 1000

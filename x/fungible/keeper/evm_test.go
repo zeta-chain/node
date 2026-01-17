@@ -11,6 +11,7 @@ import (
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/e2e/contracts/dapp"
 	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
 	"github.com/zeta-chain/node/e2e/contracts/example"

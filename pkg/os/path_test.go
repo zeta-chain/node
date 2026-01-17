@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/testutil/sample"
 )

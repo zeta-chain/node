@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/x/observer/types"
 )

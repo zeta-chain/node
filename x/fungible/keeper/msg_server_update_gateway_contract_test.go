@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/zrc20.sol"
 
-	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"

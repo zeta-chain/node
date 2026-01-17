@@ -3,9 +3,9 @@ package solana_test
 import (
 	"testing"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 

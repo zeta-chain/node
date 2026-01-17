@@ -5,11 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
-
 	sdkmath "cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -19,6 +16,8 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestKeeper_InitiateOutboundZEVM(t *testing.T) {

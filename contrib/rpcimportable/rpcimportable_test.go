@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/pkg/sdkconfig"
 )

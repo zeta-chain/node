@@ -5,13 +5,12 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/coin"

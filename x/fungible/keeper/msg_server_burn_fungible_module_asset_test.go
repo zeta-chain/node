@@ -2,15 +2,16 @@ package keeper_test
 
 import (
 	"errors"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/mock"
-	"github.com/zeta-chain/node/cmd/zetacored/config"
-	"github.com/zeta-chain/node/pkg/constant"
 	"math/big"
 	"testing"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/constant"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"

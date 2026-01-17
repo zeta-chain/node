@@ -6,11 +6,12 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
+
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/x/emissions/keeper"
 	v5 "github.com/zeta-chain/node/x/emissions/migrations/v5"
 	"github.com/zeta-chain/node/x/emissions/types"
-	"gopkg.in/yaml.v2"
 )
 
 type LegacyParams struct {

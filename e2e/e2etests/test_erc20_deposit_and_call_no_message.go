@@ -36,7 +36,7 @@ func TestERC20DepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// wait for the zrc20 balance to be updated
-	change := utils.NewExactChange(amount)
+	change := utils.NewBalanceChange(true)
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract

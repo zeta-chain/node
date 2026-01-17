@@ -5,6 +5,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/pkg/coin"
 )
 
