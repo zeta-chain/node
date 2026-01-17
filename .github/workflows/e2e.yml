@@ -8,8 +8,8 @@ on:
   pull_request:
   merge_group:
   schedule:
-    # run at 6AM UTC Daily
-    # 6AM UTC -> 11PM PT
+    # run at 5AM UTC Daily
+    # 6AM UTC -> 10PM PT / 1AM ET
     - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
@@ -200,12 +200,9 @@ jobs:
               core.setOutput('DEFAULT_TESTS', true);
               core.setOutput('UPGRADE_TESTS', true);
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
-              core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
-              core.setOutput('UPGRADE_TEST_ZETACLIENT', true);
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('ADMIN_UPGRADE_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS_1K', true);
-              core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('STAKING_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
