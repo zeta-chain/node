@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/clients"
@@ -45,6 +46,7 @@ type chainBalance struct {
 	Symbol             string
 	PendingNonceLow    int64
 	PendingNonceHigh   int64
+	NonceAvailable     bool // true if pending nonces were successfully retrieved for this chain
 	Error              string
 	VM                 pkgchains.Vm
 }
@@ -236,18 +238,19 @@ func fetchAllPendingNonces(
 	return res.PendingNonces, nil
 }
 
-// findPendingNonces finds the pending nonces for a specific chain and TSS from the list
+// findPendingNonces finds the pending nonces for a specific chain and TSS from the list.
+// Returns ok=false if no matching PendingNonces entry is found.
 func findPendingNonces(
 	allNonces []observertypes.PendingNonces,
 	chainID int64,
 	tssPubkey string,
-) (nonceLow, nonceHigh int64) {
+) (nonceLow, nonceHigh int64, ok bool) {
 	for _, nonce := range allNonces {
 		if nonce.ChainId == chainID && nonce.Tss == tssPubkey {
-			return nonce.NonceLow, nonce.NonceHigh
+			return nonce.NonceLow, nonce.NonceHigh, true
 		}
 	}
-	return 0, 0
+	return 0, 0, false
 }
 
 // printTSSBalances fetches and prints TSS address balances across all chains
@@ -625,12 +628,18 @@ func printTSSBalances(
 	// Fetch pending nonces for all chains if flag is enabled
 	if showNonces {
 		allNonces, err := fetchAllPendingNonces(ctx, observerClient)
-		if err == nil {
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to fetch pending nonces")
+		} else {
 			for i := range balances {
 				if balances[i].ChainID != 0 {
-					nonceLow, nonceHigh := findPendingNonces(allNonces, balances[i].ChainID, tss.TssPubkey)
-					balances[i].PendingNonceLow = nonceLow
-					balances[i].PendingNonceHigh = nonceHigh
+					nonceLow, nonceHigh, ok := findPendingNonces(allNonces, balances[i].ChainID, tss.TssPubkey)
+					if ok {
+						balances[i].PendingNonceLow = nonceLow
+						balances[i].PendingNonceHigh = nonceHigh
+						balances[i].NonceAvailable = true
+					}
+					// NonceAvailable remains false if no matching entry was found
 				}
 			}
 		}
@@ -707,7 +716,11 @@ func printBalanceTable(balances []chainBalance, showMigrationAmounts bool, showN
 				row = append(row, migrationStr, b.MigrationAmountRaw)
 			}
 			if showNonces {
-				row = append(row, b.PendingNonceLow, b.PendingNonceHigh)
+				if b.NonceAvailable {
+					row = append(row, b.PendingNonceLow, b.PendingNonceHigh)
+				} else {
+					row = append(row, "N/A", "N/A")
+				}
 			}
 			t.AppendRow(row)
 		}
