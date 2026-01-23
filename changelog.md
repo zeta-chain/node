@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Chores
+
+* patch CometBFT to [v0.38.21](https://github.com/cometbft/cometbft/releases/tag/v0.38.21) - adds max snapshot chunks configuration for state sync
+
 ## v36.0.0
 
 ### Features
