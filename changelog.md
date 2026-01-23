@@ -47,6 +47,10 @@ The `zetacored` binary must be upgraded to trigger chain parameters data migrati
 * [4491](https://github.com/zeta-chain/node/pull/4491) - add ton to tss migration tests
 * [4503](https://github.com/zeta-chain/node/pull/4503) - add an e2e test to replace observer without TSS migration
 
+### Chores
+
+* upgrade cometbft to [v0.38.21](https://github.com/cometbft/cometbft/releases/tag/v0.38.21)
+
 ## v37.0.0
 
 ### Breaking Changes
