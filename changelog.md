@@ -9,6 +9,7 @@
 ### Fixes
 
 * [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
+* [4538](https://github.com/zeta-chain/node/pull/4538) - fix missed inbound caused by early closure of error monitor channel
 
 ## Release ReForge
 - zetacored: v37.0.0
