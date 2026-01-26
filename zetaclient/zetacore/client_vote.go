@@ -218,7 +218,7 @@ func (c *Client) PostVoteInbound(
 					ZetaTxHash: zetaTxHash,
 				}:
 				case <-ctx.Done():
-					c.logger.Error().Msg("context cancelled: timeout")
+					c.logger.Error().Str(logs.FieldZetaTx, zetaTxHash).Msg("context cancelled: timeout")
 				}
 			}
 		}
@@ -273,7 +273,7 @@ func (c *Client) getAdjustedGasLimitForInboundVote(
 }
 
 // addReadyToExecuteInboundBallot saves the ready-to-execute inbound ballot and the gas limit used in last vote
-func (c *Client) addReadyToExecuteInboundBallot(ballotIndex string, gasWanted int64) {
+func (c *Client) addReadyToExecuteInboundBallot(ballotIndex string, gasWanted int64, zetaTxHash string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -295,6 +295,7 @@ func (c *Client) addReadyToExecuteInboundBallot(ballotIndex string, gasWanted in
 	c.logger.Info().
 		Str(logs.FieldBallotIndex, ballotIndex).
 		Uint64("gas_limit", gasLimit).
+		Str(logs.FieldZetaTx, zetaTxHash).
 		Msg("added ready-to-execute inbound ballot")
 }
 
