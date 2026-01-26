@@ -432,9 +432,17 @@ func (r *E2ERunner) suiMustFindCoinWithBalanceAbove(
 	balanceAbove math.Uint,
 	coinType string,
 ) (coinID string) {
-	return r.suiFindCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
+	coinID = r.suiFindCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
 		return a.GTE(b)
 	})
+
+	if coinID == "" {
+		require.FailNow(
+			r,
+			fmt.Sprintf("coin %s not found for address %s amount >= %s", coinType, address, balanceAbove),
+		)
+	}
+	return coinID
 }
 
 type compFunc func(a, b math.Uint) bool
