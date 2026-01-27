@@ -89,6 +89,8 @@ func getBtcClient(e2eConfig config.BitcoinRPC) (*btcclient.Client, error) {
 		chain = chains.BitcoinRegtest
 	case config.Testnet3:
 		chain = chains.BitcoinTestnet
+	case config.Signet:
+		chain = chains.BitcoinSignetTestnet
 	case config.Mainnet:
 		chain = chains.BitcoinMainnet
 	default:
