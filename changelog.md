@@ -11,6 +11,10 @@
 * [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
 * [4534](https://github.com/zeta-chain/node/pull/4534) - fix Sui nightly e2e deposit test failure by reducing gas budget to 500000000
 
+### Tests
+
+* [4539](https://github.com/zeta-chain/node/pull/4539) - add support for `signet` name in the e2e config
+
 ## Release ReForge
 - zetacored: v37.0.0
 - zetaclientd: v38.0.0

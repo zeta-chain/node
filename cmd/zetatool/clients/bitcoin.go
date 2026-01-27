@@ -182,6 +182,8 @@ func GetBTCChainID(network string) (int64, error) {
 		return 8332, nil
 	case config.NetworkTestnet:
 		return 18332, nil
+	case config.NetworkSignet:
+		return 18333, nil
 	case config.NetworkLocalnet:
 		return 18444, nil
 	default:
