@@ -20,6 +20,7 @@ const (
 	// Network name constants
 	NetworkMainnet  = "mainnet"
 	NetworkTestnet  = "testnet"
+	NetworkSignet   = "signet"
 	NetworkLocalnet = "localnet"
 )
 
