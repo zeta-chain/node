@@ -10,7 +10,7 @@ import (
 // TestConfigAdditionalAccountsSliceSynced ensures than if any new accounts are added the
 // AccountsSlice() function is updated
 func TestConfigAdditionalAccountsSliceSynced(t *testing.T) {
-	additionalAccountsType := reflect.TypeOf(AdditionalAccounts{})
+	additionalAccountsType := reflect.TypeFor[AdditionalAccounts]()
 	numberOfAdditionalAccounts := additionalAccountsType.NumField()
 
 	require.Greater(t, numberOfAdditionalAccounts, 0)

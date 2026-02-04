@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	coinType  = reflect.TypeOf(sdk.Coin{})
-	coinsType = reflect.TypeOf(sdk.Coins{})
-	uintType  = reflect.TypeOf(math.Uint{})
+	coinType  = reflect.TypeFor[sdk.Coin]()
+	coinsType = reflect.TypeFor[sdk.Coins]()
+	uintType  = reflect.TypeFor[math.Uint]()
 )
 
 // Fill analyze all struct fields and slices with
