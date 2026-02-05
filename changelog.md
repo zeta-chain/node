@@ -5,11 +5,17 @@
 ### Refactor
 
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
+* [4533](https://github.com/zeta-chain/node/pull/4533) - zetatools list pending nonces for supported chains.
 
 ### Fixes
 
 * [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
 * [4538](https://github.com/zeta-chain/node/pull/4538) - fix missed inbound caused by early closure of error monitor channel
+* [4534](https://github.com/zeta-chain/node/pull/4534) - fix Sui nightly e2e deposit test failure by reducing gas budget to 500000000
+
+### Tests
+
+* [4539](https://github.com/zeta-chain/node/pull/4539) - add support for `signet` name in the e2e config
 
 ## Release ReForge
 - zetacored: v37.0.0
