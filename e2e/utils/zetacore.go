@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"cosmossdk.io/math"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/constant"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -496,5 +498,73 @@ func WaitAndVerifyZRC20BalanceChange(
 		change.Verify(t, oldBalance, newBalance)
 
 		return
+	}
+}
+
+// GasRefundAmounts holds the calculated gas refund amounts for verification
+type GasRefundAmounts struct {
+	// OutboundTxFeePaid is the actual gas fee paid (GasUsed * EffectiveGasPrice)
+	OutboundTxFeePaid math.Uint
+	// UserGasFeePaid is what the user paid upfront (GasLimit * GasPrice)
+	UserGasFeePaid math.Uint
+	// TotalRemainingFees is UserGasFeePaid - OutboundTxFeePaid
+	TotalRemainingFees math.Uint
+	// UsableRemainingFees is 95% of TotalRemainingFees
+	UsableRemainingFees math.Uint
+	// StabilityPoolAmount is the amount funded to the stability pool
+	StabilityPoolAmount math.Uint
+	// UserRefundAmount is the amount refunded to the user
+	UserRefundAmount math.Uint
+}
+
+// VerifyOutboundGasAccounting verifies the gas accounting for an outbound CCTX and returns the calculated refund amounts.
+// It asserts that UserGasFeePaid equals GasLimit * GasPrice (gas token denomination).
+// stabilityPoolPercentage should be obtained from chain params (e.g., chainParams.ChainParams.StabilityPoolPercentage)
+func VerifyOutboundGasAccounting(
+	t require.TestingT,
+	cctx *crosschaintypes.CrossChainTx,
+	stabilityPoolPercentage uint64,
+) GasRefundAmounts {
+	outboundParams := cctx.GetCurrentOutboundParam()
+
+	// Verify UserGasFeePaid == GasLimit * GasPrice (gas token denomination)
+	gasLimit := ParseUint(t, fmt.Sprintf("%d", outboundParams.CallOptions.GasLimit))
+	gasPrice := ParseUint(t, outboundParams.GasPrice)
+	expectedUserGasFeePaid := gasLimit.Mul(gasPrice)
+	require.Equal(
+		t,
+		expectedUserGasFeePaid.String(),
+		outboundParams.UserGasFeePaid.String(),
+		"UserGasFeePaid should equal GasLimit * GasPrice (gas token denomination)",
+	)
+
+	outboundTxFeePaid := math.NewUint(outboundParams.GasUsed).
+		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
+	userGasFeePaid := outboundParams.UserGasFeePaid
+
+	if outboundTxFeePaid.GTE(userGasFeePaid) {
+		return GasRefundAmounts{
+			OutboundTxFeePaid:   outboundTxFeePaid,
+			UserGasFeePaid:      userGasFeePaid,
+			TotalRemainingFees:  math.ZeroUint(),
+			UsableRemainingFees: math.ZeroUint(),
+			StabilityPoolAmount: math.ZeroUint(),
+			UserRefundAmount:    math.ZeroUint(),
+		}
+	}
+
+	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
+	usableRemainingFees := crosschainkeeper.PercentOf(totalRemainingFees, crosschaintypes.UsableRemainingFeesPercentage)
+
+	stabilityPoolAmount := crosschainkeeper.PercentOf(usableRemainingFees, stabilityPoolPercentage)
+	userRefundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
+
+	return GasRefundAmounts{
+		OutboundTxFeePaid:   outboundTxFeePaid,
+		UserGasFeePaid:      userGasFeePaid,
+		TotalRemainingFees:  totalRemainingFees,
+		UsableRemainingFees: usableRemainingFees,
+		StabilityPoolAmount: stabilityPoolAmount,
+		UserRefundAmount:    userRefundAmount,
 	}
 }
