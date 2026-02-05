@@ -63,7 +63,10 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal btc transaction: %s", err))
 			}
 			if tx.MsgTx().TxHash().String() != req.TxHash {
-				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("tx hash mismatch: %s != %s", tx.MsgTx().TxHash().String(), req.TxHash))
+				return nil, status.Error(
+					codes.InvalidArgument,
+					fmt.Sprintf("tx hash mismatch: %s != %s", tx.MsgTx().TxHash().String(), req.TxHash),
+				)
 			}
 			proven = true
 		} else {

@@ -159,7 +159,9 @@ func (k Keeper) RateLimiterInput(
 				} else {
 					cctxsPending = append(cctxsPending, cctx)
 					// sum up non-past pending cctxs' value
-					pendingCctxsValue = pendingCctxsValue.Add(types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap))
+					pendingCctxsValue = pendingCctxsValue.Add(
+						types.ConvertCctxValueToAzeta(chain.ChainId, cctx, gasAssetRateMap, erc20AssetRateMap),
+					)
 				}
 			}
 		}

@@ -142,7 +142,12 @@ func (k Keeper) ProcessZEVMInboundV1(
 
 		// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 		// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
-		if err := k.ValidateZRC20WithdrawEvent(ctx, eventZRC20Withdrawal, coin.ForeignChainId, coin.CoinType); err != nil {
+		if err := k.ValidateZRC20WithdrawEvent(
+			ctx,
+			eventZRC20Withdrawal,
+			coin.ForeignChainId,
+			coin.CoinType,
+		); err != nil {
 			return err
 		}
 		// If the event is valid, we will process it and create a new CCTX

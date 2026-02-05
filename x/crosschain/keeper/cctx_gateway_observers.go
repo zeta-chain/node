@@ -62,7 +62,10 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 				return err
 			}
 		} else {
-			gasPrice, priorityFee, found := c.crosschainKeeper.GetMedianGasValues(ctx, config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
+			gasPrice, priorityFee, found := c.crosschainKeeper.GetMedianGasValues(
+				ctx,
+				config.CCTX.GetCurrentOutboundParam().ReceiverChainId,
+			)
 			if !found {
 				return fmt.Errorf("gasprice not found for %d", config.CCTX.GetCurrentOutboundParam().ReceiverChainId)
 			}

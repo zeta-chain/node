@@ -109,7 +109,13 @@ func (z *ZEVMRPC) DebugTraceBlockByNumber(ctx context.Context, blockNumber *big.
 	if blockNumber != nil {
 		blockParam = hexutil.EncodeBig(blockNumber)
 	}
-	if err := z.Call(ctx, &raw, "debug_traceBlockByNumber", blockParam, map[string]any{"tracer": "callTracer"}); err != nil {
+	if err := z.Call(
+		ctx,
+		&raw,
+		"debug_traceBlockByNumber",
+		blockParam,
+		map[string]any{"tracer": "callTracer"},
+	); err != nil {
 		return nil, err
 	}
 

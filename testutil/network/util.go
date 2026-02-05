@@ -122,7 +122,12 @@ func startInProcess(cfg Config, val *Validator) error {
 		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 		// that the server is gracefully shut down.
 		go func() {
-			if err := servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv); err != nil {
+			if err := servergrpc.StartGRPCServer(
+				ctx,
+				logger.With(log.ModuleKey, "grpc-server"),
+				grpcCfg,
+				grpcSrv,
+			); err != nil {
 				errCh <- err
 			}
 		}()
@@ -178,7 +183,14 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := ExportGenesisFileWithTimeAndConsensusParams(genFile, cfg.ChainID, nil, appState, genTime, *genDoc.ConsensusParams); err != nil {
+		if err := ExportGenesisFileWithTimeAndConsensusParams(
+			genFile,
+			cfg.ChainID,
+			nil,
+			appState,
+			genTime,
+			*genDoc.ConsensusParams,
+		); err != nil {
 			return err
 		}
 	}

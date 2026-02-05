@@ -222,7 +222,11 @@ func (b *Backend) SetTxDefaults(args evmtypes.TransactionArgs) (evmtypes.Transac
 	} else {
 		// Both maxPriorityfee and maxFee set by caller. Sanity-check their internal relation
 		if args.MaxFeePerGas.ToInt().Cmp(args.MaxPriorityFeePerGas.ToInt()) < 0 {
-			return args, fmt.Errorf("maxFeePerGas (%v) < maxPriorityFeePerGas (%v)", args.MaxFeePerGas, args.MaxPriorityFeePerGas)
+			return args, fmt.Errorf(
+				"maxFeePerGas (%v) < maxPriorityFeePerGas (%v)",
+				args.MaxFeePerGas,
+				args.MaxPriorityFeePerGas,
+			)
 		}
 	}
 

@@ -226,14 +226,23 @@ func (k Keeper) refundUnusedGas(
 	}
 	stabilityPoolAmount := PercentOf(usableRemainingFees, stabilityPoolPercentage)
 	if stabilityPoolAmount.GT(math.ZeroUint()) {
-		if err := k.fungibleKeeper.FundGasStabilityPool(ctx, outboundParams.ReceiverChainId, stabilityPoolAmount.BigInt()); err != nil {
+		if err := k.fungibleKeeper.FundGasStabilityPool(
+			ctx,
+			outboundParams.ReceiverChainId,
+			stabilityPoolAmount.BigInt(),
+		); err != nil {
 			return err
 		}
 	}
 
 	refundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
 	if refundAmount.GT(math.ZeroUint()) && refundToUser {
-		if err := k.fungibleKeeper.DepositChainGasToken(ctx, outboundParams.ReceiverChainId, refundAmount.BigInt(), ethcommon.HexToAddress(cctx.InboundParams.Sender)); err != nil {
+		if err := k.fungibleKeeper.DepositChainGasToken(
+			ctx,
+			outboundParams.ReceiverChainId,
+			refundAmount.BigInt(),
+			ethcommon.HexToAddress(cctx.InboundParams.Sender),
+		); err != nil {
 			return err
 		}
 	}

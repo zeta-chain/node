@@ -89,7 +89,11 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 		return gasLimit.Uint64(), nil
 	} else if cctx.InboundParams.CoinType == coin.CoinType_ERC20 {
 		// get the gas limit of the associated asset
-		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundParams.Asset, cctx.InboundParams.SenderChainId)
+		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(
+			ctx,
+			cctx.InboundParams.Asset,
+			cctx.InboundParams.SenderChainId,
+		)
 		if !found {
 			return 0, types.ErrForeignCoinNotFound
 		}

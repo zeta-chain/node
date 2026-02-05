@@ -183,7 +183,11 @@ func (event *BTCInboundEvent) ResolveAmountForMsgVoteInbound() error {
 		} else {
 			// large excess amount will be returned to the sender by reverting the tx
 			event.Status = crosschaintypes.InboundStatus_EXCESSIVE_NOASSETCALL_FUNDS
-			event.ErrorMessage = fmt.Sprintf("remaining funds of %d satoshis exceed %d satoshis", amountSats, maxNoAssetCallExcessAmount)
+			event.ErrorMessage = fmt.Sprintf(
+				"remaining funds of %d satoshis exceed %d satoshis",
+				amountSats,
+				maxNoAssetCallExcessAmount,
+			)
 		}
 	}
 
