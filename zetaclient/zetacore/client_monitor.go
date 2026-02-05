@@ -25,6 +25,10 @@ const (
 	// In our case, the upstream code ALWAYS sets a timeout in the context to override default value,
 	// so this is just to keep the logic complete and avoid accidental missed timeout in the context.
 	defaultInboundVoteMonitorTimeout = 2 * time.Minute
+
+	// monitorDeadlineOffset is subtracted from the context deadline to ensure the tx result query loop
+	// finishes earlier, allowing the caller to write errors to the error monitor channel before ctx.Done() closes.
+	monitorDeadlineOffset = 10 * time.Second
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -138,7 +142,10 @@ func (c *Client) MonitorVoteInboundResult(
 		// extract the deadline (always provided) that is used by error monitor goroutine
 		deadline := time.Now().Add(defaultInboundVoteMonitorTimeout)
 		if ctxDeadline, ok := ctx.Deadline(); ok {
-			deadline = ctxDeadline
+			// subtract deadline offset from the context deadline, so the following tx result query loop
+			// can finish earlier, otherwise the caller won't be able to write the error to the error
+			// monitor channel monitorErrCh because 'ctx.Done()' is already closed.
+			deadline = ctxDeadline.Add(-monitorDeadlineOffset)
 		}
 
 		// query tx result with the same deadline used by the upstream error monitor goroutine
@@ -185,7 +192,7 @@ func (c *Client) monitorVoteInboundResult(
 		metrics.InboundVotesWithOutOfGasErrorsTotal.WithLabelValues(c.chain.Name).Inc()
 		// record this ready-to-execute ballot for future gas adjustment
 		// The 500K is enough for regular inbound vote, out of gas error happens only on the finalizing vote
-		c.addReadyToExecuteInboundBallot(msg.Digest(), txResult.GasWanted)
+		c.addReadyToExecuteInboundBallot(msg.Digest(), txResult.GasWanted, zetaTxHash)
 
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 		logger.Debug().Str(logs.FieldZetaTx, zetaTxHash).Msg("out of gas")
