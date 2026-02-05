@@ -32,8 +32,6 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 
-	// Verify gas accounting and get refund amounts
-	refunds := utils.VerifyOutboundGasAccounting(r, cctx, chainParams.ChainParams.StabilityPoolPercentage)
-	r.Logger.Info("Gas refund - StabilityPool: %s, UserRefund: %s",
-		refunds.StabilityPoolAmount.String(), refunds.UserRefundAmount.String())
+	// Verify gas accounting and log refund amounts
+	utils.VerifyOutboundGasAccounting(r, cctx, chainParams.ChainParams.StabilityPoolPercentage, r.Logger)
 }

@@ -501,30 +501,16 @@ func WaitAndVerifyZRC20BalanceChange(
 	}
 }
 
-// GasRefundAmounts holds the calculated gas refund amounts for verification
-type GasRefundAmounts struct {
-	// OutboundTxFeePaid is the actual gas fee paid (GasUsed * EffectiveGasPrice)
-	OutboundTxFeePaid math.Uint
-	// UserGasFeePaid is what the user paid upfront (GasLimit * GasPrice)
-	UserGasFeePaid math.Uint
-	// TotalRemainingFees is UserGasFeePaid - OutboundTxFeePaid
-	TotalRemainingFees math.Uint
-	// UsableRemainingFees is 95% of TotalRemainingFees
-	UsableRemainingFees math.Uint
-	// StabilityPoolAmount is the amount funded to the stability pool
-	StabilityPoolAmount math.Uint
-	// UserRefundAmount is the amount refunded to the user
-	UserRefundAmount math.Uint
-}
-
-// VerifyOutboundGasAccounting verifies the gas accounting for an outbound CCTX and returns the calculated refund amounts.
-// It asserts that UserGasFeePaid equals GasLimit * GasPrice (gas token denomination).
+// VerifyOutboundGasAccounting verifies the gas accounting for an outbound CCTX.
+// It asserts that UserGasFeePaid equals GasLimit * GasPrice (gas token denomination),
+// and logs the calculated refund amounts (stability pool and user refund).
 // stabilityPoolPercentage should be obtained from chain params (e.g., chainParams.ChainParams.StabilityPoolPercentage)
 func VerifyOutboundGasAccounting(
 	t require.TestingT,
 	cctx *crosschaintypes.CrossChainTx,
 	stabilityPoolPercentage uint64,
-) GasRefundAmounts {
+	logger infoLogger,
+) {
 	outboundParams := cctx.GetCurrentOutboundParam()
 
 	// Verify UserGasFeePaid == GasLimit * GasPrice (gas token denomination)
@@ -542,29 +528,21 @@ func VerifyOutboundGasAccounting(
 		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
 	userGasFeePaid := outboundParams.UserGasFeePaid
 
+	logger.Info("Gas accounting - UserGasFeePaid: %s, OutboundTxFeePaid: %s",
+		userGasFeePaid.String(), outboundTxFeePaid.String())
+
 	if outboundTxFeePaid.GTE(userGasFeePaid) {
-		return GasRefundAmounts{
-			OutboundTxFeePaid:   outboundTxFeePaid,
-			UserGasFeePaid:      userGasFeePaid,
-			TotalRemainingFees:  math.ZeroUint(),
-			UsableRemainingFees: math.ZeroUint(),
-			StabilityPoolAmount: math.ZeroUint(),
-			UserRefundAmount:    math.ZeroUint(),
-		}
+		logger.Info("No remaining fees to refund (outbound used all or more gas than paid)")
+		return
 	}
 
+	// Calculate refund amounts
 	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
 	usableRemainingFees := crosschainkeeper.PercentOf(totalRemainingFees, crosschaintypes.UsableRemainingFeesPercentage)
-
 	stabilityPoolAmount := crosschainkeeper.PercentOf(usableRemainingFees, stabilityPoolPercentage)
 	userRefundAmount := usableRemainingFees.Sub(stabilityPoolAmount)
 
-	return GasRefundAmounts{
-		OutboundTxFeePaid:   outboundTxFeePaid,
-		UserGasFeePaid:      userGasFeePaid,
-		TotalRemainingFees:  totalRemainingFees,
-		UsableRemainingFees: usableRemainingFees,
-		StabilityPoolAmount: stabilityPoolAmount,
-		UserRefundAmount:    userRefundAmount,
-	}
+	logger.Info("Gas refund - TotalRemaining: %s, UsableRemaining: %s, StabilityPool: %s, UserRefund: %s",
+		totalRemainingFees.String(), usableRemainingFees.String(),
+		stabilityPoolAmount.String(), userRefundAmount.String())
 }
