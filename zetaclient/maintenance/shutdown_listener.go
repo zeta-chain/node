@@ -93,7 +93,8 @@ func (o *ShutdownListener) waitUntilSyncing(ctx context.Context) error {
 					o.logger.Info().Msgf("Node syncing detected, waiting %s before shutdown", o.waitForSyncing.String())
 				} else {
 					if time.Since(syncDetectedAt) >= o.waitForSyncing {
-						o.logger.Info().Msgf("Node still syncing after %s proceeding with shutdown", o.waitForSyncing.String())
+						o.logger.Info().
+							Msgf("Node still syncing after %s proceeding with shutdown", o.waitForSyncing.String())
 						return nil
 					}
 				}

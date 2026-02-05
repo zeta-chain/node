@@ -424,7 +424,12 @@ func CheckContainOwnedObject(res []*models.SuiObjectResponse) error {
 			// Immutable is valid, continue
 		case map[string]any:
 			if _, isShared := owner[sharedOwner]; !isShared {
-				return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d is not shared or immutable: owner = %+v", i, owner)
+				return errors.Wrapf(
+					zetasui.ErrObjectOwnership,
+					"object %d is not shared or immutable: owner = %+v",
+					i,
+					owner,
+				)
 			}
 			// Shared is valid, continue
 		default:

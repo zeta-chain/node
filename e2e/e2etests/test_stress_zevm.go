@@ -256,7 +256,12 @@ func monitorReceipts(
 			result.receipt = receipt
 			if receipt.Status == types.ReceiptStatusSuccessful {
 				if txRes.index%100 == 0 {
-					r.Logger.Print("worker %d: index %d: ✓ confirmed (gas used: %d)", workerID, txRes.index, receipt.GasUsed)
+					r.Logger.Print(
+						"worker %d: index %d: ✓ confirmed (gas used: %d)",
+						workerID,
+						txRes.index,
+						receipt.GasUsed,
+					)
 				}
 			} else {
 				r.Logger.Print("worker %d: index %d: ✗ reverted", workerID, txRes.index)

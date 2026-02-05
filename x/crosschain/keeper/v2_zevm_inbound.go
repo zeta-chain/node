@@ -119,7 +119,13 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if err := k.validateOutbound(ctx, inboundDetails.receiverChain.ChainId, inboundDetails.coinType, value, receiver); err != nil {
+		if err := k.validateOutbound(
+			ctx,
+			inboundDetails.receiverChain.ChainId,
+			inboundDetails.coinType,
+			value,
+			receiver,
+		); err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalEvent,
 				"failed to validate withdrawal event: %v", err,

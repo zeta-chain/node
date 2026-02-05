@@ -99,7 +99,10 @@ func AddTxFlags(cmd *cobra.Command) (*cobra.Command, error) {
 	if err := viper.BindPFlag(flags.FlagNode, cmd.PersistentFlags().Lookup(flags.FlagNode)); err != nil {
 		return nil, err
 	}
-	if err := viper.BindPFlag(flags.FlagKeyringBackend, cmd.PersistentFlags().Lookup(flags.FlagKeyringBackend)); err != nil {
+	if err := viper.BindPFlag(
+		flags.FlagKeyringBackend,
+		cmd.PersistentFlags().Lookup(flags.FlagKeyringBackend),
+	); err != nil {
 		return nil, err
 	}
 	return cmd, nil

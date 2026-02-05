@@ -76,7 +76,12 @@ func parseAndCheckGatewayExecuted(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayExecuted); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			gatewayAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsGatewayExecuted,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -126,7 +131,12 @@ func parseAndCheckGatewayReverted(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayReverted); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			gatewayAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsGatewayReverted,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -180,7 +190,12 @@ func parseAndCheckZetaConnectorWithdraw(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaConnectorWithdraw); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			connectorAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsZetaConnectorWithdraw,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -226,7 +241,12 @@ func parseAndCheckERC20CustodyWithdraw(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdraw); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			custodyAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsERC20CustodyWithdraw,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -280,7 +300,12 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdrawAndCall); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			custodyAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsERC20CustodyWithdrawAndCall,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -338,7 +363,12 @@ func parseAndZetaConnectorWithdrawAndCall(
 			continue
 		}
 		// basic event check
-		if err := common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaConnectorWithdrawAndCall); err != nil {
+		if err := common.ValidateEvmTxLog(
+			vLog,
+			connectorAddr,
+			receipt.TxHash.Hex(),
+			common.TopicsZetaConnectorWithdrawAndCall,
+		); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(

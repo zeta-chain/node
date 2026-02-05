@@ -486,7 +486,15 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			)
 		} else {
 			// #nosec G115 non negative value
-			rpcTx, err = rpctypes.NewRPCTransactionFromIncompleteMsg(ethMsg, common.BytesToHash(block.Hash()), uint64(block.Height), uint64(txIndex), baseFee, b.EvmChainID, txsAdditional[txIndex])
+			rpcTx, err = rpctypes.NewRPCTransactionFromIncompleteMsg(
+				ethMsg,
+				common.BytesToHash(block.Hash()),
+				uint64(block.Height),
+				uint64(txIndex),
+				baseFee,
+				b.EvmChainID,
+				txsAdditional[txIndex],
+			)
 		}
 		if err != nil {
 			b.Logger.Debug("NewTransactionFromData for receipt failed", "hash", ethMsg.Hash, "error", err.Error())

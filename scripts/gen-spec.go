@@ -327,12 +327,16 @@ func messageToString(message *proto.Message) string {
 		case *proto.NormalField:
 			sb.WriteString(fmt.Sprintf("\t%s %s = %d;\n", field.Type, field.Name, field.Sequence))
 		case *proto.MapField:
-			sb.WriteString(fmt.Sprintf("\tmap<%s, %s> %s = %d;\n", field.KeyType, field.Type, field.Name, field.Sequence))
+			sb.WriteString(
+				fmt.Sprintf("\tmap<%s, %s> %s = %d;\n", field.KeyType, field.Type, field.Name, field.Sequence),
+			)
 		case *proto.Oneof:
 			sb.WriteString(fmt.Sprintf("\toneof %s {\n", field.Name))
 			for _, of := range field.Elements {
 				if oneOfField, ok := of.(*proto.OneOfField); ok {
-					sb.WriteString(fmt.Sprintf("\t\t%s %s = %d;\n", oneOfField.Type, oneOfField.Name, oneOfField.Sequence))
+					sb.WriteString(
+						fmt.Sprintf("\t\t%s %s = %d;\n", oneOfField.Type, oneOfField.Name, oneOfField.Sequence),
+					)
 				}
 			}
 			sb.WriteString("\t}\n")

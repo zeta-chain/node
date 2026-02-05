@@ -41,7 +41,15 @@ func (tr TestReports) String(prefix string) (string, error) {
 		if !report.Success {
 			success = "❌"
 		}
-		if _, err := fmt.Fprintf(writer, "%s%s\t%s\t%s\t%s\n", prefix, report.Name, success, report.Time, spent); err != nil {
+		if _, err := fmt.Fprintf(
+			writer,
+			"%s%s\t%s\t%s\t%s\n",
+			prefix,
+			report.Name,
+			success,
+			report.Time,
+			spent,
+		); err != nil {
 			return "", err
 		}
 	}
