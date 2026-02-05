@@ -100,13 +100,21 @@ func (ob *Observer) postVoteOutbound(
 
 	signerAddress := ob.ZetaRepo().GetOperatorAddress()
 
+	// For ZETA coin type, set gas values to 0 to skip the refund logic in zetacore.
+	gasUsed := receipt.GasUsed
+	gasPrice := math.NewIntFromBigInt(transaction.GasPrice())
+	if coinType == coin.CoinType_Zeta {
+		gasUsed = 0
+		gasPrice = math.NewInt(0)
+	}
+
 	msg := crosschaintypes.NewMsgVoteOutbound(
 		signerAddress,
 		cctxIndex,
 		receipt.TxHash.Hex(),
 		receipt.BlockNumber.Uint64(),
-		receipt.GasUsed,
-		math.NewIntFromBigInt(transaction.GasPrice()),
+		gasUsed,
+		gasPrice,
 		transaction.Gas(),
 		math.NewUintFromBigInt(receiveValue),
 		receiveStatus,
