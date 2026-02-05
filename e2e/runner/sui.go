@@ -115,8 +115,14 @@ func (r *E2ERunner) SuiDepositSUI(
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
-	// retrieve SUI coin object to deposit
-	coinObjectID := r.suiSplitSUI(signer, amount)
+	// try find existing SUI coin with exact amount, avoid splitting if possible
+	coinObjectID, found := r.suiTryFindCoinWithBalance(signer.Address(), amount, string(sui.SUI))
+	if !found {
+		coinObjectID = r.suiSplitSUI(signer, amount)
+		r.Logger.Info("using split SUI coin %s with amount %s", coinObjectID, amount.String())
+	} else {
+		r.Logger.Info("using existing SUI coin %s with amount %s", coinObjectID, amount.String())
+	}
 
 	// create the tx
 	return r.suiExecuteDeposit(signer, packageID, string(sui.SUI), coinObjectID, receiver)
@@ -147,8 +153,14 @@ func (r *E2ERunner) SuiDepositFungibleToken(
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
-	// retrieve SUI coin object to deposit
-	coinObjectID := r.suiSplitUSDC(signer, amount)
+	// try find existing fungible token coin with exact amount, avoid splitting if possible
+	coinObjectID, found := r.suiTryFindCoinWithBalance(signer.Address(), amount, "0x"+r.SuiTokenCoinType)
+	if !found {
+		coinObjectID = r.suiSplitUSDC(signer, amount)
+		r.Logger.Info("using split fungible token coin %s with amount %s", coinObjectID, amount.String())
+	} else {
+		r.Logger.Info("using existing fungible token coin %s with amount %s", coinObjectID, amount.String())
+	}
 
 	// create the tx
 	return r.suiExecuteDeposit(signer, packageID, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
@@ -319,7 +331,7 @@ func (r *E2ERunner) suiExecuteDeposit(
 		Function:        "deposit",
 		TypeArguments:   []any{coinType},
 		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver.Hex()},
-		GasBudget:       "5000000000",
+		GasBudget:       "500000000",
 	})
 	require.NoError(r, err)
 
@@ -342,7 +354,7 @@ func (r *E2ERunner) suiExecuteDepositAndCall(
 		Function:        "deposit_and_call",
 		TypeArguments:   []any{coinType},
 		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver.Hex(), payload},
-		GasBudget:       "5000000000",
+		GasBudget:       "500000000",
 	})
 	require.NoError(r, err)
 
@@ -352,26 +364,26 @@ func (r *E2ERunner) suiExecuteDepositAndCall(
 // suiSplitUSDC splits USDC coin and obtain a USDC coin object with the wanted balance
 func (r *E2ERunner) suiSplitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
+	originalCoin := r.suiMustFindCoinWithBalanceAbove(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 
 	tx, err := r.Clients.Sui.SplitCoin(r.Ctx, models.SplitCoinRequest{
 		Signer:       signer.Address(),
 		CoinObjectId: originalCoin,
 		SplitAmounts: []string{balance.String()},
-		GasBudget:    "5000000000",
+		GasBudget:    "500000000",
 	})
 
 	require.NoError(r, err)
 	r.suiExecuteTx(signer, tx)
 
 	// find the split coin
-	return r.suiFindCoinWithBalance(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
+	return r.suiMustFindCoinWithBalance(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 }
 
 // suiSplitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
 func (r *E2ERunner) suiSplitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, string(sui.SUI))
+	originalCoin := r.suiMustFindCoinWithBalanceAbove(signer.Address(), balance, string(sui.SUI))
 
 	// split the coin using the PaySui API
 	tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
@@ -379,34 +391,58 @@ func (r *E2ERunner) suiSplitSUI(signer *sui.SignerSecp256k1, balance math.Uint) 
 		SuiObjectId: []string{originalCoin},
 		Recipient:   []string{signer.Address()},
 		Amount:      []string{balance.String()},
-		GasBudget:   "5000000000",
+		GasBudget:   "500000000",
 	})
 	require.NoError(r, err)
 
 	r.suiExecuteTx(signer, tx)
 
 	// find the split coin
-	return r.suiFindCoinWithBalance(signer.Address(), balance, string(sui.SUI))
+	return r.suiMustFindCoinWithBalance(signer.Address(), balance, string(sui.SUI))
 }
 
-func (r *E2ERunner) suiFindCoinWithBalance(
+func (r *E2ERunner) suiMustFindCoinWithBalance(
 	address string,
 	balance math.Uint,
 	coinType string,
 ) (coinID string) {
-	return r.suiFindCoin(address, balance, coinType, func(a, b math.Uint) bool {
+	coinID = r.suiFindCoin(address, balance, coinType, func(a, b math.Uint) bool {
 		return a.Equal(b)
 	})
+
+	if coinID == "" {
+		require.FailNow(r, fmt.Sprintf("coin %s not found for address %s amount %s", coinType, address, balance))
+	}
+	return coinID
 }
 
-func (r *E2ERunner) suiFindCoinWithBalanceAbove(
+func (r *E2ERunner) suiTryFindCoinWithBalance(
+	address string,
+	balance math.Uint,
+	coinType string,
+) (coinID string, found bool) {
+	coinID = r.suiFindCoin(address, balance, coinType, func(a, b math.Uint) bool {
+		return a.Equal(b)
+	})
+	return coinID, coinID != ""
+}
+
+func (r *E2ERunner) suiMustFindCoinWithBalanceAbove(
 	address string,
 	balanceAbove math.Uint,
 	coinType string,
 ) (coinID string) {
-	return r.suiFindCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
+	coinID = r.suiFindCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
 		return a.GTE(b)
 	})
+
+	if coinID == "" {
+		require.FailNow(
+			r,
+			fmt.Sprintf("coin %s not found for address %s amount >= %s", coinType, address, balanceAbove),
+		)
+	}
+	return coinID
 }
 
 type compFunc func(a, b math.Uint) bool
@@ -432,7 +468,6 @@ func (r *E2ERunner) suiFindCoin(
 		}
 	}
 
-	require.FailNow(r, fmt.Sprintf("coin %s not found for address %s", coinType, address))
 	return ""
 }
 
