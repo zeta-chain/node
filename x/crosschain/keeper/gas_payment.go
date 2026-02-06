@@ -457,8 +457,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 	}
 
-	// zeta token paid by the user is swapped for gas ZRC20 and burned to pay for fee.
-	cctx.GetCurrentOutboundParam().UserGasFeePaid = sdkmath.NewUintFromBigInt(outTxGasFeeInZeta)
+	// Gas fee paid by the user in gas token
+	cctx.GetCurrentOutboundParam().UserGasFeePaid = outTxGasFee
 
 	return nil
 }
