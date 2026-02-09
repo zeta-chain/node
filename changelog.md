@@ -12,6 +12,7 @@
 * [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
 * [4538](https://github.com/zeta-chain/node/pull/4538) - fix missed inbound caused by early closure of error monitor channel
 * [4534](https://github.com/zeta-chain/node/pull/4534) - fix Sui nightly e2e deposit test failure by reducing gas budget to 500000000
+* [4542](https://github.com/zeta-chain/node/pull/4542) - update user paid fee for cointype ZETA to use correct denomination
 
 ### Tests
 
