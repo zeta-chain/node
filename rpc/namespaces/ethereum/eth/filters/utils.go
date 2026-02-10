@@ -2,10 +2,10 @@ package filters
 
 import (
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"golang.org/x/exp/slices"
 )
 
 // FilterLogs creates a slice of logs matching the given criteria.
@@ -37,14 +37,7 @@ Logs:
 			continue
 		}
 		for i, sub := range topics {
-			match := len(sub) == 0 // empty rule set == wildcard
-			for _, topic := range sub {
-				if log.Topics[i] == topic {
-					match = true
-					break
-				}
-			}
-			if !match {
+			if !slices.Contains(sub, log.Topics[i]) {
 				continue Logs
 			}
 		}

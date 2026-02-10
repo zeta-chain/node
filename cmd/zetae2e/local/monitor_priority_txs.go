@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
@@ -102,13 +103,7 @@ func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 		"\"/zetachain.zetacore.observer.MsgVoteBlame\"",
 	}
 
-	for _, url := range systemTxsMsgTypeUrls {
-		if url == attr.Value {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(systemTxsMsgTypeUrls, attr.Value)
 }
 
 func isActionNonSystemTx(attr types.EventAttribute) bool {

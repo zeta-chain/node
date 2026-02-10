@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"slices"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -22,10 +23,8 @@ func isObserverNode(ctx context.Context, zc *zetacore.Client) (bool, error) {
 
 	operatorAddress := zc.GetKeys().GetOperatorAddress().String()
 
-	for _, observer := range observers {
-		if observer == operatorAddress {
-			return true, nil
-		}
+	if slices.Contains(observers, operatorAddress) {
+		return true, nil
 	}
 
 	return false, nil

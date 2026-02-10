@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"slices"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +31,7 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 	if !found {
 		return false
 	}
-	for _, addr := range observerSet.ObserverList {
-		if addr == address {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(observerSet.ObserverList, address)
 }
 
 // AddObserverToSet adds an observer to the observer set.It makes sure the updated observer set is valid.

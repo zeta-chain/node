@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"slices"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,14 +37,12 @@ func (vad VestingAccountDecorator) AnteHandle(
 	for _, msg := range tx.GetMsgs() {
 		typeURL := sdk.MsgTypeURL(msg)
 
-		for _, disabledTypeURL := range vad.disabledMsgTypeURLs {
-			if typeURL == disabledTypeURL {
-				return ctx, errorsmod.Wrapf(
-					sdkerrors.ErrUnauthorized,
-					"MsgTypeURL %s not supported",
-					typeURL,
-				)
-			}
+		if slices.Contains(vad.disabledMsgTypeURLs, typeURL) {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrUnauthorized,
+				"MsgTypeURL %s not supported",
+				typeURL,
+			)
 		}
 	}
 

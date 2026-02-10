@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"slices"
+
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,14 +49,7 @@ func (k Keeper) updateInboundHashToCCTX(
 ) {
 	in, _ := k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 	in.InboundHash = cctx.InboundParams.ObservedHash
-	found := false
-	for _, cctxIndex := range in.CctxIndex {
-		if cctxIndex == cctx.Index {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if !slices.Contains(in.CctxIndex, cctx.Index) {
 		in.CctxIndex = append(in.CctxIndex, cctx.Index)
 	}
 	k.SetInboundHashToCctx(ctx, in)
