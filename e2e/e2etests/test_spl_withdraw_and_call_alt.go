@@ -73,7 +73,7 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 	// in case AddressLookupTable address is not provided (eg. for local testing) use prefunded random accounts to create AddressLookupTable
 	randomWallets := []solana.PublicKey{}
 	if initAddressLookupTable {
-		accounts := []solana.PublicKey{}
+		accounts := make([]solana.PublicKey, 0, 6)
 
 		accounts = append(accounts, connectedPda)
 		accounts = append(accounts, connectedPdaAta)
@@ -82,9 +82,9 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 		accounts = append(accounts, solana.TokenProgramID)
 		accounts = append(accounts, solana.SystemProgramID)
 		predefinedAccountsLen := len(accounts)
-		writableIndexes = []uint8{0, 1} // only first 2 are mutable
-
 		addressLookupTableAddress, randomWallets = r.SetupTestAddressLookupTableWithRandomWalletsSPL(accounts)
+		writableIndexes = make([]uint8, 0, 2+len(randomWallets))
+		writableIndexes = append(writableIndexes, 0, 1) // only first 2 are mutable
 
 		// based on example accounts from above, all random wallets are writable
 		// since they will get some SPL from connected program example
@@ -108,7 +108,7 @@ func TestSPLWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []string
 	require.NoError(r, err)
 
 	// get receivers ata balances before withdraw
-	randomWalletsBalanceBefore := []*big.Int{}
+	randomWalletsBalanceBefore := make([]*big.Int, 0, len(randomWallets))
 	for _, acc := range randomWallets {
 		receiverBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, acc, rpc.CommitmentConfirmed)
 		require.NoError(r, err)
