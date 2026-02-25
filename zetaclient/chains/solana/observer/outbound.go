@@ -248,7 +248,7 @@ func (ob *Observer) CheckFinalizedTx(
 	}
 
 	// the tx must be successful in order to effectively increment the nonce
-	if txResult.Meta.Err != nil {
+	if txResult.Meta != nil && txResult.Meta.Err != nil {
 		logger.Error().Any("tx_meta_err", txResult.Meta.Err).Msg("tx was not successful")
 		return nil, false
 	}
