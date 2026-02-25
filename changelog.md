@@ -15,6 +15,7 @@
 * [4542](https://github.com/zeta-chain/node/pull/4542) - update user paid fee for cointype ZETA to use correct denomination
 * [4548](https://github.com/zeta-chain/node/pull/4548) - check grantee for IsSystemTx
 * [4550](https://github.com/zeta-chain/node/pull/4550) - add nil guards for Solana tx metadata and use safe signature parsing in inbound tracker
+* [4557](https://github.com/zeta-chain/node/pull/4557) - reject Solana transactions with nil metadata instead of treating as successful
 
 ### Tests
 
