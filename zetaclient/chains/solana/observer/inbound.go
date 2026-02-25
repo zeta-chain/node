@@ -278,7 +278,7 @@ func FilterInboundEvents(
 	logger zerolog.Logger,
 	resolvedTx *solana.Transaction,
 ) ([]*clienttypes.InboundEvent, error) {
-	if txResult.Meta.Err != nil {
+	if txResult.Meta != nil && txResult.Meta.Err != nil {
 		return nil, errors.Errorf("transaction failed with error: %v", txResult.Meta.Err)
 	}
 
