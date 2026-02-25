@@ -70,7 +70,7 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 
 			// exit goroutine if tx failed.
-			if tx.Meta.Err != nil {
+			if tx.Meta != nil && tx.Meta.Err != nil {
 				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced
 				// by the gateway program.
 				//
