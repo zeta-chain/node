@@ -43,6 +43,29 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
+// CheckSystemTxAuthorization checks if the observer is authorized and, if the tx was submitted
+// via MsgExec (msgExecSigner is non-empty), verifies the signer is the observer's registered hotkey.
+func (k Keeper) CheckSystemTxAuthorization(ctx sdk.Context, observer string, msgExecSigner string) error {
+	if err := k.CheckObserverCanVote(ctx, observer); err != nil {
+		return err
+	}
+	if msgExecSigner == "" {
+		return nil
+	}
+	na, found := k.GetNodeAccount(ctx, observer)
+	if !found {
+		return sdkerrors.Wrapf(types.ErrNodeAccountNotFound, "node account not found for observer: %s", observer)
+	}
+	if na.GranteeAddress != msgExecSigner {
+		return sdkerrors.Wrapf(
+			types.ErrUnauthorizedGrantee,
+			"signer %s is not the registered hotkey %s for observer %s",
+			msgExecSigner, na.GranteeAddress, observer,
+		)
+	}
+	return nil
+}
+
 // CheckObserverCanVote checks if the address is a valid observer
 func (k Keeper) CheckObserverCanVote(ctx sdk.Context, address string) error {
 	isActiveObserver := k.IsAddressPartOfObserverSet(ctx, address)
