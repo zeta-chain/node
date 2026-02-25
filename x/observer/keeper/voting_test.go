@@ -189,6 +189,160 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 }
 
+func TestKeeper_CheckSystemTxAuthorization(t *testing.T) {
+	t.Run("direct system tx succeeds for authorized observer", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+		validator := sample.Validator(t, r)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+		consAddress, err := validator.GetConsAddr()
+		require.NoError(t, err)
+		require.NoError(t, k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:    string(consAddress),
+			Tombstoned: false,
+		}))
+
+		accAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		observer := accAddress.String()
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+
+		// ACT: empty msgExecSigner means direct system tx (no MsgExec)
+		err = k.CheckSystemTxAuthorization(ctx, observer, "")
+
+		// ASSERT
+		require.NoError(t, err)
+	})
+
+	t.Run("direct system tx fails for non-observer", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		observer := sample.AccAddress()
+
+		// ACT
+		err := k.CheckSystemTxAuthorization(ctx, observer, "")
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrNotObserver)
+	})
+
+	t.Run("MsgExec with registered hotkey succeeds", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+		validator := sample.Validator(t, r)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+		consAddress, err := validator.GetConsAddr()
+		require.NoError(t, err)
+		require.NoError(t, k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:    string(consAddress),
+			Tombstoned: false,
+		}))
+
+		accAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		observer := accAddress.String()
+		registeredGrantee := sample.AccAddress()
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator:       observer,
+			GranteeAddress: registeredGrantee,
+		})
+
+		// ACT
+		err = k.CheckSystemTxAuthorization(ctx, observer, registeredGrantee)
+
+		// ASSERT
+		require.NoError(t, err)
+	})
+
+	t.Run("MsgExec with attacker grantee fails", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+		validator := sample.Validator(t, r)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+		consAddress, err := validator.GetConsAddr()
+		require.NoError(t, err)
+		require.NoError(t, k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:    string(consAddress),
+			Tombstoned: false,
+		}))
+
+		accAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		observer := accAddress.String()
+		registeredGrantee := sample.AccAddress()
+		attackerGrantee := sample.AccAddress()
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator:       observer,
+			GranteeAddress: registeredGrantee,
+		})
+
+		// ACT
+		err = k.CheckSystemTxAuthorization(ctx, observer, attackerGrantee)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrUnauthorizedGrantee)
+	})
+
+	t.Run("MsgExec with no node account fails", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+		validator := sample.Validator(t, r)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+		consAddress, err := validator.GetConsAddr()
+		require.NoError(t, err)
+		require.NoError(t, k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:    string(consAddress),
+			Tombstoned: false,
+		}))
+
+		accAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		observer := accAddress.String()
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+		// No node account set
+
+		// ACT
+		err = k.CheckSystemTxAuthorization(ctx, observer, sample.AccAddress())
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrNodeAccountNotFound)
+	})
+
+	t.Run("MsgExec with non-observer fails before grantee check", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		observer := sample.AccAddress()
+
+		// ACT
+		err := k.CheckSystemTxAuthorization(ctx, observer, sample.AccAddress())
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrNotObserver)
+	})
+}
+
 func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 	t.Run("should error if accAddress invalid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)

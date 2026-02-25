@@ -78,4 +78,8 @@ var (
 	)
 	ErrValidatorJailed     = errorsmod.Register(ModuleName, 1142, "validator is jailed")
 	ErrValidatorTombstoned = errorsmod.Register(ModuleName, 1143, "validator is tombstoned")
+	ErrUnauthorizedGrantee = errorsmod.Register(
+		ModuleName,
+		1144,
+		"grantee is not the registered hotkey for the observer")
 )
