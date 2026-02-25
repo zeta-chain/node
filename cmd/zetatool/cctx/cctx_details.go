@@ -107,7 +107,7 @@ func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain.ChainId, outboundNonce)
 	if err == nil && tracker != nil {
 		c.updateOutboundConfirmation()
-		var hashList []string
+		hashList := make([]string, 0, len(tracker.HashList))
 		for _, hash := range tracker.HashList {
 			hashList = append(hashList, hash.TxHash)
 		}

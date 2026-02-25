@@ -9,9 +9,8 @@ const (
 func ForeignCoinsKey(
 	index string,
 ) []byte {
-	var key []byte
-
 	indexBytes := []byte(index)
+	key := make([]byte, 0, len(indexBytes)+1)
 	key = append(key, indexBytes...)
 	key = append(key, []byte("/")...)
 

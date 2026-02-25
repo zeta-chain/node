@@ -34,7 +34,7 @@ func Prove(txid Hash256Digest, merkleRoot Hash256Digest, intermediateNodes []byt
 		return true
 	}
 
-	proof := []byte{}
+	proof := make([]byte, 0, len(txid)+len(intermediateNodes)+len(merkleRoot))
 	proof = append(proof, txid[:]...)
 	proof = append(proof, intermediateNodes...)
 	proof = append(proof, merkleRoot[:]...)
@@ -51,7 +51,7 @@ func Hash256(in []byte) Hash256Digest {
 
 // Hash256MerkleStep concatenates and hashes two inputs for merkle proving
 func Hash256MerkleStep(a []byte, b []byte) Hash256Digest {
-	c := []byte{}
+	c := make([]byte, 0, len(a)+len(b))
 	c = append(c, a...)
 	c = append(c, b...)
 	return Hash256(c)
