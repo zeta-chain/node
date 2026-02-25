@@ -159,7 +159,15 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssHistoryRes.TssList))
 
-		if err := printTSSBalances(ctx, cfg, tss, network, zetacoreClient.Observer, showMigrationAmounts, showNonces); err != nil {
+		if err := printTSSBalances(
+			ctx,
+			cfg,
+			tss,
+			network,
+			zetacoreClient.Observer,
+			showMigrationAmounts,
+			showNonces,
+		); err != nil {
 			fmt.Printf("Error fetching balances for TSS (height %d): %v\n", tss.FinalizedZetaHeight, err)
 			continue
 		}
@@ -637,7 +645,11 @@ func printTSSBalances(
 		} else {
 			for i := range balances {
 				if balances[i].ChainID != 0 {
-					nonceLow, nonceHigh, ok := getPendingNoncesForChainAndTss(allNonces, balances[i].ChainID, tss.TssPubkey)
+					nonceLow, nonceHigh, ok := getPendingNoncesForChainAndTss(
+						allNonces,
+						balances[i].ChainID,
+						tss.TssPubkey,
+					)
 					if ok {
 						balances[i].PendingNonceLow = nonceLow
 						balances[i].PendingNonceHigh = nonceHigh

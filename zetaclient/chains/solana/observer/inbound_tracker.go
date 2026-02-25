@@ -53,7 +53,11 @@ func (ob *Observer) observeInboundTrackers(
 	for _, tracker := range trackers {
 		signature, err := solana.SignatureFromBase58(tracker.TxHash)
 		if err != nil {
-			ob.Logger().Inbound.Error().Err(err).Str(logs.FieldTx, tracker.TxHash).Msg("invalid tx hash, skipping tracker")
+			ob.Logger().
+				Inbound.Error().
+				Err(err).
+				Str(logs.FieldTx, tracker.TxHash).
+				Msg("invalid tx hash, skipping tracker")
 			continue
 		}
 		txResult, err := ob.solanaRepo.GetTransaction(ctx, signature)
