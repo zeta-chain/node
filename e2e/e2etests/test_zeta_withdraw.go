@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
@@ -29,6 +30,16 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.CCTX(*cctx, "zeta_withdraw")
 		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+		// Get chain params for stability pool percentage
+		chainParams, err := r.ObserverClient.GetChainParamsForChain(
+			r.Ctx,
+			&observertypes.QueryGetChainParamsForChainRequest{ChainId: evmChainID.Int64()},
+		)
+		require.NoError(r, err)
+
+		// Verify gas accounting and log refund amounts
+		utils.VerifyOutboundGasAccounting(r, cctx, chainParams.ChainParams.StabilityPoolPercentage, r.Logger)
 	} else {
 		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
 		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)
