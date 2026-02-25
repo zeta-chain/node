@@ -222,7 +222,8 @@ func (p *InboundEventParser) Parse() error {
 					Accounts:       instruction.Accounts,
 					Data:           instruction.Data,
 				}
-				if err := p.parseInstruction(compiledInstruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
+				desc := fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)
+				if err := p.parseInstruction(compiledInstruction, desc); err != nil {
 					return err
 				}
 			}

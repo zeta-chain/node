@@ -274,8 +274,12 @@ func (ob *Observer) CheckFinalizedTx(
 		return nil, false
 	}
 
-	// the tx must be successful in order to effectively increment the nonce
-	if txResult.Meta != nil && txResult.Meta.Err != nil {
+	// the tx must have valid metadata and be successful in order to effectively increment the nonce
+	if txResult.Meta == nil {
+		logger.Error().Msg("transaction metadata is nil")
+		return nil, false
+	}
+	if txResult.Meta.Err != nil {
 		logger.Error().Any("tx_meta_err", txResult.Meta.Err).Msg("tx was not successful")
 		return nil, false
 	}
