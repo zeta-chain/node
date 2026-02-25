@@ -69,8 +69,12 @@ func (signer *Signer) reportToOutboundTracker(
 				continue
 			}
 
-			// exit goroutine if tx failed.
-			if tx.Meta != nil && tx.Meta.Err != nil {
+			// continue monitoring if tx metadata is not yet available
+			if tx.Meta == nil {
+				logger.Warn().Msg("transaction metadata is not yet available")
+				continue
+			}
+			if tx.Meta.Err != nil {
 				// unlike Ethereum, Solana doesn't have protocol-level nonce; the nonce is enforced
 				// by the gateway program.
 				//
