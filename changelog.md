@@ -6,6 +6,7 @@
 
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
 * [4533](https://github.com/zeta-chain/node/pull/4533) - zetatools list pending nonces for supported chains.
+* [4558](https://github.com/zeta-chain/node/pull/4558) - make `zetae2e balances` chain-aware with `--network` flag to avoid balance query failures in nightly e2e jobs.
 
 ### Fixes
 

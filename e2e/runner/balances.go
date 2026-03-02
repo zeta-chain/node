@@ -72,6 +72,21 @@ const (
 	networkTON    = "ton"
 )
 
+// validNetworks is the set of accepted --network values (plus "" for ZEVM-only).
+var validNetworks = map[string]bool{
+	"":            true,
+	"polygon":     true,
+	"bsc":         true,
+	"eth":         true,
+	"base":        true,
+	"arbitrum":    true,
+	"avalanche":   true,
+	networkBTC:    true,
+	networkSolana: true,
+	networkSui:    true,
+	networkTON:    true,
+}
+
 // isEVMNetwork returns true if the network is an EVM-based external chain.
 func isEVMNetwork(network string) bool {
 	switch network {
@@ -84,15 +99,20 @@ func isEVMNetwork(network string) bool {
 
 // GetAccountBalances returns the account balances of the accounts used in the E2E test.
 // The network parameter controls which external chain's native balance is queried:
-//   - EVM chains ("polygon", "bsc", "eth", "base", "arbitrum", "avalanche") → EVM balances
+//   - EVM chains ("polygon", "bsc", "eth", "base", "arbitrum", "avalanche") → external chain native balances
 //   - "btc" → BTC balance
 //   - "solana" → Solana SOL + SPL balances
 //   - "sui" → Sui SUI + token balances
 //   - "ton" → TON balance
-//   - "" → only ZEVM balances (safe default)
+//   - "" → safe default, no external chain native balances
 //
-// ZEVM balances are always queried since all cross-chain operations go through ZetaChain.
+// ZEVM and EVM balances are always queried: ZEVM because all cross-chain operations go
+// through ZetaChain, and EVM because GetAccountBalancesDiff needs them for gas reporting.
 func (r *E2ERunner) GetAccountBalances(network string) (AccountBalances, error) {
+	if !validNetworks[network] {
+		return AccountBalances{}, fmt.Errorf("unknown network %q", network)
+	}
+
 	// zevm — always queried
 	zetaZeta, err := r.ZEVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
@@ -111,18 +131,15 @@ func (r *E2ERunner) GetAccountBalances(network string) (AccountBalances, error) 
 	zetaSuiToken := r.getERC20BalanceSafe(r.SuiTokenZRC20, "sui token zrc20")
 	zetaTon := r.getERC20BalanceSafe(r.TONZRC20, "ton zrc20")
 
-	// evm — only for EVM chains
-	evmEth := new(big.Int)
-	evmZeta := new(big.Int)
-	evmErc20 := new(big.Int)
-	if isEVMNetwork(network) {
-		evmEth, err = r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
-		if err != nil {
-			return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
-		}
-		evmZeta = r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
-		evmErc20 = r.getERC20BalanceSafe(r.ERC20, "eth erc20")
+	// evm — always queried because GetAccountBalancesDiff needs EVM balances
+	// for accurate gas-spent reporting (used by RunE2ETestsIntoReport).
+	// Only printing is gated by isEVMNetwork.
+	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
+	if err != nil {
+		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
 	}
+	evmZeta := r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
+	evmErc20 := r.getERC20BalanceSafe(r.ERC20, "eth erc20")
 
 	// bitcoin
 	var btcBTC string
