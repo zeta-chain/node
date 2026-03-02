@@ -101,7 +101,7 @@ func (r *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, erro
 	reports := make(TestReports, 0, len(e2eTests))
 	for _, test := range e2eTests {
 		// get info before test
-		balancesBefore, err := r.GetAccountBalances(true)
+		balancesBefore, err := r.GetAccountBalances("")
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (r *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, erro
 		time.Sleep(5 * time.Second)
 
 		// get info after test
-		balancesAfter, err := r.GetAccountBalances(true)
+		balancesAfter, err := r.GetAccountBalances("")
 		if err != nil {
 			return nil, err
 		}

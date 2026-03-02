@@ -62,9 +62,38 @@ func (r *E2ERunner) getERC20BalanceSafe(z ERC20BalanceOf, name string) *big.Int 
 	return res
 }
 
-// GetAccountBalances returns the account balances of the accounts used in the E2E test
-func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
-	// zevm
+// Network constants for external chain balance queries.
+// These values must match the `network_to_test` input in the zt/e2e workflow
+// (reusable-e2e.yaml) so that `zetae2e balances --network <value>` works correctly.
+const (
+	networkBTC    = "btc"
+	networkSolana = "solana"
+	networkSui    = "sui"
+	networkTON    = "ton"
+)
+
+// isEVMNetwork returns true if the network is an EVM-based external chain.
+func isEVMNetwork(network string) bool {
+	switch network {
+	case "polygon", "bsc", "eth", "base", "arbitrum", "avalanche":
+		return true
+	default:
+		return false
+	}
+}
+
+// GetAccountBalances returns the account balances of the accounts used in the E2E test.
+// The network parameter controls which external chain's native balance is queried:
+//   - EVM chains ("polygon", "bsc", "eth", "base", "arbitrum", "avalanche") → EVM balances
+//   - "btc" → BTC balance
+//   - "solana" → Solana SOL + SPL balances
+//   - "sui" → Sui SUI + token balances
+//   - "ton" → TON balance
+//   - "" → only ZEVM balances (safe default)
+//
+// ZEVM balances are always queried since all cross-chain operations go through ZetaChain.
+func (r *E2ERunner) GetAccountBalances(network string) (AccountBalances, error) {
+	// zevm — always queried
 	zetaZeta, err := r.ZEVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
 		return AccountBalances{}, fmt.Errorf("get zeta balance: %w", err)
@@ -82,18 +111,23 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaSuiToken := r.getERC20BalanceSafe(r.SuiTokenZRC20, "sui token zrc20")
 	zetaTon := r.getERC20BalanceSafe(r.TONZRC20, "ton zrc20")
 
-	// evm
-	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
+	// evm — only for EVM chains
+	evmEth := new(big.Int)
+	evmZeta := new(big.Int)
+	evmErc20 := new(big.Int)
+	if isEVMNetwork(network) {
+		evmEth, err = r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
+		if err != nil {
+			return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
+		}
+		evmZeta = r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
+		evmErc20 = r.getERC20BalanceSafe(r.ERC20, "eth erc20")
 	}
-	evmZeta := r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
-	evmErc20 := r.getERC20BalanceSafe(r.ERC20, "eth erc20")
 
 	// bitcoin
-	var BtcBTC string
-	if !skipBTC {
-		if BtcBTC, err = r.GetBitcoinBalance(); err != nil {
+	var btcBTC string
+	if network == networkBTC {
+		if btcBTC, err = r.GetBitcoinBalance(); err != nil {
 			return AccountBalances{}, err
 		}
 	}
@@ -101,7 +135,8 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// solana
 	var solSOL *big.Int
 	var solSPL *big.Int
-	if r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" && r.SolanaClient != nil {
+	if network == networkSolana &&
+		r.Account.SolanaAddress != "" && r.Account.SolanaPrivateKey != "" && r.SolanaClient != nil {
 		solanaAddr := solana.MustPublicKeyFromBase58(r.Account.SolanaAddress.String())
 		privateKey := solana.MustPrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 		solSOLBalance, err := r.SolanaClient.GetBalance(
@@ -139,7 +174,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// sui
 	var suiSUI uint64
 	var suiToken uint64
-	if r.Clients.Sui != nil {
+	if network == networkSui && r.Clients.Sui != nil {
 		signer, err := r.Account.SuiSigner()
 		if err != nil {
 			return AccountBalances{}, err
@@ -150,7 +185,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 
 	// TON
 	var tonTON uint64
-	if r.Clients.TON != nil {
+	if network == networkTON && r.Clients.TON != nil {
 		_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
 		if err == nil {
 			tonBalance, err := tonWallet.GetBalance(r.Ctx)
@@ -174,7 +209,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		EvmETH:       evmEth,
 		EvmZETA:      evmZeta,
 		EvmERC20:     evmErc20,
-		BtcBTC:       BtcBTC,
+		BtcBTC:       btcBTC,
 		SolSOL:       solSOL,
 		SolSPL:       solSPL,
 		SuiSUI:       suiSUI,
@@ -209,22 +244,28 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 	return total, nil
 }
 
-// PrintAccountBalances shows the account balances of the accounts used in the E2E test
+// PrintAccountBalances shows the account balances of the accounts used in the E2E test.
+// Only sections relevant to the given network are printed.
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
-func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
+func (r *E2ERunner) PrintAccountBalances(balances AccountBalances, network string) {
 	r.Logger.Print(" ---💰 Account info ---")
 
+	// addresses
 	r.Logger.Print("Addresses:")
 	r.Logger.Print("* EVM: %s", r.EVMAddress().Hex())
-	r.Logger.Print("* Solana: %s", r.SolanaDeployerAddress.String())
-	signer, err := r.Account.SuiSigner()
-	if err != nil {
-		r.Logger.Print("Error getting Sui address: %s", err.Error())
-	} else {
-		r.Logger.Print("* SUI: %s", signer.Address())
+	if network == networkSolana {
+		r.Logger.Print("* Solana: %s", r.SolanaDeployerAddress.String())
+	}
+	if network == networkSui {
+		signer, err := r.Account.SuiSigner()
+		if err != nil {
+			r.Logger.Print("Error getting Sui address: %s", err.Error())
+		} else {
+			r.Logger.Print("* SUI: %s", signer.Address())
+		}
 	}
 
-	// zevm
+	// zevm — always printed
 	r.Logger.Print("ZetaChain:")
 	r.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
 	r.Logger.Print("* WZETA balance: %s", balances.ZetaWZETA.String())
@@ -238,33 +279,43 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 
 	// evm
-	r.Logger.Print("EVM:")
-	r.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
-	r.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
-	r.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
+	if isEVMNetwork(network) {
+		r.Logger.Print("EVM:")
+		r.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
+		r.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
+		r.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
+	}
 
 	// bitcoin
-	r.Logger.Print("Bitcoin:")
-	r.Logger.Print("* BTC balance: %s", balances.BtcBTC)
+	if network == networkBTC {
+		r.Logger.Print("Bitcoin:")
+		r.Logger.Print("* BTC balance: %s", balances.BtcBTC)
+	}
 
 	// solana
-	r.Logger.Print("Solana:")
-	if balances.SolSOL != nil {
-		r.Logger.Print("* SOL balance: %s", balances.SolSOL.String())
-	}
-	if balances.SolSPL != nil {
-		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
+	if network == networkSolana {
+		r.Logger.Print("Solana:")
+		if balances.SolSOL != nil {
+			r.Logger.Print("* SOL balance: %s", balances.SolSOL.String())
+		}
+		if balances.SolSPL != nil {
+			r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
+		}
 	}
 
 	// sui
-	r.Logger.Print("Sui:")
-	r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
-	r.Logger.Print("* SUI Token balance: %d", balances.SuiToken)
+	if network == networkSui {
+		r.Logger.Print("Sui:")
+		r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
+		r.Logger.Print("* SUI Token balance: %d", balances.SuiToken)
+	}
 
 	// TON
-	r.Logger.Print("TON:")
-	if balances.TONTON != 0 {
-		r.Logger.Print("* TON balance: %d", balances.TONTON)
+	if network == networkTON {
+		r.Logger.Print("TON:")
+		if balances.TONTON != 0 {
+			r.Logger.Print("* TON balance: %d", balances.TONTON)
+		}
 	}
 }
 
