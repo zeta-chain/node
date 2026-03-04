@@ -66,6 +66,7 @@ func (r *E2ERunner) getERC20BalanceSafe(z ERC20BalanceOf, name string) *big.Int 
 // These values must match the `network_to_test` input in the zt/e2e workflow
 // (reusable-e2e.yaml) so that `zetae2e balances --network <value>` works correctly.
 const (
+	networkZEVM      = "zevm" // ZEVM + EVM only, no external chain native balances
 	networkPolygon   = "polygon"
 	networkBSC       = "bsc"
 	networkETH       = "eth"
@@ -78,9 +79,9 @@ const (
 	networkTON       = "ton"
 )
 
-// validNetworks is the set of accepted --network values (plus "" for ZEVM-only).
+// validNetworks is the set of accepted --network values.
 var validNetworks = map[string]bool{
-	"":               true,
+	networkZEVM:      true,
 	networkPolygon:   true,
 	networkBSC:       true,
 	networkETH:       true,
@@ -100,7 +101,7 @@ var validNetworks = map[string]bool{
 //   - "solana" → Solana SOL + SPL balances
 //   - "sui" → Sui SUI + token balances
 //   - "ton" → TON balance
-//   - "" → safe default, no external chain native balances
+//   - "zevm" → safe default, no external chain native balances
 //
 // ZEVM and EVM balances are always queried: ZEVM because all cross-chain operations go
 // through ZetaChain, and EVM because GetAccountBalancesDiff needs them for gas reporting.

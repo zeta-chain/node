@@ -28,8 +28,8 @@ func NewBalancesCmd() *cobra.Command {
 	}
 	cmd.Flags().String(
 		flagNetwork,
-		"",
-		"external chain network to query native balances for (e.g. polygon, bsc, eth, base, arbitrum, avalanche, btc, solana, sui, ton)",
+		"zevm",
+		"network to query native balances for (e.g. zevm, polygon, bsc, eth, base, arbitrum, avalanche, btc, solana, sui, ton)",
 	)
 	// --skip-btc is kept for backward compat but intentionally not read.
 	// The zt/e2e workflow is updated in lockstep to use --network instead.
