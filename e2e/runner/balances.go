@@ -66,35 +66,31 @@ func (r *E2ERunner) getERC20BalanceSafe(z ERC20BalanceOf, name string) *big.Int 
 // These values must match the `network_to_test` input in the zt/e2e workflow
 // (reusable-e2e.yaml) so that `zetae2e balances --network <value>` works correctly.
 const (
-	networkBTC    = "btc"
-	networkSolana = "solana"
-	networkSui    = "sui"
-	networkTON    = "ton"
+	networkPolygon   = "polygon"
+	networkBSC       = "bsc"
+	networkETH       = "eth"
+	networkBase      = "base"
+	networkArbitrum  = "arbitrum"
+	networkAvalanche = "avalanche"
+	networkBTC       = "btc"
+	networkSolana    = "solana"
+	networkSui       = "sui"
+	networkTON       = "ton"
 )
 
 // validNetworks is the set of accepted --network values (plus "" for ZEVM-only).
 var validNetworks = map[string]bool{
-	"":            true,
-	"polygon":     true,
-	"bsc":         true,
-	"eth":         true,
-	"base":        true,
-	"arbitrum":    true,
-	"avalanche":   true,
-	networkBTC:    true,
-	networkSolana: true,
-	networkSui:    true,
-	networkTON:    true,
-}
-
-// isEVMNetwork returns true if the network is an EVM-based external chain.
-func isEVMNetwork(network string) bool {
-	switch network {
-	case "polygon", "bsc", "eth", "base", "arbitrum", "avalanche":
-		return true
-	default:
-		return false
-	}
+	"":               true,
+	networkPolygon:   true,
+	networkBSC:       true,
+	networkETH:       true,
+	networkBase:      true,
+	networkArbitrum:  true,
+	networkAvalanche: true,
+	networkBTC:       true,
+	networkSolana:    true,
+	networkSui:       true,
+	networkTON:       true,
 }
 
 // GetAccountBalances returns the account balances of the accounts used in the E2E test.
@@ -133,7 +129,6 @@ func (r *E2ERunner) GetAccountBalances(network string) (AccountBalances, error) 
 
 	// evm — always queried because GetAccountBalancesDiff needs EVM balances
 	// for accurate gas-spent reporting (used by RunE2ETestsIntoReport).
-	// Only printing is gated by isEVMNetwork.
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
 		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
@@ -295,13 +290,11 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances, network strin
 	r.Logger.Print("* SUI Token balance: %s", balances.ZetaSuiToken.String())
 	r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 
-	// evm
-	if isEVMNetwork(network) {
-		r.Logger.Print("EVM:")
-		r.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
-		r.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
-		r.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
-	}
+	// evm — always printed because EVM balances are always queried
+	r.Logger.Print("EVM:")
+	r.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
+	r.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
+	r.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
 
 	// bitcoin
 	if network == networkBTC {
@@ -330,9 +323,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances, network strin
 	// TON
 	if network == networkTON {
 		r.Logger.Print("TON:")
-		if balances.TONTON != 0 {
-			r.Logger.Print("* TON balance: %d", balances.TONTON)
-		}
+		r.Logger.Print("* TON balance: %d", balances.TONTON)
 	}
 }
 
