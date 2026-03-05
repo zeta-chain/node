@@ -12,7 +12,10 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 )
 
-const flagSkipBTC = "skip-btc"
+const (
+	flagNetwork = "network"
+	flagSkipBTC = "skip-btc"
+)
 
 // NewBalancesCmd returns the balances command
 // which shows from the key and rpc, the balance of the account on different network
@@ -23,11 +26,21 @@ func NewBalancesCmd() *cobra.Command {
 		RunE:  runBalances,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().String(
+		flagNetwork,
+		"zevm",
+		"network to query native balances for (e.g. zevm, polygon, bsc, eth, base, arbitrum, avalanche, btc, solana, sui, ton)",
+	)
+	// --skip-btc is kept for backward compat but intentionally not read.
+	// The zt/e2e workflow is updated in lockstep to use --network instead.
 	cmd.Flags().Bool(
 		flagSkipBTC,
 		false,
-		"skip the BTC network",
+		"[deprecated] use --network instead",
 	)
+	_ = cmd.Flags().MarkDeprecated(flagSkipBTC, "use --network instead")
+	_ = cmd.Flags().MarkHidden(flagSkipBTC)
+
 	registerERC20Flags(cmd)
 	return cmd
 }
@@ -39,7 +52,7 @@ func runBalances(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	skipBTC, err := cmd.Flags().GetBool(flagSkipBTC)
+	network, err := cmd.Flags().GetString(flagNetwork)
 	if err != nil {
 		return err
 	}
@@ -70,12 +83,12 @@ func runBalances(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	balances, err := r.GetAccountBalances(skipBTC)
+	balances, err := r.GetAccountBalances(network)
 	if err != nil {
 		cancel(err)
 		return err
 	}
-	r.PrintAccountBalances(balances)
+	r.PrintAccountBalances(balances, network)
 
 	return nil
 }
