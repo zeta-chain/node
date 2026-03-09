@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -72,6 +73,8 @@ const (
 	FlagMigrationAmounts = "migration-amounts"
 	// FlagShowNonces is the flag to show pending nonce low and high columns
 	FlagShowNonces = "show-nonces"
+	// FlagTSSNumber is the flag to select a specific TSS by position (1 = oldest, N = latest)
+	FlagTSSNumber = "tss-number"
 )
 
 // NewTSSBalancesCMD creates a new command to check TSS address balances across all chains
@@ -91,13 +94,16 @@ Examples:
   zetatool tss-balances 7000
   zetatool tss-balances zeta_mainnet
   zetatool tss-balances zeta_testnet --config custom_config.json
-  zetatool tss-balances zeta_testnet --raw-amounts`,
+  zetatool tss-balances zeta_testnet --raw-amounts
+  zetatool tss-balances zeta_mainnet --tss-number 1   # oldest TSS
+  zetatool tss-balances zeta_mainnet --tss-number 3   # 3rd TSS (use total count for latest)`,
 		Args: cobra.ExactArgs(1),
 		RunE: getTSSBalances,
 	}
 
 	cmd.Flags().Bool(FlagMigrationAmounts, false, "Show migration amount and raw migration amount columns")
 	cmd.Flags().Bool(FlagShowNonces, false, "Show pending nonce low and high columns")
+	cmd.Flags().Int(FlagTSSNumber, 0, "Show only the Nth TSS ordered by finalized height (1 = oldest, N = latest)")
 
 	return cmd
 }
@@ -127,6 +133,11 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read value for flag %s: %w", FlagShowNonces, err)
 	}
 
+	tssNumber, err := cmd.Flags().GetInt(FlagTSSNumber)
+	if err != nil {
+		return fmt.Errorf("failed to read value for flag %s: %w", FlagTSSNumber, err)
+	}
+
 	cfg, err := config.GetConfigByNetwork(network, configFile)
 	if err != nil {
 		return fmt.Errorf("failed to get config: %w", err)
@@ -153,11 +164,25 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no TSS entries found")
 	}
 
-	for i, tss := range tssHistoryRes.TssList {
+	// Sort TSS list by finalized zeta height ascending (oldest first, so TSS 1 = oldest, TSS N = latest)
+	tssList := tssHistoryRes.TssList
+	sort.Slice(tssList, func(i, j int) bool {
+		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
+	})
+
+	// Filter to a specific TSS if --tss-number is set
+	if tssNumber > 0 {
+		if tssNumber > len(tssList) {
+			return fmt.Errorf("TSS number %d out of range, only %d TSS entries available", tssNumber, len(tssList))
+		}
+		tssList = []observertypes.TSS{tssList[tssNumber-1]}
+	}
+
+	for i, tss := range tssList {
 		if i > 0 {
 			fmt.Println() // Add spacing between TSS entries
 		}
-		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssHistoryRes.TssList))
+		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssList))
 
 		if err := printTSSBalances(
 			ctx,
