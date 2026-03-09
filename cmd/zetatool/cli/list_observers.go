@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -145,8 +144,7 @@ func resolveObserverMoniker(
 }
 
 func printObserverTable(infos []observerInfo) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t := newTableWriter()
 	t.AppendHeader(table.Row{"#", "Observer Address", "Moniker"})
 
 	for i, info := range infos {

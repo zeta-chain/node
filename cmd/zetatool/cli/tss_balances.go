@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
 	"sync"
 
@@ -714,8 +713,7 @@ func printBalanceTable(balances []chainBalance, showMigrationAmounts bool, showN
 		pkgchains.Vm_mvm_sui: "sui",
 	}
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t := newTableWriter()
 
 	// Build header based on flags
 	header := table.Row{"VM", "Chain", "Chain ID", "Address", "Balance"}

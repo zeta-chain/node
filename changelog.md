@@ -24,7 +24,7 @@
 
 ### Features
 
-* [4559](https://github.com/zeta-chain/node/pull/4559) - add `tss-number` flag to `tss-balances` command and add a new command `list-observers` to zetatools
+* [4559](https://github.com/zeta-chain/node/pull/4559) - add `tss-number` flag to `tss-balances` command and add a new commands `list-observers`,`track-tss-migration` to zetatools
 
 ## Release ReForge
 - zetacored: v37.0.0

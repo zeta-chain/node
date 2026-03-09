@@ -183,8 +183,7 @@ func displayStats(stats *databaseStats, format OutputFormat) error {
 
 // displayTable renders the statistics in a formatted table
 func displayTable(stats *databaseStats) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t := newTableWriter()
 	t.AppendHeader(
 		table.Row{"Module", "Avg Key Size", "Avg Value Size", "Total Key Size", "Total Value Size", "Total Key Pairs"},
 	)

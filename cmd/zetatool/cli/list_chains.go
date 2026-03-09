@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -84,8 +83,7 @@ func listChains(cmd *cobra.Command, args []string) error {
 func printChainList(chainList []chains.Chain) {
 	fmt.Println()
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t := newTableWriter()
 	t.AppendHeader(table.Row{"Chain ID", "Name", "Network", "VM", "External"})
 
 	for _, c := range chainList {
