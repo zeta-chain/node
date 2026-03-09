@@ -22,6 +22,10 @@
 
 * [4539](https://github.com/zeta-chain/node/pull/4539) - add support for `signet` name in the e2e config
 
+### Features
+
+* [4559](https://github.com/zeta-chain/node/pull/4559) - add `tss-number` flag to `tss-balances` command and add a new command `list-observers` to zetatools
+
 ## Release ReForge
 - zetacored: v37.0.0
 - zetaclientd: v38.0.0
