@@ -51,7 +51,15 @@ func (ob *Observer) observeInboundTrackers(
 
 	// process inbound trackers
 	for _, tracker := range trackers {
-		signature := solana.MustSignatureFromBase58(tracker.TxHash)
+		signature, err := solana.SignatureFromBase58(tracker.TxHash)
+		if err != nil {
+			ob.Logger().
+				Inbound.Error().
+				Err(err).
+				Str(logs.FieldTx, tracker.TxHash).
+				Msg("invalid tx hash, skipping tracker")
+			continue
+		}
 		txResult, err := ob.solanaRepo.GetTransaction(ctx, signature)
 		switch {
 		case errors.Is(err, repo.ErrUnsupportedTxVersion):

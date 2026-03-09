@@ -82,4 +82,8 @@ var (
 		ModuleName,
 		1144,
 		"stability pool percentage cannot be more than 100")
+	ErrUnauthorizedGrantee = errorsmod.Register(
+		ModuleName,
+		1145,
+		"grantee is not the registered hotkey for the observer")
 )

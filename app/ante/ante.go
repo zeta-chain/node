@@ -91,10 +91,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			// default: handle as normal Cosmos SDK tx
 			anteHandler = newCosmosAnteHandler(options)
 
-			// if tx is a system tx, and singer is authorized, use system tx handler
+			// if tx is a system tx, and signer is authorized, use system tx handler
 
-			isAuthorized := func(creator string) error {
-				return options.ObserverKeeper.CheckObserverCanVote(ctx, creator)
+			isAuthorized := func(observer string, msgExecSigner string) error {
+				return options.ObserverKeeper.CheckSystemTxAuthorization(ctx, observer, msgExecSigner)
 			}
 
 			if IsSystemTx(tx, isAuthorized) {
@@ -139,28 +139,61 @@ func Recover(logger tmlog.Logger, err *error) {
 	}
 }
 
-// IsSystemTx determines whether tx is a system tx that's signed by an authorized signer
-// system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
-// the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
-// the tx is authorized.
-func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) error) bool {
-	// the following determines whether the tx is a system tx which will uses different handler
-	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
-	if len(tx.GetMsgs()) != 1 { // this is not a system tx
+// IsSystemTx determines whether tx is a system tx that's signed by an authorized signer.
+// System tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec.
+// isAuthorized checks both observer authorization and, for MsgExec-wrapped txs, that the
+// MsgExec.Grantee is the observer's registered hotkey.
+func IsSystemTx(tx sdk.Tx, isAuthorized func(observer string, msgExecSigner string) error) bool {
+	// System txs are always single-Msg txs, optionally wrapped by one level of MsgExec
+	if len(tx.GetMsgs()) != 1 {
 		return false
 	}
 	msg := tx.GetMsgs()[0]
 
-	// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
-	var innerMsg sdk.Msg
-	innerMsg = msg
-	if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
-		msgs, err := mm.GetMessages()
-		if err == nil && len(msgs) == 1 {
-			innerMsg = msgs[0]
-		}
+	innerMsg, msgExecSigner := unwrapMsgExec(msg)
+
+	if !isSystemMsgType(innerMsg) {
+		return false
 	}
-	switch innerMsg.(type) {
+
+	signers := innerMsg.(sdk.LegacyMsg).GetSigners()
+	if len(signers) != 1 {
+		return false
+	}
+
+	return isAuthorized(signers[0].String(), msgExecSigner) == nil
+}
+
+// unwrapMsgExec extracts the inner message from a MsgExec wrapper.
+// Returns the inner message and the MsgExec.Grantee address.
+// If the message is not a MsgExec, returns the original message and an empty grantee.
+// Returns the original MsgExec and empty grantee if:
+//   - MsgExec contains != 1 inner message
+//   - the inner message is itself a MsgExec (no nested exec)
+//   - GetMessages fails
+func unwrapMsgExec(msg sdk.Msg) (sdk.Msg, string) {
+	mm, ok := msg.(*authz.MsgExec)
+	if !ok {
+		return msg, ""
+	}
+
+	msgs, err := mm.GetMessages()
+	if err != nil || len(msgs) != 1 {
+		return msg, ""
+	}
+
+	// reject nested MsgExec
+	if _, nested := msgs[0].(*authz.MsgExec); nested {
+		return msg, ""
+	}
+
+	return msgs[0], mm.Grantee
+}
+
+// isSystemMsgType returns true if the message is a system message type eligible for
+// reduced gas fees and elevated priority.
+func isSystemMsgType(msg sdk.Msg) bool {
+	switch msg.(type) {
 	case *crosschaintypes.MsgVoteGasPrice,
 		*crosschaintypes.MsgVoteOutbound,
 		*crosschaintypes.MsgVoteInbound,
@@ -169,9 +202,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) error) bool {
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgVoteBlame:
-		signers := innerMsg.(sdk.LegacyMsg).GetSigners()
-		return len(signers) == 1 && isAuthorizedSigner(signers[0].String()) == nil
+		return true
 	}
-
 	return false
 }

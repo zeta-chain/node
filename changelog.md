@@ -6,6 +6,7 @@
 
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.
 * [4533](https://github.com/zeta-chain/node/pull/4533) - zetatools list pending nonces for supported chains.
+* [4558](https://github.com/zeta-chain/node/pull/4558) - make `zetae2e balances` chain-aware with `--network` flag to avoid balance query failures in nightly e2e jobs.
 
 ### Fixes
 
@@ -13,6 +14,9 @@
 * [4538](https://github.com/zeta-chain/node/pull/4538) - fix missed inbound caused by early closure of error monitor channel
 * [4534](https://github.com/zeta-chain/node/pull/4534) - fix Sui nightly e2e deposit test failure by reducing gas budget to 500000000
 * [4542](https://github.com/zeta-chain/node/pull/4542) - update user paid fee for cointype ZETA to use correct denomination
+* [4548](https://github.com/zeta-chain/node/pull/4548) - check grantee for IsSystemTx
+* [4550](https://github.com/zeta-chain/node/pull/4550) - add nil guards for Solana tx metadata and use safe signature parsing in inbound tracker
+* [4557](https://github.com/zeta-chain/node/pull/4557) - reject Solana transactions with nil metadata instead of treating as successful
 
 ### Tests
 
