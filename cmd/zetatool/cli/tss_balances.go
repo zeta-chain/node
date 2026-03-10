@@ -3,10 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sort"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -33,6 +35,15 @@ const (
 
 	// satoshisPerBTC is the number of satoshis in 1 BTC
 	satoshisPerBTC = 100_000_000
+
+	// evmMigrationGasLimit is the gas limit used to estimate EVM migration fees in the tss-balances tool.
+	// The zetaclient signer enforces a minimum gas limit of 100,000 for non-Gas CoinType transactions
+	// (including CoinType_Cmd used by TSS migrations), but zetacore calculates fees using 21,000 (gas.EVMSend).
+	// This mismatch causes insufficient funds errors when migrating the full balance.
+	// We use 100,000 here to match the actual gas consumed at broadcast time.
+	// TODO: remove this buffer once zetacore or zetaclient is fixed to use consistent gas limits
+	// https://github.com/zeta-chain/node/issues/3725
+	evmMigrationGasLimit = 100_000
 )
 
 // chainBalance represents the balance information for a single chain
@@ -228,6 +239,33 @@ func calculateBTCMigrationAmount(balance float64) (migrationAmt float64) {
 	return migrationAmt
 }
 
+// calculateEVMMigrationAmount estimates the migration amount for an EVM chain by subtracting
+// the estimated gas fee (using evmMigrationGasLimit and the current on-chain gas price) from the balance.
+// This accounts for the gas limit mismatch between zetacore (21,000) and zetaclient signer (100,000).
+func calculateEVMMigrationAmount(ctx context.Context, rpcURL string, balance *big.Int) (migrationAmt, migrationAmtRaw *big.Int) {
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		// If we can't connect, fall back to full balance
+		return new(big.Int).Set(balance), new(big.Int).Set(balance)
+	}
+	defer client.Close()
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	if err != nil {
+		return new(big.Int).Set(balance), new(big.Int).Set(balance)
+	}
+
+	// fee = evmMigrationGasLimit * gasPrice
+	fee := new(big.Int).Mul(big.NewInt(evmMigrationGasLimit), gasPrice)
+
+	migrationAmt = new(big.Int).Sub(balance, fee)
+	if migrationAmt.Sign() < 0 {
+		migrationAmt = big.NewInt(0)
+	}
+
+	return migrationAmt, migrationAmt
+}
+
 // getRPCForChain returns the RPC URL for a given chain from config
 func getRPCForChain(cfg *config.Config, chain pkgchains.Chain) string {
 	switch chain.Network {
@@ -391,14 +429,15 @@ func printTSSBalances(
 				}
 				return
 			}
+			migrationAmount, migrationAmountRaw := calculateEVMMigrationAmount(ctx, rpcURL, balance)
 			formattedBalance := clients.FormatEVMBalance(balance)
 			results <- chainBalance{
 				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            evmAddr.Hex(),
 				Balance:            formattedBalance,
-				MigrationAmount:    formattedBalance, // Same as balance for EVM
-				MigrationAmountRaw: balance.String(), // Raw wei amount for migration command
+				MigrationAmount:    clients.FormatEVMBalance(migrationAmount),
+				MigrationAmountRaw: migrationAmountRaw.String(),
 				Symbol:             getSymbolForChain(c),
 				VM:                 c.Vm,
 			}
