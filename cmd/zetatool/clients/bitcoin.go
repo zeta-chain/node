@@ -25,6 +25,10 @@ const (
 	mempoolAddressAPITestnet3 = "https://mempool.space/testnet/api/address/%s"
 	mempoolAddressAPISignet   = "https://mempool.space/signet/api/address/%s"
 	mempoolAddressAPITestnet4 = "https://mempool.space/testnet4/api/address/%s"
+	mempoolTxAPIMainnet       = "https://mempool.space/api/tx/%s"
+	mempoolTxAPITestnet3      = "https://mempool.space/testnet/api/tx/%s"
+	mempoolTxAPISignet        = "https://mempool.space/signet/api/tx/%s"
+	mempoolTxAPITestnet4      = "https://mempool.space/testnet4/api/tx/%s"
 	satoshisPerBitcoin        = 100_000_000
 	httpClientTimeout         = 30 * time.Second
 )
@@ -170,6 +174,60 @@ func getMempoolAddressAPIURL(chainID int64, address string) string {
 		return fmt.Sprintf(mempoolAddressAPISignet, address)
 	case 18334: // Bitcoin testnet4
 		return fmt.Sprintf(mempoolAddressAPITestnet4, address)
+	default:
+		return ""
+	}
+}
+
+// btcTxStatus represents the status portion of a mempool.space tx response
+type btcTxStatus struct {
+	Status struct {
+		Confirmed bool `json:"confirmed"`
+	} `json:"status"`
+}
+
+// IsBTCTxConfirmed checks if a BTC transaction is confirmed using mempool.space API
+func IsBTCTxConfirmed(ctx context.Context, txHash string, chainID int64) (bool, error) {
+	apiURL := getMempoolTxAPIURL(chainID, txHash)
+	if apiURL == "" {
+		return false, fmt.Errorf("unsupported Bitcoin chain ID: %d", chainID)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpClient := &http.Client{Timeout: httpClientTimeout}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("failed to fetch tx: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("mempool.space API returned status %d", resp.StatusCode)
+	}
+
+	var txStatus btcTxStatus
+	if err := json.NewDecoder(resp.Body).Decode(&txStatus); err != nil {
+		return false, fmt.Errorf("failed to decode tx status: %w", err)
+	}
+
+	return txStatus.Status.Confirmed, nil
+}
+
+// getMempoolTxAPIURL returns the mempool.space tx API URL for the given chain ID
+func getMempoolTxAPIURL(chainID int64, txHash string) string {
+	switch chainID {
+	case 8332:
+		return fmt.Sprintf(mempoolTxAPIMainnet, txHash)
+	case 18332:
+		return fmt.Sprintf(mempoolTxAPITestnet3, txHash)
+	case 18333:
+		return fmt.Sprintf(mempoolTxAPISignet, txHash)
+	case 18334:
+		return fmt.Sprintf(mempoolTxAPITestnet4, txHash)
 	default:
 		return ""
 	}

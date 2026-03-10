@@ -3,10 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
-	"os"
+	"math/big"
+	"sort"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -33,6 +35,25 @@ const (
 
 	// satoshisPerBTC is the number of satoshis in 1 BTC
 	satoshisPerBTC = 100_000_000
+
+	// evmMigrationGasLimit is the gas limit used to estimate EVM migration fees in the tss-balances tool.
+	// The zetaclient signer enforces a minimum gas limit of 100,000 for non-Gas CoinType transactions
+	// (including CoinType_Cmd used by TSS migrations), but zetacore calculates fees using 21,000 (gas.EVMSend).
+	// This mismatch causes insufficient funds errors when migrating the full balance.
+	// We use 100,000 here to match the actual gas consumed at broadcast time.
+	// TODO: remove this buffer once zetacore or zetaclient is fixed to use consistent gas limits
+	// https://github.com/zeta-chain/node/issues/3725
+	evmMigrationGasLimit = 100_000
+
+	// evmMigrationGasPriceMultiplierNum and evmMigrationGasPriceMultiplierDen represent the 2.5×
+	// gas price multiplier as a rational number (5/2) for integer math.
+	// Zetacore multiplies the median gas price by 2.5 (TssMigrationGasMultiplierEVM) when creating the
+	// migration CCTX, and the signer broadcasts using that inflated price. Our fee buffer must account
+	// for the same multiplier to avoid shortfalls.
+	// TODO: remove this once zetacore or zetaclient gas limit mismatch is fixed
+	// https://github.com/zeta-chain/node/issues/3725
+	evmMigrationGasPriceMultiplierNum = 5
+	evmMigrationGasPriceMultiplierDen = 2
 )
 
 // chainBalance represents the balance information for a single chain
@@ -72,6 +93,8 @@ const (
 	FlagMigrationAmounts = "migration-amounts"
 	// FlagShowNonces is the flag to show pending nonce low and high columns
 	FlagShowNonces = "show-nonces"
+	// FlagTSSNumber is the flag to select a specific TSS by position (1 = oldest, N = latest)
+	FlagTSSNumber = "tss-number"
 )
 
 // NewTSSBalancesCMD creates a new command to check TSS address balances across all chains
@@ -91,13 +114,16 @@ Examples:
   zetatool tss-balances 7000
   zetatool tss-balances zeta_mainnet
   zetatool tss-balances zeta_testnet --config custom_config.json
-  zetatool tss-balances zeta_testnet --raw-amounts`,
+  zetatool tss-balances zeta_testnet --raw-amounts
+  zetatool tss-balances zeta_mainnet --tss-number 1   # oldest TSS
+  zetatool tss-balances zeta_mainnet --tss-number 3   # 3rd TSS (use total count for latest)`,
 		Args: cobra.ExactArgs(1),
 		RunE: getTSSBalances,
 	}
 
 	cmd.Flags().Bool(FlagMigrationAmounts, false, "Show migration amount and raw migration amount columns")
 	cmd.Flags().Bool(FlagShowNonces, false, "Show pending nonce low and high columns")
+	cmd.Flags().Int(FlagTSSNumber, 0, "Show only the Nth TSS ordered by finalized height (1 = oldest, N = latest)")
 
 	return cmd
 }
@@ -127,6 +153,11 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read value for flag %s: %w", FlagShowNonces, err)
 	}
 
+	tssNumber, err := cmd.Flags().GetInt(FlagTSSNumber)
+	if err != nil {
+		return fmt.Errorf("failed to read value for flag %s: %w", FlagTSSNumber, err)
+	}
+
 	cfg, err := config.GetConfigByNetwork(network, configFile)
 	if err != nil {
 		return fmt.Errorf("failed to get config: %w", err)
@@ -153,11 +184,25 @@ func getTSSBalances(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no TSS entries found")
 	}
 
-	for i, tss := range tssHistoryRes.TssList {
+	// Sort TSS list by finalized zeta height ascending (oldest first, so TSS 1 = oldest, TSS N = latest)
+	tssList := tssHistoryRes.TssList
+	sort.Slice(tssList, func(i, j int) bool {
+		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
+	})
+
+	// Filter to a specific TSS if --tss-number is set
+	if tssNumber > 0 {
+		if tssNumber > len(tssList) {
+			return fmt.Errorf("TSS number %d out of range, only %d TSS entries available", tssNumber, len(tssList))
+		}
+		tssList = []observertypes.TSS{tssList[tssNumber-1]}
+	}
+
+	for i, tss := range tssList {
 		if i > 0 {
 			fmt.Println() // Add spacing between TSS entries
 		}
-		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssHistoryRes.TssList))
+		fmt.Printf("=== TSS %d of %d ===\n", i+1, len(tssList))
 
 		if err := printTSSBalances(
 			ctx,
@@ -202,6 +247,38 @@ func calculateBTCMigrationAmount(balance float64) (migrationAmt float64) {
 	}
 
 	return migrationAmt
+}
+
+// calculateEVMMigrationAmount estimates the migration amount for an EVM chain by subtracting
+// the estimated gas fee from the balance. The fee accounts for:
+//   - evmMigrationGasLimit (100,000): the actual gas limit used by the signer at broadcast
+//   - evmMigrationGasPriceMultiplier (2.5): zetacore inflates the median gas price by this factor
+//     when creating the migration CCTX, and the signer broadcasts at that inflated price
+func calculateEVMMigrationAmount(ctx context.Context, rpcURL string, balance *big.Int) (migrationAmt, migrationAmtRaw *big.Int) {
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		// If we can't connect, fall back to full balance
+		return new(big.Int).Set(balance), new(big.Int).Set(balance)
+	}
+	defer client.Close()
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	if err != nil {
+		return new(big.Int).Set(balance), new(big.Int).Set(balance)
+	}
+
+	// fee = evmMigrationGasLimit * gasPrice * (num/den)
+	adjustedGasPrice := new(big.Int).Mul(gasPrice, big.NewInt(evmMigrationGasPriceMultiplierNum))
+	adjustedGasPrice.Div(adjustedGasPrice, big.NewInt(evmMigrationGasPriceMultiplierDen))
+
+	fee := new(big.Int).Mul(big.NewInt(evmMigrationGasLimit), adjustedGasPrice)
+
+	migrationAmt = new(big.Int).Sub(balance, fee)
+	if migrationAmt.Sign() < 0 {
+		migrationAmt = big.NewInt(0)
+	}
+
+	return migrationAmt, migrationAmt
 }
 
 // getRPCForChain returns the RPC URL for a given chain from config
@@ -367,14 +444,15 @@ func printTSSBalances(
 				}
 				return
 			}
+			migrationAmount, migrationAmountRaw := calculateEVMMigrationAmount(ctx, rpcURL, balance)
 			formattedBalance := clients.FormatEVMBalance(balance)
 			results <- chainBalance{
 				ChainName:          c.Name,
 				ChainID:            c.ChainId,
 				Address:            evmAddr.Hex(),
 				Balance:            formattedBalance,
-				MigrationAmount:    formattedBalance, // Same as balance for EVM
-				MigrationAmountRaw: balance.String(), // Raw wei amount for migration command
+				MigrationAmount:    clients.FormatEVMBalance(migrationAmount),
+				MigrationAmountRaw: migrationAmountRaw.String(),
 				Symbol:             getSymbolForChain(c),
 				VM:                 c.Vm,
 			}
@@ -689,8 +767,7 @@ func printBalanceTable(balances []chainBalance, showMigrationAmounts bool, showN
 		pkgchains.Vm_mvm_sui: "sui",
 	}
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
+	t := newTableWriter()
 
 	// Build header based on flags
 	header := table.Row{"VM", "Chain", "Chain ID", "Address", "Balance"}

@@ -17,10 +17,15 @@
 * [4548](https://github.com/zeta-chain/node/pull/4548) - check grantee for IsSystemTx
 * [4550](https://github.com/zeta-chain/node/pull/4550) - add nil guards for Solana tx metadata and use safe signature parsing in inbound tracker
 * [4557](https://github.com/zeta-chain/node/pull/4557) - reject Solana transactions with nil metadata instead of treating as successful
+* [4560](https://github.com/zeta-chain/node/pull/4560) - update get tss address query
 
 ### Tests
 
 * [4539](https://github.com/zeta-chain/node/pull/4539) - add support for `signet` name in the e2e config
+
+### Features
+
+* [4559](https://github.com/zeta-chain/node/pull/4559) - add `tss-number` flag to `tss-balances` command and add a new commands `list-observers`,`track-tss-migration` to zetatools
 
 ## Release ReForge
 - zetacored: v37.0.0
