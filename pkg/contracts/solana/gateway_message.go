@@ -83,8 +83,8 @@ func (msg *MsgWithdraw) To() solana.PublicKey {
 
 // Hash packs the withdraw message and computes the hash
 func (msg *MsgWithdraw) Hash() [32]byte {
-	var message []byte
 	buff := make([]byte, 8)
+	message := make([]byte, 0, len(InstructionIdentifier)+1+3*len(buff)+len(msg.to))
 
 	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWithdraw)
@@ -188,8 +188,8 @@ func (msg *MsgIncrementNonce) Amount() uint64 {
 
 // Hash packs the increment_nonce message and computes the hash
 func (msg *MsgIncrementNonce) Hash() [32]byte {
-	var message []byte
 	buff := make([]byte, 8)
+	message := make([]byte, 0, len(InstructionIdentifier)+1+3*len(buff))
 
 	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionIncrementNonce)
@@ -496,8 +496,8 @@ func (msg *MsgWithdrawSPL) Decimals() uint8 {
 
 // Hash packs the withdraw spl message and computes the hash
 func (msg *MsgWithdrawSPL) Hash() [32]byte {
-	var message []byte
 	buff := make([]byte, 8)
+	message := make([]byte, 0, len(InstructionIdentifier)+1+3*len(buff)+len(msg.mintAccount)+len(msg.recipientAta)+1)
 
 	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWithdrawSplToken)
@@ -812,8 +812,12 @@ func (msg *MsgWhitelist) Nonce() uint64 {
 
 // Hash packs the whitelist message and computes the hash
 func (msg *MsgWhitelist) Hash() [32]byte {
-	var message []byte
 	buff := make([]byte, 8)
+	message := make(
+		[]byte,
+		0,
+		len(InstructionIdentifier)+1+2*len(buff)+len(msg.whitelistCandidate)+len(msg.whitelistEntry),
+	)
 
 	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWhitelistSplToken)

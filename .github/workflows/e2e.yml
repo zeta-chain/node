@@ -37,7 +37,7 @@ jobs:
       DOCKER_IMAGE: ghcr.io/${{ github.repository_owner }}/zetanode
       DOCKER_TAG: ${{ github.ref == 'refs/heads/develop' && 'develop' || github.sha }}
     outputs:
-      image: ${{ fromJson(steps.build.outputs.metadata)['image.name'] }}
+      image: ${{ steps.build.outputs.metadata && fromJson(steps.build.outputs.metadata)['image.name'] || '' }}
     steps:
       - uses: actions/checkout@v4
 

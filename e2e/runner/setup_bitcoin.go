@@ -93,7 +93,7 @@ func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 			false,  // descriptors
 			true,   // load_on_startup
 		}
-		argsRawMsg := []json.RawMessage{}
+		argsRawMsg := make([]json.RawMessage, 0, len(args))
 		for _, arg := range args {
 			encodedArg, err := json.Marshal(arg)
 			require.NoError(r, err)

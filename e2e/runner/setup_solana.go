@@ -46,7 +46,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 
 	// create 'initialize' instruction
 	var inst solana.GenericInstruction
-	accountSlice := []*solana.AccountMeta{}
+	accountSlice := make([]*solana.AccountMeta, 0, 3)
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
@@ -76,7 +76,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	require.NoError(r, err)
 
 	var instConnected solana.GenericInstruction
-	accountSliceConnected := []*solana.AccountMeta{}
+	accountSliceConnected := make([]*solana.AccountMeta, 0, 3)
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(connectedPda).WRITE())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(solana.SystemProgramID))
@@ -106,7 +106,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	require.NoError(r, err)
 
 	var instConnectedSPL solana.GenericInstruction
-	accountSliceConnectedSPL := []*solana.AccountMeta{}
+	accountSliceConnectedSPL := make([]*solana.AccountMeta, 0, 3)
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(connectedSPLPda).WRITE())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(solana.SystemProgramID))
@@ -248,7 +248,7 @@ func (r *E2ERunner) UpdateTSSAddressSolana(gatewayID, deployerPrivateKey string)
 
 	// create 'initialize' instruction
 	var inst solana.GenericInstruction
-	accountSlice := []*solana.AccountMeta{}
+	accountSlice := make([]*solana.AccountMeta, 0, 3)
 	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
 	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))

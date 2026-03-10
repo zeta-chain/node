@@ -153,7 +153,7 @@ var (
 )
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
-	var govProposalHandlers []govclient.ProposalHandler
+	govProposalHandlers := make([]govclient.ProposalHandler, 0, 1)
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
 		//ibcclientclient.UpdateClientProposalHandler,

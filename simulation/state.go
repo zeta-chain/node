@@ -195,13 +195,13 @@ func extractObserverGenesisState(
 	tss.OperatorAddressList = observers
 
 	// Create a tss history
-	tssHistory := make([]observertypes.TSS, 0)
+	tssHistory := make([]observertypes.TSS, 0, 1)
 	tssHistory = append(tssHistory, tss)
 
 	// Create chainnonces and pendingnonces
 	chains := zetachains.DefaultChainsList()
-	chainsNonces := make([]observertypes.ChainNonces, 0)
-	pendingNonces := make([]observertypes.PendingNonces, 0)
+	chainsNonces := make([]observertypes.ChainNonces, 0, len(chains))
+	pendingNonces := make([]observertypes.PendingNonces, 0, len(chains))
 	for _, chain := range chains {
 		chainNonce := observertypes.ChainNonces{
 			ChainId: chain.ChainId,
@@ -348,8 +348,8 @@ func extractFungibleGenesisState(
 		Gateway:        sample.EthAddressFromRand(r).String(),
 	}
 
-	foreignCoins := make([]fungibletypes.ForeignCoins, 0)
 	chains := zetachains.DefaultChainsList()
+	foreignCoins := make([]fungibletypes.ForeignCoins, 0, len(chains))
 
 	for _, chain := range chains {
 		foreignCoin := fungibletypes.ForeignCoins{

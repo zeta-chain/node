@@ -104,7 +104,7 @@ func GetRestrictedAddresses() []string {
 	restrictedAddressBookLock.RLock()
 	defer restrictedAddressBookLock.RUnlock()
 
-	addresses := []string{}
+	addresses := make([]string, 0, len(restrictedAddressBook))
 	for addr := range restrictedAddressBook {
 		addresses = append(addresses, addr)
 	}

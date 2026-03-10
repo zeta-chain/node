@@ -63,16 +63,16 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 	// in case AddressLookupTable address is not provided (eg. for local testing) use prefunded random accounts to create AddressLookupTable
 	randomWallets := []solana.PublicKey{}
 	if initAddressLookupTable {
-		accounts := []solana.PublicKey{}
+		accounts := make([]solana.PublicKey, 0, 4)
 
 		accounts = append(accounts, connectedPda)
 		accounts = append(accounts, r.ComputePdaAddress())
 		accounts = append(accounts, solana.SystemProgramID)
 		accounts = append(accounts, solana.SysVarInstructionsPubkey)
 		predefinedAccountsLen := len(accounts)
-		writableIndexes = []uint8{0} // only first one is mutable
-
 		addressLookupTableAddress, randomWallets = r.SetupTestAddressLookupTableWithRandomWallets(accounts)
+		writableIndexes = make([]uint8, 0, 1+len(randomWallets))
+		writableIndexes = append(writableIndexes, 0) // only first one is mutable
 
 		// based on example accounts from above, all random wallets are writable
 		// since they will get some lamports from connected program example
@@ -95,7 +95,7 @@ func TestSolanaWithdrawAndCallAddressLookupTable(r *runner.E2ERunner, args []str
 	encoded, err := msg.Encode()
 	require.NoError(r, err)
 
-	randomWalletsBalanceBefore := []uint64{}
+	randomWalletsBalanceBefore := make([]uint64, 0, len(randomWallets))
 	for _, acc := range randomWallets {
 		balanceBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, acc)
 		require.NoError(r, err)

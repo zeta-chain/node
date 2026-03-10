@@ -10,9 +10,8 @@ const (
 func InboundHashToCctxKey(
 	inboundHash string,
 ) []byte {
-	var key []byte
-
 	inboundHashBytes := []byte(inboundHash)
+	key := make([]byte, 0, len(inboundHashBytes)+1)
 	key = append(key, inboundHashBytes...)
 	key = append(key, []byte("/")...)
 

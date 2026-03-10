@@ -94,3 +94,13 @@ linters:
 
       - linters: [staticcheck]
         text: "QF1008"
+
+      # Packages with names that conflict with Go stdlib
+      - linters: [revive]
+        path: "(pkg/(crypto|errors|math|os)|cmd/zetatool/context|zetaclient/context|rpc/namespaces/ethereum/net)/"
+        text: "var-naming"
+
+      # Packages with generic names (types, common, interfaces, utils, base)
+      - linters: [revive]
+        path: "/(types|common|interfaces|utils|base)/"
+        text: "var-naming"

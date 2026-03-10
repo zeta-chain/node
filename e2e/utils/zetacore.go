@@ -258,7 +258,7 @@ func WaitOutboundTracker(
 				logger.Info("  Nonce: %d\n", tracker.Nonce)
 				logger.Info("  HashList:\n")
 
-				hashes := []string{}
+				hashes := make([]string, 0, len(tracker.HashList))
 				for j, hash := range tracker.HashList {
 					hashes = append(hashes, hash.TxHash)
 					logger.Info("    hash[%d]: %s\n", j, hash.TxHash)

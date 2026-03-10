@@ -958,7 +958,7 @@ func (r *E2ERunner) SetupTestAddressLookupTableWithRandomWalletsSPL(
 		randomWallets[i] = solana.MustPublicKeyFromBase58(prefundedRandomWalletAddresses[i])
 	}
 
-	randomWalletsAta := []solana.PublicKey{}
+	randomWalletsAta := make([]solana.PublicKey, 0, len(randomWallets))
 	for _, acc := range randomWallets {
 		ata := r.ResolveSolanaATA(r.GetSolanaPrivKey(), acc, r.SPLAddr)
 		randomWalletsAta = append(randomWalletsAta, ata)

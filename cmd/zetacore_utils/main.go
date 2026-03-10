@@ -97,7 +97,8 @@ func main() {
 		}
 	}
 
-	args := []string{"tx", "bank", "multi-send", signer}
+	args := make([]string, 0, 17+len(addresses))
+	args = append(args, "tx", "bank", "multi-send", signer)
 	args = append(args, addresses...)
 	args = append(
 		args,

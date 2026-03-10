@@ -8,7 +8,7 @@ import (
 
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) []fungibleModuleTypes.ForeignCoins {
 	chains := k.zetaObserverKeeper.GetSupportedChains(ctx)
-	var fCoins []fungibleModuleTypes.ForeignCoins
+	fCoins := make([]fungibleModuleTypes.ForeignCoins, 0, len(chains))
 	for _, chain := range chains {
 		fCoins = append(fCoins, k.fungibleKeeper.GetAllForeignCoinsForChain(ctx, chain.ChainId)...)
 	}

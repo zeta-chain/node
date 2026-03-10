@@ -120,7 +120,7 @@ type E2ETestRunConfig struct {
 
 // GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
 func (r *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
-	tests := []E2ETestRunConfig{}
+	tests := make([]E2ETestRunConfig, 0, len(testNames))
 	for _, testName := range testNames {
 		tests = append(tests, E2ETestRunConfig{
 			Name: testName,

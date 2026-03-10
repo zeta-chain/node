@@ -83,7 +83,7 @@ func setupCrosschainSwap(r *runner.E2ERunner) {
 func testERC20ToBTC(r *runner.E2ERunner) {
 	// msg would be [ZEVMSwapAppAddr, memobytes]
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
-	msg := []byte{}
+	msg := make([]byte, 0, len(r.ZEVMSwapAppAddr.Bytes()))
 	msg = append(msg, r.ZEVMSwapAppAddr.Bytes()...)
 	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
 		&bind.CallOpts{},
