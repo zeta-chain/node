@@ -44,6 +44,16 @@ const (
 	// TODO: remove this buffer once zetacore or zetaclient is fixed to use consistent gas limits
 	// https://github.com/zeta-chain/node/issues/3725
 	evmMigrationGasLimit = 100_000
+
+	// evmMigrationGasPriceMultiplierNum and evmMigrationGasPriceMultiplierDen represent the 2.5×
+	// gas price multiplier as a rational number (5/2) for integer math.
+	// Zetacore multiplies the median gas price by 2.5 (TssMigrationGasMultiplierEVM) when creating the
+	// migration CCTX, and the signer broadcasts using that inflated price. Our fee buffer must account
+	// for the same multiplier to avoid shortfalls.
+	// TODO: remove this once zetacore or zetaclient gas limit mismatch is fixed
+	// https://github.com/zeta-chain/node/issues/3725
+	evmMigrationGasPriceMultiplierNum = 5
+	evmMigrationGasPriceMultiplierDen = 2
 )
 
 // chainBalance represents the balance information for a single chain
@@ -240,8 +250,10 @@ func calculateBTCMigrationAmount(balance float64) (migrationAmt float64) {
 }
 
 // calculateEVMMigrationAmount estimates the migration amount for an EVM chain by subtracting
-// the estimated gas fee (using evmMigrationGasLimit and the current on-chain gas price) from the balance.
-// This accounts for the gas limit mismatch between zetacore (21,000) and zetaclient signer (100,000).
+// the estimated gas fee from the balance. The fee accounts for:
+//   - evmMigrationGasLimit (100,000): the actual gas limit used by the signer at broadcast
+//   - evmMigrationGasPriceMultiplier (2.5): zetacore inflates the median gas price by this factor
+//     when creating the migration CCTX, and the signer broadcasts at that inflated price
 func calculateEVMMigrationAmount(ctx context.Context, rpcURL string, balance *big.Int) (migrationAmt, migrationAmtRaw *big.Int) {
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
@@ -255,8 +267,11 @@ func calculateEVMMigrationAmount(ctx context.Context, rpcURL string, balance *bi
 		return new(big.Int).Set(balance), new(big.Int).Set(balance)
 	}
 
-	// fee = evmMigrationGasLimit * gasPrice
-	fee := new(big.Int).Mul(big.NewInt(evmMigrationGasLimit), gasPrice)
+	// fee = evmMigrationGasLimit * gasPrice * (num/den)
+	adjustedGasPrice := new(big.Int).Mul(gasPrice, big.NewInt(evmMigrationGasPriceMultiplierNum))
+	adjustedGasPrice.Div(adjustedGasPrice, big.NewInt(evmMigrationGasPriceMultiplierDen))
+
+	fee := new(big.Int).Mul(big.NewInt(evmMigrationGasLimit), adjustedGasPrice)
 
 	migrationAmt = new(big.Int).Sub(balance, fee)
 	if migrationAmt.Sign() < 0 {
