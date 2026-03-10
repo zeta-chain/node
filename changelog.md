@@ -17,6 +17,7 @@
 * [4548](https://github.com/zeta-chain/node/pull/4548) - check grantee for IsSystemTx
 * [4550](https://github.com/zeta-chain/node/pull/4550) - add nil guards for Solana tx metadata and use safe signature parsing in inbound tracker
 * [4557](https://github.com/zeta-chain/node/pull/4557) - reject Solana transactions with nil metadata instead of treating as successful
+* [4560](https://github.com/zeta-chain/node/pull/4560) - update get tss address query
 
 ### Tests
 
