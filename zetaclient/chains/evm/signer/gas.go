@@ -81,16 +81,18 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx_gas_limit", limit).
 			Uint64("max_gas_limit", maxGasLimit).
 			Msg("gas limit is too high; setting to the maximum")
-	} else if limit < contractCallMinGasLimit && (params.CoinType != coin.CoinType_Gas || isWithdrawWithNoCall || isRevertWithNoCall) {
-		// currently a gas limit that is too low will not make the transaction fail but just
-		// completely block the network because the outbound can't be broadcasted
+	} else if limit < contractCallMinGasLimit && (params.CoinType != coin.CoinType_Gas && params.CoinType != coin.CoinType_Cmd || isWithdrawWithNoCall || isRevertWithNoCall) {
+		// A gas limit that is too low can block the network because the outbound can't be broadcasted.
+		// This check bumps the gas limit to the minimum for contract calls.
 		//
-		// this check ensure that the gas limit is high enough for the outbound to be broadcasted
+		// Skipped for:
+		// - CoinType_Gas: simple gas withdrawals don't need high gas limits
+		// - CoinType_Cmd: admin commands like TSS migration (MigrateFundCmdCCTX)
+		//  Note: WhitelistAssetCmdCCTX already sets its own gas limit to 100,000
+		//   so it is unaffected by this skip.
+		// - isWithdrawWithNoCall / isRevertWithNoCall: gas deposit reverts without revert calls
 		//
-		// a minimal gas limit is set to the tx, this check is skipped above in the case where a
-		// simple gas withdraw is performed or a gas deposit revert without revert call
-		//
-		// TODO: gas limit that is too low should now block outbound at all
+		// TODO: gas limit that is too low should not block outbound at all
 		// https://github.com/zeta-chain/node/issues/3725
 		limit = contractCallMinGasLimit
 		logger.Warn().
