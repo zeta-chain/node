@@ -252,6 +252,8 @@ func resolveParams(name string) (chains.Params, error) {
 		return chains.TestNet3Params, nil
 	case chaincfg.RegressionNetParams.Name, regNetAlias:
 		return chains.RegressionNetParams, nil
+	case chains.SigNetParams.Name:
+		return chains.SigNetParams, nil
 	case chaincfg.SimNetParams.Name:
 		return chains.SimNetParams, nil
 	default:
