@@ -17,6 +17,7 @@
 * [4548](https://github.com/zeta-chain/node/pull/4548) - check grantee for IsSystemTx
 * [4550](https://github.com/zeta-chain/node/pull/4550) - add nil guards for Solana tx metadata and use safe signature parsing in inbound tracker
 * [4557](https://github.com/zeta-chain/node/pull/4557) - reject Solana transactions with nil metadata instead of treating as successful
+* [4561](https://github.com/zeta-chain/node/pull/4561) - add signet to BTC client `resolveParams` to fix e2e `unknown chain params` error
 
 ### Tests
 
