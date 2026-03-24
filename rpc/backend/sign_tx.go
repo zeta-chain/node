@@ -122,6 +122,11 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 
 // Sign signs the provided data using the private key of address via Geth's signature standard.
 func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
+		return nil, fmt.Errorf("account unlock with HTTP access is forbidden")
+	}
+
 	from := sdk.AccAddress(address.Bytes())
 
 	_, err := b.ClientCtx.Keyring.KeyByAddress(from)
@@ -143,6 +148,11 @@ func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Byte
 
 // SignTypedData signs EIP-712 conformant typed data
 func (b *Backend) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
+		return nil, fmt.Errorf("account unlock with HTTP access is forbidden")
+	}
+
 	from := sdk.AccAddress(address.Bytes())
 
 	_, err := b.ClientCtx.Keyring.KeyByAddress(from)
