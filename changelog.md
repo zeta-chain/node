@@ -23,6 +23,7 @@ The `zetacored` binary must be upgraded to trigger chain parameters data migrati
 
 ### Fixes
 
+* [4562](https://github.com/zeta-chain/node/pull/4562) - add AllowInsecureUnlock guard to eth_sign and eth_signTypedData
 * [4403](https://github.com/zeta-chain/node/pull/4403) - load Sui inbound cursors from database for all supported packages
 * [4401](https://github.com/zeta-chain/node/pull/4401) - retry Sui inbound when the inbound vote RPC failed
 * [4414](https://github.com/zeta-chain/node/pull/4414) - fix example package deployment by removing gateway object reference
