@@ -124,7 +124,7 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
 	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
 		b.Logger.Debug("account unlock with HTTP access is forbidden")
-		return nil, fmt.Errorf("account unlock with HTTP access is forbidden")
+		return nil, errors.New("account unlock with HTTP access is forbidden")
 	}
 
 	from := sdk.AccAddress(address.Bytes())
