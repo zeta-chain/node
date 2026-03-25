@@ -154,6 +154,15 @@ func (s *TestSuite) TestSign() {
 		expPass      bool
 	}{
 		{
+			"fail - insecure unlock not allowed",
+			func() {
+				s.backend.Cfg.JSONRPC.AllowInsecureUnlock = false
+			},
+			from,
+			nil,
+			false,
+		},
+		{
 			"fail - can't find key in Keyring",
 			func() {},
 			from,
@@ -204,6 +213,15 @@ func (s *TestSuite) TestSignTypedData() {
 		inputTypedData apitypes.TypedData
 		expPass        bool
 	}{
+		{
+			"fail - insecure unlock not allowed",
+			func() {
+				s.backend.Cfg.JSONRPC.AllowInsecureUnlock = false
+			},
+			from,
+			apitypes.TypedData{},
+			false,
+		},
 		{
 			"fail - can't find key in Keyring",
 			func() {},
