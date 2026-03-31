@@ -84,7 +84,7 @@ func NewLocalCmd() *cobra.Command {
 		Short: "Run Local E2E tests",
 		Run:   localE2ETest,
 	}
-	cmd.Flags().Bool(flagContractsDeployed, false, "set to to true if running tests again with existing state")
+	cmd.Flags().Bool(flagContractsDeployed, false, "set to true if running tests again with existing state")
 	cmd.Flags().Int64(flagWaitForHeight, 1, "block height for tests to begin, ex. --wait-for 100")
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
