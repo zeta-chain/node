@@ -307,6 +307,9 @@ func parseAndCheckZetaEvent(
 		// try parsing ZetaReceived event
 		received, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 		if err == nil {
+			if vLog.Address != connectorAddr {
+				continue
+			}
 			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReceived)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReceived event")
@@ -328,6 +331,9 @@ func parseAndCheckZetaEvent(
 		// try parsing ZetaReverted event
 		reverted, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 		if err == nil {
+			if vLog.Address != connectorAddr {
+				continue
+			}
 			err = common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaReverted)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "error validating ZetaReverted event")
@@ -364,6 +370,9 @@ func parseAndCheckWithdrawnEvent(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ParseWithdrawn(*vLog)
 		if err == nil {
+			if vLog.Address != custodyAddr {
+				continue
+			}
 			err = common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsWithdrawn)
 			if err != nil {
 				return nil, errors.Wrap(err, "error validating Withdrawn event")
