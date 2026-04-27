@@ -14,14 +14,22 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	cctx *types.CrossChainTx,
 	outboundData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	// V2 arbitrary calls are not supported by the signer. Cancel by signing a
-	// TSS-to-TSS zero-value self-transfer that consumes the assigned nonce on
-	// the destination chain. This avoids head-of-line blocking that would occur
+	// V2 arbitrary calls that route through GatewayEVM.execute are not signed:
+	// the destination contract and calldata are caller-controlled, so we
+	// cancel via a TSS-to-TSS zero-value self-transfer that consumes the
+	// assigned nonce. This avoids the head-of-line blocking that would occur
 	// if the CCTX were left perpetually unsigned.
-	if outboundData.callOptions.IsArbitraryCall {
+	//
+	// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall reach
+	// signGatewayExecute. The other arbitrary-call routes
+	// (ERC20Custody.withdrawAndCall, ZetaConnector.withdrawAndCall) constrain
+	// the destination to invoke typed `Callable.onCall` and remain enabled.
+	// Plain withdraws emit `isArbitraryCall=true` from GatewayZEVM.withdraw()
+	// too, but they don't reach signGatewayExecute either.
+	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
+	if outboundData.callOptions.IsArbitraryCall && common.IsGatewayExecuteOutbound(outboundType) {
 		return signer.SignCancel(outboundData)
 	}
-	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
 	case common.OutboundTypeGasWithdraw, common.OutboundTypeGasWithdrawRevert:
 		return signer.SignGasWithdraw(outboundData)

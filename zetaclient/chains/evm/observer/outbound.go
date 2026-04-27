@@ -530,15 +530,23 @@ func (ob *Observer) checkConfirmedTx(
 }
 
 // isArbitraryCallCancellation returns true if the outbound CCTX is a V2
-// arbitrary call. The signer cancels these by producing a TSS-to-TSS
-// self-transfer instead of invoking the destination Gateway, so the
-// observer must treat the resulting receipt as a failed outbound (mirroring
-// the compliance-restricted cancellation path) to bypass event parsing and
-// trigger the standard V2 revert flow.
+// arbitrary call that the signer cancels via SignOutboundFromCCTXV2 (TSS
+// self-transfer). The observer must treat the resulting receipt as a failed
+// outbound (mirroring the compliance-restricted cancellation path) to bypass
+// event parsing and trigger the standard V2 revert flow.
+//
+// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled by
+// the signer (see SignOutboundFromCCTXV2). The ERC20- and ZETA-`withdrawAndCall`
+// paths and plain V2 withdraws also have CallOptions.IsArbitraryCall=true on
+// the wire but are not cancelled — they must follow the normal event-parsing
+// path.
 func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
 	outboundParam := cctx.GetCurrentOutboundParam()
 	if outboundParam == nil || outboundParam.CallOptions == nil {
 		return false
 	}
-	return outboundParam.CallOptions.IsArbitraryCall
+	if !outboundParam.CallOptions.IsArbitraryCall {
+		return false
+	}
+	return common.IsGatewayExecuteOutbound(common.ParseOutboundTypeFromCCTX(*cctx))
 }

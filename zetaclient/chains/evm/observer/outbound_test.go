@@ -79,10 +79,15 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		require.False(t, continueKeysign)
 	})
 	t.Run("should post vote and return true on V2 arbitrary call cancellation", func(t *testing.T) {
-		// load a fresh cctx and mark its current outbound as a V2 arbitrary call
-		// so the signer-side SignCancel path is mirrored by the observer:
-		// bypass Gateway event parsing and vote the outbound as failed.
+		// Mirror the signer's SignOutboundFromCCTXV2 cancel path: only
+		// OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled.
+		// Build a OutboundTypeGasWithdrawAndCall CCTX with IsArbitraryCall=true
+		// so the observer bypass fires and votes the outbound as failed without
+		// parsing Gateway events.
 		cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.GetCurrentOutboundParam().CallOptions = &crosschaintypes.CallOptions{
 			GasLimit:        100_000,
 			IsArbitraryCall: true,
@@ -668,36 +673,39 @@ func Test_FilterTSSOutbound(t *testing.T) {
 //}
 
 func Test_isArbitraryCallCancellation(t *testing.T) {
+	build := func(
+		coinType coin.CoinType,
+		isCrossChainCall bool,
+		callOptions *crosschaintypes.CallOptions,
+	) *crosschaintypes.CrossChainTx {
+		return &crosschaintypes.CrossChainTx{
+			InboundParams: &crosschaintypes.InboundParams{
+				CoinType:         coinType,
+				IsCrossChainCall: isCrossChainCall,
+			},
+			CctxStatus:     &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_PendingOutbound},
+			OutboundParams: []*crosschaintypes.OutboundParams{{CallOptions: callOptions}},
+		}
+	}
+	arbitrary := &crosschaintypes.CallOptions{IsArbitraryCall: true}
+	authenticated := &crosschaintypes.CallOptions{IsArbitraryCall: false}
+
 	tests := []struct {
 		name     string
 		cctx     *crosschaintypes.CrossChainTx
 		expected bool
 	}{
-		{
-			name: "nil call options returns false",
-			cctx: &crosschaintypes.CrossChainTx{
-				OutboundParams: []*crosschaintypes.OutboundParams{{}},
-			},
-			expected: false,
-		},
-		{
-			name: "non-arbitrary call returns false",
-			cctx: &crosschaintypes.CrossChainTx{
-				OutboundParams: []*crosschaintypes.OutboundParams{{
-					CallOptions: &crosschaintypes.CallOptions{IsArbitraryCall: false},
-				}},
-			},
-			expected: false,
-		},
-		{
-			name: "arbitrary call returns true",
-			cctx: &crosschaintypes.CrossChainTx{
-				OutboundParams: []*crosschaintypes.OutboundParams{{
-					CallOptions: &crosschaintypes.CallOptions{IsArbitraryCall: true},
-				}},
-			},
-			expected: true,
-		},
+		{"nil call options returns false", build(coin.CoinType_Gas, true, nil), false},
+		{"authenticated call returns false", build(coin.CoinType_Gas, true, authenticated), false},
+		{"arbitrary gas withdraw and call (Gateway.execute) returns true", build(coin.CoinType_Gas, true, arbitrary), true},
+		{"arbitrary no-asset call (Gateway.execute) returns true", build(coin.CoinType_NoAssetCall, true, arbitrary), true},
+		// GatewayZEVM.withdraw() emits isArbitraryCall=true on plain withdraws,
+		// but the signer routes those through SignGasWithdraw — not cancelled.
+		{"plain gas withdraw with arbitrary flag returns false", build(coin.CoinType_Gas, false, arbitrary), false},
+		// Custody / Connector withdrawAndCall paths — destination is invoked
+		// via typed Callable.onCall, not the GatewayEVM.execute drain shape.
+		{"arbitrary erc20 withdraw and call (Custody) returns false", build(coin.CoinType_ERC20, true, arbitrary), false},
+		{"arbitrary zeta withdraw and call (Connector) returns false", build(coin.CoinType_Zeta, true, arbitrary), false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

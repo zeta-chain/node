@@ -8,14 +8,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels verifies that a V2 CCTX
-// requesting an arbitrary call is short-circuited to SignCancel (a TSS-to-TSS
-// zero-value self-transfer) rather than packed into GatewayEVM.execute.
+// TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels verifies that a V2
+// gas-withdraw-and-call CCTX with IsArbitraryCall=true is short-circuited to
+// SignCancel (a TSS-to-TSS zero-value self-transfer) rather than packed into
+// GatewayEVM.execute.
 func TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels(t *testing.T) {
 	ctx := makeCtx(t)
 	evmSigner := newTestSuite(t)
 
+	// Build a OutboundTypeGasWithdrawAndCall CCTX (CoinType=Gas with
+	// IsCrossChainCall=true) — the GatewayEVM.execute dispatch path that must
+	// be cancelled when IsArbitraryCall=true.
 	cctx := getCCTX(t)
+	cctx.InboundParams.IsCrossChainCall = true
+
 	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
@@ -23,8 +29,6 @@ func TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels(t *testing.T) {
 	// Force the outbound's call options to request an arbitrary call.
 	txData.callOptions.IsArbitraryCall = true
 
-	// SignOutboundFromCCTXV2 should route arbitrary calls to SignCancel; mock
-	// the signature for the cancel digest accordingly.
 	digest := getCancelDigest(t, evmSigner.Signer, txData)
 	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
 
@@ -32,7 +36,39 @@ func TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tx)
 
-	// Cancel produces a TSS self-transfer: to == TSS, value == 0.
+	// Cancel produces a TSS self-transfer: to == TSS, value == 0, no calldata.
 	verifyTxBodyBasics(t, tx, evmSigner.tss.PubKey().AddressEVM(), txData.nonce, big.NewInt(0))
 	require.Empty(t, tx.Data())
+}
+
+// TestSigner_SignOutboundFromCCTXV2_PlainWithdrawNotCancelled is a regression
+// guard for the case where GatewayZEVM.withdraw() emits Withdrawn with
+// CallOptions.isArbitraryCall=true even though there is no payload. Plain V2
+// withdraws must NOT be cancelled — they don't reach signGatewayExecute.
+func TestSigner_SignOutboundFromCCTXV2_PlainWithdrawNotCancelled(t *testing.T) {
+	ctx := makeCtx(t)
+	evmSigner := newTestSuite(t)
+
+	// CCTX is OutboundTypeGasWithdraw (CoinType=Gas, IsCrossChainCall=false).
+	cctx := getCCTX(t)
+	require.False(t, cctx.InboundParams.IsCrossChainCall)
+
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	// Simulate the protocol-contract behavior: GatewayZEVM.withdraw() emits
+	// isArbitraryCall=true on plain withdraws.
+	txData.callOptions.IsArbitraryCall = true
+
+	digest := getGasWithdrawDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
+	tx, err := evmSigner.SignOutboundFromCCTXV2(cctx, txData)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+
+	// Gas withdraw sends to the receiver, not the TSS — i.e. NOT a self-transfer.
+	verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
+	require.NotEqual(t, evmSigner.tss.PubKey().AddressEVM(), *tx.To())
 }
