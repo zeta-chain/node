@@ -541,6 +541,13 @@ func (ob *Observer) checkConfirmedTx(
 // the wire but are not cancelled — they must follow the normal event-parsing
 // path.
 func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
+	// Mirror the signer's V2-only dispatch (SignOutboundFromCCTXV2 is reached
+	// only via signer.go's ProtocolContractVersion == V2 branch). V1 CCTXs do
+	// not populate CallOptions today, but gate on the version explicitly so
+	// the predicate is symmetric with the signer.
+	if cctx.ProtocolContractVersion != crosschaintypes.ProtocolContractVersion_V2 {
+		return false
+	}
 	outboundParam := cctx.GetCurrentOutboundParam()
 	if outboundParam == nil || outboundParam.CallOptions == nil {
 		return false

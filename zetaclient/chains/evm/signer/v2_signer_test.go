@@ -4,8 +4,11 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 // TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels verifies that a V2
@@ -27,6 +30,39 @@ func TestSigner_SignOutboundFromCCTXV2_ArbitraryCallCancels(t *testing.T) {
 	require.NoError(t, err)
 
 	// Force the outbound's call options to request an arbitrary call.
+	txData.callOptions.IsArbitraryCall = true
+
+	digest := getCancelDigest(t, evmSigner.Signer, txData)
+	mockSignature(t, evmSigner.Signer, txData.nonce, digest)
+
+	tx, err := evmSigner.SignOutboundFromCCTXV2(cctx, txData)
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+
+	// Cancel produces a TSS self-transfer: to == TSS, value == 0, no calldata.
+	verifyTxBodyBasics(t, tx, evmSigner.tss.PubKey().AddressEVM(), txData.nonce, big.NewInt(0))
+	require.Empty(t, tx.Data())
+}
+
+// TestSigner_SignOutboundFromCCTXV2_NoAssetArbitraryCallCancels verifies that
+// a V2 OutboundTypeCall (no-asset call from GatewayZEVM.call) with
+// IsArbitraryCall=true is short-circuited to SignCancel — this is the path
+// the live mainnet drain used.
+func TestSigner_SignOutboundFromCCTXV2_NoAssetArbitraryCallCancels(t *testing.T) {
+	ctx := makeCtx(t)
+	evmSigner := newTestSuite(t)
+
+	// Build a OutboundTypeCall CCTX (CoinType=NoAssetCall, amount=0,
+	// PendingOutbound).
+	cctx := getCCTX(t)
+	cctx.InboundParams.CoinType = coin.CoinType_NoAssetCall
+	cctx.GetCurrentOutboundParam().CoinType = coin.CoinType_NoAssetCall
+	cctx.GetCurrentOutboundParam().Amount = math.ZeroUint()
+
+	txData, skip, err := NewOutboundData(ctx, cctx, zerolog.Logger{})
+	require.False(t, skip)
+	require.NoError(t, err)
+
 	txData.callOptions.IsArbitraryCall = true
 
 	digest := getCancelDigest(t, evmSigner.Signer, txData)
