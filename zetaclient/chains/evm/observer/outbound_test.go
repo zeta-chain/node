@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -73,6 +74,25 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// post outbound vote
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
+		require.NoError(t, err)
+		require.False(t, continueKeysign)
+	})
+	t.Run("should post vote and return true on V2 arbitrary call cancellation", func(t *testing.T) {
+		// load a fresh cctx and mark its current outbound as a V2 arbitrary call
+		// so the signer-side SignCancel path is mirrored by the observer:
+		// bypass Gateway event parsing and vote the outbound as failed.
+		cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
+		cctx.GetCurrentOutboundParam().CallOptions = &crosschaintypes.CallOptions{
+			GasLimit:        100_000,
+			IsArbitraryCall: true,
+		}
+
+		// create evm observer and set outbound and receipt
+		ob := newTestSuite(t)
+		ob.setTxNReceipt(nonce, receipt, outbound)
+
+		// post outbound vote — bypass should fire regardless of receipt contents
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
 		require.False(t, continueKeysign)
@@ -646,3 +666,42 @@ func Test_FilterTSSOutbound(t *testing.T) {
 //		require.Equal(t, chains.ReceiveStatus_failed, status)
 //	})
 //}
+
+func Test_isArbitraryCallCancellation(t *testing.T) {
+	tests := []struct {
+		name     string
+		cctx     *crosschaintypes.CrossChainTx
+		expected bool
+	}{
+		{
+			name: "nil call options returns false",
+			cctx: &crosschaintypes.CrossChainTx{
+				OutboundParams: []*crosschaintypes.OutboundParams{{}},
+			},
+			expected: false,
+		},
+		{
+			name: "non-arbitrary call returns false",
+			cctx: &crosschaintypes.CrossChainTx{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
+					CallOptions: &crosschaintypes.CallOptions{IsArbitraryCall: false},
+				}},
+			},
+			expected: false,
+		},
+		{
+			name: "arbitrary call returns true",
+			cctx: &crosschaintypes.CrossChainTx{
+				OutboundParams: []*crosschaintypes.OutboundParams{{
+					CallOptions: &crosschaintypes.CallOptions{IsArbitraryCall: true},
+				}},
+			},
+			expected: true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, isArbitraryCallCancellation(tc.cctx))
+		})
+	}
+}
