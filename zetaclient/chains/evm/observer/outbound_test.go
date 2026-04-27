@@ -78,7 +78,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, continueKeysign)
 	})
-	t.Run("should post vote and return true on V2 arbitrary call cancellation", func(t *testing.T) {
+	t.Run("should post vote and return false on V2 arbitrary call cancellation", func(t *testing.T) {
 		// Mirror the signer's SignOutboundFromCCTXV2 cancel path: only
 		// OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled.
 		// Build a OutboundTypeGasWithdrawAndCall CCTX with IsArbitraryCall=true
