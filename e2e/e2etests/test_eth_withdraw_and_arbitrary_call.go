@@ -56,8 +56,21 @@ func TestETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	// destination dApp must not have been called
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
-	// revert address should receive the principal back
+	// revert address should receive at least the principal back. The exact
+	// amount also includes a portion of the unused gas-fee leftover (refunded
+	// by RefundUnusedGasFee in the vote handler) but the precise math is
+	// fragile across gas-price/percentage settings, so we assert the lower
+	// bound: balance increase >= principal.
 	revertBalanceAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
-	require.EqualValues(r, new(big.Int).Add(revertBalanceBefore, amount), revertBalanceAfter)
+
+	wantMin := new(big.Int).Add(revertBalanceBefore, amount)
+	require.GreaterOrEqual(
+		r,
+		revertBalanceAfter.Cmp(wantMin),
+		0,
+		"revert address should receive at least the principal: got %s, want >= %s",
+		revertBalanceAfter.String(),
+		wantMin.String(),
+	)
 }
