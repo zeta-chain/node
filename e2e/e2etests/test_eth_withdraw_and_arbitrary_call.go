@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts-evm/pkg/gatewayzevm.sol"
 
@@ -54,8 +55,21 @@ func TestETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	// withdrawn ZRC20 amount is refunded to the revert address on ZEVM.
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	// the cancelled outbound is a TSS self-transfer with zero value
-	r.EVMVerifyOutboundTransferAmount(cctx.OutboundParams[0].Hash, 0)
+	// the cancelled outbound on-chain must be a TSS self-transfer:
+	// zero value, no calldata, recipient = TSS. Fetching the tx and
+	// inspecting it directly is necessary because Transfer-event-based
+	// helpers can't see a payload-less self-transfer (no logs).
+	require.NotEmpty(r, cctx.OutboundParams, "CCTX must have at least one outbound param")
+	cancelTxHash := ethcommon.HexToHash(cctx.OutboundParams[0].Hash)
+	cancelTx, _, err := r.EVMClient.TransactionByHash(r.Ctx, cancelTxHash)
+	require.NoError(r, err)
+	require.Equal(r, big.NewInt(0).Int64(), cancelTx.Value().Int64(),
+		"cancelled outbound must have zero value")
+	require.Empty(r, cancelTx.Data(),
+		"cancelled outbound must have no calldata")
+	require.NotNil(r, cancelTx.To())
+	require.Equal(r, r.TSSAddress.Hex(), cancelTx.To().Hex(),
+		"cancelled outbound must be sent to TSS (self-transfer)")
 
 	// destination dApp must not have been called
 	r.AssertTestDAppEVMCalled(false, payload, amount)
