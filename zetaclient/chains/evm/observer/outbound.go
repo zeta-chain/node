@@ -181,7 +181,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// cancelled transaction means the outbound is failed
 	// - set amount to CCTX's amount to bypass amount check in zetacore
 	// - set status to failed to revert the CCTX in zetacore
-	if compliance.IsCCTXRestricted(cctx) {
+	// CCTXs are cancelled via SignCancel (TSS self-transfer) when:
+	// - the CCTX is restricted by compliance, OR
+	// - the CCTX is a V2 arbitrary call routing through GatewayEVM.execute
+	//   (the signer refuses to forward arbitrary calldata through the
+	//   destination Gateway).
+	if compliance.IsCCTXRestricted(cctx) || isArbitraryCallCancellation(cctx) {
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
@@ -514,4 +519,33 @@ func (ob *Observer) checkConfirmedTx(
 	}
 
 	return receipt, transaction, true
+}
+
+// isArbitraryCallCancellation returns true if the outbound CCTX is a V2
+// arbitrary call that the signer cancels via SignOutboundFromCCTXV2 (TSS
+// self-transfer). The observer must treat the resulting receipt as a failed
+// outbound (mirroring the compliance-restricted cancellation path) to bypass
+// event parsing and trigger the standard V2 revert flow.
+//
+// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled by
+// the signer (see SignOutboundFromCCTXV2). The ERC20-`withdrawAndCall` path
+// and plain V2 withdraws also have CallOptions.IsArbitraryCall=true on the
+// wire but are not cancelled — they must follow the normal event-parsing
+// path.
+func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
+	// Mirror the signer's V2-only dispatch (SignOutboundFromCCTXV2 is reached
+	// only via signer.go's ProtocolContractVersion == V2 branch). V1 CCTXs do
+	// not populate CallOptions today, but gate on the version explicitly so
+	// the predicate is symmetric with the signer.
+	if cctx.ProtocolContractVersion != crosschaintypes.ProtocolContractVersion_V2 {
+		return false
+	}
+	outboundParam := cctx.GetCurrentOutboundParam()
+	if outboundParam == nil || outboundParam.CallOptions == nil {
+		return false
+	}
+	if !outboundParam.CallOptions.IsArbitraryCall {
+		return false
+	}
+	return common.IsGatewayExecuteOutbound(common.ParseOutboundTypeFromCCTX(*cctx))
 }

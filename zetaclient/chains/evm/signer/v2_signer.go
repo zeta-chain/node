@@ -17,6 +17,22 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	outboundData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
+
+	// V2 arbitrary calls that route through GatewayEVM.execute are not signed:
+	// the destination contract and calldata are caller-controlled, so we
+	// cancel via a TSS-to-TSS zero-value self-transfer that consumes the
+	// assigned nonce. This avoids the head-of-line blocking that would occur
+	// if the CCTX were left perpetually unsigned.
+	//
+	// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall reach
+	// signGatewayExecute. The other arbitrary-call routes
+	// (ERC20Custody.withdrawAndCall) constrain the destination to invoke
+	// typed `Callable.onCall` and remain enabled. Plain withdraws emit
+	// `isArbitraryCall=true` from GatewayZEVM.withdraw() too, but they don't
+	// reach signGatewayExecute either.
+	if outboundData.callOptions.IsArbitraryCall && common.IsGatewayExecuteOutbound(outboundType) {
+		return signer.SignCancel(ctx, outboundData)
+	}
 	switch outboundType {
 	case common.OutboundTypeGasWithdraw, common.OutboundTypeGasWithdrawRevert:
 		return signer.SignGasWithdraw(ctx, outboundData)

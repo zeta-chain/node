@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -73,6 +74,31 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// post outbound vote
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
+		require.NoError(t, err)
+		require.False(t, continueKeysign)
+	})
+	t.Run("should post vote and return true on V2 arbitrary call cancellation", func(t *testing.T) {
+		// Mirror the signer's SignOutboundFromCCTXV2 cancel path: only
+		// OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled.
+		// Build a OutboundTypeGasWithdrawAndCall CCTX with IsArbitraryCall=true
+		// so the observer bypass fires and votes the outbound as failed without
+		// parsing Gateway events.
+		cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
+		cctx.ProtocolContractVersion = crosschaintypes.ProtocolContractVersion_V2
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
+		cctx.GetCurrentOutboundParam().CallOptions = &crosschaintypes.CallOptions{
+			GasLimit:        100_000,
+			IsArbitraryCall: true,
+		}
+
+		// create evm observer and set outbound and receipt
+		ob := newTestSuite(t)
+		ob.setTxNReceipt(nonce, receipt, outbound)
+
+		// post outbound vote — bypass should fire regardless of receipt contents
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
 		require.NoError(t, err)
 		require.False(t, continueKeysign)
@@ -646,3 +672,50 @@ func Test_FilterTSSOutbound(t *testing.T) {
 //		require.Equal(t, chains.ReceiveStatus_failed, status)
 //	})
 //}
+
+func Test_isArbitraryCallCancellation(t *testing.T) {
+	build := func(
+		version crosschaintypes.ProtocolContractVersion,
+		coinType coin.CoinType,
+		isCrossChainCall bool,
+		callOptions *crosschaintypes.CallOptions,
+	) *crosschaintypes.CrossChainTx {
+		return &crosschaintypes.CrossChainTx{
+			ProtocolContractVersion: version,
+			InboundParams: &crosschaintypes.InboundParams{
+				CoinType:         coinType,
+				IsCrossChainCall: isCrossChainCall,
+			},
+			CctxStatus:     &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_PendingOutbound},
+			OutboundParams: []*crosschaintypes.OutboundParams{{CallOptions: callOptions}},
+		}
+	}
+	v2 := crosschaintypes.ProtocolContractVersion_V2
+	v1 := crosschaintypes.ProtocolContractVersion_V1
+	arbitrary := &crosschaintypes.CallOptions{IsArbitraryCall: true}
+	authenticated := &crosschaintypes.CallOptions{IsArbitraryCall: false}
+
+	tests := []struct {
+		name     string
+		cctx     *crosschaintypes.CrossChainTx
+		expected bool
+	}{
+		{"nil call options returns false", build(v2, coin.CoinType_Gas, true, nil), false},
+		{"authenticated call returns false", build(v2, coin.CoinType_Gas, true, authenticated), false},
+		{"arbitrary gas withdraw and call (Gateway.execute) returns true", build(v2, coin.CoinType_Gas, true, arbitrary), true},
+		{"arbitrary no-asset call (Gateway.execute) returns true", build(v2, coin.CoinType_NoAssetCall, true, arbitrary), true},
+		// GatewayZEVM.withdraw() emits isArbitraryCall=true on plain withdraws,
+		// but the signer routes those through SignGasWithdraw — not cancelled.
+		{"plain gas withdraw with arbitrary flag returns false", build(v2, coin.CoinType_Gas, false, arbitrary), false},
+		// Custody withdrawAndCall path — destination is invoked via typed
+		// Callable.onCall, not the GatewayEVM.execute drain shape.
+		{"arbitrary erc20 withdraw and call (Custody) returns false", build(v2, coin.CoinType_ERC20, true, arbitrary), false},
+		// Defense-in-depth: predicate must mirror the signer's V2-only dispatch.
+		{"V1 cctx with arbitrary flag never cancelled", build(v1, coin.CoinType_Gas, true, arbitrary), false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, isArbitraryCallCancellation(tc.cctx))
+		})
+	}
+}
