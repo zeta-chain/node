@@ -532,6 +532,13 @@ func (ob *Observer) checkConfirmedTx(
 // and plain V2 withdraws also have CallOptions.IsArbitraryCall=true on the
 // wire but are not cancelled — they must follow the normal event-parsing
 // path.
+//
+// Deployment note: this predicate decides on CCTX metadata alone, never the
+// receipt. During a rolling zetaclient upgrade where some validators still
+// run the old signer (which forwards the call as GatewayEVM.execute), a
+// new-version observer would mark that successful Executed receipt as
+// failed. To avoid split votes, all validators should upgrade zetaclient as
+// a single coordinated step on this hotfix.
 func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
 	// Mirror the signer's V2-only dispatch (SignOutboundFromCCTXV2 is reached
 	// only via signer.go's ProtocolContractVersion == V2 branch). V1 CCTXs do
