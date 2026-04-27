@@ -14,6 +14,13 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	cctx *types.CrossChainTx,
 	outboundData *OutboundData,
 ) (*ethtypes.Transaction, error) {
+	// V2 arbitrary calls are not supported by the signer. Cancel by signing a
+	// TSS-to-TSS zero-value self-transfer that consumes the assigned nonce on
+	// the destination chain. This avoids head-of-line blocking that would occur
+	// if the CCTX were left perpetually unsigned.
+	if outboundData.callOptions.IsArbitraryCall {
+		return signer.SignCancel(outboundData)
+	}
 	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
 	case common.OutboundTypeGasWithdraw, common.OutboundTypeGasWithdrawRevert:

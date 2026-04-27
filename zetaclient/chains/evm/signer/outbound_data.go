@@ -152,23 +152,20 @@ func NewOutboundData(
 	}, false, nil
 }
 
-// ErrArbitraryCallDisabled is returned by MessageContext when an outbound
-// CCTX requests an arbitrary call (sender == address(0) on the destination
-// Gateway). Arbitrary calls are no longer supported by the signer.
-var ErrArbitraryCallDisabled = errors.New("arbitrary call outbounds are disabled")
-
 func (o OutboundData) MessageContext() (gatewayevm.MessageContext, error) {
 	if o.callOptions == (types.CallOptions{}) {
 		return gatewayevm.MessageContext{}, errors.New("call options not found")
 	}
-	if o.callOptions.IsArbitraryCall {
-		return gatewayevm.MessageContext{}, ErrArbitraryCallDisabled
-	}
-	// only authenticated calls reach this point: target is Callable.onCall and
-	// sender is propagated as the inbound caller's address.
-	return gatewayevm.MessageContext{
+	// if sender is provided in messageContext call is authenticated and target is Callable.onCall
+	// otherwise, call is arbitrary
+	messageContext := gatewayevm.MessageContext{
 		Sender: o.sender,
-	}, nil
+	}
+	if o.callOptions.IsArbitraryCall {
+		messageContext.Sender = ethcommon.Address{}
+	}
+
+	return messageContext, nil
 }
 
 func getCCTXIndex(cctx *types.CrossChainTx) ([32]byte, error) {
