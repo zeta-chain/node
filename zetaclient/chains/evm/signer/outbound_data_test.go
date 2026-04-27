@@ -144,3 +144,47 @@ func TestNewOutboundData(t *testing.T) {
 		assert.ErrorContains(t, err, "outboundParams is empty")
 	})
 }
+
+func TestOutboundData_MessageContext(t *testing.T) {
+	sender := ethcommon.HexToAddress("0x000000000000000000000000000000000000abcd")
+
+	t.Run("authenticated call propagates sender", func(t *testing.T) {
+		// ARRANGE
+		out := OutboundData{
+			sender:      sender,
+			callOptions: types.CallOptions{GasLimit: 100_000, IsArbitraryCall: false},
+		}
+
+		// ACT
+		mc, err := out.MessageContext()
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, sender, mc.Sender)
+	})
+
+	t.Run("arbitrary call is rejected", func(t *testing.T) {
+		// ARRANGE
+		out := OutboundData{
+			sender:      sender,
+			callOptions: types.CallOptions{GasLimit: 100_000, IsArbitraryCall: true},
+		}
+
+		// ACT
+		_, err := out.MessageContext()
+
+		// ASSERT
+		require.ErrorIs(t, err, ErrArbitraryCallDisabled)
+	})
+
+	t.Run("missing call options returns error", func(t *testing.T) {
+		// ARRANGE
+		out := OutboundData{sender: sender}
+
+		// ACT
+		_, err := out.MessageContext()
+
+		// ASSERT
+		require.ErrorContains(t, err, "call options not found")
+	})
+}
