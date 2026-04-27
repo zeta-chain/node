@@ -35,12 +35,16 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	)
 
 	if r.IsV2ZETAEnabled() {
-		// V2 ZETA flows enabled: withdraw and call should succeed
+		// V2 ZETA flows enabled: CCTX is created, but the signer cancels V2
+		// arbitrary calls (TSS self-transfer); the observer reports the
+		// outbound as failed and the CCTX terminates as Reverted via the
+		// standard V2 revert flow. ZETA principal is refunded to the sender.
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.CCTX(*cctx, "zeta_withdraw_and_arbitrary_call")
-		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-		r.AssertTestDAppEVMCalled(true, payload, amount)
+		// destination dApp must not have been called
+		r.AssertTestDAppEVMCalled(false, payload, amount)
 	} else {
 		// V2 ZETA flows disabled: tx should revert on GatewayZEVM, no CCTX created
 		utils.EnsureNoCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient)

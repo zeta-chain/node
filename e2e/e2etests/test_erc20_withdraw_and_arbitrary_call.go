@@ -34,7 +34,13 @@ func TestERC20WithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	r.AssertTestDAppEVMCalled(true, payload, amount)
+	// V2 arbitrary calls are cancelled by the signer (TSS self-transfer).
+	// The observer reports the outbound as failed, which routes the CCTX
+	// through the standard V2 revert flow and terminates as Reverted; the
+	// withdrawn ERC20 ZRC20 amount is refunded to the sender on ZEVM.
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+
+	// destination dApp must not have been called
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 }

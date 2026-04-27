@@ -190,7 +190,11 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// cancelled transaction means the outbound is failed
 	// - set amount to CCTX's amount to bypass amount check in zetacore
 	// - set status to failed to revert the CCTX in zetacore
-	if compliance.IsCCTXRestricted(cctx) {
+	// CCTXs are cancelled via SignCancel (TSS self-transfer) when:
+	// - the CCTX is restricted by compliance, OR
+	// - the CCTX is a V2 arbitrary call (signer refuses to forward arbitrary
+	//   calldata through the destination Gateway)
+	if compliance.IsCCTXRestricted(cctx) || isArbitraryCallCancellation(cctx) {
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
@@ -523,4 +527,18 @@ func (ob *Observer) checkConfirmedTx(
 	}
 
 	return receipt, transaction, true
+}
+
+// isArbitraryCallCancellation returns true if the outbound CCTX is a V2
+// arbitrary call. The signer cancels these by producing a TSS-to-TSS
+// self-transfer instead of invoking the destination Gateway, so the
+// observer must treat the resulting receipt as a failed outbound (mirroring
+// the compliance-restricted cancellation path) to bypass event parsing and
+// trigger the standard V2 revert flow.
+func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
+	outboundParam := cctx.GetCurrentOutboundParam()
+	if outboundParam == nil || outboundParam.CallOptions == nil {
+		return false
+	}
+	return outboundParam.CallOptions.IsArbitraryCall
 }
