@@ -23,11 +23,7 @@ func TestETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
-	// capture the ZEVM revert recipient's ETH-ZRC20 balance before the
-	// withdraw — the cancelled CCTX should refund the principal here.
 	revertAddress := r.EVMAddress()
-	revertBalanceBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
-	require.NoError(r, err)
 
 	// perform the withdraw
 	tx := r.ETHWithdrawAndArbitraryCall(
@@ -39,6 +35,14 @@ func TestETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
+
+	// wait for the withdraw tx to mine on ZEVM (user has now paid amount +
+	// gasFee + protocolFlatFee out of their ETH-ZRC20 balance), then capture
+	// the post-payment balance — the revert refund will add on top of this.
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+	revertBalanceBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	require.NoError(r, err)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -56,11 +60,11 @@ func TestETHWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	// destination dApp must not have been called
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
-	// revert address should receive at least the principal back. The exact
-	// amount also includes a portion of the unused gas-fee leftover (refunded
-	// by RefundUnusedGasFee in the vote handler) but the precise math is
-	// fragile across gas-price/percentage settings, so we assert the lower
-	// bound: balance increase >= principal.
+	// Compared to the post-withdraw balance, the revert refund must add at
+	// least the principal (zetacore's ProcessRevert refunds amount in full).
+	// The exact value also includes a fractional gas-fee leftover refund from
+	// RefundUnusedGasFee, but the precise math is fragile across percentage
+	// settings, so we assert the lower bound only.
 	revertBalanceAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
