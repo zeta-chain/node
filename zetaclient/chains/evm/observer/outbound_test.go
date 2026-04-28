@@ -704,13 +704,14 @@ func Test_isArbitraryCallCancellation(t *testing.T) {
 		{"authenticated call returns false", build(v2, coin.CoinType_Gas, true, authenticated), false},
 		{"arbitrary gas withdraw and call (Gateway.execute) returns true", build(v2, coin.CoinType_Gas, true, arbitrary), true},
 		{"arbitrary no-asset call (Gateway.execute) returns true", build(v2, coin.CoinType_NoAssetCall, true, arbitrary), true},
+		// ERC20 / Zeta withdrawAndCall arbitrary calls land at
+		// GatewayEVM.executeWithERC20's `_executeArbitraryCall` branch (sender
+		// == address(0)) — same drain shape as GatewayEVM.execute, also cancelled.
+		{"arbitrary erc20 withdraw and call (Custody) returns true", build(v2, coin.CoinType_ERC20, true, arbitrary), true},
+		{"arbitrary zeta withdraw and call (Connector) returns true", build(v2, coin.CoinType_Zeta, true, arbitrary), true},
 		// GatewayZEVM.withdraw() emits isArbitraryCall=true on plain withdraws,
 		// but the signer routes those through SignGasWithdraw — not cancelled.
 		{"plain gas withdraw with arbitrary flag returns false", build(v2, coin.CoinType_Gas, false, arbitrary), false},
-		// Custody / Connector withdrawAndCall paths — destination is invoked
-		// via typed Callable.onCall, not the GatewayEVM.execute drain shape.
-		{"arbitrary erc20 withdraw and call (Custody) returns false", build(v2, coin.CoinType_ERC20, true, arbitrary), false},
-		{"arbitrary zeta withdraw and call (Connector) returns false", build(v2, coin.CoinType_Zeta, true, arbitrary), false},
 		// Defense-in-depth: predicate must mirror the signer's V2-only dispatch.
 		{"V1 cctx with arbitrary flag never cancelled", build(v1, coin.CoinType_Gas, true, arbitrary), false},
 	}
