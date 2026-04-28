@@ -194,8 +194,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// - the CCTX is restricted by compliance, OR
 	// - the CCTX is a V2 arbitrary call (signer refuses to forward arbitrary
 	//   calldata through the destination Gateway)
-	if compliance.IsCCTXRestricted(cctx) || isArbitraryCallCancellation(cctx) {
-		if isArbitraryCallCancellation(cctx) {
+	isArbitraryCancel := isArbitraryCallCancellation(cctx)
+	if compliance.IsCCTXRestricted(cctx) || isArbitraryCancel {
+		if isArbitraryCancel {
 			logger.Warn().
 				Str(logs.FieldCctxIndex, cctx.Index).
 				Stringer(logs.FieldTx, receipt.TxHash).
