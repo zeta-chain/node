@@ -219,10 +219,15 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 	}
 }
 
-func TestIsGatewayExecuteOutbound(t *testing.T) {
-	gatewayExecuteTypes := map[OutboundType]bool{
-		OutboundTypeCall:               true,
-		OutboundTypeGasWithdrawAndCall: true,
+func TestIsArbitraryCallCancellable(t *testing.T) {
+	// All outbound types that route to a signer that translates
+	// IsArbitraryCall=true into MessageContext.Sender=0x0 and lands at
+	// GatewayEVM's arbitrary-call branch (via execute or executeWithERC20).
+	cancellableTypes := map[OutboundType]bool{
+		OutboundTypeCall:                 true,
+		OutboundTypeGasWithdrawAndCall:   true,
+		OutboundTypeERC20WithdrawAndCall: true,
+		OutboundTypeZetaWithdrawAndCall:  true,
 	}
 	allTypes := []OutboundType{
 		OutboundTypeUnknown,
@@ -243,7 +248,7 @@ func TestIsGatewayExecuteOutbound(t *testing.T) {
 	for _, ot := range allTypes {
 		ot := ot
 		t.Run(fmt.Sprintf("OutboundType_%d", ot), func(t *testing.T) {
-			require.Equal(t, gatewayExecuteTypes[ot], IsGatewayExecuteOutbound(ot))
+			require.Equal(t, cancellableTypes[ot], IsArbitraryCallCancellable(ot))
 		})
 	}
 }

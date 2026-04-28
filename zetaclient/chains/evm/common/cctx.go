@@ -49,13 +49,34 @@ const (
 	OutboundTypeZetaWithdraw
 )
 
-// IsGatewayExecuteOutbound reports whether the outbound type forwards
-// arbitrary calldata through GatewayEVM.execute (signGatewayExecute path).
-// These are the outbound types where MessageContext.Sender = 0x0 grants the
-// destination contract authority over arbitrary calldata, so a CCTX with
-// CallOptions.IsArbitraryCall=true on this path must not be signed.
-func IsGatewayExecuteOutbound(t OutboundType) bool {
-	return t == OutboundTypeCall || t == OutboundTypeGasWithdrawAndCall
+// IsArbitraryCallCancellable reports whether the outbound type, when paired
+// with CallOptions.IsArbitraryCall=true, would produce a TSS-signed call
+// containing MessageContext.Sender == address(0) and thereby reach
+// GatewayEVM's arbitrary-call branch (_executeArbitraryCall) on the
+// destination chain.
+//
+// Three signer entry points translate IsArbitraryCall into a zero sender
+// inside MessageContext (see OutboundData.MessageContext) and pass it into
+// a contract that branches on sender:
+//   - signGatewayExecute → GatewayEVM.execute
+//     reached by OutboundTypeCall and OutboundTypeGasWithdrawAndCall
+//   - signERC20CustodyWithdrawAndCall → ERC20Custody.withdrawAndCall
+//     → GatewayEVM.executeWithERC20
+//     reached by OutboundTypeERC20WithdrawAndCall
+//   - signZetaConnectorWithdrawAndCall → ZetaConnector.withdrawAndCall
+//     → GatewayEVM.executeWithERC20
+//     reached by OutboundTypeZetaWithdrawAndCall
+//
+// All three end at GatewayEVM's arbitrary-call branch, which performs a raw
+// destination.call(data) with msg.sender == GatewayEVM and is not selector-
+// filtered against ERC20 authority (transferFrom / approve / permit). CCTXs
+// with IsArbitraryCall=true on any of these outbound types must be cancelled
+// at the signer rather than relayed to the destination chain.
+func IsArbitraryCallCancellable(t OutboundType) bool {
+	return t == OutboundTypeCall ||
+		t == OutboundTypeGasWithdrawAndCall ||
+		t == OutboundTypeERC20WithdrawAndCall ||
+		t == OutboundTypeZetaWithdrawAndCall
 }
 
 // ParseOutboundTypeFromCCTX returns the outbound type from the CCTX

@@ -702,14 +702,20 @@ func Test_isArbitraryCallCancellation(t *testing.T) {
 	}{
 		{"nil call options returns false", build(v2, coin.CoinType_Gas, true, nil), false},
 		{"authenticated call returns false", build(v2, coin.CoinType_Gas, true, authenticated), false},
+		// GatewayEVM.execute path (signGatewayExecute):
 		{"arbitrary gas withdraw and call (Gateway.execute) returns true", build(v2, coin.CoinType_Gas, true, arbitrary), true},
 		{"arbitrary no-asset call (Gateway.execute) returns true", build(v2, coin.CoinType_NoAssetCall, true, arbitrary), true},
-		// GatewayZEVM.withdraw() emits isArbitraryCall=true on plain withdraws,
-		// but the signer routes those through SignGasWithdraw — not cancelled.
+		// GatewayEVM.executeWithERC20 path via asset-handler relay:
+		// ERC20Custody.withdrawAndCall and ZetaConnector.withdrawAndCall both
+		// pass MessageContext through to gateway.executeWithERC20, which
+		// branches on sender==0 to _executeArbitraryCall — same drain
+		// primitive as GatewayEVM.execute. Must be cancelled too.
+		{"arbitrary erc20 withdraw and call (Custody → executeWithERC20) returns true", build(v2, coin.CoinType_ERC20, true, arbitrary), true},
+		{"arbitrary zeta withdraw and call (Connector → executeWithERC20) returns true", build(v2, coin.CoinType_Zeta, true, arbitrary), true},
+		// Plain withdraws emit isArbitraryCall=true on the wire (GatewayZEVM
+		// semantics for "no authenticated sender") but don't reach any of the
+		// MessageContext-passing signers — not cancelled.
 		{"plain gas withdraw with arbitrary flag returns false", build(v2, coin.CoinType_Gas, false, arbitrary), false},
-		// Custody withdrawAndCall path — destination is invoked via typed
-		// Callable.onCall, not the GatewayEVM.execute drain shape.
-		{"arbitrary erc20 withdraw and call (Custody) returns false", build(v2, coin.CoinType_ERC20, true, arbitrary), false},
 		// Defense-in-depth: predicate must mirror the signer's V2-only dispatch.
 		{"V1 cctx with arbitrary flag never cancelled", build(v1, coin.CoinType_Gas, true, arbitrary), false},
 	}

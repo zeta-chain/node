@@ -19,19 +19,23 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 ) (*ethtypes.Transaction, error) {
 	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
 
-	// V2 arbitrary calls that route through GatewayEVM.execute are not signed:
-	// the destination contract and calldata are caller-controlled, so we
-	// cancel via a TSS-to-TSS zero-value self-transfer that consumes the
-	// assigned nonce. This avoids the head-of-line blocking that would occur
-	// if the CCTX were left perpetually unsigned.
+	// V2 arbitrary calls whose CCTX shape lands at GatewayEVM's arbitrary-call
+	// branch on the destination chain are not signed. The destination contract
+	// and calldata are caller-controlled, so we cancel via a TSS-to-TSS
+	// zero-value self-transfer that consumes the assigned nonce. This avoids
+	// the head-of-line blocking that would occur if the CCTX were left
+	// perpetually unsigned.
 	//
-	// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall reach
-	// signGatewayExecute. The other arbitrary-call routes
-	// (ERC20Custody.withdrawAndCall) constrain the destination to invoke
-	// typed `Callable.onCall` and remain enabled. Plain withdraws emit
-	// `isArbitraryCall=true` from GatewayZEVM.withdraw() too, but they don't
-	// reach signGatewayExecute either.
-	if outboundData.callOptions.IsArbitraryCall && common.IsGatewayExecuteOutbound(outboundType) {
+	// IsArbitraryCallCancellable enumerates the outbound types whose signer
+	// would otherwise produce MessageContext.Sender=0x0 and pass it into
+	// GatewayEVM.execute (signGatewayExecute) or GatewayEVM.executeWithERC20
+	// (via ERC20Custody.withdrawAndCall / ZetaConnector.withdrawAndCall) —
+	// both of which branch on the zero sender to invoke _executeArbitraryCall.
+	//
+	// Plain withdraws emit `isArbitraryCall=true` from GatewayZEVM.withdraw()
+	// per protocol-contracts semantics ("no authenticated sender"), but they
+	// don't reach any of those entry points and are not cancelled.
+	if outboundData.callOptions.IsArbitraryCall && common.IsArbitraryCallCancellable(outboundType) {
 		signer.Logger().Std.Warn().
 			Str(logs.FieldCctxIndex, cctx.Index).
 			Uint64(logs.FieldNonce, outboundData.nonce).

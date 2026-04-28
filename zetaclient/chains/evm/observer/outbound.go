@@ -533,11 +533,12 @@ func (ob *Observer) checkConfirmedTx(
 // outbound (mirroring the compliance-restricted cancellation path) to bypass
 // event parsing and trigger the standard V2 revert flow.
 //
-// Only OutboundTypeCall and OutboundTypeGasWithdrawAndCall are cancelled by
-// the signer (see SignOutboundFromCCTXV2). The ERC20-`withdrawAndCall` path
-// and plain V2 withdraws also have CallOptions.IsArbitraryCall=true on the
-// wire but are not cancelled — they must follow the normal event-parsing
-// path.
+// IsArbitraryCallCancellable enumerates the outbound types cancelled by the
+// signer (Call / GasWithdrawAndCall via signGatewayExecute, plus
+// ERC20WithdrawAndCall and ZetaWithdrawAndCall via the asset-handler relay
+// to GatewayEVM.executeWithERC20). Plain V2 withdraws also have
+// IsArbitraryCall=true on the wire per protocol-contracts semantics but are
+// not cancelled — they follow the normal event-parsing path.
 //
 // Deployment note: this predicate decides on CCTX metadata alone, never the
 // receipt. During a rolling zetaclient upgrade where some validators still
@@ -560,5 +561,5 @@ func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
 	if !outboundParam.CallOptions.IsArbitraryCall {
 		return false
 	}
-	return common.IsGatewayExecuteOutbound(common.ParseOutboundTypeFromCCTX(*cctx))
+	return common.IsArbitraryCallCancellable(common.ParseOutboundTypeFromCCTX(*cctx))
 }
