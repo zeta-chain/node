@@ -7,6 +7,7 @@ import (
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // SignOutboundFromCCTXV2 signs an outbound transaction from a CCTX with protocol contract v2
@@ -28,6 +29,12 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	// too, but they don't reach signGatewayExecute either.
 	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
 	if outboundData.callOptions.IsArbitraryCall && common.IsGatewayExecuteOutbound(outboundType) {
+		signer.Logger().Std.Warn().
+			Str(logs.FieldCctxIndex, cctx.Index).
+			Uint64(logs.FieldNonce, outboundData.nonce).
+			Stringer("destination", outboundData.to).
+			Int("outbound_type", int(outboundType)).
+			Msg("cancelling V2 arbitrary-call CCTX via TSS self-transfer")
 		return signer.SignCancel(outboundData)
 	}
 	switch outboundType {

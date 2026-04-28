@@ -195,6 +195,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// - the CCTX is a V2 arbitrary call (signer refuses to forward arbitrary
 	//   calldata through the destination Gateway)
 	if compliance.IsCCTXRestricted(cctx) || isArbitraryCallCancellation(cctx) {
+		if isArbitraryCallCancellation(cctx) {
+			logger.Warn().
+				Str(logs.FieldCctxIndex, cctx.Index).
+				Stringer(logs.FieldTx, receipt.TxHash).
+				Msg("voting V2 arbitrary-call CCTX as failed (signer-cancelled)")
+		}
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
