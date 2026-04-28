@@ -183,11 +183,11 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// - set status to failed to revert the CCTX in zetacore
 	// CCTXs are cancelled via SignCancel (TSS self-transfer) when:
 	// - the CCTX is restricted by compliance, OR
-	// - the CCTX is a V2 arbitrary call routing through GatewayEVM.execute
-	//   (the signer refuses to forward arbitrary calldata through the
-	//   destination Gateway).
-	if compliance.IsCCTXRestricted(cctx) || isArbitraryCallCancellation(cctx) {
-		if isArbitraryCallCancellation(cctx) {
+	// - the CCTX is a V2 arbitrary call (signer refuses to forward arbitrary
+	//   calldata through the destination Gateway)
+	isArbitraryCancel := isArbitraryCallCancellation(cctx)
+	if compliance.IsCCTXRestricted(cctx) || isArbitraryCancel {
+		if isArbitraryCancel {
 			logger.Warn().
 				Str(logs.FieldCctxIndex, cctx.Index).
 				Stringer(logs.FieldTx, receipt.TxHash).
