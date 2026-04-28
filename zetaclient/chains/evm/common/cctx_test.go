@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -214,6 +215,40 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ParseOutboundTypeFromCCTX(tt.cctx)
 			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestIsArbitraryCallCancellable(t *testing.T) {
+	// All outbound types that route to a signer that translates
+	// IsArbitraryCall=true into MessageContext.Sender=0x0 and lands at
+	// GatewayEVM's arbitrary-call branch (via execute or executeWithERC20).
+	cancellableTypes := map[OutboundType]bool{
+		OutboundTypeCall:                 true,
+		OutboundTypeGasWithdrawAndCall:   true,
+		OutboundTypeERC20WithdrawAndCall: true,
+		OutboundTypeZetaWithdrawAndCall:  true,
+	}
+	allTypes := []OutboundType{
+		OutboundTypeUnknown,
+		OutboundTypeGasWithdraw,
+		OutboundTypeERC20Withdraw,
+		OutboundTypeGasWithdrawAndCall,
+		OutboundTypeERC20WithdrawAndCall,
+		OutboundTypeCall,
+		OutboundTypeGasWithdrawRevert,
+		OutboundTypeGasWithdrawRevertAndCallOnRevert,
+		OutboundTypeERC20WithdrawRevert,
+		OutboundTypeERC20WithdrawRevertAndCallOnRevert,
+		OutboundTypeZetaWithdrawRevertAndCallOnRevert,
+		OutboundTypeZetaWithdrawRevert,
+		OutboundTypeZetaWithdrawAndCall,
+		OutboundTypeZetaWithdraw,
+	}
+	for _, ot := range allTypes {
+		ot := ot
+		t.Run(fmt.Sprintf("OutboundType_%d", ot), func(t *testing.T) {
+			require.Equal(t, cancellableTypes[ot], IsArbitraryCallCancellable(ot))
 		})
 	}
 }

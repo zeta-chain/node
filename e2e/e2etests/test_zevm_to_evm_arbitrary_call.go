@@ -33,8 +33,12 @@ func TestZEVMToEVMArbitraryCall(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "call")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// check the payload was received on the contract
-	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
+	// V2 arbitrary calls are cancelled by the signer (TSS self-transfer).
+	// The observer reports the outbound as failed, which routes the CCTX
+	// through the standard V2 revert flow and terminates as Reverted.
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+
+	// destination dApp must not have been called
+	r.AssertTestDAppEVMCalled(false, payload, big.NewInt(0))
 }

@@ -181,7 +181,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// cancelled transaction means the outbound is failed
 	// - set amount to CCTX's amount to bypass amount check in zetacore
 	// - set status to failed to revert the CCTX in zetacore
-	if compliance.IsCCTXRestricted(cctx) {
+	// CCTXs are cancelled via SignCancel (TSS self-transfer) when:
+	// - the CCTX is restricted by compliance, OR
+	// - the CCTX is a V2 arbitrary call (signer refuses to forward arbitrary
+	//   calldata through the destination Gateway)
+	isArbitraryCancel := isArbitraryCallCancellation(cctx)
+	if compliance.IsCCTXRestricted(cctx) || isArbitraryCancel {
+		if isArbitraryCancel {
+			logger.Warn().
+				Str(logs.FieldCctxIndex, cctx.Index).
+				Stringer(logs.FieldTx, receipt.TxHash).
+				Msg("voting V2 arbitrary-call CCTX as failed (signer-cancelled)")
+		}
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
@@ -514,4 +525,41 @@ func (ob *Observer) checkConfirmedTx(
 	}
 
 	return receipt, transaction, true
+}
+
+// isArbitraryCallCancellation returns true if the outbound CCTX is a V2
+// arbitrary call that the signer cancels via SignOutboundFromCCTXV2 (TSS
+// self-transfer). The observer must treat the resulting receipt as a failed
+// outbound (mirroring the compliance-restricted cancellation path) to bypass
+// event parsing and trigger the standard V2 revert flow.
+//
+// IsArbitraryCallCancellable enumerates the outbound types cancelled by the
+// signer (Call / GasWithdrawAndCall via signGatewayExecute, plus
+// ERC20WithdrawAndCall and ZetaWithdrawAndCall via the asset-handler relay
+// to GatewayEVM.executeWithERC20). Plain V2 withdraws also have
+// IsArbitraryCall=true on the wire per protocol-contracts semantics but are
+// not cancelled — they follow the normal event-parsing path.
+//
+// Deployment note: this predicate decides on CCTX metadata alone, never the
+// receipt. During a rolling zetaclient upgrade where some validators still
+// run the old signer (which forwards the call as GatewayEVM.execute), a
+// new-version observer would mark that successful Executed receipt as
+// failed. To avoid split votes, all validators should upgrade zetaclient as
+// a single coordinated step on this hotfix.
+func isArbitraryCallCancellation(cctx *crosschaintypes.CrossChainTx) bool {
+	// Mirror the signer's V2-only dispatch (SignOutboundFromCCTXV2 is reached
+	// only via signer.go's ProtocolContractVersion == V2 branch). V1 CCTXs do
+	// not populate CallOptions today, but gate on the version explicitly so
+	// the predicate is symmetric with the signer.
+	if cctx.ProtocolContractVersion != crosschaintypes.ProtocolContractVersion_V2 {
+		return false
+	}
+	outboundParam := cctx.GetCurrentOutboundParam()
+	if outboundParam == nil || outboundParam.CallOptions == nil {
+		return false
+	}
+	if !outboundParam.CallOptions.IsArbitraryCall {
+		return false
+	}
+	return common.IsArbitraryCallCancellable(common.ParseOutboundTypeFromCCTX(*cctx))
 }

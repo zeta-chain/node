@@ -8,6 +8,7 @@ import (
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // SignOutboundFromCCTXV2 signs an outbound transaction from a CCTX with protocol contract v2
@@ -17,6 +18,32 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 	outboundData *OutboundData,
 ) (*ethtypes.Transaction, error) {
 	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
+
+	// V2 arbitrary calls whose CCTX shape lands at GatewayEVM's arbitrary-call
+	// branch on the destination chain are not signed. The destination contract
+	// and calldata are caller-controlled, so we cancel via a TSS-to-TSS
+	// zero-value self-transfer that consumes the assigned nonce. This avoids
+	// the head-of-line blocking that would occur if the CCTX were left
+	// perpetually unsigned.
+	//
+	// IsArbitraryCallCancellable enumerates the outbound types whose signer
+	// would otherwise produce MessageContext.Sender=0x0 and pass it into
+	// GatewayEVM.execute (signGatewayExecute) or GatewayEVM.executeWithERC20
+	// (via ERC20Custody.withdrawAndCall / ZetaConnector.withdrawAndCall) —
+	// both of which branch on the zero sender to invoke _executeArbitraryCall.
+	//
+	// Plain withdraws emit `isArbitraryCall=true` from GatewayZEVM.withdraw()
+	// per protocol-contracts semantics ("no authenticated sender"), but they
+	// don't reach any of those entry points and are not cancelled.
+	if outboundData.callOptions.IsArbitraryCall && common.IsArbitraryCallCancellable(outboundType) {
+		signer.Logger().Std.Warn().
+			Str(logs.FieldCctxIndex, cctx.Index).
+			Uint64(logs.FieldNonce, outboundData.nonce).
+			Stringer("destination", outboundData.to).
+			Int("outbound_type", int(outboundType)).
+			Msg("cancelling V2 arbitrary-call CCTX via TSS self-transfer")
+		return signer.SignCancel(ctx, outboundData)
+	}
 	switch outboundType {
 	case common.OutboundTypeGasWithdraw, common.OutboundTypeGasWithdrawRevert:
 		return signer.SignGasWithdraw(ctx, outboundData)
