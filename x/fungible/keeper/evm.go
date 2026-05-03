@@ -388,7 +388,7 @@ func (k Keeper) CallDepositAndCall(ctx sdk.Context,
 }
 
 // CallOnReceiveZevmConnector calls the onReceive function of the ZevmConnector contract
-// Before calling it mints the zetaValue tokens to the fungible module , and this amount is then provided as value to the onReceive function
+// Before calling it mints the zetaValue tokens to the fungible module, and this amount is then provided as value to the onReceive function
 // The onReceive function will then wrap this native zeta into WZETA and call the onReceive function of the destination contract specified by the destinationAddress
 func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	zetaTxSenderAddress []byte,
@@ -440,7 +440,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 }
 
 // CallOnRevertZevmConnector calls the onRevert function of the ZevmConnector contract
-// Before calling it mints the remainingZetaValue tokens to the fungible module , and this amount is then provided as value to the onRevert function
+// Before calling it mints the remainingZetaValue tokens to the fungible module, and this amount is then provided as value to the onRevert function
 // The onRevert function will then wrap this native zeta into WZETA and call the onRevert function of the contract specified by the zetaTxSenderAddress
 // Note the destination address is the original destination address of the transaction and not the current destination .
 func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
