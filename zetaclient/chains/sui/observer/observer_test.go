@@ -276,6 +276,64 @@ func TestObserver(t *testing.T) {
 		require.Empty(t, ts.inboundVotesBag)
 	})
 
+	t.Run("ObserveInbound handles multiple gateway events in the same tx", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+		packageID := ts.gateway.PackageID()
+		txHash := "TX_MULTI_EVENT"
+
+		evmBob := sample.EthAddress()
+		evmAlice := sample.EthAddress()
+
+		expectedQuery := client.EventQuery{
+			PackageID: packageID,
+			Module:    sui.GatewayModule,
+			Cursor:    "",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		events := []models.SuiEventResponse{
+			ts.SampleEventWithSeq(packageID, txHash, "0", string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+			ts.SampleEventWithSeq(packageID, txHash, "1", string(sui.DepositAndCallEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "300",
+				"sender":    "SUI_ALICE",
+				"receiver":  evmAlice.String(),
+				"payload":   preparePayload([]byte{1, 2, 3}),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+		ts.OnGetTx(txHash, "10000", true, false, nil)
+		ts.OnGetTx(txHash, "10000", true, false, nil)
+
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
+		ts.CatchInboundVotes()
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, "TX_MULTI_EVENT,1", ts.GetAuxString(packageID))
+		require.Len(t, ts.inboundVotesBag, 2)
+
+		require.Equal(t, uint64(0), ts.inboundVotesBag[0].EventIndex)
+		require.Equal(t, evmBob.String(), ts.inboundVotesBag[0].Receiver)
+		require.Equal(t, math.NewUint(200), ts.inboundVotesBag[0].Amount)
+
+		require.Equal(t, uint64(1), ts.inboundVotesBag[1].EventIndex)
+		require.Equal(t, evmAlice.String(), ts.inboundVotesBag[1].Receiver)
+		require.Equal(t, math.NewUint(300), ts.inboundVotesBag[1].Amount)
+		require.Equal(t, "010203", ts.inboundVotesBag[1].Message)
+	})
+
 	t.Run("ObserveInbound restricted address", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
@@ -385,6 +443,57 @@ func TestObserver(t *testing.T) {
 		require.Equal(t, false, vote.IsCrossChainCall)
 		require.Equal(t, math.NewUint(1000), vote.Amount)
 		require.Equal(t, evmAlice.String(), vote.Receiver)
+	})
+
+	t.Run("ProcessInboundTrackers handles multiple gateway events in the same tx", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+		packageID := ts.gateway.PackageID()
+		txHash := "TX_TRACKER_MULTI_EVENT"
+		chainID := ts.Chain().ChainId
+
+		trackers := []cctypes.InboundTracker{
+			{
+				ChainId:  chainID,
+				TxHash:   txHash,
+				CoinType: coin.CoinType_Gas,
+			},
+		}
+		ts.zetaMock.On("GetInboundTrackersForChain", mock.Anything, chainID).Return(trackers, nil)
+
+		evmBob := sample.EthAddress()
+		evmAlice := sample.EthAddress()
+		ts.OnGetTx(txHash, "15000", true, true, []models.SuiEventResponse{
+			ts.SampleEventWithSeq(packageID, txHash, "0", string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "1000",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+			ts.SampleEventWithSeq(packageID, txHash, "1", string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "2000",
+				"sender":    "SUI_ALICE",
+				"receiver":  evmAlice.String(),
+			}),
+		})
+
+		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
+		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
+		ts.CatchInboundVotes()
+
+		// ACT
+		err := ts.ProcessInboundTrackers(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Len(t, ts.inboundVotesBag, 2)
+		require.Equal(t, uint64(0), ts.inboundVotesBag[0].EventIndex)
+		require.Equal(t, evmBob.String(), ts.inboundVotesBag[0].Receiver)
+		require.Equal(t, math.NewUint(1000), ts.inboundVotesBag[0].Amount)
+		require.Equal(t, uint64(1), ts.inboundVotesBag[1].EventIndex)
+		require.Equal(t, evmAlice.String(), ts.inboundVotesBag[1].Receiver)
+		require.Equal(t, math.NewUint(2000), ts.inboundVotesBag[1].Amount)
 	})
 
 	t.Run("ProcessOutboundTrackers", func(t *testing.T) {
@@ -804,12 +913,22 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 }
 
 func (ts *testSuite) SampleEvent(packageID, txHash, event string, kv map[string]any) models.SuiEventResponse {
+	return ts.SampleEventWithSeq(packageID, txHash, "0", event, kv)
+}
+
+func (ts *testSuite) SampleEventWithSeq(
+	packageID,
+	txHash,
+	eventSeq,
+	event string,
+	kv map[string]any,
+) models.SuiEventResponse {
 	eventType := fmt.Sprintf("%s::%s::%s", packageID, sui.GatewayModule, event)
 
 	return models.SuiEventResponse{
 		Id: models.EventId{
 			TxDigest: txHash,
-			EventSeq: "0",
+			EventSeq: eventSeq,
 		},
 		PackageId:         packageID,
 		TransactionModule: "gateway",

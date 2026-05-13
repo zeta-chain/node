@@ -169,11 +169,6 @@ func (ob *Observer) processInboundEvent(
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
-	case event.EventIndex != 0:
-		// Is it possible to have multiple events per tx?
-		// e.g. contract "A" calls Gateway multiple times in a single tx (deposit to multiple accounts)
-		// most likely not, so let's explicitly fail to prevent undefined behavior.
-		return errors.Errorf("unexpected event index %d for tx %s", event.EventIndex, event.TxHash)
 	}
 
 	if tx == nil {
