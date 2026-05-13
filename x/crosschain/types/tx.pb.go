@@ -1141,7 +1141,8 @@ type MsgVoteInbound struct {
 	ErrorMessage string `protobuf:"bytes,22,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	// event_gas_fee tracks the gas fee paid in GatewayZEVM V2 events.
 	EventGasFee cosmossdk_io_math.Uint `protobuf:"bytes,23,opt,name=event_gas_fee,json=eventGasFee,proto3,customtype=cosmossdk.io/math.Uint" json:"event_gas_fee"`
-	// event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events.
+	// event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events for auditability.
+	// It is not used to calculate unused gas refunds.
 	EventProtocolFlatFee cosmossdk_io_math.Uint `protobuf:"bytes,24,opt,name=event_protocol_flat_fee,json=eventProtocolFlatFee,proto3,customtype=cosmossdk.io/math.Uint" json:"event_protocol_flat_fee"`
 }
 

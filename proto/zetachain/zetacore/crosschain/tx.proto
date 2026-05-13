@@ -227,7 +227,8 @@ message MsgVoteInbound {
     (gogoproto.nullable) = false
   ];
 
-  // event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events.
+  // event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events for auditability.
+  // It is not used to calculate unused gas refunds.
   string event_protocol_flat_fee = 24 [
     (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false

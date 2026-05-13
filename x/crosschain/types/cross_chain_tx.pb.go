@@ -456,7 +456,8 @@ type OutboundParams struct {
 	UserGasFeePaid cosmossdk_io_math.Uint `protobuf:"bytes,26,opt,name=user_gas_fee_paid,json=userGasFeePaid,proto3,customtype=cosmossdk.io/math.Uint" json:"user_gas_fee_paid"`
 	// This field tracks the gas fee paid in the emitted GatewayZEVM V2 event.
 	EventGasFee cosmossdk_io_math.Uint `protobuf:"bytes,27,opt,name=event_gas_fee,json=eventGasFee,proto3,customtype=cosmossdk.io/math.Uint" json:"event_gas_fee"`
-	// This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event.
+	// This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event for auditability.
+	// It is not used to calculate unused gas refunds.
 	EventProtocolFlatFee cosmossdk_io_math.Uint `protobuf:"bytes,28,opt,name=event_protocol_flat_fee,json=eventProtocolFlatFee,proto3,customtype=cosmossdk.io/math.Uint" json:"event_protocol_flat_fee"`
 }
 

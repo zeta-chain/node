@@ -185,7 +185,7 @@ func (k Keeper) refundUnusedGas(
 		Mul(math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt()))
 	userGasFeePaid := outboundParams.UserGasFeePaid
 	refundableGasFeePaid := userGasFeePaid
-	if !outboundParams.EventGasFee.IsNil() && outboundParams.EventGasFee.LT(refundableGasFeePaid) {
+	if !userGasFeePaid.IsNil() && !outboundParams.EventGasFee.IsNil() && outboundParams.EventGasFee.LT(refundableGasFeePaid) {
 		refundableGasFeePaid = outboundParams.EventGasFee
 	}
 

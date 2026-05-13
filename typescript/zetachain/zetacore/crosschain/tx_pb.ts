@@ -677,7 +677,8 @@ export type MsgVoteInbound = Message<"zetachain.zetacore.crosschain.MsgVoteInbou
   eventGasFee: string;
 
   /**
-   * event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events.
+   * event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events for auditability.
+   * It is not used to calculate unused gas refunds.
    *
    * @generated from field: string event_protocol_flat_fee = 24;
    */
@@ -928,4 +929,3 @@ export const Msg: GenService<{
   },
 }> = /*@__PURE__*/
   serviceDesc(file_zetachain_zetacore_crosschain_tx, 0);
-

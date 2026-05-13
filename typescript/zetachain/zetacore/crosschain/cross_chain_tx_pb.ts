@@ -278,7 +278,8 @@ export type OutboundParams = Message<"zetachain.zetacore.crosschain.OutboundPara
   eventGasFee: string;
 
   /**
-   * This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event.
+   * This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event for auditability.
+   * It is not used to calculate unused gas refunds.
    *
    * @generated from field: string event_protocol_flat_fee = 28;
    */
@@ -635,4 +636,3 @@ export enum ProtocolContractVersion {
  */
 export const ProtocolContractVersionSchema: GenEnum<ProtocolContractVersion> = /*@__PURE__*/
   enumDesc(file_zetachain_zetacore_crosschain_cross_chain_tx, 4);
-
