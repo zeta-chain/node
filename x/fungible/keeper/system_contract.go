@@ -17,12 +17,19 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-const uniswapV2SwapDeadline = 30 * time.Minute
+const (
+	uniswapV2SwapDeadline           = 30 * time.Minute
+	uniswapV2FallbackDeadline int64 = 100_000_000_000_000_000
+)
 
 func uniswapV2Deadline(ctx sdk.Context) *big.Int {
+	if ctx.BlockTime().IsZero() {
+		return big.NewInt(uniswapV2FallbackDeadline)
+	}
+
 	deadline := ctx.BlockTime().Add(uniswapV2SwapDeadline).Unix()
 	if deadline < 0 {
-		deadline = int64(uniswapV2SwapDeadline.Seconds())
+		deadline = uniswapV2FallbackDeadline
 	}
 	return big.NewInt(deadline)
 }

@@ -40,6 +40,8 @@ func gasPaymentAmountOutMin(amountOut *big.Int) *big.Int {
 		return big.NewInt(0)
 	}
 
+	// The swap minimum catches severe EVM-level slippage. Callers still require the full
+	// expected gas fee after the swap so CCTX accounting remains exact.
 	amountOutMin := new(big.Int).Mul(amountOut, big.NewInt(gasPaymentBpsDenominator-gasPaymentSwapSlippageBps))
 	return amountOutMin.Div(amountOutMin, big.NewInt(gasPaymentBpsDenominator))
 }
