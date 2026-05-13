@@ -68,6 +68,14 @@ func WithErrorMessage(errorMessage string) InboundVoteOption {
 	}
 }
 
+// WithEventFees sets the fees paid in the emitted GatewayZEVM V2 event.
+func WithEventFees(gasFee, protocolFlatFee math.Uint) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.EventGasFee = gasFee
+		msg.EventProtocolFlatFee = protocolFlatFee
+	}
+}
+
 var _ sdk.Msg = &MsgVoteInbound{}
 
 func NewMsgVoteInbound(

@@ -136,6 +136,18 @@ message OutboundParams {
     (gogoproto.nullable) = false
   ];
 
+  // This field tracks the gas fee paid in the emitted GatewayZEVM V2 event.
+  string event_gas_fee = 27 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
+
+  // This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event.
+  string event_protocol_flat_fee = 28 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
+
   // not used. do not edit.
   reserved 13 to 19;
 }
