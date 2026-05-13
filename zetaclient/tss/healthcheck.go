@@ -43,14 +43,14 @@ func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckPro
 
 	// Ping & collect round trip time
 	var (
-		host    = server.GetP2PHost()
-		pingRTT = make(map[peer.ID]int64)
-		mu      = sync.Mutex{}
+		host = server.GetP2PHost()
+		mu   = sync.Mutex{}
 	)
 
 	const pingTimeout = 5 * time.Second
 
 	pinger := func(ctx context.Context, _ *ticker.Ticker) error {
+		pingRTT := make(map[peer.ID]int64)
 		var wg sync.WaitGroup
 		for _, peerID := range p.WhitelistPeers {
 			if peerID == host.ID() {

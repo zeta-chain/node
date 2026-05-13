@@ -59,25 +59,37 @@ func NewTelemetryServer() *TelemetryServer {
 func (t *TelemetryServer) SetPingRTT(rtt map[peer.ID]int64) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	t.rtt = rtt
+	t.rtt = copyPingRTT(rtt)
 }
 
 func (t *TelemetryServer) GetPingRTT() map[peer.ID]int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.rtt
+	return copyPingRTT(t.rtt)
 }
 
 func (t *TelemetryServer) SetConnectedPeers(peers []peer.AddrInfo) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	t.connectedPeers = peers
+	t.connectedPeers = copyConnectedPeers(peers)
 }
 
 func (t *TelemetryServer) GetConnectedPeers() []peer.AddrInfo {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.connectedPeers
+	return copyConnectedPeers(t.connectedPeers)
+}
+
+func copyPingRTT(rtt map[peer.ID]int64) map[peer.ID]int64 {
+	rttCopy := make(map[peer.ID]int64, len(rtt))
+	for peerID, duration := range rtt {
+		rttCopy[peerID] = duration
+	}
+	return rttCopy
+}
+
+func copyConnectedPeers(peers []peer.AddrInfo) []peer.AddrInfo {
+	return append([]peer.AddrInfo(nil), peers...)
 }
 
 // SetP2PID sets p2pid
