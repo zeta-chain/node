@@ -282,8 +282,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
 		return s.broadcastCancelTx(ctx, cancelTxBuilder)
 	case err != nil:
-		logger.Info().Err(err).Msg("cancelling tx due to withdraw tx build error")
-		return s.broadcastCancelTx(ctx, cancelTxBuilder)
+		return "", errors.Wrap(err, "unable to build withdraw tx")
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{

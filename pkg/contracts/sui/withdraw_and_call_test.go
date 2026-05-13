@@ -30,6 +30,7 @@ func Test_ExtractInitialSharedVersion(t *testing.T) {
 		objData     models.SuiObjectData
 		wantVersion uint64
 		errMsg      string
+		errIs       error
 	}{
 		{
 			name: "successful extraction",
@@ -49,6 +50,7 @@ func Test_ExtractInitialSharedVersion(t *testing.T) {
 			},
 			wantVersion: 0,
 			errMsg:      "invalid object owner type string",
+			errIs:       ErrInvalidPayload,
 		},
 		{
 			name: "missing shared object",
@@ -59,6 +61,7 @@ func Test_ExtractInitialSharedVersion(t *testing.T) {
 			},
 			wantVersion: 0,
 			errMsg:      "missing shared object",
+			errIs:       ErrInvalidPayload,
 		},
 		{
 			name: "invalid shared object type",
@@ -69,6 +72,7 @@ func Test_ExtractInitialSharedVersion(t *testing.T) {
 			},
 			wantVersion: 0,
 			errMsg:      "invalid shared object type string",
+			errIs:       ErrInvalidPayload,
 		},
 	}
 
@@ -78,6 +82,9 @@ func Test_ExtractInitialSharedVersion(t *testing.T) {
 			if tt.errMsg != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tt.errMsg)
+				if tt.errIs != nil {
+					require.ErrorIs(t, err, tt.errIs)
+				}
 				return
 			}
 

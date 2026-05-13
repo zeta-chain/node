@@ -56,6 +56,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 		name   string
 		args   withdrawAndCallPTBArgs
 		errMsg string
+		errIs  error
 	}{
 		{
 			name: "successful withdraw and call",
@@ -130,6 +131,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 				return args
 			}(),
 			errMsg: "invalid type argument",
+			errIs:  zetasui.ErrInvalidPayload,
 		},
 	}
 
@@ -139,6 +141,9 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
+				if tt.errIs != nil {
+					require.ErrorIs(t, err, tt.errIs)
+				}
 				return
 			}
 
