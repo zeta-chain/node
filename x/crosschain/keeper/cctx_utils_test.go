@@ -107,6 +107,57 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
 	})
 
+	t.Run("should fail if gas coin query gas limit exceeds uint64", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := getValidEthChainID()
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		gas := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "FOO")
+
+		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, gas, new(big.Int).Lsh(big.NewInt(1), 64))
+		require.NoError(t, err)
+
+		_, err = k.GetRevertGasLimit(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_Gas,
+				SenderChainId: chainID,
+			},
+		})
+		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
+	})
+
+	t.Run("should fail if erc20 query gas limit exceeds uint64", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := getValidEthChainID()
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		asset := sample.EthAddress().String()
+		zrc20Addr := deployZRC20(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			chainID,
+			"bar",
+			asset,
+			"bar",
+		)
+
+		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, zrc20Addr, new(big.Int).Lsh(big.NewInt(1), 64))
+		require.NoError(t, err)
+
+		_, err = k.GetRevertGasLimit(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_ERC20,
+				SenderChainId: chainID,
+				Asset:         asset,
+			},
+		})
+		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
+	})
+
 	t.Run("should fail if no gas coin found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
