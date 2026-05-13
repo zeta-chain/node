@@ -255,6 +255,33 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, res.Ballots, 10)
 	})
+
+	t.Run("should cap excessive pagination limit", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+		numOfBallots := 1001
+
+		for i := 0; i < numOfBallots; i++ {
+			ballot := types.Ballot{
+				BallotIdentifier:     fmt.Sprintf("index-%d", i),
+				VoterList:            []string{sample.AccAddress()},
+				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
+				BallotStatus:         types.BallotStatus_BallotInProgress,
+				BallotCreationHeight: 1,
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
+			}
+			k.SetBallot(ctx, &ballot)
+		}
+
+		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{
+			Pagination: &query.PageRequest{
+				Limit: 1_000_000,
+			},
+		})
+		require.NoError(t, err)
+		require.Len(t, res.Ballots, 1000)
+		require.NotEmpty(t, res.Pagination.NextKey)
+	})
 }
 
 func TestKeeper_Ballots(t *testing.T) {
