@@ -204,6 +204,55 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		}, res)
 	})
 
+}
+
+func TestKeeper_Ballots(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.Ballots(wctx, nil)
+		require.Nil(t, res)
+		require.Error(t, err)
+	})
+
+	t.Run("should return empty list if no ballots", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
+		require.NoError(t, err)
+		require.Empty(t, res.Ballots)
+	})
+
+	t.Run("should return all ballots", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		ballots := make([]types.Ballot, 10)
+		for i := 0; i < 10; i++ {
+			ballot := types.Ballot{
+				BallotIdentifier:     fmt.Sprintf("index-%d", i),
+				VoterList:            []string{sample.AccAddress()},
+				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
+				BallotStatus:         types.BallotStatus_BallotInProgress,
+				BallotCreationHeight: 1 + int64(i),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
+			}
+			k.SetBallot(ctx, &ballot)
+			ballots[i] = ballot
+		}
+
+		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
+		require.NoError(t, err)
+		require.ElementsMatch(t, ballots, res.Ballots)
+
+		firstBallotCreationHeight := res.Ballots[0].BallotCreationHeight
+		for _, ballot := range res.Ballots {
+			require.GreaterOrEqual(t, ballot.BallotCreationHeight, firstBallotCreationHeight)
+		}
+	})
+
 	t.Run("should return 100 ballots if more exist and limit is not provided", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		wctx := sdk.WrapSDKContext(ctx)
@@ -281,53 +330,5 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, res.Ballots, 1000)
 		require.NotEmpty(t, res.Pagination.NextKey)
-	})
-}
-
-func TestKeeper_Ballots(t *testing.T) {
-	t.Run("should error if req is nil", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		wctx := sdk.WrapSDKContext(ctx)
-
-		res, err := k.Ballots(wctx, nil)
-		require.Nil(t, res)
-		require.Error(t, err)
-	})
-
-	t.Run("should return empty list if no ballots", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		wctx := sdk.WrapSDKContext(ctx)
-
-		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
-		require.NoError(t, err)
-		require.Empty(t, res.Ballots)
-	})
-
-	t.Run("should return all ballots", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		wctx := sdk.WrapSDKContext(ctx)
-
-		ballots := make([]types.Ballot, 10)
-		for i := 0; i < 10; i++ {
-			ballot := types.Ballot{
-				BallotIdentifier:     fmt.Sprintf("index-%d", i),
-				VoterList:            []string{sample.AccAddress()},
-				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
-				BallotStatus:         types.BallotStatus_BallotInProgress,
-				BallotCreationHeight: 1 + int64(i),
-				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
-			}
-			k.SetBallot(ctx, &ballot)
-			ballots[i] = ballot
-		}
-
-		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
-		require.NoError(t, err)
-		require.ElementsMatch(t, ballots, res.Ballots)
-
-		firstBallotCreationHeight := res.Ballots[0].BallotCreationHeight
-		for _, ballot := range res.Ballots {
-			require.GreaterOrEqual(t, ballot.BallotCreationHeight, firstBallotCreationHeight)
-		}
 	})
 }

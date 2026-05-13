@@ -76,6 +76,8 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
 	}
+	// A zero limit preserves the Cosmos SDK default page size, which is below
+	// maxBallotsPageLimit. Only explicit oversized limits are capped here.
 	if req.Pagination.Limit > maxBallotsPageLimit {
 		req.Pagination.Limit = maxBallotsPageLimit
 	}
