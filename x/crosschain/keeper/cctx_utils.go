@@ -22,7 +22,7 @@ func gasLimitUint64(gasLimit sdkmath.Uint) (uint64, error) {
 
 func gasLimitBigIntUint64(gasLimit *big.Int) (uint64, error) {
 	if gasLimit == nil || gasLimit.Sign() < 0 || gasLimit.BitLen() > 64 {
-		return 0, cosmoserrors.Wrap(types.ErrInvalidGasLimit, "gas limit exceeds uint64 range")
+		return 0, cosmoserrors.Wrap(types.ErrInvalidGasLimit, "gas limit is invalid or exceeds uint64 range")
 	}
 	return gasLimit.Uint64(), nil
 }
