@@ -53,11 +53,15 @@ func (signer *Signer) createMsgWithdraw(
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
-	amount := params.Amount.Uint64()
+	amount := uint64(0)
 
 	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports through the gateway.
-	if cancelTx {
-		amount = 0
+	if !cancelTx {
+		var err error
+		amount, err = outboundAmountUint64(params.Amount)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// check receiver address

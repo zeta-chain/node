@@ -159,6 +159,10 @@ func (s *Signer) buildWithdrawAndCallTx(
 	payloadHex string,
 ) (models.TxnMetaData, error) {
 	params := cctx.GetCurrentOutboundParam()
+	amount, err := outboundAmountUint64(params.Amount)
+	if err != nil {
+		return models.TxnMetaData{}, err
+	}
 
 	// decode and parse the payload into object IDs and on_call arguments
 	payloadBytes, err := hex.DecodeString(payloadHex)
@@ -181,7 +185,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	args := withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: wacRefs,
 		coinType:               coinType,
-		amount:                 params.Amount.Uint64(),
+		amount:                 amount,
 		nonce:                  params.TssNonce,
 		gasBudget:              gasBudget,
 		sender:                 ethcommon.HexToAddress(cctx.InboundParams.Sender).Hex(),
