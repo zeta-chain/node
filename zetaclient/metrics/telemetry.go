@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/libp2p/go-libp2p/core/peer"
+	multiaddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -89,7 +90,11 @@ func copyPingRTT(rtt map[peer.ID]int64) map[peer.ID]int64 {
 }
 
 func copyConnectedPeers(peers []peer.AddrInfo) []peer.AddrInfo {
-	return append([]peer.AddrInfo(nil), peers...)
+	peersCopy := append([]peer.AddrInfo(nil), peers...)
+	for i := range peersCopy {
+		peersCopy[i].Addrs = append([]multiaddr.Multiaddr(nil), peersCopy[i].Addrs...)
+	}
+	return peersCopy
 }
 
 // SetP2PID sets p2pid
