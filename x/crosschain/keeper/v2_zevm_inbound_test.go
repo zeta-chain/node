@@ -265,7 +265,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		foreignCoin := fungibletypes.ForeignCoins{
-			Zrc20ContractAddress: sample.EthAddress().Hex(),
+			Zrc20ContractAddress: zrc20.Hex(),
 			Asset:                "USDT",
 			ForeignChainId:       1,
 			CoinType:             coin.CoinType_ERC20,
@@ -362,7 +362,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		foreignCoin := fungibletypes.ForeignCoins{
-			Zrc20ContractAddress: sample.EthAddress().Hex(),
+			Zrc20ContractAddress: zrc20.Hex(),
 			Asset:                "USDT",
 			ForeignChainId:       1,
 			CoinType:             coin.CoinType_ERC20,
