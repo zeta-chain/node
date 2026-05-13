@@ -30,6 +30,20 @@ type ChainGasParams struct {
 	ProtocolFlatFee sdkmath.Uint
 }
 
+const (
+	gasPaymentSwapSlippageBps = 500
+	gasPaymentBpsDenominator  = 10_000
+)
+
+func gasPaymentAmountOutMin(amountOut *big.Int) *big.Int {
+	if amountOut == nil || amountOut.Sign() <= 0 {
+		return big.NewInt(0)
+	}
+
+	amountOutMin := new(big.Int).Mul(amountOut, big.NewInt(gasPaymentBpsDenominator-gasPaymentSwapSlippageBps))
+	return amountOutMin.Div(amountOutMin, big.NewInt(gasPaymentBpsDenominator))
+}
+
 // PayGasAndUpdateCctx updates the outbound tx with the new amount after paying the gas fee
 // **Caller should feed temporary ctx into this function**
 // chainID is the outbound chain chain id , this can be receiver chain for regular transactions and sender-chain to reverted transactions
@@ -274,6 +288,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		types.ModuleAddressEVM,
 		types.ModuleAddressEVM,
 		feeInZRC20,
+		gasPaymentAmountOutMin(outTxGasFee.BigInt()),
 		zrc20,
 		gas.GasZRC20,
 		noEthereumTxEvent,
@@ -423,6 +438,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			types.ModuleAddressEVM,
 			types.ModuleAddressEVM,
 			outTxGasFeeInZeta,
+			gasPaymentAmountOutMin(outTxGasFee.BigInt()),
 			gasZRC20,
 			noEthereumTxEvent,
 		)
@@ -441,6 +457,15 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 		// FIXME: investigate small mismatches between amounts[1] and outTxGasFee
 		// https://github.com/zeta-chain/node/issues/1303
+		if amounts[1].Cmp(outTxGasFee.BigInt()) == -1 {
+			return cosmoserrors.Wrapf(
+				types.ErrInvalidGasAmount,
+				"gas obtained for burn (%s) is lower than gas fee(%s)",
+				amounts[1],
+				outTxGasFee,
+			)
+		}
+
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
