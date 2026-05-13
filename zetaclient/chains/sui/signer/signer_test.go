@@ -360,6 +360,32 @@ func TestSigner(t *testing.T) {
 	})
 }
 
+func TestSigner_BroadcastWithdrawalWithFallback(t *testing.T) {
+	t.Run("cancels on generic withdraw build error", func(t *testing.T) {
+		ts := newTestSuite(t)
+
+		withdrawTxBuilder := func(context.Context) (models.TxnMetaData, string, error) {
+			return models.TxnMetaData{}, "", fmt.Errorf("invalid type argument")
+		}
+
+		cancelTxBytes := base64.StdEncoding.EncodeToString([]byte("cancel_tx_bytes"))
+		cancelTxBuilder := func(context.Context) (models.TxnMetaData, string, error) {
+			return models.TxnMetaData{TxBytes: cancelTxBytes}, "cancel_signature", nil
+		}
+
+		const cancelDigest = "0xCancelTransactionBlockDigest"
+		ts.MockExec(func(req models.SuiExecuteTransactionBlockRequest) {
+			require.Equal(t, cancelTxBytes, req.TxBytes)
+			require.Equal(t, []string{"cancel_signature"}, req.Signature)
+		}, cancelDigest)
+
+		digest, err := ts.Signer.broadcastWithdrawalWithFallback(ts.Ctx, withdrawTxBuilder, cancelTxBuilder)
+
+		require.NoError(t, err)
+		require.Equal(t, cancelDigest, digest)
+	})
+}
+
 type testSuite struct {
 	t   *testing.T
 	Ctx context.Context
