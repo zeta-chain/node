@@ -126,6 +126,10 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 		!cctx.RevertOptions.RevertGasLimit.IsZero() {
 		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
 	}
+	callGasLimit, err := gasLimitUint64(gas.GasLimit)
+	if err != nil {
+		return err
+	}
 
 	// calculate the final gas fee
 	gasFee := gas.GasLimit.Mul(gas.GasPrice)
@@ -149,7 +153,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = callGasLimit
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 
@@ -193,6 +197,10 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
 		!cctx.RevertOptions.RevertGasLimit.IsZero() {
 		gas.GasLimit = cctx.RevertOptions.RevertGasLimit
+	}
+	callGasLimit, err := gasLimitUint64(gas.GasLimit)
+	if err != nil {
+		return err
 	}
 
 	gasFee := gas.GasLimit.Mul(gas.GasPrice)
@@ -312,7 +320,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 
 	// update cctx
 	cctx.GetCurrentOutboundParam().Amount = newAmount
-	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = gas.GasLimit.Uint64()
+	cctx.GetCurrentOutboundParam().CallOptions.GasLimit = callGasLimit
 	cctx.GetCurrentOutboundParam().GasPrice = gas.GasPrice.String()
 	cctx.GetCurrentOutboundParam().GasPriorityFee = gas.PriorityFee.String()
 

@@ -93,6 +93,20 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.Equal(t, uint64(42), gasLimit)
 	})
 
+	t.Run("should fail if revert gas limit exceeds uint64", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		overflowGasLimit := sdkmath.NewUintFromBigInt(new(big.Int).Lsh(big.NewInt(1), 64))
+
+		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+			ProtocolContractVersion: types.ProtocolContractVersion_V2,
+			RevertOptions: types.RevertOptions{
+				CallOnRevert:   true,
+				RevertGasLimit: overflowGasLimit,
+			},
+		})
+		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
+	})
+
 	t.Run("should fail if no gas coin found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 

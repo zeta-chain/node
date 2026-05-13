@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"sort"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -14,6 +15,17 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
+
+func gasLimitUint64(gasLimit sdkmath.Uint) (uint64, error) {
+	return gasLimitBigIntUint64(gasLimit.BigInt())
+}
+
+func gasLimitBigIntUint64(gasLimit *big.Int) (uint64, error) {
+	if gasLimit == nil || gasLimit.Sign() < 0 || gasLimit.BitLen() > 64 {
+		return 0, cosmoserrors.Wrap(types.ErrInvalidGasLimit, "gas limit exceeds uint64 range")
+	}
+	return gasLimit.Uint64(), nil
+}
 
 // SetObserverOutboundInfo sets the CCTX outbound nonce to the next available nonce for the TSS address, and updates the nonce of blockchain state.
 // It also updates the PendingNonces that is used to track the unfulfilled outbound txs.
@@ -69,7 +81,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 	// with V2 protocol, reverts on connected chains can eventually call a onRevert function which can require a higher gas limit
 	if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 && cctx.RevertOptions.CallOnRevert &&
 		!cctx.RevertOptions.RevertGasLimit.IsZero() {
-		return cctx.RevertOptions.RevertGasLimit.Uint64(), nil
+		return gasLimitUint64(cctx.RevertOptions.RevertGasLimit)
 	}
 
 	if cctx.InboundParams == nil {
@@ -86,7 +98,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 		if err != nil {
 			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
-		return gasLimit.Uint64(), nil
+		return gasLimitBigIntUint64(gasLimit)
 	} else if cctx.InboundParams.CoinType == coin.CoinType_ERC20 {
 		// get the gas limit of the associated asset
 		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(
@@ -101,7 +113,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 		if err != nil {
 			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
-		return gasLimit.Uint64(), nil
+		return gasLimitBigIntUint64(gasLimit)
 	}
 
 	return 0, nil
