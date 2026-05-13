@@ -67,12 +67,13 @@ func (s *Signer) TryProcessOutbound(
 	s.MarkOutbound(outboundID, true)
 	defer func() {
 		s.MarkOutbound(outboundID, false)
+		panicStack := debug.Stack()
 		if r := recover(); r != nil {
 			s.Logger().Std.Error().
 				Str(logs.FieldCctxIndex, cctx.Index).
 				Str(logs.FieldOutboundID, outboundID).
 				Interface("panic", r).
-				Str("stack_trace", string(debug.Stack())).
+				Str("stack_trace", string(panicStack)).
 				Msg("caught panic error")
 		}
 	}()
