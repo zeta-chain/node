@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
@@ -75,7 +76,7 @@ func (signer *Signer) createAndSignMsgIncrementNonce(
 	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports through the gateway.
 	if !cancelTx {
 		var err error
-		amount, err = outboundAmountUint64(params.Amount)
+		amount, err = base.OutboundAmountUint64(params.Amount)
 		if err != nil {
 			return nil, err
 		}

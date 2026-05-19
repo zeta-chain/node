@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -159,7 +160,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	payloadHex string,
 ) (models.TxnMetaData, error) {
 	params := cctx.GetCurrentOutboundParam()
-	amount, err := outboundAmountUint64(params.Amount)
+	amount, err := base.OutboundAmountUint64(params.Amount)
 	if err != nil {
 		return models.TxnMetaData{}, err
 	}

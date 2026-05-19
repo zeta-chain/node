@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 )
 
 // prepareExecuteSPLTx prepares execute spl outbound
@@ -68,7 +69,7 @@ func (signer *Signer) createMsgExecuteSPL(
 	// zero out the amount if cancelTx is set. It's legal to withdraw 0 spl through the gateway.
 	if !cancelTx {
 		var err error
-		amount, err = outboundAmountUint64(params.Amount)
+		amount, err = base.OutboundAmountUint64(params.Amount)
 		if err != nil {
 			return nil, nil, err
 		}
