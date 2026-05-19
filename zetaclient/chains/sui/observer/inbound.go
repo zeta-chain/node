@@ -70,10 +70,12 @@ func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string)
 		Int("events", len(events)).
 		Msg("processing inbound events")
 
+	txCache := make(map[string]*models.SuiTransactionBlockResponse)
+
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, event, nil, false, false)
+		err := ob.processInboundEvent(ctx, event, nil, txCache, false, false)
 
 		switch {
 		case errors.Is(err, errTxNotFound),
@@ -159,6 +161,7 @@ func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
+	txCache map[string]*models.SuiTransactionBlockResponse,
 	fromTracker bool,
 	isInternalTracker bool,
 ) error {
@@ -169,6 +172,12 @@ func (ob *Observer) processInboundEvent(
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
+	}
+
+	if tx == nil && txCache != nil {
+		if cached, ok := txCache[event.TxHash]; ok {
+			tx = cached
+		}
 	}
 
 	if tx == nil {
@@ -182,6 +191,9 @@ func (ob *Observer) processInboundEvent(
 		}
 
 		tx = &txFresh
+		if txCache != nil {
+			txCache[event.TxHash] = tx
+		}
 	}
 
 	msg, err := ob.constructInboundVote(event, *tx)
@@ -221,7 +233,7 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 	}
 
 	for _, event := range tx.Events {
-		if err := ob.processInboundEvent(ctx, event, &tx, true, isInternal); err != nil {
+		if err := ob.processInboundEvent(ctx, event, &tx, nil, true, isInternal); err != nil {
 			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
 		}
 	}

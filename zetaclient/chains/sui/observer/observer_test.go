@@ -310,7 +310,6 @@ func TestObserver(t *testing.T) {
 
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 		ts.OnGetTx(txHash, "10000", true, false, nil)
-		ts.OnGetTx(txHash, "10000", true, false, nil)
 
 		getCctxByHashErr := grpcstatus.Error(grpccodes.InvalidArgument, "anything")
 		ts.zetaMock.MockGetCctxByHash("", getCctxByHashErr)
