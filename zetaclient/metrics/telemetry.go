@@ -90,9 +90,17 @@ func copyPingRTT(rtt map[peer.ID]int64) map[peer.ID]int64 {
 }
 
 func copyConnectedPeers(peers []peer.AddrInfo) []peer.AddrInfo {
-	peersCopy := append([]peer.AddrInfo(nil), peers...)
-	for i := range peersCopy {
-		peersCopy[i].Addrs = append([]multiaddr.Multiaddr(nil), peersCopy[i].Addrs...)
+	if peers == nil {
+		return nil
+	}
+
+	peersCopy := make([]peer.AddrInfo, len(peers))
+	for i, peerInfo := range peers {
+		peersCopy[i].ID = peerInfo.ID
+		if peerInfo.Addrs != nil {
+			peersCopy[i].Addrs = make([]multiaddr.Multiaddr, len(peerInfo.Addrs))
+			copy(peersCopy[i].Addrs, peerInfo.Addrs)
+		}
 	}
 	return peersCopy
 }
