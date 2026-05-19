@@ -48,6 +48,10 @@ func (ob *Observer) observeInboundTrackers(
 	// deposits referenced by external or internal trackers are not voted on
 	// (outbound/withdrawal processing is unaffected).
 	if ob.ChainParams().DisableTssBlockScan {
+		ob.Logger().Sampled.Info().
+			Bool("is_internal", isInternal).
+			Int("tracker_count", len(trackers)).
+			Msg("skip inbound tracker processing: DisableTssBlockScan is true")
 		return nil
 	}
 

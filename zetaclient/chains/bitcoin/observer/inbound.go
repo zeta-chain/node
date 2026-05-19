@@ -30,6 +30,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// When DisableTssBlockScan is true, skip all inbound scanning so new deposits
 	// are not observed (outbound/withdrawal processing is unaffected).
 	if ob.ChainParams().DisableTssBlockScan {
+		ob.Logger().Sampled.Info().Msg("skip inbound observation: DisableTssBlockScan is true")
 		return nil
 	}
 
