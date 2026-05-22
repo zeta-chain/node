@@ -75,6 +75,9 @@ func parseAndCheckGatewayExecuted(
 		if err != nil {
 			continue
 		}
+		if vLog.Address != gatewayAddr {
+			continue
+		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(
 			vLog,
@@ -128,6 +131,9 @@ func parseAndCheckGatewayReverted(
 	for _, vLog := range receipt.Logs {
 		reverted, err := gateway.GatewayEVMFilterer.ParseReverted(*vLog)
 		if err != nil {
+			continue
+		}
+		if vLog.Address != gatewayAddr {
 			continue
 		}
 		// basic event check
@@ -189,6 +195,9 @@ func parseAndCheckZetaConnectorWithdraw(
 		if err != nil {
 			continue
 		}
+		if vLog.Address != connectorAddr {
+			continue
+		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(
 			vLog,
@@ -238,6 +247,9 @@ func parseAndCheckERC20CustodyWithdraw(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawn(*vLog)
 		if err != nil {
+			continue
+		}
+		if vLog.Address != custodyAddr {
 			continue
 		}
 		// basic event check
@@ -297,6 +309,9 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := custody.ERC20CustodyFilterer.ParseWithdrawnAndCalled(*vLog)
 		if err != nil {
+			continue
+		}
+		if vLog.Address != custodyAddr {
 			continue
 		}
 		// basic event check
@@ -360,6 +375,9 @@ func parseAndZetaConnectorWithdrawAndCall(
 	for _, vLog := range receipt.Logs {
 		withdrawn, err := connector.ZetaConnectorNativeFilterer.ParseWithdrawnAndCalled(*vLog)
 		if err != nil {
+			continue
+		}
+		if vLog.Address != connectorAddr {
 			continue
 		}
 		// basic event check
