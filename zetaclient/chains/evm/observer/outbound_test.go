@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
@@ -217,13 +218,24 @@ func Test_ParseZetaReceived(t *testing.T) {
 		require.NotNil(t, receivedLog)
 		require.Nil(t, revertedLog)
 	})
-	t.Run("should fail on connector address mismatch", func(t *testing.T) {
+	t.Run("should report no event on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
 		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
-		require.ErrorContains(t, err, "error validating ZetaReceived event")
+		require.ErrorContains(t, err, "no ZetaReceived/ZetaReverted event")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
+	})
+	t.Run("should skip forged connector log and parse later valid zeta received event", func(t *testing.T) {
+		forgedReceipt := receiptWithPrependedForgedLog(
+			receipt,
+			mustFindZetaReceivedLogIndex(t, receipt, connector),
+			sample.EthAddress(),
+		)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, forgedReceipt, connectorAddress, connector)
+		require.NoError(t, err)
+		require.NotNil(t, receivedLog)
+		require.Nil(t, revertedLog)
 	})
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
@@ -292,13 +304,24 @@ func Test_ParseZetaReverted(t *testing.T) {
 		require.Nil(t, receivedLog)
 		require.NotNil(t, revertedLog)
 	})
-	t.Run("should fail on connector address mismatch", func(t *testing.T) {
+	t.Run("should report no event on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
 		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
-		require.ErrorContains(t, err, "error validating ZetaReverted event")
+		require.ErrorContains(t, err, "no ZetaReceived/ZetaReverted event")
 		require.Nil(t, receivedLog)
 		require.Nil(t, revertedLog)
+	})
+	t.Run("should skip forged connector log and parse later valid zeta reverted event", func(t *testing.T) {
+		forgedReceipt := receiptWithPrependedForgedLog(
+			receipt,
+			mustFindZetaRevertedLogIndex(t, receipt, connector),
+			sample.EthAddress(),
+		)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, forgedReceipt, connectorAddress, connector)
+		require.NoError(t, err)
+		require.Nil(t, receivedLog)
+		require.NotNil(t, revertedLog)
 	})
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
@@ -350,12 +373,22 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, withdrawn)
 	})
-	t.Run("should fail on erc20 custody address mismatch", func(t *testing.T) {
+	t.Run("should report no event on erc20 custody address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeCustodyAddress := sample.EthAddress()
 		withdrawn, err := parseAndCheckWithdrawnEvent(cctx, receipt, fakeCustodyAddress, custody)
-		require.ErrorContains(t, err, "error validating Withdrawn event")
+		require.ErrorContains(t, err, "no ERC20 Withdrawn event")
 		require.Nil(t, withdrawn)
+	})
+	t.Run("should skip forged custody log and parse later valid withdrawn event", func(t *testing.T) {
+		forgedReceipt := receiptWithPrependedForgedLog(
+			receipt,
+			mustFindWithdrawnLogIndex(t, receipt, custody),
+			sample.EthAddress(),
+		)
+		withdrawn, err := parseAndCheckWithdrawnEvent(cctx, forgedReceipt, custodyAddress, custody)
+		require.NoError(t, err)
+		require.NotNil(t, withdrawn)
 	})
 	t.Run("should fail on receiver address mismatch", func(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
@@ -457,6 +490,87 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		found := ob.isTxConfirmed(outboundNonce)
 		require.False(t, found)
 	})
+}
+
+func receiptWithPrependedForgedLog(
+	receipt *ethtypes.Receipt,
+	logIndex int,
+	forgedAddress ethcommon.Address,
+) *ethtypes.Receipt {
+	clonedReceipt := *receipt
+	clonedLogs := make([]*ethtypes.Log, 0, len(receipt.Logs)+1)
+
+	forgedLog := cloneEVMLog(receipt.Logs[logIndex])
+	forgedLog.Address = forgedAddress
+	clonedLogs = append(clonedLogs, forgedLog)
+
+	for _, log := range receipt.Logs {
+		clonedLogs = append(clonedLogs, cloneEVMLog(log))
+	}
+
+	clonedReceipt.Logs = clonedLogs
+	return &clonedReceipt
+}
+
+func cloneEVMLog(log *ethtypes.Log) *ethtypes.Log {
+	cloned := *log
+	cloned.Topics = append([]ethcommon.Hash(nil), log.Topics...)
+	cloned.Data = append([]byte(nil), log.Data...)
+	return &cloned
+}
+
+func mustFindZetaReceivedLogIndex(
+	t *testing.T,
+	receipt *ethtypes.Receipt,
+	connector *zetaconnector.ZetaConnectorNonEth,
+) int {
+	t.Helper()
+
+	for i, log := range receipt.Logs {
+		event, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*log)
+		if err == nil && event != nil {
+			return i
+		}
+	}
+
+	t.Fatal("zeta received log not found")
+	return -1
+}
+
+func mustFindZetaRevertedLogIndex(
+	t *testing.T,
+	receipt *ethtypes.Receipt,
+	connector *zetaconnector.ZetaConnectorNonEth,
+) int {
+	t.Helper()
+
+	for i, log := range receipt.Logs {
+		event, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*log)
+		if err == nil && event != nil {
+			return i
+		}
+	}
+
+	t.Fatal("zeta reverted log not found")
+	return -1
+}
+
+func mustFindWithdrawnLogIndex(
+	t *testing.T,
+	receipt *ethtypes.Receipt,
+	custody *erc20custody.ERC20Custody,
+) int {
+	t.Helper()
+
+	for i, log := range receipt.Logs {
+		event, err := custody.ParseWithdrawn(*log)
+		if err == nil && event != nil {
+			return i
+		}
+	}
+
+	t.Fatal("withdrawn log not found")
+	return -1
 }
 
 // TODO: create mocks for gateway and ERC20Custody and uncomment these tests
