@@ -43,6 +43,18 @@ func (ob *Observer) observeInboundTrackers(
 	trackers []types.InboundTracker,
 	isInternal bool,
 ) error {
+	// Bitcoin's only inbound mechanism is direct transfers to the TSS address.
+	// When DisableTssBlockScan is true, skip inbound tracker processing so new
+	// deposits referenced by external or internal trackers are not voted on
+	// (outbound/withdrawal processing is unaffected).
+	if ob.ChainParams().DisableTssBlockScan {
+		ob.Logger().Sampled.Info().
+			Bool("is_internal", isInternal).
+			Int("tracker_count", len(trackers)).
+			Msg("skip inbound tracker processing: DisableTssBlockScan is true")
+		return nil
+	}
+
 	// take at most MaxInternalTrackersPerScan for each scan
 	if len(trackers) > config.MaxInboundTrackersPerScan {
 		trackers = trackers[:config.MaxInboundTrackersPerScan]

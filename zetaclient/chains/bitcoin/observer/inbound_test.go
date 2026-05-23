@@ -143,6 +143,43 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	})
 }
 
+func Test_ObserveInbound_DisableTssBlockScan(t *testing.T) {
+	chain := chains.BitcoinMainnet
+	ob := newTestSuite(t, chain)
+
+	// flip the chain param to disable inbound scanning
+	chainParams := ob.ChainParams()
+	chainParams.DisableTssBlockScan = true
+	ob.SetChainParams(chainParams)
+
+	// ObserveInbound should return early without scanning any block.
+	// We intentionally do NOT mock GetBlockHash/GetBlockVerbose — if scanning
+	// were attempted, the mock client would fail the test on unexpected calls.
+	err := ob.ObserveInbound(ob.ctx)
+	require.NoError(t, err)
+}
+
+func Test_ObserveInboundTrackers_DisableTssBlockScan(t *testing.T) {
+	chain := chains.BitcoinMainnet
+	ob := newTestSuite(t, chain)
+
+	chainParams := ob.ChainParams()
+	chainParams.DisableTssBlockScan = true
+	ob.SetChainParams(chainParams)
+
+	// Even with trackers present, observeInboundTrackers should return early.
+	// We intentionally do NOT mock GetRawTransactionVerbose/GetBlockVerbose —
+	// if processing were attempted, the mock client would fail on unexpected calls.
+	trackers := []crosschaintypes.InboundTracker{
+		{ChainId: chain.ChainId, TxHash: "abc"},
+	}
+	err := ob.observeInboundTrackers(ob.ctx, trackers, false)
+	require.NoError(t, err)
+
+	err = ob.observeInboundTrackers(ob.ctx, trackers, true)
+	require.NoError(t, err)
+}
+
 func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	r := sample.Rand()
 

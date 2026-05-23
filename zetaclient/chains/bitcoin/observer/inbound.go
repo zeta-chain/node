@@ -26,6 +26,14 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 
+	// Bitcoin's only inbound mechanism is direct transfers to the TSS address.
+	// When DisableTssBlockScan is true, skip all inbound scanning so new deposits
+	// are not observed (outbound/withdrawal processing is unaffected).
+	if ob.ChainParams().DisableTssBlockScan {
+		ob.Logger().Sampled.Info().Msg("skip inbound observation: DisableTssBlockScan is true")
+		return nil
+	}
+
 	// get fee rate multiplier
 	feeRateMultiplier, err := ob.ChainParams().GasPriceMultiplier.Float64()
 	if err != nil {
