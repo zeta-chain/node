@@ -250,10 +250,12 @@ func (a *AppContext) updateChainRegistry(
 			Msg("chain list changed at the runtime")
 	}
 
-	// Log warn if somehow chain doesn't chainParam
+	// Log if a chain in the registry lacks chainParams. Debug-level because this
+	// fires on every UpdateAppContext tick for every such chain — high-volume
+	// enumeration noise, not an actionable warning.
 	for _, chainID := range freshChainIDs {
 		if _, ok := freshChainParams[chainID]; !ok && !isZeta(chainID) {
-			a.logger.Warn().
+			a.logger.Debug().
 				Int64("chain_id", chainID).
 				Msg("chain does not have according ChainParams present; skipping")
 		}
