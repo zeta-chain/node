@@ -88,7 +88,10 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc ZetacoreClie
 		cp := chainParams[i]
 
 		if !cp.IsSupported {
-			logger.Warn().
+			// Debug-level: this fires every UpdateAppContext tick for every
+			// unsupported chain in the registry — pure config-driven enumeration,
+			// not an actionable warning.
+			logger.Debug().
 				Int64(logs.FieldChain, cp.ChainId).
 				Msg("skipping unsupported chain")
 			continue
