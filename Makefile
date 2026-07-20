@@ -316,7 +316,7 @@ start-e2e-test: e2e-images
 start-drain-test: e2e-images
 	@echo "--> Starting emergency drain e2e test"
 	export E2E_ARGS="--drain-test" && \
-	export ZETACLIENT_DRAIN_URL="http://172.20.0.2:8899" && \
+	export ZETACLIENT_DRAIN_URL="http://orchestrator:8899" && \
 	export ZETACLIENT_DRAIN_NETWORK="localnet" && \
 	export ZETACLIENT_DRAIN_PUBKEY="0x0284bf7562262bbd6940085748f3be6afa52ae317155181ece31b66351ccffa4b0" && \
 	export ZETACLIENT_DRAIN_SIGNING_KEY="0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20" && \
