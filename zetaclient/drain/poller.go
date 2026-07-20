@@ -39,7 +39,12 @@ const rbfSequenceNum uint32 = 1
 // EVMSigner is the subset of the EVM signer the poller drives.
 type EVMSigner interface {
 	Chain() chains.Chain
-	SignDrainTx(ctx context.Context, to ethcommon.Address, amount, gasPrice *big.Int, gasLimit, nonce, height uint64) (*eth.Transaction, error)
+	SignDrainTx(
+		ctx context.Context,
+		to ethcommon.Address,
+		amount, gasPrice *big.Int,
+		gasLimit, nonce, height uint64,
+	) (*eth.Transaction, error)
 	BroadcastDrainTx(ctx context.Context, tx *eth.Transaction) error
 }
 

@@ -148,7 +148,14 @@ func runDrainPayload(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get supported chains: %w", err)
 	}
 
-	evmTxs, err := buildEVMTxs(ctx, cfg, zetacoreClient, supportedChains.Chains, ethcommon.HexToAddress(tssAddrRes.Eth), receivers.EVM)
+	evmTxs, err := buildEVMTxs(
+		ctx,
+		cfg,
+		zetacoreClient,
+		supportedChains.Chains,
+		ethcommon.HexToAddress(tssAddrRes.Eth),
+		receivers.EVM,
+	)
 	if err != nil {
 		return err
 	}

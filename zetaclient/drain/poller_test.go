@@ -44,11 +44,11 @@ func (m *mockEVMSigner) BroadcastDrainTx(_ context.Context, tx *eth.Transaction)
 }
 
 type mockBTCSigner struct {
-	chain      chains.Chain
-	signedTx   *wire.MsgTx
-	inAmounts  []int64
-	height     uint64
-	broadcast  bool
+	chain     chains.Chain
+	signedTx  *wire.MsgTx
+	inAmounts []int64
+	height    uint64
+	broadcast bool
 }
 
 func (m *mockBTCSigner) Chain() chains.Chain { return m.chain }
@@ -116,11 +116,11 @@ func TestReadyToFire(t *testing.T) {
 		current, trigger int64
 		fire, missed     bool
 	}{
-		{99, 100, false, false},  // before window
-		{100, 100, true, false},  // at trigger
-		{104, 100, true, false},  // inside window
-		{105, 100, false, true},  // window elapsed -> missed
-		{200, 100, false, true},  // long past
+		{99, 100, false, false}, // before window
+		{100, 100, true, false}, // at trigger
+		{104, 100, true, false}, // inside window
+		{105, 100, false, true}, // window elapsed -> missed
+		{200, 100, false, true}, // long past
 	}
 	for _, tc := range tests {
 		fire, missed := p.readyToFire(tc.current, tc.trigger)
