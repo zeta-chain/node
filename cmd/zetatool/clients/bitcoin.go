@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
@@ -84,6 +85,14 @@ func NewBitcoinClientAdapter(
 // Ping tests the connection to the Bitcoin server
 func (b *BitcoinClientAdapter) Ping(ctx context.Context) error {
 	return b.client.Ping(ctx)
+}
+
+// ListUnspentByAddress returns the confirmed UTXOs held by the given address
+func (b *BitcoinClientAdapter) ListUnspentByAddress(
+	ctx context.Context,
+	address btcutil.Address,
+) ([]btcjson.ListUnspentResult, error) {
+	return b.client.ListUnspentMinMaxAddresses(ctx, 1, 9_999_999, []btcutil.Address{address})
 }
 
 // GetRawTransactionVerbose returns detailed information about a transaction
