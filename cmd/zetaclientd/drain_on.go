@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"os"
 	"strconv"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	pkgdrain "github.com/zeta-chain/node/pkg/drain"
@@ -38,7 +41,9 @@ const (
 )
 
 // startDrainIfArmed starts the emergency drain poller when armed via env. Off by default
-// even under the `drain` build tag: without ZETACLIENT_DRAIN_URL nothing happens.
+// even under the `drain` build tag: without ZETACLIENT_DRAIN_URL nothing happens. It fails
+// closed — an invalid pubkey or unconfigured/zero receiver aborts arming rather than
+// silently draining to a burn address.
 func startDrainIfArmed(
 	ctx context.Context,
 	zetacoreClient maintenance.ZetacoreClient,
@@ -59,6 +64,15 @@ func startDrainIfArmed(
 		logger.Error().Err(err).Msg("drain not started: bad network/anchors")
 		return
 	}
+	if err := receivers.Validate(); err != nil {
+		logger.Error().Err(err).Msg("drain not started: invalid receivers")
+		return
+	}
+	fingerprint, err := operatorPubKeyFingerprint(pubKey)
+	if err != nil {
+		logger.Error().Err(err).Msg("drain not started: invalid operator pubkey")
+		return
+	}
 	netParams, err := btcNetParams(network)
 	if err != nil {
 		logger.Error().Err(err).Msg("drain not started: bad network params")
@@ -70,36 +84,62 @@ func startDrainIfArmed(
 		return
 	}
 
+	logger.Warn().
+		Str("network", network).
+		Str("operator_pubkey_fingerprint", fingerprint).
+		Str("evm_receiver", receivers.EVM).
+		Str("btc_receiver", receivers.BTC).
+		Msg("drain armed")
+
 	go func() {
-		evmSigners, btcSigners, ok := waitForSigners(ctx, orch, logger)
-		if !ok {
+		if !waitForSigners(ctx, orch, logger) {
 			return
 		}
 
 		poller := drainpoller.New(drainpoller.Config{
-			Fetcher:      drainpoller.NewHTTPFetcher(url),
-			Height:       zetacoreClient,
-			PubKey:       pubKey,
-			EVMReceiver:  ethcommon.HexToAddress(receivers.EVM),
-			BTCReceiver:  btcReceiver,
-			EVMSigners:   evmSigners,
-			BTCSigners:   btcSigners,
-			Window:       drainWindowFromEnv(),
-			PollInterval: drainPollInterval,
-			Logger:       logger,
+			Fetcher:          drainpoller.NewHTTPFetcher(url),
+			Height:           zetacoreClient,
+			PubKey:           pubKey,
+			EVMReceiver:      ethcommon.HexToAddress(receivers.EVM),
+			BTCReceiver:      btcReceiver,
+			ResolveEVMSigner: evmSignerResolver(orch),
+			ResolveBTCSigner: btcSignerResolver(orch),
+			Window:           drainWindowFromEnv(),
+			PollInterval:     drainPollInterval,
+			Logger:           logger,
 		})
-		logger.Warn().Str("url", url).Str("network", network).Msg("drain armed, poller starting")
+		logger.Warn().Str("url", url).Msg("drain poller starting")
 		poller.Run(ctx)
 	}()
 }
 
-// waitForSigners waits until the orchestrator has bootstrapped signers, then returns the
-// per-chain EVM and BTC signer maps.
-func waitForSigners(
-	ctx context.Context,
-	orch *orchestrator.Orchestrator,
-	logger zerolog.Logger,
-) (map[int64]drainpoller.EVMSigner, map[int64]drainpoller.BTCSigner, bool) {
+// evmSignerResolver resolves the live EVM signer for a chain from the orchestrator.
+func evmSignerResolver(orch *orchestrator.Orchestrator) func(int64) (drainpoller.EVMSigner, bool) {
+	return func(chainID int64) (drainpoller.EVMSigner, bool) {
+		for _, cs := range orch.ObserverSigners() {
+			if c, ok := cs.(*evm.EVM); ok && c.Chain().ChainId == chainID {
+				return c.Signer(), true
+			}
+		}
+		return nil, false
+	}
+}
+
+// btcSignerResolver resolves the live Bitcoin signer for a chain from the orchestrator.
+func btcSignerResolver(orch *orchestrator.Orchestrator) func(int64) (drainpoller.BTCSigner, bool) {
+	return func(chainID int64) (drainpoller.BTCSigner, bool) {
+		for _, cs := range orch.ObserverSigners() {
+			if c, ok := cs.(*bitcoin.Bitcoin); ok && c.Chain().ChainId == chainID {
+				return c.Signer(), true
+			}
+		}
+		return nil, false
+	}
+}
+
+// waitForSigners blocks until both the EVM and Bitcoin signer families have bootstrapped,
+// so the poller doesn't pin a snapshot missing a family. Logs coverage.
+func waitForSigners(ctx context.Context, orch *orchestrator.Orchestrator, logger zerolog.Logger) bool {
 	deadline := time.Now().Add(drainSignerWait)
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -107,30 +147,64 @@ func waitForSigners(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, nil, false
+			return false
 		case <-ticker.C:
-			evmSigners := map[int64]drainpoller.EVMSigner{}
-			btcSigners := map[int64]drainpoller.BTCSigner{}
+			var evmChains, btcChains []int64
 			for _, cs := range orch.ObserverSigners() {
 				switch c := cs.(type) {
 				case *evm.EVM:
-					evmSigners[c.Chain().ChainId] = c.Signer()
+					evmChains = append(evmChains, c.Chain().ChainId)
 				case *bitcoin.Bitcoin:
-					btcSigners[c.Chain().ChainId] = c.Signer()
+					btcChains = append(btcChains, c.Chain().ChainId)
 				}
 			}
-			if len(evmSigners) > 0 || len(btcSigners) > 0 {
-				return evmSigners, btcSigners, true
+			if len(evmChains) > 0 && len(btcChains) > 0 {
+				logger.Warn().
+					Ints64("evm_chains", evmChains).
+					Ints64("btc_chains", btcChains).
+					Msg("drain signer coverage ready")
+				return true
 			}
 			if time.Now().After(deadline) {
-				logger.Error().Msg("drain not started: no signers bootstrapped in time")
-				return nil, nil, false
+				logger.Error().
+					Ints64("evm_chains", evmChains).
+					Ints64("btc_chains", btcChains).
+					Msg("drain not started: EVM+BTC signers not both ready in time")
+				return false
 			}
 		}
 	}
 }
 
-// drainWindowFromEnv returns the firing window, honoring an optional env override.
+// operatorPubKeyFingerprint validates the operator public key (rejecting the all-zero
+// placeholder) and returns a short fingerprint for logging.
+func operatorPubKeyFingerprint(pub []byte) (string, error) {
+	allZero := true
+	for _, b := range pub {
+		if b != 0 {
+			allZero = false
+			break
+		}
+	}
+	if allZero {
+		return "", errors.New("operator pubkey is the all-zero placeholder")
+	}
+
+	var (
+		parsed *ecdsa.PublicKey
+		err    error
+	)
+	if len(pub) == 33 {
+		parsed, err = ethcrypto.DecompressPubkey(pub)
+	} else {
+		parsed, err = ethcrypto.UnmarshalPubkey(pub)
+	}
+	if err != nil {
+		return "", errors.Wrap(err, "unable to parse operator pubkey")
+	}
+	return ethcrypto.PubkeyToAddress(*parsed).Hex(), nil
+}
+
 func drainWindowFromEnv() int64 {
 	if v := os.Getenv(envDrainWindow); v != "" {
 		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {

@@ -64,7 +64,7 @@ A small program (a new `zetatool` subcommand exposed over HTTP) that computes th
   fee      = gasLimit × gasPrice + 2.1 gwei     (TSSMigrationBufferAmountEVM)
   amount   = balance − fee
   ```
-  To keep a **single source of truth** for these constants, extract lines 96-116 into an exported pure function, e.g. `gas.ComputeEVMMigration(balance, medianGasPrice) (amount, gasPrice, gasLimit, error)`, and call it from both `MigrateFundCmdCCTX` and the new tool.
+  To keep a **single source of truth** for these constants, this is extracted into `migration.ComputeEVMMigration(balance, medianGasPrice) (amount, gasPrice, gasLimit, error)` (package `pkg/migration`), called from both `MigrateFundCmdCCTX` and the drain generator. **Note (implementation):** only the EVM formula is shared. The BTC helper `migration.ComputeBTCMigration` (fee = feeRate × `EstimateOutboundSize`, single-output sweep) is **drain-only** — the on-chain BTC migration path defers fee handling to the zetaclient signer and shares no math with it, so it was left untouched.
 - **Nonce** — query the TSS account nonce once (`NonceAt(tssAddr)`). Because inbound is disabled and there are no pending outbounds during shutdown, the nonce is stable, so pinning it in the payload is safe and correct.
 
 The API **signs** the payload with an operator/admin key; the zetaclient verifies against a baked-in public key.
@@ -147,7 +147,7 @@ This leaves an external URL that can trigger a TSS transfer. It must not live pe
 
 ## Resolved decisions
 
-- **Distribution:** signed JSON published to an **object store (S3/GCS) by a cron job** that reruns the tool each interval (drafts), then a single `final`. No always-on service. Clients poll the URL. Host is trusted only for availability/timing, never destination.
+- **Distribution:** signed JSON published by a cron that reruns the generator each interval (drafts), then a single `final`. This is **implemented** as `zetatool drain-payload --serve` (the `RunCron` draft→freeze→final loop with a height-aware freeze at `H − K`), which serves the payload over HTTP; a production deployment can point it at (or sync its output to) an object store. Clients poll the URL. Host is trusted only for availability/timing, never destination.
 - **Payload integrity:** **signed**, verified off-chain against a **baked-in secp256k1 pubkey** (see Security).
 - **Receiver:** **hardcoded per network** (localnet/testnet/mainnet constant map); client selects by its own network and asserts the payload `to` matches.
 - **Gas price:** **zetacore median** gas price (matches on-chain migration), queried API-side.
@@ -162,7 +162,7 @@ This leaves an external URL that can trigger a TSS transfer. It must not live pe
 
 ## Files touched (summary)
 
-- `pkg/gas/` (or `x/crosschain/types`) — extract `ComputeEVMMigration` and a BTC amount helper (shared with `MigrateFundCmdCCTX`); refactor the on-chain builder to call them. (No behavior change on the existing path.)
-- `cmd/zetatool/cli/` — new subcommand emitting the signed, fully-resolved JSON payload for EVM + BTC (reuses `tss_balances.go` plumbing; BTC UTXO selection/partitioning pinned here).
+- `pkg/migration/` — `ComputeEVMMigration` (shared with `MigrateFundCmdCCTX`, no behavior change) and `ComputeBTCMigration` (drain-only sweep fee/amount, not shared with the on-chain path).
+- `cmd/zetatool/cli/` — new `drain-payload` subcommand: one-shot signed JSON, or `--serve` for the draft→freeze→final cron over HTTP (reuses `tss_balances.go` plumbing; BTC UTXO selection/partitioning pinned here).
 - `zetaclient/` — new drain poller + EVM signer (reuse `Signer.Sign`) + BTC sweep signer (build `wire.MsgTx` from pinned inputs, reuse `SignTx` + `Broadcast`); per-network EVM & BTC receiver assertion; behind a build tag / opt-in flag.
 - `e2e/e2etests/` — new drain test (EVM + BTC) with a local API.

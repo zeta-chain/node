@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"math/big"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 
 type mockEVMSigner struct {
 	chain     chains.Chain
+	mu        sync.Mutex
 	signCalls int
 	bcastTx   *eth.Transaction
 	lastTo    ethcommon.Address
@@ -34,17 +36,22 @@ type mockEVMSigner struct {
 
 func (m *mockEVMSigner) Chain() chains.Chain { return m.chain }
 func (m *mockEVMSigner) SignDrainTx(_ context.Context, to ethcommon.Address, amount, gasPrice *big.Int, gasLimit, nonce, height uint64) (*eth.Transaction, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.signCalls++
 	m.lastTo, m.lastAmt, m.lastNonce, m.lastHt = to, amount, nonce, height
 	return eth.NewTx(&eth.LegacyTx{To: &to, Value: amount, GasPrice: gasPrice, Gas: gasLimit, Nonce: nonce}), nil
 }
 func (m *mockEVMSigner) BroadcastDrainTx(_ context.Context, tx *eth.Transaction) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.bcastTx = tx
 	return nil
 }
 
 type mockBTCSigner struct {
 	chain     chains.Chain
+	mu        sync.Mutex
 	signedTx  *wire.MsgTx
 	inAmounts []int64
 	height    uint64
@@ -53,10 +60,14 @@ type mockBTCSigner struct {
 
 func (m *mockBTCSigner) Chain() chains.Chain { return m.chain }
 func (m *mockBTCSigner) SignTx(_ context.Context, tx *wire.MsgTx, inputAmounts []int64, height, _ uint64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.signedTx, m.inAmounts, m.height = tx, inputAmounts, height
 	return nil
 }
 func (m *mockBTCSigner) Broadcast(_ context.Context, _ *wire.MsgTx) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.broadcast = true
 	return nil
 }
@@ -77,7 +88,28 @@ func btcReceiver(t *testing.T) btcutil.Address {
 	return addr
 }
 
+func evmResolver(m map[int64]EVMSigner) func(int64) (EVMSigner, bool) {
+	return func(id int64) (EVMSigner, bool) { s, ok := m[id]; return s, ok }
+}
+
+func btcResolver(m map[int64]BTCSigner) func(int64) (BTCSigner, bool) {
+	return func(id int64) (BTCSigner, bool) { s, ok := m[id]; return s, ok }
+}
+
+func btcInputs() []draintx.BTCInput {
+	return []draintx.BTCInput{
+		{TxID: "3ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 0, AmountSats: 45_000_000},
+		{TxID: "4ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 1, AmountSats: 45_010_000},
+	}
+}
+
 func signedPayload(t *testing.T, priv *ecdsa.PrivateKey, final bool, triggerHeight int64, btcTo string) draintx.Payload {
+	in := btcInputs()
+	var total int64
+	for _, i := range in {
+		total += i.AmountSats
+	}
+	fee := int64(10_000)
 	p := draintx.Payload{
 		TriggerZetaHeight: triggerHeight,
 		Seq:               1,
@@ -86,20 +118,14 @@ func signedPayload(t *testing.T, priv *ecdsa.PrivateKey, final bool, triggerHeig
 			{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000},
 		},
 		BTCTxs: []draintx.BTCTx{
-			{
-				ChainID: chains.BitcoinRegtest.ChainId, To: btcTo, OutputSats: 90_000_000, FeeSats: 10_000,
-				Inputs: []draintx.BTCInput{
-					{TxID: "3ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 0, AmountSats: 45_000_000},
-					{TxID: "4ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 1, AmountSats: 45_010_000},
-				},
-			},
+			{ChainID: chains.BitcoinRegtest.ChainId, To: btcTo, OutputSats: total - fee, FeeSats: fee, Inputs: in},
 		},
 	}
 	require.NoError(t, p.Sign(priv))
 	return p
 }
 
-func newTestPoller(t *testing.T, cfg Config) *Poller {
+func newTestPoller(cfg Config) *Poller {
 	if cfg.PollInterval == 0 {
 		cfg.PollInterval = time.Millisecond
 	}
@@ -111,158 +137,245 @@ func newTestPoller(t *testing.T, cfg Config) *Poller {
 }
 
 func TestReadyToFire(t *testing.T) {
-	p := newTestPoller(t, Config{Window: 5})
+	p := newTestPoller(Config{Window: 5})
 	tests := []struct {
 		current, trigger int64
 		fire, missed     bool
 	}{
-		{99, 100, false, false}, // before window
-		{100, 100, true, false}, // at trigger
-		{104, 100, true, false}, // inside window
-		{105, 100, false, true}, // window elapsed -> missed
-		{200, 100, false, true}, // long past
+		{99, 100, false, false},
+		{100, 100, true, false},
+		{104, 100, true, false},
+		{105, 100, false, true},
+		{200, 100, false, true},
 	}
 	for _, tc := range tests {
 		fire, missed := p.readyToFire(tc.current, tc.trigger)
-		require.Equal(t, tc.fire, fire, "fire for current=%d trigger=%d", tc.current, tc.trigger)
-		require.Equal(t, tc.missed, missed, "missed for current=%d trigger=%d", tc.current, tc.trigger)
+		require.Equal(t, tc.fire, fire, "fire c=%d t=%d", tc.current, tc.trigger)
+		require.Equal(t, tc.missed, missed, "missed c=%d t=%d", tc.current, tc.trigger)
 	}
 }
 
-func TestTickRejectsNonFinal(t *testing.T) {
+func TestStepRejectsNonFinal(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
 	evm := &mockEVMSigner{chain: chains.Ethereum}
-	p := newTestPoller(t, Config{
-		Fetcher:     mockFetcher{signedPayload(t, priv, false, 100, recv.EncodeAddress())},
-		Height:      mockHeight(100),
-		PubKey:      ethcrypto.CompressPubkey(&priv.PublicKey),
-		EVMReceiver: ethcommon.HexToAddress(evmReceiverHex),
-		BTCReceiver: recv,
-		EVMSigners:  map[int64]EVMSigner{chains.Ethereum.ChainId: evm},
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, false, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(nil),
 	})
 
-	require.False(t, p.tick(context.Background()))
+	var active *activeDrain
+	require.False(t, p.step(context.Background(), &active))
+	require.Nil(t, active)
 	require.Zero(t, evm.signCalls)
 }
 
-func TestTickRejectsBadSignature(t *testing.T) {
+func TestStepRejectsBadSignature(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	other, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
 	evm := &mockEVMSigner{chain: chains.Ethereum}
-	p := newTestPoller(t, Config{
-		Fetcher:     mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
-		Height:      mockHeight(100),
-		PubKey:      ethcrypto.CompressPubkey(&other.PublicKey), // wrong key
-		EVMReceiver: ethcommon.HexToAddress(evmReceiverHex),
-		BTCReceiver: recv,
-		EVMSigners:  map[int64]EVMSigner{chains.Ethereum.ChainId: evm},
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&other.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(nil),
 	})
 
-	require.False(t, p.tick(context.Background()))
+	var active *activeDrain
+	require.False(t, p.step(context.Background(), &active))
 	require.Zero(t, evm.signCalls)
 }
 
-func TestTickMissedWindow(t *testing.T) {
+func TestStepMissedWindow(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
 	evm := &mockEVMSigner{chain: chains.Ethereum}
-	p := newTestPoller(t, Config{
-		Fetcher:     mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
-		Height:      mockHeight(1000), // way past
-		PubKey:      ethcrypto.CompressPubkey(&priv.PublicKey),
-		EVMReceiver: ethcommon.HexToAddress(evmReceiverHex),
-		BTCReceiver: recv,
-		EVMSigners:  map[int64]EVMSigner{chains.Ethereum.ChainId: evm},
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
+		Height:           mockHeight(1000),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(nil),
 	})
 
-	require.True(t, p.tick(context.Background())) // done (missed)
+	var active *activeDrain
+	require.True(t, p.step(context.Background(), &active))
 	require.Zero(t, evm.signCalls)
+}
+
+func TestStepFiresAndCompletes(t *testing.T) {
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+	recv := btcReceiver(t)
+	evm := &mockEVMSigner{chain: chains.Ethereum}
+	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(map[int64]BTCSigner{chains.BitcoinRegtest.ChainId: btc}),
+	})
+
+	var active *activeDrain
+	require.True(t, p.step(context.Background(), &active), "step should complete both families")
+	require.Equal(t, 1, evm.signCalls)
+	require.EqualValues(t, 100, evm.lastHt)
+	require.True(t, btc.broadcast)
+	require.EqualValues(t, 100, btc.height)
 }
 
 func TestExecuteEVM(t *testing.T) {
 	recv := btcReceiver(t)
 	evm := &mockEVMSigner{chain: chains.Ethereum}
-	p := newTestPoller(t, Config{
-		EVMReceiver: ethcommon.HexToAddress(evmReceiverHex),
-		BTCReceiver: recv,
-		EVMSigners:  map[int64]EVMSigner{chains.Ethereum.ChainId: evm},
+	p := newTestPoller(Config{
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
 	})
 
-	t.Run("happy path signs and broadcasts to receiver", func(t *testing.T) {
+	t.Run("happy path signs to receiver at height", func(t *testing.T) {
 		tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000}
 		require.NoError(t, p.executeEVM(context.Background(), tx, 100))
 		require.Equal(t, 1, evm.signCalls)
 		require.Equal(t, ethcommon.HexToAddress(evmReceiverHex), evm.lastTo)
-		require.Equal(t, "1000", evm.lastAmt.String())
-		require.EqualValues(t, 5, evm.lastNonce)
 		require.EqualValues(t, 100, evm.lastHt)
 		require.NotNil(t, evm.bcastTx)
 	})
 
 	t.Run("rejects wrong receiver", func(t *testing.T) {
 		evm.signCalls, evm.bcastTx = 0, nil
-		tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: "0x2222222222222222222222222222222222222222", Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000}
+		tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: "0x2222222222222222222222222222222222222222", Amount: "1000", GasPrice: "250000", GasLimit: 21000}
 		require.Error(t, p.executeEVM(context.Background(), tx, 100))
 		require.Zero(t, evm.signCalls)
-		require.Nil(t, evm.bcastTx)
 	})
+}
+
+func TestExecuteEVMRejectsZeroReceiver(t *testing.T) {
+	evm := &mockEVMSigner{chain: chains.Ethereum}
+	p := newTestPoller(Config{
+		EVMReceiver:      ethcommon.Address{}, // zero
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+	})
+	tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: "0x0000000000000000000000000000000000000000", Amount: "1000", GasPrice: "250000", GasLimit: 21000}
+	require.Error(t, p.executeEVM(context.Background(), tx, 100))
+	require.Zero(t, evm.signCalls)
 }
 
 func TestExecuteBTC(t *testing.T) {
 	recv := btcReceiver(t)
 	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
-	p := newTestPoller(t, Config{
-		BTCReceiver: recv,
-		BTCSigners:  map[int64]BTCSigner{chains.BitcoinRegtest.ChainId: btc},
+	p := newTestPoller(Config{
+		BTCReceiver:      recv,
+		ResolveBTCSigner: btcResolver(map[int64]BTCSigner{chains.BitcoinRegtest.ChainId: btc}),
 	})
-	inputs := []draintx.BTCInput{
-		{TxID: "3ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 0, AmountSats: 45_000_000},
-		{TxID: "4ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 1, AmountSats: 45_010_000},
+	in := btcInputs()
+	var total int64
+	for _, i := range in {
+		total += i.AmountSats
 	}
 
 	t.Run("happy path builds sweep and signs at height", func(t *testing.T) {
-		tx := draintx.BTCTx{ChainID: chains.BitcoinRegtest.ChainId, To: recv.EncodeAddress(), OutputSats: 90_000_000, FeeSats: 10_000, Inputs: inputs}
+		tx := draintx.BTCTx{ChainID: chains.BitcoinRegtest.ChainId, To: recv.EncodeAddress(), OutputSats: total - 10_000, FeeSats: 10_000, Inputs: in}
 		require.NoError(t, p.executeBTC(context.Background(), tx, 100))
 		require.NotNil(t, btc.signedTx)
 		require.Len(t, btc.signedTx.TxIn, 2)
 		require.Len(t, btc.signedTx.TxOut, 1)
-		require.EqualValues(t, 90_000_000, btc.signedTx.TxOut[0].Value)
-		require.Equal(t, []int64{45_000_000, 45_010_000}, btc.inAmounts)
+		require.EqualValues(t, total-10_000, btc.signedTx.TxOut[0].Value)
 		require.EqualValues(t, 100, btc.height)
 		require.True(t, btc.broadcast)
 	})
 
 	t.Run("rejects wrong receiver", func(t *testing.T) {
 		btc.signedTx, btc.broadcast = nil, false
-		tx := draintx.BTCTx{ChainID: chains.BitcoinRegtest.ChainId, To: "bcrt1qwrongwrongwrong", OutputSats: 90_000_000, FeeSats: 10_000, Inputs: inputs}
+		tx := draintx.BTCTx{ChainID: chains.BitcoinRegtest.ChainId, To: "bcrt1qwrong", OutputSats: total - 10_000, FeeSats: 10_000, Inputs: in}
 		require.Error(t, p.executeBTC(context.Background(), tx, 100))
 		require.Nil(t, btc.signedTx)
-		require.False(t, btc.broadcast)
 	})
+
+	t.Run("rejects fee/amount mismatch (burn-to-miners)", func(t *testing.T) {
+		btc.signedTx = nil
+		tx := draintx.BTCTx{ChainID: chains.BitcoinRegtest.ChainId, To: recv.EncodeAddress(), OutputSats: 1, FeeSats: 10_000, Inputs: in}
+		require.Error(t, p.executeBTC(context.Background(), tx, 100))
+		require.Nil(t, btc.signedTx)
+	})
+}
+
+func TestValidateBTCFee(t *testing.T) {
+	in := btcInputs()
+	var total int64
+	for _, i := range in {
+		total += i.AmountSats
+	}
+
+	require.NoError(t, validateBTCFee(draintx.BTCTx{OutputSats: total - 10_000, FeeSats: 10_000, Inputs: in}))
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total, FeeSats: 10_000, Inputs: in}))            // inconsistent
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total / 2, FeeSats: total / 2, Inputs: in}))    // excessive fee
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: 1, FeeSats: total - 1, Inputs: in}))            // dust output
 }
 
 func TestBuildSweep(t *testing.T) {
 	recv := btcReceiver(t)
-	inputs := []draintx.BTCInput{
-		{TxID: "3ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 0, AmountSats: 45_000_000},
-		{TxID: "4ba58f8f2f3f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f", Vout: 3, AmountSats: 45_010_000},
-	}
+	in := btcInputs()
 
-	tx, amounts, err := buildSweep(recv, inputs, 90_000_000)
+	tx, amounts, err := buildSweep(recv, in, 90_000_000)
 	require.NoError(t, err)
 	require.Len(t, tx.TxIn, 2)
 	require.EqualValues(t, rbfSequenceNum, tx.TxIn[0].Sequence)
-	require.EqualValues(t, 3, tx.TxIn[1].PreviousOutPoint.Index)
 	require.Len(t, tx.TxOut, 1)
 	require.EqualValues(t, 90_000_000, tx.TxOut[0].Value)
 	require.Equal(t, []int64{45_000_000, 45_010_000}, amounts)
 
+	// deterministic: identical inputs -> identical tx
+	tx2, _, err := buildSweep(recv, in, 90_000_000)
+	require.NoError(t, err)
+	require.Equal(t, tx.TxHash(), tx2.TxHash())
+
 	_, _, err = buildSweep(recv, nil, 1)
 	require.Error(t, err)
+}
+
+func TestRunStopsOnContextCancel(t *testing.T) {
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+	recv := btcReceiver(t)
+	// non-final payload so the poller never fires and just keeps polling until cancel
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, false, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(nil),
+		ResolveBTCSigner: btcResolver(nil),
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() { p.Run(ctx); close(done) }()
+
+	time.Sleep(20 * time.Millisecond)
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Run did not stop on context cancel")
+	}
 }

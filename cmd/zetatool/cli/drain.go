@@ -2,10 +2,13 @@ package cli
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
@@ -37,6 +40,14 @@ const (
 	FlagSeq = "seq"
 	// FlagFeeRate is the BTC fee rate in sat/vB pinned into the sweeps.
 	FlagFeeRate = "fee-rate"
+	// FlagServe runs the draft->freeze->final cron, serving the payload over HTTP.
+	FlagServe = "serve"
+	// FlagServeAddr is the address the serve-mode HTTP server binds.
+	FlagServeAddr = "serve-addr"
+	// FlagFreezeWindow K: publish the single final once currentHeight >= triggerHeight - K.
+	FlagFreezeWindow = "freeze-window"
+	// FlagInterval is how often the cron recomputes and republishes drafts.
+	FlagInterval = "interval"
 )
 
 // NewDrainPayloadCMD creates the command that builds and signs an emergency drain payload.
@@ -48,128 +59,44 @@ func NewDrainPayloadCMD() *cobra.Command {
 the hardcoded safe wallet. The operator supplies only the trigger height; balances,
 median gas prices, nonces and UTXOs are derived from the configured RPCs.
 
+Without --serve it prints a single signed payload to stdout. With --serve it runs the
+draft->freeze->final cron: it recomputes and republishes drafts (final:false) every
+--interval over HTTP, and once the zeta height reaches (trigger-height - freeze-window)
+it publishes exactly one final:true payload and stops.
+
 The chain argument selects the network (mainnet/testnet/localnet) the same way as
-tss-balances. The signed JSON payload is printed to stdout.`,
+tss-balances.`,
 		Args: cobra.ExactArgs(1),
 		RunE: runDrainPayload,
 	}
 
 	cmd.Flags().Int64(FlagTriggerHeight, 0, "zeta block height at which clients fire (required)")
-	cmd.Flags().Bool(FlagFinal, false, "mark the payload as final (clients only sign final payloads)")
+	cmd.Flags().Bool(FlagFinal, false, "mark the one-shot payload as final (ignored with --serve)")
 	cmd.Flags().String(FlagSigningKey, "", "hex-encoded secp256k1 operator private key (required)")
-	cmd.Flags().Uint64(FlagSeq, 0, "monotonic payload version")
+	cmd.Flags().Uint64(FlagSeq, 0, "monotonic payload version (one-shot mode)")
 	cmd.Flags().Int64(FlagFeeRate, conservativeFeeRate, "BTC fee rate in sat/vB")
+	cmd.Flags().Bool(FlagServe, false, "run the draft->freeze->final cron and serve over HTTP")
+	cmd.Flags().String(FlagServeAddr, ":8899", "address the serve-mode HTTP server binds")
+	cmd.Flags().Int64(FlagFreezeWindow, 20, "blocks before trigger-height at which to freeze and publish the final")
+	cmd.Flags().Duration(FlagInterval, 10*time.Second, "serve-mode republish interval")
 
 	return cmd
 }
 
 func runDrainPayload(cmd *cobra.Command, args []string) error {
-	chain, err := zetatoolcommon.ResolveChain(args[0])
-	if err != nil {
-		return fmt.Errorf("failed to resolve chain %q: %w", args[0], err)
-	}
-	network := zetatoolcommon.NetworkTypeFromChain(chain)
-
-	triggerHeight, err := cmd.Flags().GetInt64(FlagTriggerHeight)
-	if err != nil {
-		return err
-	}
-	if triggerHeight <= 0 {
-		return fmt.Errorf("--%s is required and must be positive", FlagTriggerHeight)
-	}
-
-	final, err := cmd.Flags().GetBool(FlagFinal)
-	if err != nil {
-		return err
-	}
-	seq, err := cmd.Flags().GetUint64(FlagSeq)
-	if err != nil {
-		return err
-	}
-	feeRate, err := cmd.Flags().GetInt64(FlagFeeRate)
+	gen, opts, err := setupGenerator(cmd, args[0])
 	if err != nil {
 		return err
 	}
 
-	signingKeyHex, err := cmd.Flags().GetString(FlagSigningKey)
-	if err != nil {
-		return err
-	}
-	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(signingKeyHex, "0x"))
-	if err != nil {
-		return fmt.Errorf("invalid --%s: %w", FlagSigningKey, err)
+	if opts.serve {
+		return serveDrain(cmd.Context(), gen, opts)
 	}
 
-	configFile, err := cmd.Flags().GetString(config.FlagConfig)
-	if err != nil {
-		return err
-	}
-	cfg, err := config.GetConfigByNetwork(network, configFile)
-	if err != nil {
-		return fmt.Errorf("failed to get config: %w", err)
-	}
-	if cfg.ZetaChainRPC == "" {
-		return fmt.Errorf("ZetaChainRPC is not configured for network %s", network)
-	}
-
-	receivers, err := drain.ReceiverForNetwork(drainNetwork(network))
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-	zetacoreClient, err := rpc.NewCometBFTClients(cfg.ZetaChainRPC)
-	if err != nil {
-		return fmt.Errorf("failed to create zetacore client: %w", err)
-	}
-
-	tss, err := currentTSS(ctx, zetacoreClient)
-	if err != nil {
-		return err
-	}
-
-	btcChainID, err := clients.GetBTCChainID(network)
-	if err != nil {
-		return fmt.Errorf("failed to get BTC chain ID: %w", err)
-	}
-	tssAddrRes, err := zetacoreClient.Observer.GetTssAddressByFinalizedHeight(
-		ctx,
-		&observertypes.QueryGetTssAddressByFinalizedHeightRequest{
-			FinalizedZetaHeight: tss.FinalizedZetaHeight,
-			BitcoinChainId:      btcChainID,
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to get TSS addresses: %w", err)
-	}
-
-	supportedChains, err := zetacoreClient.Observer.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
-	if err != nil {
-		return fmt.Errorf("failed to get supported chains: %w", err)
-	}
-
-	evmTxs, err := buildEVMTxs(
-		ctx,
-		cfg,
-		zetacoreClient,
-		supportedChains.Chains,
-		ethcommon.HexToAddress(tssAddrRes.Eth),
-		receivers.EVM,
-	)
-	if err != nil {
-		return err
-	}
-
-	btcTxs, err := buildBTCTxs(ctx, cfg, supportedChains.Chains, tssAddrRes.Btc, receivers.BTC, feeRate)
-	if err != nil {
-		return err
-	}
-
-	payload, err := drain.BuildPayload(triggerHeight, seq, final, evmTxs, btcTxs, priv)
+	payload, err := gen.generate(context.Background(), opts.seq, opts.final)
 	if err != nil {
 		return fmt.Errorf("failed to build payload: %w", err)
 	}
-
 	out, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
 		return err
@@ -178,17 +105,184 @@ func runDrainPayload(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// drainOptions holds the parsed command flags.
+type drainOptions struct {
+	serve       bool
+	serveAddr   string
+	final       bool
+	seq         uint64
+	interval    time.Duration
+	freezeK     int64
+	triggerHigh int64
+}
+
+// setupGenerator parses flags and builds a payloadGenerator + options.
+func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, drainOptions, error) {
+	var opts drainOptions
+
+	chain, err := zetatoolcommon.ResolveChain(chainArg)
+	if err != nil {
+		return nil, opts, fmt.Errorf("failed to resolve chain %q: %w", chainArg, err)
+	}
+	network := zetatoolcommon.NetworkTypeFromChain(chain)
+
+	opts.triggerHigh = must(cmd.Flags().GetInt64(FlagTriggerHeight))
+	if opts.triggerHigh <= 0 {
+		return nil, opts, fmt.Errorf("--%s is required and must be positive", FlagTriggerHeight)
+	}
+	opts.final = must(cmd.Flags().GetBool(FlagFinal))
+	opts.seq = must(cmd.Flags().GetUint64(FlagSeq))
+	opts.serve = must(cmd.Flags().GetBool(FlagServe))
+	opts.serveAddr = must(cmd.Flags().GetString(FlagServeAddr))
+	opts.interval = must(cmd.Flags().GetDuration(FlagInterval))
+	opts.freezeK = must(cmd.Flags().GetInt64(FlagFreezeWindow))
+	feeRate := must(cmd.Flags().GetInt64(FlagFeeRate))
+
+	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
+	if err != nil {
+		return nil, opts, fmt.Errorf("invalid --%s: %w", FlagSigningKey, err)
+	}
+
+	cfg, err := config.GetConfigByNetwork(network, must(cmd.Flags().GetString(config.FlagConfig)))
+	if err != nil {
+		return nil, opts, fmt.Errorf("failed to get config: %w", err)
+	}
+	if cfg.ZetaChainRPC == "" {
+		return nil, opts, fmt.Errorf("ZetaChainRPC is not configured for network %s", network)
+	}
+
+	receivers, err := drain.ReceiverForNetwork(drainNetwork(network))
+	if err != nil {
+		return nil, opts, err
+	}
+	if err := receivers.Validate(); err != nil {
+		return nil, opts, fmt.Errorf("drain receivers not configured for %s: %w", network, err)
+	}
+
+	zetacoreClient, err := rpc.NewCometBFTClients(cfg.ZetaChainRPC)
+	if err != nil {
+		return nil, opts, fmt.Errorf("failed to create zetacore client: %w", err)
+	}
+
+	btcChainID, err := clients.GetBTCChainID(network)
+	if err != nil {
+		return nil, opts, fmt.Errorf("failed to get BTC chain ID: %w", err)
+	}
+
+	return &payloadGenerator{
+		cfg:           cfg,
+		zetacore:      zetacoreClient,
+		network:       network,
+		btcChainID:    btcChainID,
+		triggerHeight: opts.triggerHigh,
+		evmReceiver:   receivers.EVM,
+		btcReceiver:   receivers.BTC,
+		feeRate:       feeRate,
+		priv:          priv,
+	}, opts, nil
+}
+
+// payloadGenerator builds a signed payload from live chain state; reused per cron tick.
+type payloadGenerator struct {
+	cfg           *config.Config
+	zetacore      rpc.Clients
+	network       string
+	btcChainID    int64
+	triggerHeight int64
+	evmReceiver   string
+	btcReceiver   string
+	feeRate       int64
+	priv          *ecdsa.PrivateKey
+}
+
+// generate resolves live balances/gas/nonces/UTXOs and returns a signed payload.
+func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool) (draintx.Payload, error) {
+	tss, err := currentTSS(ctx, g.zetacore)
+	if err != nil {
+		return draintx.Payload{}, err
+	}
+	tssAddrRes, err := g.zetacore.Observer.GetTssAddressByFinalizedHeight(
+		ctx,
+		&observertypes.QueryGetTssAddressByFinalizedHeightRequest{
+			FinalizedZetaHeight: tss.FinalizedZetaHeight,
+			BitcoinChainId:      g.btcChainID,
+		},
+	)
+	if err != nil {
+		return draintx.Payload{}, fmt.Errorf("failed to get TSS addresses: %w", err)
+	}
+	supportedChains, err := g.zetacore.Observer.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
+	if err != nil {
+		return draintx.Payload{}, fmt.Errorf("failed to get supported chains: %w", err)
+	}
+
+	evmTxs, err := buildEVMTxs(
+		ctx,
+		g.cfg,
+		g.zetacore,
+		supportedChains.Chains,
+		ethcommon.HexToAddress(tssAddrRes.Eth),
+		g.evmReceiver,
+	)
+	if err != nil {
+		return draintx.Payload{}, err
+	}
+	btcTxs, err := buildBTCTxs(ctx, g.cfg, supportedChains.Chains, tssAddrRes.Btc, g.btcReceiver, g.feeRate)
+	if err != nil {
+		return draintx.Payload{}, err
+	}
+	return drain.BuildPayload(g.triggerHeight, seq, final, evmTxs, btcTxs, g.priv)
+}
+
+// serveDrain runs the draft->freeze->final cron, serving the payload over HTTP.
+func serveDrain(ctx context.Context, gen *payloadGenerator, opts drainOptions) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	server := drain.NewPayloadServer()
+	if err := server.Start(opts.serveAddr); err != nil {
+		return fmt.Errorf("failed to start payload server: %w", err)
+	}
+	defer server.Close()
+	fmt.Fprintf(os.Stderr, "serving drain payload at %s (trigger=%d, freeze-window=%d)\n",
+		server.URL(), opts.triggerHigh, opts.freezeK)
+
+	isFinalTime := func(ctx context.Context) (bool, error) {
+		height, err := zetaHeight(ctx, gen.zetacore)
+		if err != nil {
+			return false, err
+		}
+		return height >= opts.triggerHigh-opts.freezeK, nil
+	}
+
+	return drain.RunCron(ctx, opts.interval, gen.generate, server.Publish, isFinalTime)
+}
+
+// zetaHeight returns the latest zeta block height.
+func zetaHeight(ctx context.Context, c rpc.Clients) (int64, error) {
+	res, err := c.Crosschain.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+	if err != nil {
+		return 0, fmt.Errorf("get zeta height: %w", err)
+	}
+	return res.Height, nil
+}
+
 // currentTSS returns the TSS with the highest finalized height.
 func currentTSS(ctx context.Context, c rpc.Clients) (observertypes.TSS, error) {
 	res, err := c.Observer.TssHistory(ctx, &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return observertypes.TSS{}, fmt.Errorf("failed to fetch TSS history: %w", err)
 	}
-	if len(res.TssList) == 0 {
+	return latestTSS(res.TssList)
+}
+
+// latestTSS picks the TSS entry with the highest finalized zeta height.
+func latestTSS(list []observertypes.TSS) (observertypes.TSS, error) {
+	if len(list) == 0 {
 		return observertypes.TSS{}, fmt.Errorf("no TSS entries found")
 	}
-	current := res.TssList[0]
-	for _, t := range res.TssList {
+	current := list[0]
+	for _, t := range list {
 		if t.FinalizedZetaHeight > current.FinalizedZetaHeight {
 			current = t
 		}
@@ -204,13 +298,17 @@ func buildEVMTxs(
 	tssAddr ethcommon.Address,
 	receiver string,
 ) ([]draintx.EVMTx, error) {
-	var evmTxs []draintx.EVMTx
+	var (
+		evmTxs   []draintx.EVMTx
+		included []int64
+	)
 	for _, chain := range supportedChains {
 		if !chain.IsExternal || chain.Vm != pkgchains.Vm_evm {
 			continue
 		}
 		rpcURL := getRPCForChain(cfg, chain)
 		if rpcURL == "" {
+			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: RPC not configured\n", chain.ChainId)
 			continue
 		}
 
@@ -219,6 +317,7 @@ func buildEVMTxs(
 			return nil, fmt.Errorf("get balance for chain %d: %w", chain.ChainId, err)
 		}
 		if balance.Sign() == 0 {
+			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: zero balance\n", chain.ChainId)
 			continue
 		}
 
@@ -239,12 +338,13 @@ func buildEVMTxs(
 			Nonce:          nonce,
 		})
 		if err != nil {
-			// insufficient funds to cover the fee — skip this chain rather than aborting.
-			fmt.Printf("skipping chain %d: %v\n", chain.ChainId, err)
+			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: %v\n", chain.ChainId, err)
 			continue
 		}
 		evmTxs = append(evmTxs, tx)
+		included = append(included, chain.ChainId)
 	}
+	fmt.Fprintf(os.Stderr, "EVM drain: %d chains included %v\n", len(included), included)
 	return evmTxs, nil
 }
 
@@ -297,6 +397,7 @@ func buildBTCTxs(
 		}
 		utxos = append(utxos, drain.UTXO{TxID: u.TxID, Vout: u.Vout, AmountSats: sats})
 	}
+	fmt.Fprintf(os.Stderr, "BTC drain: %d UTXOs for chain %d\n", len(utxos), btcChain.ChainId)
 
 	return drain.GenerateBTCTxs(drain.BTCInput{
 		ChainID: btcChain.ChainId,
@@ -314,7 +415,11 @@ func medianGasPrice(ctx context.Context, c rpc.Clients, chainID int64) (sdkmath.
 	if err != nil {
 		return sdkmath.ZeroUint(), fmt.Errorf("get gas price for chain %d: %w", chainID, err)
 	}
-	gp := res.GasPrice
+	return pickMedian(res.GasPrice, chainID)
+}
+
+// pickMedian extracts the median gas price from a GasPrice record.
+func pickMedian(gp *crosschaintypes.GasPrice, chainID int64) (sdkmath.Uint, error) {
 	if gp == nil || len(gp.Prices) == 0 || gp.MedianIndex >= uint64(len(gp.Prices)) {
 		return sdkmath.ZeroUint(), fmt.Errorf("no median gas price for chain %d", chainID)
 	}
@@ -331,4 +436,12 @@ func drainNetwork(network string) string {
 	default:
 		return drain.NetworkTestnet
 	}
+}
+
+// must panics on a flag-parse error; flags are statically defined so this cannot fail.
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return v
 }

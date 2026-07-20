@@ -203,7 +203,7 @@ func GetEVMBalance(ctx context.Context, rpcURL string, address ethcommon.Address
 	return client.BalanceAt(ctx, address, nil)
 }
 
-// GetEVMNonce fetches the pending account nonce for an address on an EVM chain
+// GetEVMNonce fetches the latest confirmed account nonce for an address on an EVM chain
 func GetEVMNonce(ctx context.Context, rpcURL string, address ethcommon.Address) (uint64, error) {
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {

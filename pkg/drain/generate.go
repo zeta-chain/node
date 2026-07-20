@@ -9,7 +9,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/draintx"
 	"github.com/zeta-chain/node/pkg/migration"
 )
@@ -86,6 +88,14 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 		outputSats, feeSats, err := migration.ComputeBTCMigration(totalSats, in.FeeRate, len(group), in.To)
 		if err != nil {
 			return nil, err
+		}
+
+		// a group whose swept output would be below dust is unspendable; reject rather than
+		// build a tx that the network will not relay.
+		if outputSats < constant.BTCWithdrawalDustAmount {
+			return nil, errors.Errorf(
+				"btc sweep group output %d below dust %d", outputSats, constant.BTCWithdrawalDustAmount,
+			)
 		}
 
 		txs = append(txs, draintx.BTCTx{

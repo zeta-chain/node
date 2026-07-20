@@ -59,9 +59,10 @@ func ComputeEVMMigration(
 // ComputeBTCMigration computes the single-output amount and fee (in satoshis) for a
 // Bitcoin sweep spending numInputs pinned UTXOs totalling totalInputSats to payee.
 //
-// The size estimate reuses common.EstimateOutboundSize, which conservatively assumes
-// nonce-mark + change outputs; the drain has a single output, so the fee is slightly
-// over-estimated, which is safe for a sweep.
+// This is used ONLY by the emergency drain, not by the on-chain TSS migration path (which
+// defers BTC fee handling to the zetaclient signer). The size estimate reuses
+// common.EstimateOutboundSize, which conservatively assumes nonce-mark + change outputs;
+// the drain has a single output, so the fee is slightly over-estimated, which is safe.
 func ComputeBTCMigration(
 	totalInputSats, feeRate int64,
 	numInputs int,
