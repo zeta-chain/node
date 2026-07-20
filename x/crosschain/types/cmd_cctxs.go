@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -12,16 +13,16 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
-	"github.com/zeta-chain/node/pkg/gas"
+	"github.com/zeta-chain/node/pkg/migration"
 )
 
 const (
 	// TssMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the tss migration .
 	// This is done to avoid the tss migration tx getting stuck in the mempool
-	TssMigrationGasMultiplierEVM = "2.5"
+	TssMigrationGasMultiplierEVM = migration.GasMultiplierEVM
 
 	// TSSMigrationBufferAmountEVM is the buffer amount added to the gas price for the tss migration transaction
-	TSSMigrationBufferAmountEVM = "2100000000"
+	TSSMigrationBufferAmountEVM = migration.BufferAmountEVM
 
 	// AssetCustodyWhitelistGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody whitelist
 	AssetCustodyWhitelistGasMultiplierEVM = 2
@@ -93,27 +94,19 @@ func MigrateFundCmdCCTX(
 		}
 		sender = ethAddressOld.String()
 		receiver = ethAddressNew.String()
-		gasLimit = gas.EVMSend
-		gasPriceUint, err := gas.MultiplyGasPrice(medianGasPrice, TssMigrationGasMultiplierEVM)
+		migratedAmount, gasPriceUint, evmGasLimit, err := migration.ComputeEVMMigration(amount, medianGasPrice)
 		if err != nil {
+			if errors.Is(err, migration.ErrInsufficientFunds) {
+				return CrossChainTx{}, errorsmod.Wrap(
+					ErrInsufficientFundsTssMigration,
+					fmt.Sprintf("insufficient funds to pay for gas fee, chainid: %d, %s", chainID, err.Error()),
+				)
+			}
 			return CrossChainTx{}, err
 		}
-		evmFee := sdkmath.NewUint(gasLimit).
-			Mul(gasPriceUint).
-			Add(sdkmath.NewUintFromString(TSSMigrationBufferAmountEVM))
-		if evmFee.GT(amount) {
-			return CrossChainTx{}, errorsmod.Wrap(
-				ErrInsufficientFundsTssMigration,
-				fmt.Sprintf(
-					"insufficient funds to pay for gas fee, amount: %s, gas fee: %s, chainid: %d",
-					amount.String(),
-					evmFee.String(),
-					chainID,
-				),
-			)
-		}
+		gasLimit = evmGasLimit
 		gasPrice = gasPriceUint.String()
-		finalAmount = amount.Sub(evmFee)
+		finalAmount = migratedAmount
 	case chains.IsBitcoinChain(chainID, additionalStaticChainInfo):
 		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 		if err != nil {
