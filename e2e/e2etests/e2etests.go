@@ -217,6 +217,7 @@ const (
 	TestPauseERC20CustodyName            = "pause_erc20_custody"
 	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                   = "migrate_tss"
+	TestDrainTSSName                     = "drain_tss"
 	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
 	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
@@ -1710,6 +1711,12 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate TSS funds",
 		[]runner.ArgDefinition{},
 		TestMigrateTSS,
+	),
+	runner.NewE2ETest(
+		TestDrainTSSName,
+		"emergency drain of native TSS funds (EVM + BTC)",
+		[]runner.ArgDefinition{},
+		TestDrainTSS,
 	),
 	runner.NewE2ETest(
 		TestMigrateConnectorFundsName,
