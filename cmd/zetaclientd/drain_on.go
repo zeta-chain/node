@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -25,10 +26,12 @@ const (
 	envDrainURL = "ZETACLIENT_DRAIN_URL"
 	// envDrainNetwork selects the compiled-in receiver set (localnet/testnet/mainnet).
 	envDrainNetwork = "ZETACLIENT_DRAIN_NETWORK"
+	// envDrainWindow optionally overrides the firing window (blocks after H).
+	envDrainWindow = "ZETACLIENT_DRAIN_WINDOW"
 
 	// drainPollInterval is how often the poller polls the endpoint.
 	drainPollInterval = 5 * time.Second
-	// drainWindow is the number of blocks after the trigger height a node may still fire.
+	// drainWindow is the default number of blocks after the trigger height a node may still fire.
 	drainWindow = 10
 	// drainSignerWait is how long to wait for the orchestrator to bootstrap signers.
 	drainSignerWait = 2 * time.Minute
@@ -51,9 +54,9 @@ func startDrainIfArmed(
 	}
 	network := os.Getenv(envDrainNetwork)
 
-	receivers, err := pkgdrain.ReceiverForNetwork(network)
+	pubKey, receivers, err := pkgdrain.ResolveAnchors(network)
 	if err != nil {
-		logger.Error().Err(err).Msg("drain not started: bad network")
+		logger.Error().Err(err).Msg("drain not started: bad network/anchors")
 		return
 	}
 	netParams, err := btcNetParams(network)
@@ -64,11 +67,6 @@ func startDrainIfArmed(
 	btcReceiver, err := btcutil.DecodeAddress(receivers.BTC, netParams)
 	if err != nil {
 		logger.Error().Err(err).Msg("drain not started: bad BTC receiver")
-		return
-	}
-	pubKey, err := pkgdrain.OperatorPubKey()
-	if err != nil {
-		logger.Error().Err(err).Msg("drain not started: bad operator pubkey")
 		return
 	}
 
@@ -86,7 +84,7 @@ func startDrainIfArmed(
 			BTCReceiver:  btcReceiver,
 			EVMSigners:   evmSigners,
 			BTCSigners:   btcSigners,
-			Window:       drainWindow,
+			Window:       drainWindowFromEnv(),
 			PollInterval: drainPollInterval,
 			Logger:       logger,
 		})
@@ -130,6 +128,16 @@ func waitForSigners(
 			}
 		}
 	}
+}
+
+// drainWindowFromEnv returns the firing window, honoring an optional env override.
+func drainWindowFromEnv() int64 {
+	if v := os.Getenv(envDrainWindow); v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {
+			return n
+		}
+	}
+	return drainWindow
 }
 
 func btcNetParams(network string) (*chaincfg.Params, error) {

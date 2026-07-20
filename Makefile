@@ -40,7 +40,10 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-buildid= \
 	-s -w
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
+# BUILD_TAGS is overridable so specialized builds (e.g. the localnet drain image) can add
+# build tags without changing the production default.
+BUILD_TAGS ?= pebbledb,ledger
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags $(BUILD_TAGS)
 
 TEST_DIR ?= "./..."
 TEST_BUILD_FLAGS := -tags pebbledb,ledger,test
@@ -280,9 +283,14 @@ zetanode:
 else
 zetanode:
 	@echo "Building zetanode"
-	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --target latest-runtime -f ./Dockerfile-localnet .
+	$(DOCKER) build -t zetanode --build-arg NODE_VERSION=$(NODE_VERSION) --build-arg NODE_COMMIT=$(NODE_COMMIT) --build-arg BUILD_TAGS=$(LOCALNET_BUILD_TAGS) --target latest-runtime -f ./Dockerfile-localnet .
 .PHONY: zetanode
 endif
+
+# LOCALNET_BUILD_TAGS includes the drain tag so the emergency drain poller is present in the
+# localnet zetaclientd (off unless armed via ZETACLIENT_DRAIN_URL). Production builds are
+# unaffected — this only applies to the localnet image.
+LOCALNET_BUILD_TAGS ?= pebbledb,ledger,drain
 
 orchestrator:
 	@echo "Building e2e orchestrator"
@@ -300,6 +308,19 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
+
+# start-drain-test runs ONLY the emergency drain e2e test in isolation. It arms the two
+# localnet zetaclients (built with the drain tag) to poll the orchestrator's payload server
+# and verify against the test operator key. The signing key / pubkey below are test-only.
+start-drain-test: e2e-images
+	@echo "--> Starting emergency drain e2e test"
+	export E2E_ARGS="--drain-test" && \
+	export ZETACLIENT_DRAIN_URL="http://172.20.0.2:8899" && \
+	export ZETACLIENT_DRAIN_NETWORK="localnet" && \
+	export ZETACLIENT_DRAIN_PUBKEY="0x0284bf7562262bbd6940085748f3be6afa52ae317155181ece31b66351ccffa4b0" && \
+	export ZETACLIENT_DRAIN_SIGNING_KEY="0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20" && \
+	export ZETACLIENT_DRAIN_WINDOW="500" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
 
 start-e2e-test-4nodes: e2e-images
