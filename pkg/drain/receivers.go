@@ -1,6 +1,19 @@
 package drain
 
-import "github.com/pkg/errors"
+import (
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
+)
+
+// OperatorPubKeyHex is the compiled-in secp256k1 public key (33-byte compressed, 0x-hex)
+// used to verify drain payloads. It is a PLACEHOLDER and MUST be replaced with the real
+// operator public key (reviewed in the PR) before a drain build is cut.
+const OperatorPubKeyHex = "0x000000000000000000000000000000000000000000000000000000000000000000"
+
+// OperatorPubKey returns the compiled-in operator public key bytes.
+func OperatorPubKey() ([]byte, error) {
+	return hexutil.Decode(OperatorPubKeyHex)
+}
 
 // Network selects which hardcoded safe-wallet receiver set to use.
 const (
