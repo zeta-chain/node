@@ -85,7 +85,7 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 			inputs[i] = draintx.BTCInput{TxID: u.TxID, Vout: u.Vout, AmountSats: u.AmountSats}
 		}
 
-		outputSats, feeSats, err := migration.ComputeBTCMigration(totalSats, in.FeeRate, len(group), in.To)
+		outputSats, feeSats, err := migration.ComputeBTCMigration(totalSats, in.FeeRate)
 		if err != nil {
 			return nil, err
 		}

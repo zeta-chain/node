@@ -15,21 +15,16 @@ import (
 	zetatoolcommon "github.com/zeta-chain/node/cmd/zetatool/common"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/migration"
 	"github.com/zeta-chain/node/pkg/rpc"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 const (
-	// conservativeFeeRate is a conservative fee rate in sat/vB for migration calculations.
-	// We use 50 sat/vB which is 5x the default testnet rate to ensure outbound goes through.
-	conservativeFeeRate = 50
-
-	// reservedRBFFees is the amount reserved for potential RBF fee bumping (0.01 BTC)
-	reservedRBFFees = 0.01
-
-	// nonceMarkBuffer is a buffer for nonce mark output in BTC (0.00003 BTC = 3000 satoshis)
-	nonceMarkBuffer = 0.00003
+	// conservativeFeeRate is the default BTC fee rate in sat/vB, aliased from the shared migration
+	// package so the drain-payload --fee-rate flag default and the balance math agree.
+	conservativeFeeRate = migration.BTCConservativeFeeRate
 
 	// satoshisPerBTC is the number of satoshis in 1 BTC
 	satoshisPerBTC = 100_000_000
@@ -185,23 +180,16 @@ func getSymbolForChain(chain pkgchains.Chain) string {
 }
 
 // calculateBTCMigrationAmount calculates the maximum amount that can be migrated from a Bitcoin TSS address
-// after accounting for transaction fees, RBF reserve, and nonce mark.
+// after accounting for transaction fees, RBF reserve, and nonce mark. It reuses the shared
+// migration.ComputeBTCMigration overhead so this display matches what the drain payload actually pins.
 func calculateBTCMigrationAmount(balance float64) (migrationAmt float64) {
-	// Calculate estimated fee using conservative estimates:
-	// - OutboundBytesMax (1543 vB) for maximum transaction size
-	// - conservativeFeeRate (50 sat/vB) to account for network congestion
-	estimatedFee := float64(conservativeFeeRate*btccommon.OutboundBytesMax) / satoshisPerBTC
-
-	// Total overhead includes: estimated fee + RBF reserve + nonce mark buffer
-	totalOverhead := estimatedFee + reservedRBFFees + nonceMarkBuffer
-	migrationAmt = balance - totalOverhead
-
-	// Ensure migration amount is not negative
-	if migrationAmt < 0 {
-		migrationAmt = 0
+	totalInputSats := int64(balance * satoshisPerBTC)
+	outputSats, _, err := migration.ComputeBTCMigration(totalInputSats, conservativeFeeRate)
+	if err != nil {
+		// insufficient funds to cover the overhead: nothing can be migrated
+		return 0
 	}
-
-	return migrationAmt
+	return float64(outputSats) / satoshisPerBTC
 }
 
 // getRPCForChain returns the RPC URL for a given chain from config
@@ -278,19 +266,17 @@ func printTSSBalances(
 
 	// Print Bitcoin fee estimation info if showing migration amounts
 	if showMigrationAmounts {
+		estimatedFee := float64(conservativeFeeRate*btccommon.OutboundBytesMax) / satoshisPerBTC
+		reservedRBFFees := float64(migration.BTCReservedRBFFeeSats) / satoshisPerBTC
+		nonceMarkBuffer := float64(migration.BTCNonceMarkBufferSats) / satoshisPerBTC
+
 		fmt.Println("Bitcoin Fee Estimation Parameters:")
 		fmt.Printf("  Conservative Fee Rate: %d sat/vB\n", conservativeFeeRate)
 		fmt.Printf("  Max Transaction Size: %d vB\n", btccommon.OutboundBytesMax)
-		fmt.Printf(
-			"  Estimated Fee: %.8f BTC\n",
-			float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC,
-		)
+		fmt.Printf("  Estimated Fee: %.8f BTC\n", estimatedFee)
 		fmt.Printf("  RBF Reserve: %.8f BTC\n", reservedRBFFees)
 		fmt.Printf("  Nonce Mark Buffer: %.8f BTC\n", nonceMarkBuffer)
-		fmt.Printf(
-			"  Total Overhead: %.8f BTC\n",
-			float64(conservativeFeeRate*btccommon.OutboundBytesMax)/satoshisPerBTC+reservedRBFFees+nonceMarkBuffer,
-		)
+		fmt.Printf("  Total Overhead: %.8f BTC\n", estimatedFee+reservedRBFFees+nonceMarkBuffer)
 		fmt.Println()
 	}
 

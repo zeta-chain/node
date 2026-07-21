@@ -9,7 +9,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/btcsuite/btcd/btcutil"
 
 	"github.com/zeta-chain/node/pkg/gas"
 	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
@@ -22,6 +21,16 @@ const (
 
 	// BufferAmountEVM is the buffer amount (wei) added to the fee for the migration transaction.
 	BufferAmountEVM = "2100000000"
+
+	// BTCConservativeFeeRate is a conservative BTC fee rate in sat/vB used as the default for
+	// migration calculations. 50 sat/vB is 5x the default testnet rate to ensure the sweep confirms.
+	BTCConservativeFeeRate int64 = 50
+
+	// BTCReservedRBFFeeSats reserves 0.01 BTC for potential RBF fee bumping of the sweep.
+	BTCReservedRBFFeeSats int64 = 1_000_000
+
+	// BTCNonceMarkBufferSats buffers 3000 satoshis for the nonce-mark output.
+	BTCNonceMarkBufferSats int64 = 3_000
 )
 
 // ErrInsufficientFunds is returned when the balance cannot cover the migration fee.
@@ -57,24 +66,20 @@ func ComputeEVMMigration(
 }
 
 // ComputeBTCMigration computes the single-output amount and fee (in satoshis) for a
-// Bitcoin sweep spending numInputs pinned UTXOs totalling totalInputSats to payee.
+// Bitcoin sweep spending pinned UTXOs totalling totalInputSats.
 //
-// This is used ONLY by the emergency drain, not by the on-chain TSS migration path (which
-// defers BTC fee handling to the zetaclient signer). The size estimate reuses
-// common.EstimateOutboundSize, which conservatively assumes nonce-mark + change outputs;
-// the drain has a single output, so the fee is slightly over-estimated, which is safe.
-func ComputeBTCMigration(
-	totalInputSats, feeRate int64,
-	numInputs int,
-	payee btcutil.Address,
-) (outputSats, feeSats int64, err error) {
-	// #nosec G115 numInputs is a small bounded count
-	txSize, err := btccommon.EstimateOutboundSize(int64(numInputs), []btcutil.Address{payee})
-	if err != nil {
-		return 0, 0, err
-	}
-
-	feeSats = txSize * feeRate
+// It backs the emergency drain sweep and the zetatool tss-balances migration-amount display,
+// but not the on-chain TSS migration path (which defers BTC fee handling to the zetaclient
+// signer). The overhead is intentionally generous:
+//
+//	feeSats = OutboundBytesMax × feeRate    (miner fee at the max outbound tx size)
+//	        + BTCReservedRBFFeeSats         (0.01 BTC reserved for RBF fee bumping)
+//	        + BTCNonceMarkBufferSats        (3000 sats for the nonce-mark output)
+//
+// The RBF and nonce-mark reserves are a deliberate margin beyond the real miner fee that
+// guarantees the sweep confirms; the unspent remainder is not reclaimed, which is acceptable.
+func ComputeBTCMigration(totalInputSats, feeRate int64) (outputSats, feeSats int64, err error) {
+	feeSats = btccommon.OutboundBytesMax*feeRate + BTCReservedRBFFeeSats + BTCNonceMarkBufferSats
 	outputSats = totalInputSats - feeSats
 	if outputSats < 0 {
 		return 0, 0, errorsmod.Wrap(
