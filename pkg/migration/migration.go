@@ -9,6 +9,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"github.com/btcsuite/btcd/btcutil"
 
 	"github.com/zeta-chain/node/pkg/gas"
 	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
@@ -93,13 +94,25 @@ func ComputeBTCMigration(totalInputSats, feeRate int64) (outputSats, feeSats int
 }
 
 // ComputeBTCSweep computes the single-output amount and fee (in satoshis) for one transaction
-// of the emergency drain's multi-tx BTC sweep.
+// of the emergency drain's multi-tx BTC sweep spending numInputs UTXOs to payee.
 //
 // Unlike ComputeBTCMigration it charges the miner fee only (no RBF or nonce-mark reserve): the
 // drain partitions a large UTXO set into many sweep txs, and a per-tx reserve would both
 // multiply across N txs and, in a single-output sweep, be paid to miners rather than preserved.
-func ComputeBTCSweep(totalInputSats, feeRate int64) (outputSats, feeSats int64, err error) {
-	feeSats = btccommon.OutboundBytesMax * feeRate
+// The fee is sized to the real input count via EstimateOutboundSize rather than the fixed
+// OutboundBytesMax; the caller caps groups at 20 inputs, so the estimate stays within that max.
+func ComputeBTCSweep(
+	totalInputSats, feeRate int64,
+	numInputs int,
+	payee btcutil.Address,
+) (outputSats, feeSats int64, err error) {
+	// #nosec G115 numInputs is a small bounded count (<= the partition cap)
+	txSize, err := btccommon.EstimateOutboundSize(int64(numInputs), []btcutil.Address{payee})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	feeSats = txSize * feeRate
 	outputSats = totalInputSats - feeSats
 	if outputSats < 0 {
 		return 0, 0, errorsmod.Wrap(

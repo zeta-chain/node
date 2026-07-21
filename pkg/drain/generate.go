@@ -14,11 +14,13 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/draintx"
 	"github.com/zeta-chain/node/pkg/migration"
+	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
-// MaxInputsPerTx mirrors signer.MaxNoOfInputsPerTx: a BTC outbound may spend at most
-// 20 inputs, so a larger UTXO set is swept with multiple disjoint transactions.
-const MaxInputsPerTx = 20
+// MaxBTCFeeFraction bounds a sweep's fee to at most 1/N of its input total. It is the single
+// source of truth shared with the poller's validateBTCFee, so the generator never emits a group
+// the poller would reject.
+const MaxBTCFeeFraction = 4
 
 // EVMInput is the resolved state needed to build a single EVM drain tx.
 type EVMInput struct {
@@ -60,9 +62,9 @@ func GenerateEVMTx(in EVMInput) (draintx.EVMTx, error) {
 	}, nil
 }
 
-// GenerateBTCTxs partitions the UTXO set into disjoint groups of at most MaxInputsPerTx
-// and builds one independent sweep per group. Each sweep spends its pinned inputs into a
-// single output to the receiver, minus the miner fee.
+// GenerateBTCTxs partitions the UTXO set into disjoint groups of at most
+// btccommon.MaxNoOfInputsPerTx and builds one independent sweep per group. Each sweep spends
+// its pinned inputs into a single output to the receiver, minus the miner fee.
 //
 // UTXOs are sorted by amount descending (tie-broken by TxID then Vout) so the largest inputs
 // pack into economical txs and dust clusters into the trailing groups. Groups that cannot
@@ -88,10 +90,10 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	})
 
 	to := in.To.EncodeAddress()
-	txs := make([]draintx.BTCTx, 0, (len(utxos)+MaxInputsPerTx-1)/MaxInputsPerTx)
+	txs := make([]draintx.BTCTx, 0, (len(utxos)+btccommon.MaxNoOfInputsPerTx-1)/btccommon.MaxNoOfInputsPerTx)
 
-	for start := 0; start < len(utxos); start += MaxInputsPerTx {
-		end := start + MaxInputsPerTx
+	for start := 0; start < len(utxos); start += btccommon.MaxNoOfInputsPerTx {
+		end := start + btccommon.MaxNoOfInputsPerTx
 		if end > len(utxos) {
 			end = len(utxos)
 		}
@@ -104,10 +106,12 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 			inputs[i] = draintx.BTCInput{TxID: u.TxID, Vout: u.Vout, AmountSats: u.AmountSats}
 		}
 
-		outputSats, feeSats, err := migration.ComputeBTCSweep(totalSats, in.FeeRate)
-		// a group that cannot cover the fee, or whose output would be below dust, is
-		// uneconomical to sweep; skip it rather than aborting the whole drain.
-		if err != nil || outputSats < constant.BTCWithdrawalDustAmount {
+		outputSats, feeSats, err := migration.ComputeBTCSweep(totalSats, in.FeeRate, len(group), in.To)
+		// A group that cannot cover the fee, whose output is below dust, or whose fee exceeds the
+		// poller's cap is uneconomical (or would be rejected by validateBTCFee); skip it rather
+		// than aborting the whole drain. The <=20-input partition keeps each emitted sweep within
+		// OutboundBytesMax and, with this cap, inside the poller's fee bound.
+		if err != nil || outputSats < constant.BTCWithdrawalDustAmount || feeSats > totalSats/MaxBTCFeeFraction {
 			continue
 		}
 

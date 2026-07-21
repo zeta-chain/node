@@ -28,6 +28,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
+	pkgdrain "github.com/zeta-chain/node/pkg/drain"
 	"github.com/zeta-chain/node/pkg/draintx"
 )
 
@@ -37,9 +38,6 @@ const (
 	btcKeysignNonce = 0
 	// rbfSequenceNum opts the first input into full-RBF, mirroring the production BTC signer.
 	rbfSequenceNum uint32 = 1
-	// maxBTCFeeFraction bounds the sweep fee to at most 1/N of the total input, so a
-	// malformed payload cannot burn the balance to miners.
-	maxBTCFeeFraction = 4
 )
 
 // EVMSigner is the subset of the EVM signer the poller drives.
@@ -434,8 +432,8 @@ func validateBTCFee(tx draintx.BTCTx) error {
 		)
 	case tx.FeeSats <= 0:
 		return errors.Errorf("btc fee is non-positive: %d", tx.FeeSats)
-	case tx.FeeSats > totalIn/maxBTCFeeFraction:
-		return errors.Errorf("btc fee %d exceeds 1/%d of inputs %d", tx.FeeSats, maxBTCFeeFraction, totalIn)
+	case tx.FeeSats > totalIn/pkgdrain.MaxBTCFeeFraction:
+		return errors.Errorf("btc fee %d exceeds 1/%d of inputs %d", tx.FeeSats, pkgdrain.MaxBTCFeeFraction, totalIn)
 	case tx.OutputSats < constant.BTCWithdrawalDustAmount:
 		return errors.Errorf("btc output %d below dust %d", tx.OutputSats, constant.BTCWithdrawalDustAmount)
 	}

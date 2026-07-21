@@ -288,9 +288,10 @@ zetanode:
 endif
 
 # LOCALNET_BUILD_TAGS includes the drain tag so the emergency drain poller is present in the
-# localnet zetaclientd (off unless armed via ZETACLIENT_DRAIN_URL). Production builds are
-# unaffected — this only applies to the localnet image.
-LOCALNET_BUILD_TAGS ?= pebbledb,ledger,drain
+# localnet zetaclientd (off unless armed via ZETACLIENT_DRAIN_URL), plus drain_localnet so the
+# localnet anchor path + its env overrides are compiled in for the e2e test. Production builds
+# are unaffected — this only applies to the localnet image, which never ships to a real network.
+LOCALNET_BUILD_TAGS ?= pebbledb,ledger,drain,drain_localnet
 
 orchestrator:
 	@echo "Building e2e orchestrator"

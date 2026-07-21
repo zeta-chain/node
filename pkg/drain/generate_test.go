@@ -83,7 +83,7 @@ func TestGenerateBTCTxsPartitioning(t *testing.T) {
 			seen := map[uint32]bool{}
 			totalInputs := 0
 			for _, tx := range txs {
-				require.LessOrEqual(t, len(tx.Inputs), drain.MaxInputsPerTx)
+				require.LessOrEqual(t, len(tx.Inputs), btccommon.MaxNoOfInputsPerTx)
 				var sumInputs int64
 				for _, in := range tx.Inputs {
 					require.False(t, seen[in.Vout], "input reused across txs")
@@ -91,8 +91,10 @@ func TestGenerateBTCTxsPartitioning(t *testing.T) {
 					sumInputs += in.AmountSats
 					totalInputs++
 				}
-				// output = sum(inputs) - miner-fee-only (no RBF / nonce reserve)
-				require.Equal(t, in.FeeRate*btccommon.OutboundBytesMax, tx.FeeSats)
+				// output = sum(inputs) - miner-fee-only, right-sized to the input count
+				wantSize, err := btccommon.EstimateOutboundSize(int64(len(tx.Inputs)), []btcutil.Address{payee})
+				require.NoError(t, err)
+				require.Equal(t, in.FeeRate*wantSize, tx.FeeSats)
 				require.Equal(t, sumInputs-tx.FeeSats, tx.OutputSats)
 			}
 			// every UTXO here is economical, so all are swept
@@ -103,7 +105,7 @@ func TestGenerateBTCTxsPartitioning(t *testing.T) {
 
 func TestGenerateBTCTxsSkipsDust(t *testing.T) {
 	payee := testPayee(t)
-	const feeRate = int64(50) // miner fee = 50 * 1543 = 77_150 sats per tx
+	const feeRate = int64(50)
 
 	// 3 large + 40 dust: sorted desc, the large ones head the first group (swept) and the dust
 	// clusters into trailing groups that cannot cover the fee (skipped, not aborted).
@@ -126,18 +128,47 @@ func TestGenerateBTCTxsSkipsDust(t *testing.T) {
 	require.Len(t, txs, 1)
 
 	tx := txs[0]
-	require.Len(t, tx.Inputs, drain.MaxInputsPerTx)
+	require.Len(t, tx.Inputs, btccommon.MaxNoOfInputsPerTx)
 	// sort desc: the three large UTXOs lead the swept group
 	require.EqualValues(t, 100_000_000, tx.Inputs[0].AmountSats)
 	require.EqualValues(t, 100_000_000, tx.Inputs[1].AmountSats)
 	require.EqualValues(t, 100_000_000, tx.Inputs[2].AmountSats)
-	require.Equal(t, feeRate*btccommon.OutboundBytesMax, tx.FeeSats)
+	wantSize, err := btccommon.EstimateOutboundSize(int64(len(tx.Inputs)), []btcutil.Address{payee})
+	require.NoError(t, err)
+	require.Equal(t, feeRate*wantSize, tx.FeeSats)
 	var sumInputs int64
 	for _, in := range tx.Inputs {
 		sumInputs += in.AmountSats
 	}
 	require.Equal(t, sumInputs-tx.FeeSats, tx.OutputSats)
 	require.GreaterOrEqual(t, tx.OutputSats, int64(constant.BTCWithdrawalDustAmount))
+}
+
+func TestGenerateBTCTxsSkipsHighFeeGroup(t *testing.T) {
+	payee := testPayee(t)
+
+	// a fee rate high enough that the right-sized fee exceeds 1/MaxBTCFeeFraction of the input.
+	// The poller's validateBTCFee would reject such a sweep, so the generator must not emit it.
+	size, err := btccommon.EstimateOutboundSize(1, []btcutil.Address{payee})
+	require.NoError(t, err)
+	feeRate := int64(1000)
+	fee := size * feeRate
+	// total = 2*fee: the output (fee) stays well above dust and the fee is coverable, but
+	// fee > total/MaxBTCFeeFraction (= fee/2), so the group is uneconomical.
+	total := 2 * fee
+	require.Greater(t, total-fee, int64(constant.BTCWithdrawalDustAmount))
+
+	// ACT
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332,
+		To:      payee,
+		FeeRate: feeRate,
+		UTXOs:   []drain.UTXO{{TxID: "aaa", Vout: 0, AmountSats: total}},
+	})
+
+	// ASSERT: no tx emitted, and no error (skipped like other uneconomical groups)
+	require.NoError(t, err)
+	require.Empty(t, txs)
 }
 
 func TestGenerateBTCTxsDeterministic(t *testing.T) {

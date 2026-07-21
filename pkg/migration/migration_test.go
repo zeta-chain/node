@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/migration"
@@ -87,21 +89,27 @@ func TestComputeBTCMigration(t *testing.T) {
 }
 
 func TestComputeBTCSweep(t *testing.T) {
-	t.Run("charges miner fee only, no reserves", func(t *testing.T) {
+	payee, err := btcutil.NewAddressWitnessPubKeyHash(make([]byte, 20), &chaincfg.RegressionNetParams)
+	require.NoError(t, err)
+
+	t.Run("fee is sized to the real input count, no reserves", func(t *testing.T) {
 		// ARRANGE
 		totalInputSats := int64(100_000_000)
 		feeRate := int64(50)
 
-		// ACT
-		outputSats, feeSats, err := migration.ComputeBTCSweep(totalInputSats, feeRate)
+		for _, numInputs := range []int{1, 5, 20} {
+			// ACT
+			outputSats, feeSats, err := migration.ComputeBTCSweep(totalInputSats, feeRate, numInputs, payee)
 
-		// ASSERT: fee is exactly the miner fee at max outbound size, with no RBF/nonce reserve
-		require.NoError(t, err)
-		require.Equal(t, btccommon.OutboundBytesMax*feeRate, feeSats)
-		require.Equal(t, totalInputSats-feeSats, outputSats)
-		// the reserves ComputeBTCMigration adds are absent here
-		require.Less(t, feeSats, btccommon.OutboundBytesMax*feeRate+
-			migration.BTCReservedRBFFeeSats+migration.BTCNonceMarkBufferSats)
+			// ASSERT: fee == EstimateOutboundSize(n, [payee]) * feeRate, with no RBF/nonce reserve
+			require.NoError(t, err)
+			wantSize, err := btccommon.EstimateOutboundSize(int64(numInputs), []btcutil.Address{payee})
+			require.NoError(t, err)
+			require.Equal(t, wantSize*feeRate, feeSats)
+			require.Equal(t, totalInputSats-feeSats, outputSats)
+			// right-sizing charges no more than the fixed-max ComputeBTCMigration miner fee
+			require.LessOrEqual(t, feeSats, btccommon.OutboundBytesMax*feeRate)
+		}
 	})
 
 	t.Run("errors when inputs cannot cover fee", func(t *testing.T) {
@@ -110,7 +118,7 @@ func TestComputeBTCSweep(t *testing.T) {
 		feeRate := int64(100)
 
 		// ACT
-		_, _, err := migration.ComputeBTCSweep(totalInputSats, feeRate)
+		_, _, err := migration.ComputeBTCSweep(totalInputSats, feeRate, 20, payee)
 
 		// ASSERT
 		require.Error(t, err)

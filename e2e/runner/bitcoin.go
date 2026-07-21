@@ -28,7 +28,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 const (
@@ -135,8 +134,8 @@ func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, e
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
-	if len(utxos) > signer.MaxNoOfInputsPerTx {
-		utxos = utxos[:signer.MaxNoOfInputsPerTx]
+	if len(utxos) > zetabtc.MaxNoOfInputsPerTx {
+		utxos = utxos[:zetabtc.MaxNoOfInputsPerTx]
 	}
 	return utxos, nil
 }

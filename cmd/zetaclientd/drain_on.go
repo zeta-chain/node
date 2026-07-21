@@ -178,7 +178,9 @@ func btcNetParams(network string) (*chaincfg.Params, error) {
 		return &chaincfg.MainNetParams, nil
 	case pkgdrain.NetworkTestnet:
 		return &chaincfg.TestNet3Params, nil
-	default:
+	case pkgdrain.NetworkLocalnet:
 		return &chaincfg.RegressionNetParams, nil
+	default:
+		return nil, errors.Errorf("unsupported drain network %q", network)
 	}
 }

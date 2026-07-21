@@ -218,9 +218,6 @@ func TestLiveBTCDrain(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// miner fee only, no RBF / nonce reserve for the multi-tx sweep
-	expectedFee := feeRate * btccommon.OutboundBytesMax
-
 	var sweptInputs int
 	var sweptSats, totalFees int64
 	for _, tx := range txs {
@@ -235,9 +232,13 @@ func TestLiveBTCDrain(t *testing.T) {
 			"chain %d: to=%s inputs=%d outputSats=%d feeSats=%d",
 			tx.ChainID, tx.To, len(tx.Inputs), tx.OutputSats, tx.FeeSats,
 		)
-		require.Equal(t, expectedFee, tx.FeeSats)
+		// miner fee only (no RBF / nonce reserve), right-sized to the input count
+		wantSize, err := btccommon.EstimateOutboundSize(int64(len(tx.Inputs)), []btcutil.Address{receiver})
+		require.NoError(t, err)
+		require.Equal(t, feeRate*wantSize, tx.FeeSats)
 		require.Equal(t, sumInputs-tx.FeeSats, tx.OutputSats)
 		require.GreaterOrEqual(t, tx.OutputSats, int64(constant.BTCWithdrawalDustAmount))
+		require.LessOrEqual(t, tx.FeeSats, sumInputs/drain.MaxBTCFeeFraction) // poller fee cap
 	}
 
 	// uneconomical dust groups are skipped, so swept UTXOs may be fewer than fetched

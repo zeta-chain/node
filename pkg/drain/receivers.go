@@ -1,8 +1,6 @@
 package drain
 
 import (
-	"os"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -18,15 +16,6 @@ const OperatorPubKeyHex = "0x000000000000000000000000000000000000000000000000000
 // a valid address, so an unconfigured testnet/mainnet build fails closed rather than
 // silently matching a real burn address like 0x0.
 const unset = "UNSET"
-
-// Localnet-only env overrides. These apply ONLY when network == localnet so the e2e test
-// can inject its own test keypair and receivers. Testnet/mainnet always use the compiled
-// anchors — the production security model is unchanged.
-const (
-	EnvLocalnetPubKey      = "ZETACLIENT_DRAIN_PUBKEY"
-	EnvLocalnetEVMReceiver = "ZETACLIENT_DRAIN_EVM_RECEIVER"
-	EnvLocalnetBTCReceiver = "ZETACLIENT_DRAIN_BTC_RECEIVER"
-)
 
 // OperatorPubKey returns the compiled-in operator public key bytes.
 func OperatorPubKey() ([]byte, error) {
@@ -48,17 +37,14 @@ type Receivers struct {
 	BTC string
 }
 
-// receiversByNetwork is the single source of truth for drain destinations.
+// receiversByNetwork is the single source of truth for the production drain destinations.
 //
 // The testnet and mainnet values are UNSET sentinels and MUST be replaced with the real
 // safe-wallet addresses (reviewed in the PR) before a drain build is cut; the arm-time
-// guard rejects UNSET so an unconfigured build fails closed. The localnet values are
-// throwaway non-zero defaults; the e2e test overrides them with a fresh receiver via env.
+// guard rejects UNSET so an unconfigured build fails closed. Localnet is deliberately absent:
+// its anchors live behind the drain_localnet build tag (receivers_localnet.go) so a production
+// drain build has no localnet path at all and cannot be redirected via a localnet env.
 var receiversByNetwork = map[string]Receivers{
-	NetworkLocalnet: {
-		EVM: "0x74D6F908a320Fed7E1c0002eBa7996C4376A8071",
-		BTC: "bcrt1qzyfpx9q4zct3sxg6rvwp68slyqsjygeyuwdjcu",
-	},
 	NetworkTestnet: {
 		EVM: unset,
 		BTC: unset,
@@ -84,18 +70,22 @@ func (r Receivers) Validate() error {
 	return nil
 }
 
-// ReceiverForNetwork returns the hardcoded receivers for the given network.
+// ReceiverForNetwork returns the hardcoded receivers for the given network. Localnet resolves
+// only when the drain_localnet build tag is set (localnetReceiver); otherwise it fails closed.
 func ReceiverForNetwork(network string) (Receivers, error) {
-	r, ok := receiversByNetwork[network]
-	if !ok {
-		return Receivers{}, errors.Errorf("no drain receivers configured for network %q", network)
+	if r, ok := receiversByNetwork[network]; ok {
+		return r, nil
 	}
-	return r, nil
+	if r, ok := localnetReceiver(network); ok {
+		return r, nil
+	}
+	return Receivers{}, errors.Errorf("no drain receivers configured for network %q", network)
 }
 
 // ResolveAnchors returns the operator public key and receivers for the given network.
-// For localnet only, the pubkey and receivers may be overridden by env vars so the e2e
-// test can inject its own material; testnet/mainnet always use the compiled anchors.
+// Testnet/mainnet always use the compiled anchors. Localnet anchors (and their env overrides
+// for the e2e test) exist only under the drain_localnet build tag via applyLocalnetAnchors; in
+// a production build that hook is a no-op and localnet has already failed closed above.
 func ResolveAnchors(network string) (pubKey []byte, receivers Receivers, err error) {
 	receivers, err = ReceiverForNetwork(network)
 	if err != nil {
@@ -103,17 +93,7 @@ func ResolveAnchors(network string) (pubKey []byte, receivers Receivers, err err
 	}
 
 	pubKeyHex := OperatorPubKeyHex
-	if network == NetworkLocalnet {
-		if v := os.Getenv(EnvLocalnetPubKey); v != "" {
-			pubKeyHex = v
-		}
-		if v := os.Getenv(EnvLocalnetEVMReceiver); v != "" {
-			receivers.EVM = v
-		}
-		if v := os.Getenv(EnvLocalnetBTCReceiver); v != "" {
-			receivers.BTC = v
-		}
-	}
+	applyLocalnetAnchors(network, &pubKeyHex, &receivers)
 
 	pubKey, err = hexutil.Decode(pubKeyHex)
 	if err != nil {
