@@ -302,7 +302,9 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 	// while moving nothing. A draft with zero txs is a fine transient state, and a subset
 	// (EVM-only or BTC-only) is valid — only the fully-empty final is refused.
 	if final && len(evmTxs) == 0 && len(btcTxs) == 0 {
-		return draintx.Payload{}, fmt.Errorf("refusing to sign an empty final drain payload: no chains have drainable funds")
+		return draintx.Payload{}, fmt.Errorf(
+			"refusing to sign an empty final drain payload: no chains have drainable funds",
+		)
 	}
 
 	return drain.BuildPayload(g.triggerHeight, seq, final, evmTxs, btcTxs, g.priv)
@@ -373,10 +375,8 @@ func buildEVMTxs(
 	receiver string,
 	filter chainFilter,
 ) ([]draintx.EVMTx, error) {
-	var (
-		evmTxs   []draintx.EVMTx
-		included []int64
-	)
+	evmTxs := make([]draintx.EVMTx, 0, len(supportedChains))
+	included := make([]int64, 0, len(supportedChains))
 	for _, chain := range supportedChains {
 		if !chain.IsExternal || chain.Vm != pkgchains.Vm_evm {
 			continue
@@ -500,8 +500,15 @@ func buildBTCTxs(
 			sweptSats += in.AmountSats
 		}
 	}
-	fmt.Fprintf(os.Stderr, "BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) as uneconomical\n",
-		sweptInputs, sweptSats, len(txs), len(utxos)-sweptInputs, totalSats-sweptSats)
+	fmt.Fprintf(
+		os.Stderr,
+		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) as uneconomical\n",
+		sweptInputs,
+		sweptSats,
+		len(txs),
+		len(utxos)-sweptInputs,
+		totalSats-sweptSats,
+	)
 
 	return txs, nil
 }
