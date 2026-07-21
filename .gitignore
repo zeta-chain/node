@@ -7,6 +7,12 @@
 .actrc
 .zetacored/
 .zetaclientd/
+# built binaries at repo root
+/zetacored
+/zetaclientd
+/zetaclientd-supervisor
+/zetae2e
+/zetatool
 coverage
 coverage.json
 coverage.out
