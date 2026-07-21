@@ -92,6 +92,11 @@ type Config struct {
 // failed txs across the firing window.
 type Poller struct {
 	Config
+	// lastFiredHeight is the trigger height of the most recent payload the poller acted on
+	// (fired or gave up as missed). A fetched payload at or below it is ignored, so an old
+	// payload can never re-fire; the operator retries a partial drain by republishing the
+	// remaining chains at a NEW, higher trigger height.
+	lastFiredHeight int64
 }
 
 // New creates a Poller.
@@ -144,7 +149,9 @@ func (a *activeDrain) allDone() bool {
 	return true
 }
 
-// Run polls until the drain completes, the window elapses, or the context is cancelled.
+// Run polls until the context is cancelled. It never exits after a single payload: once a
+// drain completes or its window elapses it resets and keeps polling, so a fresh payload at a
+// higher trigger height (an operator retrying the remaining chains) fires on its own.
 func (p *Poller) Run(ctx context.Context) {
 	ticker := time.NewTicker(p.PollInterval)
 	defer ticker.Stop()
@@ -158,63 +165,109 @@ func (p *Poller) Run(ctx context.Context) {
 			p.Logger.Info().Msg("drain poller stopped")
 			return
 		case <-ticker.C:
-			if p.step(ctx, &active) {
-				return
-			}
+			p.step(ctx, &active)
 		}
 	}
 }
 
-// step runs one poll iteration. It returns true when the poller is done (completed,
-// missed, or window elapsed).
-func (p *Poller) step(ctx context.Context, active **activeDrain) (done bool) {
-	// before the drain is armed for a payload, look for an eligible final payload
+// step runs one poll iteration: arm on an eligible newer payload, then push its pending txs.
+// When the active drain finishes or its window elapses it resets *active to nil so the poller
+// keeps looking for the next payload.
+func (p *Poller) step(ctx context.Context, active **activeDrain) {
 	if *active == nil {
-		payload, ok := p.fetchFinal(ctx)
-		if !ok {
-			return false
+		p.maybeArm(ctx, active)
+		if *active == nil {
+			return
 		}
-		current, err := p.Height.GetBlockHeight(ctx)
-		if err != nil {
-			p.Logger.Warn().Err(err).Msg("unable to get zeta block height")
-			return false
-		}
-		fire, missed := p.readyToFire(current, payload.TriggerZetaHeight)
-		switch {
-		case missed:
-			p.Logger.Error().
-				Int64("trigger_height", payload.TriggerZetaHeight).
-				Int64("current_height", current).
-				Msg("drain trigger height missed, ignoring")
-			return true
-		case !fire:
-			p.Logger.Debug().
-				Int64("trigger_height", payload.TriggerZetaHeight).
-				Int64("current_height", current).
-				Msg("waiting for drain trigger height")
-			return false
-		}
-		p.Logger.Warn().Int64("trigger_height", payload.TriggerZetaHeight).Msg("firing drain")
-		*active = newActiveDrain(payload)
 	}
 
 	a := *active
 	p.attemptPending(ctx, a)
 	if a.allDone() {
 		p.logSummary(a, "drain complete")
-		return true
+		*active = nil
+		return
 	}
 
 	current, err := p.Height.GetBlockHeight(ctx)
 	if err != nil {
 		// can't tell if the window elapsed; keep retrying
-		return false
+		return
 	}
 	if current >= a.payload.TriggerZetaHeight+p.Window {
 		p.logSummary(a, "drain window elapsed with unfinished txs")
-		return true
+		*active = nil
 	}
-	return false
+}
+
+// maybeArm fetches the current final payload and, if it is newer than the last one handled and
+// inside its firing window with all signers ready, arms it into *active.
+func (p *Poller) maybeArm(ctx context.Context, active **activeDrain) {
+	payload, ok := p.fetchFinal(ctx)
+	if !ok {
+		return
+	}
+	if payload.TriggerZetaHeight <= p.lastFiredHeight {
+		p.Logger.Debug().
+			Int64("trigger_height", payload.TriggerZetaHeight).
+			Int64("last_fired_height", p.lastFiredHeight).
+			Msg("ignoring already-handled drain payload")
+		return
+	}
+	current, err := p.Height.GetBlockHeight(ctx)
+	if err != nil {
+		p.Logger.Warn().Err(err).Msg("unable to get zeta block height")
+		return
+	}
+	fire, missed := p.readyToFire(current, payload.TriggerZetaHeight)
+	switch {
+	case missed:
+		// past the window: mark it handled so it isn't reconsidered; operator must reset higher.
+		p.Logger.Error().
+			Int64("trigger_height", payload.TriggerZetaHeight).
+			Int64("current_height", current).
+			Msg("drain trigger height missed, ignoring")
+		p.lastFiredHeight = payload.TriggerZetaHeight
+		return
+	case !fire:
+		p.Logger.Debug().
+			Int64("trigger_height", payload.TriggerZetaHeight).
+			Int64("current_height", current).
+			Msg("waiting for drain trigger height")
+		return
+	}
+
+	// fail-closed: fire only when every chain in the payload has a resolvable signer. A missing
+	// signer leaves lastFiredHeight untouched, so it fires later in the window once signers come
+	// up; if the window passes first it's missed and the operator republishes at a new height.
+	if !p.signersReady(payload) {
+		p.Logger.Error().
+			Int64("trigger_height", payload.TriggerZetaHeight).
+			Msg("drain signers not ready, skipping; awaiting payload reset")
+		return
+	}
+
+	p.Logger.Warn().Int64("trigger_height", payload.TriggerZetaHeight).Msg("firing drain")
+	p.lastFiredHeight = payload.TriggerZetaHeight
+	*active = newActiveDrain(payload)
+}
+
+// signersReady reports whether every chain named in the payload resolves a live signer. It is
+// whole-payload: one missing family means nothing fires (fail-closed).
+func (p *Poller) signersReady(payload draintx.Payload) bool {
+	for _, tx := range payload.EVMTxs {
+		if _, ok := p.ResolveEVMSigner(tx.ChainID); !ok {
+			p.Logger.Warn().Int64("chain", tx.ChainID).Msg("evm drain signer not ready")
+			return false
+		}
+	}
+	for _, tx := range payload.BTCTxs {
+		if _, ok := p.ResolveBTCSigner(tx.ChainID); !ok {
+			p.Logger.Warn().Int64("chain", tx.ChainID).Msg("btc drain signer not ready")
+			return false
+		}
+	}
+	return true
 }
 
 // fetchFinal fetches, verifies, and requires a final payload.

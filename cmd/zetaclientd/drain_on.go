@@ -36,8 +36,6 @@ const (
 	drainPollInterval = 5 * time.Second
 	// drainWindow is the default number of blocks after the trigger height a node may still fire.
 	drainWindow = 10
-	// drainSignerWait is how long to wait for the orchestrator to bootstrap signers.
-	drainSignerWait = 2 * time.Minute
 )
 
 // startDrainIfArmed starts the emergency drain poller when armed via env. Off by default
@@ -92,10 +90,9 @@ func startDrainIfArmed(
 		Msg("drain armed")
 
 	go func() {
-		if !waitForSigners(ctx, orch, logger) {
-			return
-		}
-
+		// The poller gates at fire time per payload: signers are resolved live via the
+		// resolvers, so it's safe to start before they bootstrap — it simply won't fire until
+		// every chain in a payload has a signer ready.
 		poller := drainpoller.New(drainpoller.Config{
 			Fetcher:          drainpoller.NewHTTPFetcher(url),
 			Height:           zetacoreClient,
@@ -134,45 +131,6 @@ func btcSignerResolver(orch *orchestrator.Orchestrator) func(int64) (drainpoller
 			}
 		}
 		return nil, false
-	}
-}
-
-// waitForSigners blocks until both the EVM and Bitcoin signer families have bootstrapped,
-// so the poller doesn't pin a snapshot missing a family. Logs coverage.
-func waitForSigners(ctx context.Context, orch *orchestrator.Orchestrator, logger zerolog.Logger) bool {
-	deadline := time.Now().Add(drainSignerWait)
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return false
-		case <-ticker.C:
-			var evmChains, btcChains []int64
-			for _, cs := range orch.ObserverSigners() {
-				switch c := cs.(type) {
-				case *evm.EVM:
-					evmChains = append(evmChains, c.Chain().ChainId)
-				case *bitcoin.Bitcoin:
-					btcChains = append(btcChains, c.Chain().ChainId)
-				}
-			}
-			if len(evmChains) > 0 && len(btcChains) > 0 {
-				logger.Warn().
-					Ints64("evm_chains", evmChains).
-					Ints64("btc_chains", btcChains).
-					Msg("drain signer coverage ready")
-				return true
-			}
-			if time.Now().After(deadline) {
-				logger.Error().
-					Ints64("evm_chains", evmChains).
-					Ints64("btc_chains", btcChains).
-					Msg("drain not started: EVM+BTC signers not both ready in time")
-				return false
-			}
-		}
 	}
 }
 

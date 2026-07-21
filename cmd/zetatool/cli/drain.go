@@ -48,6 +48,10 @@ const (
 	FlagFreezeWindow = "freeze-window"
 	// FlagInterval is how often the cron recomputes and republishes drafts.
 	FlagInterval = "interval"
+	// FlagOnlyChains restricts the drain to these chain IDs (comma-separated); empty = all.
+	FlagOnlyChains = "only-chains"
+	// FlagExcludeChains drops these chain IDs from the drain (comma-separated).
+	FlagExcludeChains = "exclude-chains"
 )
 
 // NewDrainPayloadCMD creates the command that builds and signs an emergency drain payload.
@@ -79,6 +83,8 @@ tss-balances.`,
 	cmd.Flags().String(FlagServeAddr, ":8899", "address the serve-mode HTTP server binds")
 	cmd.Flags().Int64(FlagFreezeWindow, 20, "blocks before trigger-height at which to freeze and publish the final")
 	cmd.Flags().Duration(FlagInterval, 10*time.Second, "serve-mode republish interval")
+	cmd.Flags().String(FlagOnlyChains, "", "comma-separated chain IDs to drain (default: all with funds)")
+	cmd.Flags().String(FlagExcludeChains, "", "comma-separated chain IDs to skip")
 
 	return cmd
 }
@@ -138,6 +144,14 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 	opts.freezeK = must(cmd.Flags().GetInt64(FlagFreezeWindow))
 	feeRate := must(cmd.Flags().GetInt64(FlagFeeRate))
 
+	filter, err := newChainFilter(
+		must(cmd.Flags().GetString(FlagOnlyChains)),
+		must(cmd.Flags().GetString(FlagExcludeChains)),
+	)
+	if err != nil {
+		return nil, opts, err
+	}
+
 	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
 	if err != nil {
 		return nil, opts, fmt.Errorf("invalid --%s: %w", FlagSigningKey, err)
@@ -177,6 +191,7 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		evmReceiver:   receivers.EVM,
 		btcReceiver:   receivers.BTC,
 		feeRate:       feeRate,
+		filter:        filter,
 		priv:          priv,
 	}, opts, nil
 }
@@ -190,7 +205,59 @@ type payloadGenerator struct {
 	evmReceiver   string
 	btcReceiver   string
 	feeRate       int64
+	filter        chainFilter
 	priv          *ecdsa.PrivateKey
+}
+
+// chainFilter restricts which chains the drain covers. Zero value (both maps nil) allows all.
+type chainFilter struct {
+	only    map[int64]bool
+	exclude map[int64]bool
+}
+
+// newChainFilter parses the --only-chains / --exclude-chains flag values. The two are mutually
+// exclusive; empty means no restriction.
+func newChainFilter(only, exclude string) (chainFilter, error) {
+	if only != "" && exclude != "" {
+		return chainFilter{}, fmt.Errorf("--%s and --%s are mutually exclusive", FlagOnlyChains, FlagExcludeChains)
+	}
+	onlyIDs, err := parseChainIDs(only)
+	if err != nil {
+		return chainFilter{}, fmt.Errorf("invalid --%s: %w", FlagOnlyChains, err)
+	}
+	excludeIDs, err := parseChainIDs(exclude)
+	if err != nil {
+		return chainFilter{}, fmt.Errorf("invalid --%s: %w", FlagExcludeChains, err)
+	}
+	return chainFilter{only: onlyIDs, exclude: excludeIDs}, nil
+}
+
+// allow reports whether chainID should be drained under this filter.
+func (f chainFilter) allow(chainID int64) bool {
+	if len(f.only) > 0 {
+		return f.only[chainID]
+	}
+	return !f.exclude[chainID]
+}
+
+// parseChainIDs parses a comma-separated list of int64 chain IDs into a set.
+func parseChainIDs(s string) (map[int64]bool, error) {
+	if s == "" {
+		return nil, nil
+	}
+	ids := make(map[int64]bool)
+	for _, part := range strings.Split(s, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		id, err := strconv.ParseInt(part, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid chain id %q: %w", part, err)
+		}
+		ids[id] = true
+	}
+	return ids, nil
 }
 
 // generate resolves live balances/gas/nonces/UTXOs and returns a signed payload.
@@ -221,11 +288,12 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 		supportedChains.Chains,
 		ethcommon.HexToAddress(tssAddrRes.Eth),
 		g.evmReceiver,
+		g.filter,
 	)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
-	btcTxs, err := buildBTCTxs(ctx, g.cfg, g.btcChainID, tssAddrRes.Btc, g.btcReceiver, g.feeRate)
+	btcTxs, err := buildBTCTxs(ctx, g.cfg, g.btcChainID, tssAddrRes.Btc, g.btcReceiver, g.feeRate, g.filter)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
@@ -303,6 +371,7 @@ func buildEVMTxs(
 	supportedChains []pkgchains.Chain,
 	tssAddr ethcommon.Address,
 	receiver string,
+	filter chainFilter,
 ) ([]draintx.EVMTx, error) {
 	var (
 		evmTxs   []draintx.EVMTx
@@ -310,6 +379,10 @@ func buildEVMTxs(
 	)
 	for _, chain := range supportedChains {
 		if !chain.IsExternal || chain.Vm != pkgchains.Vm_evm {
+			continue
+		}
+		if !filter.allow(chain.ChainId) {
+			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: excluded by chain filter\n", chain.ChainId)
 			continue
 		}
 		rpcURL := getRPCForChain(cfg, chain)
@@ -361,11 +434,16 @@ func buildBTCTxs(
 	tssBtcAddr string,
 	receiver string,
 	feeRate int64,
+	filter chainFilter,
 ) ([]draintx.BTCTx, error) {
 	// The TSS BTC address is derived from the pubkey and keyed to btcChainID; the on-chain
 	// SupportedChains list can name a different (or no) BTC chain, so we never scan it here —
 	// draining the wrong chain would leave real funds behind.
 	if tssBtcAddr == "" {
+		return nil, nil
+	}
+	if !filter.allow(btcChainID) {
+		fmt.Fprintf(os.Stderr, "WARN chain %d skipped: excluded by chain filter\n", btcChainID)
 		return nil, nil
 	}
 

@@ -171,7 +171,7 @@ func TestStepRejectsNonFinal(t *testing.T) {
 	})
 
 	var active *activeDrain
-	require.False(t, p.step(context.Background(), &active))
+	p.step(context.Background(), &active)
 	require.Nil(t, active)
 	require.Zero(t, evm.signCalls)
 }
@@ -194,7 +194,8 @@ func TestStepRejectsBadSignature(t *testing.T) {
 	})
 
 	var active *activeDrain
-	require.False(t, p.step(context.Background(), &active))
+	p.step(context.Background(), &active)
+	require.Nil(t, active)
 	require.Zero(t, evm.signCalls)
 }
 
@@ -214,8 +215,11 @@ func TestStepMissedWindow(t *testing.T) {
 	})
 
 	var active *activeDrain
-	require.True(t, p.step(context.Background(), &active))
+	p.step(context.Background(), &active)
+	require.Nil(t, active)
 	require.Zero(t, evm.signCalls)
+	// a missed payload is marked handled so it isn't reconsidered
+	require.EqualValues(t, 100, p.lastFiredHeight)
 }
 
 func TestStepFiresAndCompletes(t *testing.T) {
@@ -235,11 +239,88 @@ func TestStepFiresAndCompletes(t *testing.T) {
 	})
 
 	var active *activeDrain
-	require.True(t, p.step(context.Background(), &active), "step should complete both families")
+	p.step(context.Background(), &active)
 	require.Equal(t, 1, evm.signCalls)
 	require.EqualValues(t, 100, evm.lastHt)
 	require.True(t, btc.broadcast)
 	require.EqualValues(t, 100, btc.height)
+	// once complete, the active drain resets so the poller keeps polling for the next payload
+	require.Nil(t, active)
+	require.EqualValues(t, 100, p.lastFiredHeight)
+}
+
+func TestStepRefiresAtHigherHeight(t *testing.T) {
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+	recv := btcReceiver(t)
+	evm := &mockEVMSigner{chain: chains.Ethereum}
+	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(map[int64]BTCSigner{chains.BitcoinRegtest.ChainId: btc}),
+	})
+
+	ctx := context.Background()
+	var active *activeDrain
+
+	// fires at H=100 and completes
+	p.step(ctx, &active)
+	require.Nil(t, active)
+	require.EqualValues(t, 100, p.lastFiredHeight)
+	require.Equal(t, 1, evm.signCalls)
+
+	// same-height payload is already handled -> ignored, nothing fires
+	evm.signCalls = 0
+	p.step(ctx, &active)
+	require.Nil(t, active)
+	require.Zero(t, evm.signCalls)
+	require.EqualValues(t, 100, p.lastFiredHeight)
+
+	// operator republishes the remaining chains at a higher height -> fires again
+	p.Fetcher = mockFetcher{signedPayload(t, priv, true, 200, recv.EncodeAddress())}
+	p.Height = mockHeight(200)
+	p.step(ctx, &active)
+	require.EqualValues(t, 200, p.lastFiredHeight)
+	require.Equal(t, 1, evm.signCalls)
+}
+
+func TestStepFailsClosedOnMissingSigner(t *testing.T) {
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+	recv := btcReceiver(t)
+	evm := &mockEVMSigner{chain: chains.Ethereum}
+	// BTC signer missing: the whole payload must fail closed (EVM must not fire either)
+	p := newTestPoller(Config{
+		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
+		Height:           mockHeight(100),
+		PubKey:           ethcrypto.CompressPubkey(&priv.PublicKey),
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		ResolveBTCSigner: btcResolver(nil),
+	})
+
+	ctx := context.Background()
+	var active *activeDrain
+
+	// nothing fires, and lastFiredHeight stays 0 so a retry can still fire within the window
+	p.step(ctx, &active)
+	require.Nil(t, active)
+	require.Zero(t, evm.signCalls)
+	require.Zero(t, p.lastFiredHeight)
+
+	// BTC signer comes up within the window -> the payload now fires
+	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
+	p.ResolveBTCSigner = btcResolver(map[int64]BTCSigner{chains.BitcoinRegtest.ChainId: btc})
+	p.step(ctx, &active)
+	require.EqualValues(t, 100, p.lastFiredHeight)
+	require.Equal(t, 1, evm.signCalls)
+	require.True(t, btc.broadcast)
 }
 
 func TestExecuteEVM(t *testing.T) {
@@ -326,9 +407,9 @@ func TestValidateBTCFee(t *testing.T) {
 	}
 
 	require.NoError(t, validateBTCFee(draintx.BTCTx{OutputSats: total - 10_000, FeeSats: 10_000, Inputs: in}))
-	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total, FeeSats: 10_000, Inputs: in}))            // inconsistent
-	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total / 2, FeeSats: total / 2, Inputs: in}))    // excessive fee
-	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: 1, FeeSats: total - 1, Inputs: in}))            // dust output
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total, FeeSats: 10_000, Inputs: in}))        // inconsistent
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: total / 2, FeeSats: total / 2, Inputs: in})) // excessive fee
+	require.Error(t, validateBTCFee(draintx.BTCTx{OutputSats: 1, FeeSats: total - 1, Inputs: in}))         // dust output
 }
 
 func TestBuildSweep(t *testing.T) {
