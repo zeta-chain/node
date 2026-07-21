@@ -172,7 +172,6 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 	return &payloadGenerator{
 		cfg:           cfg,
 		zetacore:      zetacoreClient,
-		network:       network,
 		btcChainID:    btcChainID,
 		triggerHeight: opts.triggerHigh,
 		evmReceiver:   receivers.EVM,
@@ -186,7 +185,6 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 type payloadGenerator struct {
 	cfg           *config.Config
 	zetacore      rpc.Clients
-	network       string
 	btcChainID    int64
 	triggerHeight int64
 	evmReceiver   string
