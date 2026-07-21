@@ -125,7 +125,12 @@ func TestDrainTSS(r *runner.E2ERunner, _ []string) {
 
 // fundTSS donates ETH and BTC UTXOs to the TSS so the drain has funds to sweep.
 func fundTSS(r *runner.E2ERunner) {
-	_, err := r.DonateEtherToTSS(big.NewInt(drainETHFund))
+	// --skip-regular skips the bitcoin test setup that matures coinbase to the deployer
+	// wallet, so mine it here: 101 blocks makes the first coinbase spendable.
+	_, err := r.GenerateToAddressIfLocalBitcoin(101, r.GetBtcAddress())
+	require.NoError(r, err)
+
+	_, err = r.DonateEtherToTSS(big.NewInt(drainETHFund))
 	require.NoError(r, err)
 
 	for i := 0; i < drainBTCNumUTXOs; i++ {
