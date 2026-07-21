@@ -388,21 +388,40 @@ func buildBTCTxs(
 	}
 
 	utxos := make([]drain.UTXO, 0, len(unspent))
+	var totalSats int64
 	for _, u := range unspent {
 		sats, err := btccommon.GetSatoshis(u.Amount)
 		if err != nil {
 			return nil, fmt.Errorf("convert utxo amount: %w", err)
 		}
+		totalSats += sats
 		utxos = append(utxos, drain.UTXO{TxID: u.TxID, Vout: u.Vout, AmountSats: sats})
 	}
-	fmt.Fprintf(os.Stderr, "BTC drain: %d UTXOs for chain %d\n", len(utxos), btcChain.ChainId)
+	fmt.Fprintf(os.Stderr, "BTC drain: %d UTXOs (%d sats) for chain %d\n", len(utxos), totalSats, btcChain.ChainId)
 
-	return drain.GenerateBTCTxs(drain.BTCInput{
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
 		ChainID: btcChain.ChainId,
 		To:      receiverAddr,
 		FeeRate: feeRate,
 		UTXOs:   utxos,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// surface dust that GenerateBTCTxs skipped as uneconomical, so it isn't dropped silently.
+	var sweptInputs int
+	var sweptSats int64
+	for _, tx := range txs {
+		sweptInputs += len(tx.Inputs)
+		for _, in := range tx.Inputs {
+			sweptSats += in.AmountSats
+		}
+	}
+	fmt.Fprintf(os.Stderr, "BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) as uneconomical\n",
+		sweptInputs, sweptSats, len(txs), len(utxos)-sweptInputs, totalSats-sweptSats)
+
+	return txs, nil
 }
 
 // medianGasPrice queries zetacore for the median gas price of a chain.

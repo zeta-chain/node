@@ -68,18 +68,38 @@ func ComputeEVMMigration(
 // ComputeBTCMigration computes the single-output amount and fee (in satoshis) for a
 // Bitcoin sweep spending pinned UTXOs totalling totalInputSats.
 //
-// It backs the emergency drain sweep and the zetatool tss-balances migration-amount display,
-// but not the on-chain TSS migration path (which defers BTC fee handling to the zetaclient
-// signer). The overhead is intentionally generous:
+// It backs the zetatool tss-balances migration-amount display, not the on-chain TSS migration
+// path (which defers BTC fee handling to the zetaclient signer). The overhead is intentionally
+// generous:
 //
 //	feeSats = OutboundBytesMax × feeRate    (miner fee at the max outbound tx size)
 //	        + BTCReservedRBFFeeSats         (0.01 BTC reserved for RBF fee bumping)
 //	        + BTCNonceMarkBufferSats        (3000 sats for the nonce-mark output)
 //
 // The RBF and nonce-mark reserves are a deliberate margin beyond the real miner fee that
-// guarantees the sweep confirms; the unspent remainder is not reclaimed, which is acceptable.
+// guarantees a single migration tx confirms; the unspent remainder survives as UTXOs. The
+// multi-tx emergency drain uses ComputeBTCSweep instead, where the reserves don't scale.
 func ComputeBTCMigration(totalInputSats, feeRate int64) (outputSats, feeSats int64, err error) {
 	feeSats = btccommon.OutboundBytesMax*feeRate + BTCReservedRBFFeeSats + BTCNonceMarkBufferSats
+	outputSats = totalInputSats - feeSats
+	if outputSats < 0 {
+		return 0, 0, errorsmod.Wrap(
+			ErrInsufficientFunds,
+			fmt.Sprintf("total input: %d, fee: %d", totalInputSats, feeSats),
+		)
+	}
+
+	return outputSats, feeSats, nil
+}
+
+// ComputeBTCSweep computes the single-output amount and fee (in satoshis) for one transaction
+// of the emergency drain's multi-tx BTC sweep.
+//
+// Unlike ComputeBTCMigration it charges the miner fee only (no RBF or nonce-mark reserve): the
+// drain partitions a large UTXO set into many sweep txs, and a per-tx reserve would both
+// multiply across N txs and, in a single-output sweep, be paid to miners rather than preserved.
+func ComputeBTCSweep(totalInputSats, feeRate int64) (outputSats, feeSats int64, err error) {
+	feeSats = btccommon.OutboundBytesMax * feeRate
 	outputSats = totalInputSats - feeSats
 	if outputSats < 0 {
 		return 0, 0, errorsmod.Wrap(

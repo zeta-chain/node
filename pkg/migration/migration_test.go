@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/migration"
+	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestComputeEVMMigration(t *testing.T) {
@@ -78,6 +79,38 @@ func TestComputeBTCMigration(t *testing.T) {
 
 		// ACT
 		_, _, err := migration.ComputeBTCMigration(totalInputSats, feeRate)
+
+		// ASSERT
+		require.Error(t, err)
+		require.ErrorIs(t, err, migration.ErrInsufficientFunds)
+	})
+}
+
+func TestComputeBTCSweep(t *testing.T) {
+	t.Run("charges miner fee only, no reserves", func(t *testing.T) {
+		// ARRANGE
+		totalInputSats := int64(100_000_000)
+		feeRate := int64(50)
+
+		// ACT
+		outputSats, feeSats, err := migration.ComputeBTCSweep(totalInputSats, feeRate)
+
+		// ASSERT: fee is exactly the miner fee at max outbound size, with no RBF/nonce reserve
+		require.NoError(t, err)
+		require.Equal(t, btccommon.OutboundBytesMax*feeRate, feeSats)
+		require.Equal(t, totalInputSats-feeSats, outputSats)
+		// the reserves ComputeBTCMigration adds are absent here
+		require.Less(t, feeSats, btccommon.OutboundBytesMax*feeRate+
+			migration.BTCReservedRBFFeeSats+migration.BTCNonceMarkBufferSats)
+	})
+
+	t.Run("errors when inputs cannot cover fee", func(t *testing.T) {
+		// ARRANGE
+		totalInputSats := int64(1)
+		feeRate := int64(100)
+
+		// ACT
+		_, _, err := migration.ComputeBTCSweep(totalInputSats, feeRate)
 
 		// ASSERT
 		require.Error(t, err)

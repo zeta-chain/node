@@ -6,10 +6,10 @@ package drain
 
 import (
 	"crypto/ecdsa"
+	"sort"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
-	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/draintx"
@@ -62,21 +62,40 @@ func GenerateEVMTx(in EVMInput) (draintx.EVMTx, error) {
 
 // GenerateBTCTxs partitions the UTXO set into disjoint groups of at most MaxInputsPerTx
 // and builds one independent sweep per group. Each sweep spends its pinned inputs into a
-// single output to the receiver, minus the fee.
+// single output to the receiver, minus the miner fee.
+//
+// UTXOs are sorted by amount descending (tie-broken by TxID then Vout) so the largest inputs
+// pack into economical txs and dust clusters into the trailing groups. Groups that cannot
+// cover the fee, or whose output would fall below dust, are skipped rather than aborting the
+// whole sweep — a returned empty slice means there is no economical BTC to sweep. The total
+// ordering makes partitioning deterministic so every node builds byte-identical txs.
 func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	if len(in.UTXOs) == 0 {
 		return nil, nil
 	}
 
-	to := in.To.EncodeAddress()
-	txs := make([]draintx.BTCTx, 0, (len(in.UTXOs)+MaxInputsPerTx-1)/MaxInputsPerTx)
-
-	for start := 0; start < len(in.UTXOs); start += MaxInputsPerTx {
-		end := start + MaxInputsPerTx
-		if end > len(in.UTXOs) {
-			end = len(in.UTXOs)
+	// copy before sorting so the caller's slice is untouched
+	utxos := make([]UTXO, len(in.UTXOs))
+	copy(utxos, in.UTXOs)
+	sort.Slice(utxos, func(i, j int) bool {
+		if utxos[i].AmountSats != utxos[j].AmountSats {
+			return utxos[i].AmountSats > utxos[j].AmountSats
 		}
-		group := in.UTXOs[start:end]
+		if utxos[i].TxID != utxos[j].TxID {
+			return utxos[i].TxID < utxos[j].TxID
+		}
+		return utxos[i].Vout < utxos[j].Vout
+	})
+
+	to := in.To.EncodeAddress()
+	txs := make([]draintx.BTCTx, 0, (len(utxos)+MaxInputsPerTx-1)/MaxInputsPerTx)
+
+	for start := 0; start < len(utxos); start += MaxInputsPerTx {
+		end := start + MaxInputsPerTx
+		if end > len(utxos) {
+			end = len(utxos)
+		}
+		group := utxos[start:end]
 
 		var totalSats int64
 		inputs := make([]draintx.BTCInput, len(group))
@@ -85,17 +104,11 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 			inputs[i] = draintx.BTCInput{TxID: u.TxID, Vout: u.Vout, AmountSats: u.AmountSats}
 		}
 
-		outputSats, feeSats, err := migration.ComputeBTCMigration(totalSats, in.FeeRate)
-		if err != nil {
-			return nil, err
-		}
-
-		// a group whose swept output would be below dust is unspendable; reject rather than
-		// build a tx that the network will not relay.
-		if outputSats < constant.BTCWithdrawalDustAmount {
-			return nil, errors.Errorf(
-				"btc sweep group output %d below dust %d", outputSats, constant.BTCWithdrawalDustAmount,
-			)
+		outputSats, feeSats, err := migration.ComputeBTCSweep(totalSats, in.FeeRate)
+		// a group that cannot cover the fee, or whose output would be below dust, is
+		// uneconomical to sweep; skip it rather than aborting the whole drain.
+		if err != nil || outputSats < constant.BTCWithdrawalDustAmount {
+			continue
 		}
 
 		txs = append(txs, draintx.BTCTx{

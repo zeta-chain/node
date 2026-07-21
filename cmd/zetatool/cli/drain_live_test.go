@@ -8,6 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -25,8 +26,9 @@ import (
 // throwaway receivers: these tests only build and inspect drain txs, never broadcast them.
 const (
 	liveEVMReceiver = "0x000000000000000000000000000000000000dEaD"
-	// tb1q... is the BIP173 testnet bech32 example address; valid on testnet3.
-	liveBTCReceiver = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+	// bc1q.../tb1q... are the BIP173 bech32 P2WPKH example addresses for mainnet/testnet.
+	liveBTCReceiverMainnet = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
+	liveBTCReceiverTestnet = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
 )
 
 func requireLiveTest(t *testing.T) {
@@ -35,8 +37,25 @@ func requireLiveTest(t *testing.T) {
 	}
 }
 
-// liveTestnet resolves the current testnet TSS state exactly like payloadGenerator.generate does.
-func liveTestnet(t *testing.T) (
+// liveNetwork returns the network the live tests run against: testnet by default, or the value
+// of ZETATOOL_LIVE_NETWORK when set (used to inspect a real BTC sweep on mainnet).
+func liveNetwork(t *testing.T) string {
+	network := os.Getenv("ZETATOOL_LIVE_NETWORK")
+	if network == "" {
+		return config.NetworkTestnet
+	}
+	switch network {
+	case config.NetworkTestnet, config.NetworkMainnet:
+		return network
+	default:
+		t.Fatalf("unsupported ZETATOOL_LIVE_NETWORK %q: use testnet or mainnet", network)
+		return ""
+	}
+}
+
+// liveState resolves the current TSS state on the selected network, exactly like
+// payloadGenerator.generate does.
+func liveState(t *testing.T) (
 	context.Context,
 	*config.Config,
 	rpc.Clients,
@@ -45,12 +64,16 @@ func liveTestnet(t *testing.T) (
 	int64,
 ) {
 	ctx := context.Background()
-	cfg := config.TestnetConfig()
+	network := liveNetwork(t)
+	t.Logf("live network: %s", network)
+
+	cfg, err := config.GetConfigByNetwork(network, "")
+	require.NoError(t, err)
 
 	zetacore, err := rpc.NewCometBFTClients(cfg.ZetaChainRPC)
 	require.NoError(t, err)
 
-	btcChainID, err := clients.GetBTCChainID(config.NetworkTestnet)
+	btcChainID, err := clients.GetBTCChainID(network)
 	require.NoError(t, err)
 
 	tss, err := currentTSS(ctx, zetacore)
@@ -75,7 +98,7 @@ func liveTestnet(t *testing.T) (
 func TestLiveEVMDrain(t *testing.T) {
 	requireLiveTest(t)
 
-	ctx, cfg, zetacore, tssAddrRes, chains, _ := liveTestnet(t)
+	ctx, cfg, zetacore, tssAddrRes, chains, _ := liveState(t)
 	tssAddr := ethcommon.HexToAddress(tssAddrRes.Eth)
 	t.Logf("TSS EVM address: %s", tssAddr.Hex())
 
@@ -146,31 +169,36 @@ func TestLiveEVMDrain(t *testing.T) {
 func TestLiveBTCDrain(t *testing.T) {
 	requireLiveTest(t)
 
-	ctx, _, _, tssAddrRes, chains, btcChainID := liveTestnet(t)
+	ctx, _, _, tssAddrRes, _, btcChainID := liveState(t)
 
-	var btcChain *pkgchains.Chain
-	for i := range chains {
-		if chains[i].IsExternal && chains[i].Vm == pkgchains.Vm_no_vm {
-			btcChain = &chains[i]
-			break
-		}
-	}
-	if btcChain == nil {
-		t.Skip("no external BTC chain in supported chains")
-	}
-
+	// The TSS BTC address is derived from the pubkey and returned regardless of whether BTC is an
+	// active supported chain, so we query it directly by address+chainID via mempool.space.
 	btcAddr := tssAddrRes.Btc
+	if btcAddr == "" {
+		t.Skipf("no TSS BTC address derived on %s", liveNetwork(t))
+	}
 	t.Logf("TSS BTC address: %s", btcAddr)
 
-	netParams, err := pkgchains.BitcoinNetParamsFromChainID(btcChain.ChainId)
+	netParams, err := pkgchains.BitcoinNetParamsFromChainID(btcChainID)
 	require.NoError(t, err)
-	receiver, err := btcutil.DecodeAddress(liveBTCReceiver, netParams)
+	btcReceiver := liveBTCReceiverTestnet
+	if netParams.Name == chaincfg.MainNetParams.Name {
+		btcReceiver = liveBTCReceiverMainnet
+	}
+	receiver, err := btcutil.DecodeAddress(btcReceiver, netParams)
 	require.NoError(t, err)
+
+	balance, err := clients.GetBTCBalance(ctx, btcAddr, btcChainID)
+	require.NoError(t, err)
+	t.Logf("TSS BTC balance: %.8f BTC", balance)
 
 	utxos, err := clients.GetBTCUtxos(ctx, btcAddr, btcChainID)
 	require.NoError(t, err)
 	if len(utxos) == 0 {
-		t.Skipf("TSS BTC address %s has no UTXOs", btcAddr)
+		t.Skipf(
+			"TSS BTC address %s on %s has no UTXOs; try ZETATOOL_LIVE_NETWORK=mainnet",
+			btcAddr, liveNetwork(t),
+		)
 	}
 
 	var totalSats int64
@@ -183,27 +211,38 @@ func TestLiveBTCDrain(t *testing.T) {
 
 	feeRate := migration.BTCConservativeFeeRate
 	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
-		ChainID: btcChain.ChainId,
+		ChainID: btcChainID,
 		To:      receiver,
 		FeeRate: feeRate,
 		UTXOs:   drainUTXOs,
 	})
 	require.NoError(t, err)
 
-	expectedFee := migration.BTCConservativeFeeRate*btccommon.OutboundBytesMax +
-		migration.BTCReservedRBFFeeSats + migration.BTCNonceMarkBufferSats
+	// miner fee only, no RBF / nonce reserve for the multi-tx sweep
+	expectedFee := feeRate * btccommon.OutboundBytesMax
 
+	var sweptInputs int
+	var sweptSats, totalFees int64
 	for _, tx := range txs {
 		var sumInputs int64
 		for _, in := range tx.Inputs {
 			sumInputs += in.AmountSats
 		}
+		sweptInputs += len(tx.Inputs)
+		sweptSats += sumInputs
+		totalFees += tx.FeeSats
 		t.Logf(
 			"chain %d: to=%s inputs=%d outputSats=%d feeSats=%d",
 			tx.ChainID, tx.To, len(tx.Inputs), tx.OutputSats, tx.FeeSats,
 		)
-		require.Equal(t, sumInputs-tx.FeeSats, tx.OutputSats)
 		require.Equal(t, expectedFee, tx.FeeSats)
+		require.Equal(t, sumInputs-tx.FeeSats, tx.OutputSats)
 		require.GreaterOrEqual(t, tx.OutputSats, int64(constant.BTCWithdrawalDustAmount))
 	}
+
+	// uneconomical dust groups are skipped, so swept UTXOs may be fewer than fetched
+	t.Logf(
+		"swept %d UTXOs (%d sats) in %d txs; skipped %d UTXOs (%d sats); total miner fees %d sats",
+		sweptInputs, sweptSats, len(txs), len(utxos)-sweptInputs, totalSats-sweptSats, totalFees,
+	)
 }
