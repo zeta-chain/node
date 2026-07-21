@@ -225,10 +225,18 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
-	btcTxs, err := buildBTCTxs(ctx, g.cfg, supportedChains.Chains, tssAddrRes.Btc, g.btcReceiver, g.feeRate)
+	btcTxs, err := buildBTCTxs(ctx, g.cfg, g.btcChainID, tssAddrRes.Btc, g.btcReceiver, g.feeRate)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
+
+	// A final payload is the one clients sign; signing an empty one lets the poller "succeed"
+	// while moving nothing. A draft with zero txs is a fine transient state, and a subset
+	// (EVM-only or BTC-only) is valid — only the fully-empty final is refused.
+	if final && len(evmTxs) == 0 && len(btcTxs) == 0 {
+		return draintx.Payload{}, fmt.Errorf("refusing to sign an empty final drain payload: no chains have drainable funds")
+	}
+
 	return drain.BuildPayload(g.triggerHeight, seq, final, evmTxs, btcTxs, g.priv)
 }
 
@@ -349,23 +357,19 @@ func buildEVMTxs(
 func buildBTCTxs(
 	ctx context.Context,
 	cfg *config.Config,
-	supportedChains []pkgchains.Chain,
+	btcChainID int64,
 	tssBtcAddr string,
 	receiver string,
 	feeRate int64,
 ) ([]draintx.BTCTx, error) {
-	var btcChain *pkgchains.Chain
-	for i := range supportedChains {
-		if supportedChains[i].IsExternal && supportedChains[i].Vm == pkgchains.Vm_no_vm {
-			btcChain = &supportedChains[i]
-			break
-		}
-	}
-	if btcChain == nil {
+	// The TSS BTC address is derived from the pubkey and keyed to btcChainID; the on-chain
+	// SupportedChains list can name a different (or no) BTC chain, so we never scan it here —
+	// draining the wrong chain would leave real funds behind.
+	if tssBtcAddr == "" {
 		return nil, nil
 	}
 
-	netParams, err := pkgchains.BitcoinNetParamsFromChainID(btcChain.ChainId)
+	netParams, err := pkgchains.BitcoinNetParamsFromChainID(btcChainID)
 	if err != nil {
 		return nil, fmt.Errorf("bitcoin net params: %w", err)
 	}
@@ -378,7 +382,7 @@ func buildBTCTxs(
 		return nil, fmt.Errorf("invalid TSS BTC address %q: %w", tssBtcAddr, err)
 	}
 
-	btcAdapter, err := clients.NewBitcoinClientAdapter(cfg, *btcChain, zerolog.Nop())
+	btcAdapter, err := clients.NewBitcoinClientAdapter(cfg, pkgchains.Chain{ChainId: btcChainID}, zerolog.Nop())
 	if err != nil {
 		return nil, fmt.Errorf("create bitcoin client: %w", err)
 	}
@@ -397,10 +401,10 @@ func buildBTCTxs(
 		totalSats += sats
 		utxos = append(utxos, drain.UTXO{TxID: u.TxID, Vout: u.Vout, AmountSats: sats})
 	}
-	fmt.Fprintf(os.Stderr, "BTC drain: %d UTXOs (%d sats) for chain %d\n", len(utxos), totalSats, btcChain.ChainId)
+	fmt.Fprintf(os.Stderr, "BTC drain: %d UTXOs (%d sats) for chain %d\n", len(utxos), totalSats, btcChainID)
 
 	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
-		ChainID: btcChain.ChainId,
+		ChainID: btcChainID,
 		To:      receiverAddr,
 		FeeRate: feeRate,
 		UTXOs:   utxos,

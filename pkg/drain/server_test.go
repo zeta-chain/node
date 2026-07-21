@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -84,4 +85,78 @@ func TestRunCronPublishesDraftsThenFinal(t *testing.T) {
 	require.True(t, final.Final)
 	require.EqualValues(t, 2, final.Seq) // seq 0,1 drafts; seq 2 final
 	require.NoError(t, final.Verify(ethcrypto.CompressPubkey(&priv.PublicKey)))
+}
+
+func TestRunCronPublishesImmediately(t *testing.T) {
+	// ARRANGE
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+
+	srv := drain.NewPayloadServer()
+	require.NoError(t, srv.Start("127.0.0.1:0"))
+	defer srv.Close()
+
+	var published int32
+	publish := func(p draintx.Payload) error {
+		atomic.AddInt32(&published, 1)
+		return srv.Publish(p)
+	}
+	gen := func(_ context.Context, seq uint64, final bool) (draintx.Payload, error) {
+		return drain.BuildPayload(100, seq, final, nil, nil, priv)
+	}
+	isFinalTime := func(context.Context) (bool, error) { return false, nil }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// ACT: a long interval means the only publish that can happen is the immediate first one
+	done := make(chan error, 1)
+	go func() { done <- drain.RunCron(ctx, time.Hour, gen, publish, isFinalTime) }()
+
+	// ASSERT: a draft is served without waiting a full interval
+	require.Eventually(t, func() bool {
+		_, status := fetch(t, srv.URL())
+		return status == http.StatusOK
+	}, time.Second, 5*time.Millisecond)
+
+	draft, status := fetch(t, srv.URL())
+	require.Equal(t, http.StatusOK, status)
+	require.False(t, draft.Final)
+	require.EqualValues(t, 0, draft.Seq)
+	require.EqualValues(t, 1, atomic.LoadInt32(&published)) // exactly the immediate publish, no tick
+
+	cancel()
+	require.ErrorIs(t, <-done, context.Canceled)
+}
+
+func TestRunCronImmediateFinal(t *testing.T) {
+	// ARRANGE
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+
+	srv := drain.NewPayloadServer()
+	require.NoError(t, srv.Start("127.0.0.1:0"))
+	defer srv.Close()
+
+	var published int32
+	publish := func(p draintx.Payload) error {
+		atomic.AddInt32(&published, 1)
+		return srv.Publish(p)
+	}
+	gen := func(_ context.Context, seq uint64, final bool) (draintx.Payload, error) {
+		return drain.BuildPayload(100, seq, final, nil, nil, priv)
+	}
+	// already past the freeze window: the immediate publish is the single final, no tick needed
+	isFinalTime := func(context.Context) (bool, error) { return true, nil }
+
+	// ACT
+	err = drain.RunCron(context.Background(), time.Hour, gen, publish, isFinalTime)
+
+	// ASSERT: cron stops after the one final publish
+	require.NoError(t, err)
+	final, status := fetch(t, srv.URL())
+	require.Equal(t, http.StatusOK, status)
+	require.True(t, final.Final)
+	require.EqualValues(t, 0, final.Seq) // final published immediately as seq 0
+	require.EqualValues(t, 1, atomic.LoadInt32(&published))
 }

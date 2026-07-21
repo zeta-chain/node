@@ -85,9 +85,10 @@ func (s *PayloadServer) Close() error {
 // Generator produces a payload for the given sequence and finality.
 type Generator func(ctx context.Context, seq uint64, final bool) (draintx.Payload, error)
 
-// RunCron republishes fresh draft payloads on an interval, then publishes exactly one
-// final payload once isFinalTime reports true, and stops. Drafts are for monitoring only;
-// clients only ever sign the final. This is the thin wrapper around the generator.
+// RunCron publishes a payload immediately, then republishes fresh drafts on an interval, and
+// publishes exactly one final payload once isFinalTime reports true, then stops. Drafts are for
+// monitoring only; clients only ever sign the final. The immediate first publish means clients
+// get a payload without waiting a full interval (and the final can't be delayed by one).
 func RunCron(
 	ctx context.Context,
 	interval time.Duration,
@@ -95,29 +96,40 @@ func RunCron(
 	publish func(draintx.Payload) error,
 	isFinalTime func(ctx context.Context) (bool, error),
 ) error {
+	var seq uint64
+
+	// publishOnce generates and publishes one payload, returning whether it was the final.
+	publishOnce := func() (bool, error) {
+		final, err := isFinalTime(ctx)
+		if err != nil {
+			return false, errors.Wrap(err, "unable to check final time")
+		}
+		p, err := gen(ctx, seq, final)
+		if err != nil {
+			return false, errors.Wrap(err, "unable to generate payload")
+		}
+		if err := publish(p); err != nil {
+			return false, errors.Wrap(err, "unable to publish payload")
+		}
+		seq++
+		return final, nil
+	}
+
+	// publish immediately so the first payload isn't delayed a full interval
+	if final, err := publishOnce(); err != nil || final {
+		return err
+	}
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	var seq uint64
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			final, err := isFinalTime(ctx)
-			if err != nil {
-				return errors.Wrap(err, "unable to check final time")
-			}
-			p, err := gen(ctx, seq, final)
-			if err != nil {
-				return errors.Wrap(err, "unable to generate payload")
-			}
-			if err := publish(p); err != nil {
-				return errors.Wrap(err, "unable to publish payload")
-			}
-			seq++
-			if final {
-				return nil
+			if final, err := publishOnce(); err != nil || final {
+				return err
 			}
 		}
 	}
