@@ -43,6 +43,7 @@ const (
 // EVMSigner is the subset of the EVM signer the poller drives.
 type EVMSigner interface {
 	Chain() chains.Chain
+	PendingNonce(ctx context.Context) (uint64, error)
 	SignDrainTx(
 		ctx context.Context,
 		to ethcommon.Address,
@@ -74,6 +75,9 @@ type Config struct {
 	Fetcher Fetcher
 	Height  HeightProvider
 	PubKey  []byte // baked-in operator public key
+	// Network is the zeta network this client is armed for; a payload built for a different
+	// network is rejected (cross-network replay protection).
+	Network string
 	// EVMReceiver/BTCReceiver are the compiled-in security anchors; every tx must send here.
 	EVMReceiver ethcommon.Address
 	BTCReceiver btcutil.Address
@@ -182,7 +186,7 @@ func (p *Poller) step(ctx context.Context, active **activeDrain) {
 	a := *active
 	p.attemptPending(ctx, a)
 	if a.allDone() {
-		p.logSummary(a, "drain complete")
+		p.logSummary(a, "all drain txs broadcast (not confirmed on-chain)")
 		*active = nil
 		return
 	}
@@ -277,6 +281,13 @@ func (p *Poller) fetchFinal(ctx context.Context) (draintx.Payload, bool) {
 	}
 	if err := payload.Verify(p.PubKey); err != nil {
 		p.Logger.Error().Err(err).Msg("drain payload signature verification failed")
+		return draintx.Payload{}, false
+	}
+	if payload.Network != p.Network {
+		p.Logger.Error().
+			Str("payload_network", payload.Network).
+			Str("armed_network", p.Network).
+			Msg("drain payload network mismatch")
 		return draintx.Payload{}, false
 	}
 	if !payload.Final {
@@ -393,6 +404,30 @@ func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64)
 	if !ok {
 		return errors.Errorf("invalid gas price %q", tx.GasPrice)
 	}
+	if gasPrice.Sign() <= 0 {
+		return errors.Errorf("gas price is non-positive: %s", gasPrice)
+	}
+	ceiling := new(big.Int).Mul(big.NewInt(pkgdrain.MaxEVMGasPriceGwei), big.NewInt(1_000_000_000))
+	if gasPrice.Cmp(ceiling) > 0 {
+		return errors.Errorf("gas price %s exceeds cap %s wei", gasPrice, ceiling)
+	}
+
+	// Guard against a nonce clash at fire time: pending outbounds must have cleared (live >= pinned)
+	// and the pinned nonce must not already be consumed. This composes with the already-broadcast
+	// handling below, which still treats a post-broadcast race as success.
+	live, err := signer.PendingNonce(ctx)
+	if err != nil {
+		return errors.Wrap(err, "get live nonce")
+	}
+	switch {
+	case live < tx.Nonce:
+		return errors.Errorf("live nonce %d < pinned nonce %d: waiting for pending txs to clear", live, tx.Nonce)
+	case live > tx.Nonce:
+		return errors.Errorf(
+			"pinned nonce %d already consumed (live %d): verify balance and republish at a higher trigger height",
+			tx.Nonce, live,
+		)
+	}
 
 	// #nosec G115 height is a positive zeta block height
 	signed, err := signer.SignDrainTx(ctx, p.EVMReceiver, amount, gasPrice, tx.GasLimit, tx.Nonce, uint64(height))
@@ -480,19 +515,27 @@ func (p *Poller) logSummary(a *activeDrain, msg string) {
 	defer a.mu.Unlock()
 
 	evmDone, btcDone := 0, 0
+	evmPending := make([]int64, 0, len(a.evm))
+	btcPending := make([]int64, 0, len(a.btc))
 	for _, it := range a.evm {
 		if it.done {
 			evmDone++
+			continue
 		}
+		evmPending = append(evmPending, it.tx.ChainID)
 	}
 	for _, it := range a.btc {
 		if it.done {
 			btcDone++
+			continue
 		}
+		btcPending = append(btcPending, it.tx.ChainID)
 	}
 	p.Logger.Warn().
 		Int("evm_broadcast", evmDone).Int("evm_total", len(a.evm)).
 		Int("btc_broadcast", btcDone).Int("btc_total", len(a.btc)).
+		Ints64("evm_pending", evmPending).
+		Ints64("btc_pending", btcPending).
 		Msg(msg)
 }
 

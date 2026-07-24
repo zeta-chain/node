@@ -48,3 +48,11 @@ func (signer *Signer) SignDrainTx(
 func (signer *Signer) BroadcastDrainTx(ctx context.Context, tx *eth.Transaction) error {
 	return signer.broadcast(ctx, tx)
 }
+
+// PendingNonce returns the TSS account's current on-chain nonce as seen by this node's EVM client.
+// The drain poller compares it against the pinned nonce to catch a clash before signing. The EVM
+// client exposes only NonceAt (latest confirmed), which is the value the pinned drain nonce was
+// derived from at generation time.
+func (signer *Signer) PendingNonce(ctx context.Context) (uint64, error) {
+	return signer.evmClient.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
+}

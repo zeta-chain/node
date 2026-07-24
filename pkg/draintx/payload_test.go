@@ -12,6 +12,7 @@ func samplePayload() Payload {
 		TriggerZetaHeight: 1_234_567,
 		Seq:               12,
 		Final:             true,
+		Network:           "mainnet",
 		EVMTxs: []EVMTx{
 			{ChainID: 1, To: "0x1111111111111111111111111111111111111111", Nonce: 42, Amount: "1000000000000000000", GasPrice: "250000", GasLimit: 21000},
 		},
@@ -88,6 +89,13 @@ func TestVerifyRejectsMutation(t *testing.T) {
 		p.Final = false
 		require.Error(t, p.Verify(pub))
 	})
+
+	t.Run("mutated network", func(t *testing.T) {
+		p := samplePayload()
+		require.NoError(t, p.Sign(priv))
+		p.Network = "testnet"
+		require.Error(t, p.Verify(pub))
+	})
 }
 
 func TestCanonicalBytesStable(t *testing.T) {
@@ -110,6 +118,16 @@ func TestCanonicalBytesFieldOrderMatters(t *testing.T) {
 	a := samplePayload()
 	b := samplePayload()
 	b.BTCTxs[0].Inputs[0], b.BTCTxs[0].Inputs[1] = b.BTCTxs[0].Inputs[1], b.BTCTxs[0].Inputs[0]
+
+	// ASSERT
+	require.NotEqual(t, a.canonicalBytes(), b.canonicalBytes())
+}
+
+func TestCanonicalBytesNetworkMatters(t *testing.T) {
+	// ARRANGE: two payloads differing only by network must produce different canonical bytes
+	a := samplePayload()
+	b := samplePayload()
+	b.Network = "testnet"
 
 	// ASSERT
 	require.NotEqual(t, a.canonicalBytes(), b.canonicalBytes())

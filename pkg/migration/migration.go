@@ -32,6 +32,12 @@ const (
 
 	// BTCNonceMarkBufferSats buffers 3000 satoshis for the nonce-mark output.
 	BTCNonceMarkBufferSats int64 = 3_000
+
+	// DrainEVMGasLimit is the gas pinned for an emergency-drain EVM transfer. Unlike the on-chain
+	// migration (which sends to a new TSS = EOA, 21000), the drain sends to a safe wallet that may be a
+	// contract (e.g. a Gnosis Safe), whose receive()/fallback needs more than 21000. Unused gas is
+	// refunded, so over-provisioning is safe.
+	DrainEVMGasLimit uint64 = 100_000
 )
 
 // ErrInsufficientFunds is returned when the balance cannot cover the migration fee.
@@ -47,7 +53,16 @@ var ErrInsufficientFunds = errorsmod.Register("migration", 1, "insufficient fund
 func ComputeEVMMigration(
 	balance, medianGasPrice sdkmath.Uint,
 ) (amount sdkmath.Uint, gasPrice sdkmath.Uint, gasLimit uint64, err error) {
-	gasLimit = gas.EVMSend
+	return ComputeEVMMigrationWithGasLimit(balance, medianGasPrice, gas.EVMSend)
+}
+
+// ComputeEVMMigrationWithGasLimit is ComputeEVMMigration with a caller-supplied gas limit. The
+// emergency drain passes DrainEVMGasLimit so a contract safe wallet's receive()/fallback has room;
+// the on-chain migration keeps gas.EVMSend via the ComputeEVMMigration wrapper.
+func ComputeEVMMigrationWithGasLimit(
+	balance, medianGasPrice sdkmath.Uint,
+	gasLimit uint64,
+) (amount sdkmath.Uint, gasPrice sdkmath.Uint, gasLimitOut uint64, err error) {
 	gasPrice, err = gas.MultiplyGasPrice(medianGasPrice, GasMultiplierEVM)
 	if err != nil {
 		return sdkmath.ZeroUint(), sdkmath.ZeroUint(), 0, err

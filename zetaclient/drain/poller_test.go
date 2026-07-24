@@ -3,6 +3,7 @@
 package drain
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"errors"
@@ -25,18 +26,23 @@ import (
 )
 
 type mockEVMSigner struct {
-	chain     chains.Chain
-	mu        sync.Mutex
-	signCalls int
-	bcastTx   *eth.Transaction
-	bcastErr  error
-	lastTo    ethcommon.Address
-	lastAmt   *big.Int
-	lastNonce uint64
-	lastHt    uint64
+	chain        chains.Chain
+	mu           sync.Mutex
+	signCalls    int
+	bcastTx      *eth.Transaction
+	bcastErr     error
+	lastTo       ethcommon.Address
+	lastAmt      *big.Int
+	lastNonce    uint64
+	lastHt       uint64
+	pendingNonce uint64
+	pendingErr   error
 }
 
 func (m *mockEVMSigner) Chain() chains.Chain { return m.chain }
+func (m *mockEVMSigner) PendingNonce(context.Context) (uint64, error) {
+	return m.pendingNonce, m.pendingErr
+}
 func (m *mockEVMSigner) SignDrainTx(_ context.Context, to ethcommon.Address, amount, gasPrice *big.Int, gasLimit, nonce, height uint64) (*eth.Transaction, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -228,7 +234,7 @@ func TestStepFiresAndCompletes(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
-	evm := &mockEVMSigner{chain: chains.Ethereum}
+	evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
 	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
 	p := newTestPoller(Config{
 		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
@@ -255,7 +261,7 @@ func TestStepRefiresAtHigherHeight(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
-	evm := &mockEVMSigner{chain: chains.Ethereum}
+	evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
 	btc := &mockBTCSigner{chain: chains.BitcoinRegtest}
 	p := newTestPoller(Config{
 		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
@@ -295,7 +301,7 @@ func TestStepFailsClosedOnMissingSigner(t *testing.T) {
 	priv, err := ethcrypto.GenerateKey()
 	require.NoError(t, err)
 	recv := btcReceiver(t)
-	evm := &mockEVMSigner{chain: chains.Ethereum}
+	evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
 	// BTC signer missing: the whole payload must fail closed (EVM must not fire either)
 	p := newTestPoller(Config{
 		Fetcher:          mockFetcher{signedPayload(t, priv, true, 100, recv.EncodeAddress())},
@@ -327,7 +333,7 @@ func TestStepFailsClosedOnMissingSigner(t *testing.T) {
 
 func TestExecuteEVM(t *testing.T) {
 	recv := btcReceiver(t)
-	evm := &mockEVMSigner{chain: chains.Ethereum}
+	evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
 	p := newTestPoller(Config{
 		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
 		BTCReceiver:      recv,
@@ -355,7 +361,7 @@ func TestExecuteEVMAlreadyBroadcast(t *testing.T) {
 	// ARRANGE: another node broadcast the byte-identical drain tx first, so this node's
 	// broadcast fails with "already known".
 	recv := btcReceiver(t)
-	evm := &mockEVMSigner{chain: chains.Ethereum, bcastErr: errors.New("already known")}
+	evm := &mockEVMSigner{chain: chains.Ethereum, bcastErr: errors.New("already known"), pendingNonce: 5}
 	p := newTestPoller(Config{
 		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
 		BTCReceiver:      recv,
@@ -380,6 +386,115 @@ func TestExecuteEVMRejectsZeroReceiver(t *testing.T) {
 	tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: "0x0000000000000000000000000000000000000000", Amount: "1000", GasPrice: "250000", GasLimit: 21000}
 	require.Error(t, p.executeEVM(context.Background(), tx, 100))
 	require.Zero(t, evm.signCalls)
+}
+
+func TestExecuteEVMNonceGuard(t *testing.T) {
+	recv := btcReceiver(t)
+	tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000}
+	newP := func(evm *mockEVMSigner) *Poller {
+		return newTestPoller(Config{
+			EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+			BTCReceiver:      recv,
+			ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		})
+	}
+
+	t.Run("live nonce below pinned -> error, does not sign", func(t *testing.T) {
+		evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 4}
+		require.Error(t, newP(evm).executeEVM(context.Background(), tx, 100))
+		require.Zero(t, evm.signCalls)
+	})
+
+	t.Run("live nonce above pinned -> error, does not sign", func(t *testing.T) {
+		evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 6}
+		require.Error(t, newP(evm).executeEVM(context.Background(), tx, 100))
+		require.Zero(t, evm.signCalls)
+	})
+
+	t.Run("live nonce matches pinned -> proceeds", func(t *testing.T) {
+		evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
+		require.NoError(t, newP(evm).executeEVM(context.Background(), tx, 100))
+		require.Equal(t, 1, evm.signCalls)
+	})
+}
+
+func TestExecuteEVMRejectsBadGasPrice(t *testing.T) {
+	recv := btcReceiver(t)
+	newP := func(evm *mockEVMSigner) *Poller {
+		return newTestPoller(Config{
+			EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+			BTCReceiver:      recv,
+			ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+		})
+	}
+
+	t.Run("gas price over cap -> rejected", func(t *testing.T) {
+		evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
+		overCap := new(big.Int).Mul(big.NewInt(10_001), big.NewInt(1_000_000_000)) // 10_001 gwei > 10_000 gwei cap
+		tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: overCap.String(), GasLimit: 21000}
+		require.Error(t, newP(evm).executeEVM(context.Background(), tx, 100))
+		require.Zero(t, evm.signCalls)
+	})
+
+	t.Run("zero gas price -> rejected", func(t *testing.T) {
+		evm := &mockEVMSigner{chain: chains.Ethereum, pendingNonce: 5}
+		tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "0", GasLimit: 21000}
+		require.Error(t, newP(evm).executeEVM(context.Background(), tx, 100))
+		require.Zero(t, evm.signCalls)
+	})
+}
+
+func TestFetchFinalNetworkMismatch(t *testing.T) {
+	priv, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+	recv := btcReceiver(t)
+
+	makePayload := func(network string) draintx.Payload {
+		p := signedPayload(t, priv, true, 100, recv.EncodeAddress())
+		p.Network = network
+		require.NoError(t, p.Sign(priv)) // re-sign so the signature covers the network
+		return p
+	}
+	newP := func(payloadNet string) *Poller {
+		return newTestPoller(Config{
+			Fetcher:     mockFetcher{makePayload(payloadNet)},
+			Height:      mockHeight(100),
+			PubKey:      ethcrypto.CompressPubkey(&priv.PublicKey),
+			Network:     "mainnet",
+			EVMReceiver: ethcommon.HexToAddress(evmReceiverHex),
+			BTCReceiver: recv,
+		})
+	}
+
+	// payload built for a different network is rejected even though the signature is valid
+	_, ok := newP("testnet").fetchFinal(context.Background())
+	require.False(t, ok)
+
+	// matching network passes verification and is accepted
+	_, ok = newP("mainnet").fetchFinal(context.Background())
+	require.True(t, ok)
+}
+
+func TestLogSummaryListsPending(t *testing.T) {
+	var buf bytes.Buffer
+	p := newTestPoller(Config{})
+	p.Logger = zerolog.New(&buf)
+
+	a := newActiveDrain(draintx.Payload{
+		EVMTxs: []draintx.EVMTx{
+			{ChainID: 1},
+			{ChainID: 56},
+		},
+		BTCTxs: []draintx.BTCTx{{ChainID: 8332}},
+	})
+	// mark only the first EVM item done; chains 56 (evm) and 8332 (btc) stay pending
+	p.markDone(a, &a.evm[0].done)
+
+	p.logSummary(a, "window elapsed")
+
+	out := buf.String()
+	require.Contains(t, out, `"evm_pending":[56]`)
+	require.Contains(t, out, `"btc_pending":[8332]`)
 }
 
 func TestExecuteBTC(t *testing.T) {

@@ -13,6 +13,10 @@ const (
 	EnvLocalnetBTCReceiver = "ZETACLIENT_DRAIN_BTC_RECEIVER"
 )
 
+// IsLocalnetDrainBuild is true when compiled with the drain_localnet tag: a non-production build
+// that honors env-overridable anchors and must only ever run on localnet.
+const IsLocalnetDrainBuild = true
+
 // localnetReceivers are throwaway non-zero defaults; the e2e test overrides them via env.
 var localnetReceivers = Receivers{
 	EVM: "0x74D6F908a320Fed7E1c0002eBa7996C4376A8071",

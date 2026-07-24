@@ -111,6 +111,8 @@ New code is small and self-contained:
 
 This reuses the existing native-transfer signer; the genuinely new EVM signing code is close to zero.
 
+> **"Broadcast" is not "confirmed."** The poller reports success once a tx is broadcast, not once it is mined — the fee is pinned into the payload, so a tx pinned below the live network rate can sit unconfirmed. A stuck (under-fee) tx is **not** remedied by retrying the same payload (it would rebroadcast the identical, still-underpriced tx). The operator republishes the remaining chains at a **new, higher trigger height** with a fresh `--fee-rate` (BTC) / gas (EVM), which the poller fires as a distinct drain.
+
 ### 4. Bitcoin specifics
 
 BTC needs more than EVM because it's UTXO-based, and the determinism-critical parts must move into the (API-produced) payload:

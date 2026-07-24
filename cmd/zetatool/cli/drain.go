@@ -25,6 +25,7 @@ import (
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/drain"
 	"github.com/zeta-chain/node/pkg/draintx"
+	"github.com/zeta-chain/node/pkg/migration"
 	"github.com/zeta-chain/node/pkg/rpc"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -145,6 +146,18 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 	opts.interval = must(cmd.Flags().GetDuration(FlagInterval))
 	opts.freezeK = must(cmd.Flags().GetInt64(FlagFreezeWindow))
 	feeRate := must(cmd.Flags().GetInt64(FlagFeeRate))
+	if feeRate <= 0 {
+		return nil, opts, fmt.Errorf("--%s must be positive, got %d", FlagFeeRate, feeRate)
+	}
+	if feeRate < migration.BTCConservativeFeeRate {
+		fmt.Fprintf(
+			os.Stderr,
+			"WARN --%s %d is below the conservative default %d sat/vB; set it from the live mempool so sweeps confirm\n",
+			FlagFeeRate,
+			feeRate,
+			migration.BTCConservativeFeeRate,
+		)
+	}
 
 	filter, err := newChainFilter(
 		must(cmd.Flags().GetString(FlagOnlyChains)),
@@ -190,6 +203,7 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		zetacore:      zetacoreClient,
 		btcChainID:    btcChainID,
 		triggerHeight: opts.triggerHigh,
+		network:       drainNetwork(network),
 		evmReceiver:   receivers.EVM,
 		btcReceiver:   receivers.BTC,
 		feeRate:       feeRate,
@@ -204,6 +218,7 @@ type payloadGenerator struct {
 	zetacore      rpc.Clients
 	btcChainID    int64
 	triggerHeight int64
+	network       string
 	evmReceiver   string
 	btcReceiver   string
 	feeRate       int64
@@ -309,7 +324,7 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 		)
 	}
 
-	return drain.BuildPayload(g.triggerHeight, seq, final, evmTxs, btcTxs, g.priv)
+	return drain.BuildPayload(g.triggerHeight, seq, final, g.network, evmTxs, btcTxs, g.priv)
 }
 
 // serveDrain runs the draft->freeze->final cron, serving the payload over HTTP.
@@ -397,6 +412,7 @@ func buildEVMTxs(
 ) ([]draintx.EVMTx, error) {
 	evmTxs := make([]draintx.EVMTx, 0, len(supportedChains))
 	included := make([]int64, 0, len(supportedChains))
+	skipped := make([]int64, 0, len(supportedChains))
 	for _, chain := range supportedChains {
 		if !chain.IsExternal || chain.Vm != pkgchains.Vm_evm {
 			continue
@@ -411,9 +427,13 @@ func buildEVMTxs(
 			continue
 		}
 
+		// A per-chain RPC failure skips that chain loudly rather than aborting the whole payload:
+		// one unreachable endpoint must not deny the drain of every other chain.
 		balance, err := clients.GetEVMBalance(ctx, rpcURL, tssAddr)
 		if err != nil {
-			return nil, fmt.Errorf("get balance for chain %d: %w", chain.ChainId, err)
+			fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: get balance failed: %v\n", chain.ChainId, err)
+			skipped = append(skipped, chain.ChainId)
+			continue
 		}
 		if balance.Sign() == 0 {
 			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: zero balance\n", chain.ChainId)
@@ -422,11 +442,15 @@ func buildEVMTxs(
 
 		median, err := medianGasPrice(ctx, zetacoreClient, chain.ChainId)
 		if err != nil {
-			return nil, err
+			fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: get median gas price failed: %v\n", chain.ChainId, err)
+			skipped = append(skipped, chain.ChainId)
+			continue
 		}
 		nonce, err := clients.GetEVMNonce(ctx, rpcURL, tssAddr)
 		if err != nil {
-			return nil, fmt.Errorf("get nonce for chain %d: %w", chain.ChainId, err)
+			fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: get nonce failed: %v\n", chain.ChainId, err)
+			skipped = append(skipped, chain.ChainId)
+			continue
 		}
 
 		tx, err := drain.GenerateEVMTx(drain.EVMInput{
@@ -438,12 +462,14 @@ func buildEVMTxs(
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: %v\n", chain.ChainId, err)
+			skipped = append(skipped, chain.ChainId)
 			continue
 		}
 		evmTxs = append(evmTxs, tx)
 		included = append(included, chain.ChainId)
 	}
 	fmt.Fprintf(os.Stderr, "EVM drain: %d chains included %v\n", len(included), included)
+	fmt.Fprintf(os.Stderr, "EVM drain: skipped chains %v\n", skipped)
 	return evmTxs, nil
 }
 
@@ -480,13 +506,17 @@ func buildBTCTxs(
 		return nil, fmt.Errorf("invalid TSS BTC address %q: %w", tssBtcAddr, err)
 	}
 
+	// A per-chain RPC failure skips BTC loudly rather than aborting the whole payload, so an
+	// unreachable BTC endpoint doesn't deny the EVM drain.
 	btcAdapter, err := clients.NewBitcoinClientAdapter(cfg, pkgchains.Chain{ChainId: btcChainID}, zerolog.Nop())
 	if err != nil {
-		return nil, fmt.Errorf("create bitcoin client: %w", err)
+		fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: create bitcoin client failed: %v\n", btcChainID, err)
+		return nil, nil
 	}
 	unspent, err := btcAdapter.ListUnspentByAddress(ctx, tssAddr)
 	if err != nil {
-		return nil, fmt.Errorf("list unspent: %w", err)
+		fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: list unspent failed: %v\n", btcChainID, err)
+		return nil, nil
 	}
 
 	utxos := make([]drain.UTXO, 0, len(unspent))
@@ -494,7 +524,8 @@ func buildBTCTxs(
 	for _, u := range unspent {
 		sats, err := btccommon.GetSatoshis(u.Amount)
 		if err != nil {
-			return nil, fmt.Errorf("convert utxo amount: %w", err)
+			fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: convert utxo amount failed: %v\n", btcChainID, err)
+			return nil, nil
 		}
 		totalSats += sats
 		utxos = append(utxos, drain.UTXO{TxID: u.TxID, Vout: u.Vout, AmountSats: sats})

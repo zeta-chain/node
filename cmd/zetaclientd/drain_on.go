@@ -57,6 +57,19 @@ func startDrainIfArmed(
 	}
 	network := os.Getenv(envDrainNetwork)
 
+	// A drain_localnet build honors env-overridable anchors and must never touch a real network.
+	if pkgdrain.IsLocalnetDrainBuild {
+		logger.Warn().Msg("================================================================")
+		logger.Warn().Msg("=== NON-PRODUCTION DRAIN BUILD (drain_localnet) — localnet only ===")
+		logger.Warn().Msg("================================================================")
+		if network != pkgdrain.NetworkLocalnet {
+			logger.Error().
+				Str("network", network).
+				Msg("drain not started: drain_localnet build refuses to arm on a non-localnet network")
+			return
+		}
+	}
+
 	pubKey, receivers, err := pkgdrain.ResolveAnchors(network)
 	if err != nil {
 		logger.Error().Err(err).Msg("drain not started: bad network/anchors")
@@ -97,6 +110,7 @@ func startDrainIfArmed(
 			Fetcher:          drainpoller.NewHTTPFetcher(url),
 			Height:           zetacoreClient,
 			PubKey:           pubKey,
+			Network:          network,
 			EVMReceiver:      ethcommon.HexToAddress(receivers.EVM),
 			BTCReceiver:      btcReceiver,
 			ResolveEVMSigner: evmSignerResolver(orch),

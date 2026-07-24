@@ -43,6 +43,27 @@ func TestComputeEVMMigration(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, migration.ErrInsufficientFunds)
 	})
+
+	t.Run("drain gas limit overrides the default", func(t *testing.T) {
+		// ARRANGE
+		balance := sdkmath.NewUint(1e18)
+		medianGasPrice := sdkmath.NewUint(100_000)
+
+		// ACT
+		amount, gasPrice, gasLimit, err := migration.ComputeEVMMigrationWithGasLimit(
+			balance,
+			medianGasPrice,
+			migration.DrainEVMGasLimit,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.EqualValues(t, 100_000, gasLimit)
+		require.Equal(t, sdkmath.NewUint(250_000).String(), gasPrice.String())
+		// fee = 100000 × 250000 + 2_100_000_000 = 27_100_000_000
+		expectedFee := sdkmath.NewUint(27_100_000_000)
+		require.Equal(t, balance.Sub(expectedFee).String(), amount.String())
+	})
 }
 
 func TestComputeBTCMigration(t *testing.T) {

@@ -15,6 +15,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// domainTag is a fixed prefix mixed into every signed digest so a drain signature can never be
+// mistaken for a signature over any other message.
+const domainTag = "ZETADRAIN"
+
 // Payload is the full, byte-final drain instruction shared by every signer.
 type Payload struct {
 	// TriggerZetaHeight is the zeta block height at which clients fire. It doubles as
@@ -24,6 +28,9 @@ type Payload struct {
 	Seq uint64 `json:"seq"`
 	// Final gates signing: clients only ever sign a payload marked final.
 	Final bool `json:"final"`
+	// Network binds the payload to a single zeta network (mainnet/testnet/localnet) so a client
+	// armed for one network rejects a payload built for another.
+	Network string `json:"network"`
 	// EVMTxs holds one fully-resolved native transfer per EVM chain.
 	EVMTxs []EVMTx `json:"evm_txs"`
 	// BTCTxs holds one sweep per disjoint group of <=20 UTXOs.
@@ -64,6 +71,8 @@ type BTCInput struct {
 func (p Payload) canonicalBytes() []byte {
 	var b bytes.Buffer
 
+	writeString(&b, domainTag)
+	writeString(&b, p.Network)
 	writeInt64(&b, p.TriggerZetaHeight)
 	writeUint64(&b, p.Seq)
 	writeBool(&b, p.Final)

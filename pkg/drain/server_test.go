@@ -66,7 +66,7 @@ func TestRunCronPublishesDraftsThenFinal(t *testing.T) {
 	defer srv.Close()
 
 	gen := func(_ context.Context, seq uint64, final bool) (draintx.Payload, error) {
-		return drain.BuildPayload(100, seq, final, nil, nil, priv)
+		return drain.BuildPayload(100, seq, final, drain.NetworkLocalnet, nil, nil, priv)
 	}
 	// become final on the 3rd tick
 	ticks := 0
@@ -102,7 +102,7 @@ func TestRunCronPublishesImmediately(t *testing.T) {
 		return srv.Publish(p)
 	}
 	gen := func(_ context.Context, seq uint64, final bool) (draintx.Payload, error) {
-		return drain.BuildPayload(100, seq, final, nil, nil, priv)
+		return drain.BuildPayload(100, seq, final, drain.NetworkLocalnet, nil, nil, priv)
 	}
 	isFinalTime := func(context.Context) (bool, error) { return false, nil }
 
@@ -144,7 +144,7 @@ func TestRunCronImmediateFinal(t *testing.T) {
 		return srv.Publish(p)
 	}
 	gen := func(_ context.Context, seq uint64, final bool) (draintx.Payload, error) {
-		return drain.BuildPayload(100, seq, final, nil, nil, priv)
+		return drain.BuildPayload(100, seq, final, drain.NetworkLocalnet, nil, nil, priv)
 	}
 	// already past the freeze window: the immediate publish is the single final, no tick needed
 	isFinalTime := func(context.Context) (bool, error) { return true, nil }

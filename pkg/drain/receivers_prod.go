@@ -9,3 +9,7 @@ func localnetReceiver(string) (Receivers, bool) { return Receivers{}, false }
 // applyLocalnetAnchors is a no-op in production builds: env overrides of the anchors are
 // impossible, so ZETACLIENT_DRAIN_NETWORK=localnet cannot redirect the drain.
 func applyLocalnetAnchors(string, *string, *Receivers) {}
+
+// IsLocalnetDrainBuild is false in production drain builds (no drain_localnet tag): the anchors are
+// compiled-in and cannot be overridden by env.
+const IsLocalnetDrainBuild = false

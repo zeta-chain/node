@@ -94,7 +94,7 @@ func TestDrainTSS(r *runner.E2ERunner, _ []string) {
 	current := currentZetaHeight(r)
 	triggerHeight := current + drainTriggerOffset
 
-	payload, err := pkgdrain.BuildPayload(triggerHeight, 1, true, evmTxs, btcTxs, priv)
+	payload, err := pkgdrain.BuildPayload(triggerHeight, 1, true, pkgdrain.NetworkLocalnet, evmTxs, btcTxs, priv)
 	require.NoError(r, err)
 
 	server := servePayload(r, drainURL, payload)

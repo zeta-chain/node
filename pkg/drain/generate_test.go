@@ -39,10 +39,11 @@ func TestGenerateEVMTx(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, in.To, tx.To)
 	require.EqualValues(t, 7, tx.Nonce)
-	require.EqualValues(t, 21_000, tx.GasLimit)
+	// the drain pins DrainEVMGasLimit (100000), not gas.EVMSend, so a contract safe wallet has room
+	require.EqualValues(t, 100_000, tx.GasLimit)
 	require.Equal(t, "250000", tx.GasPrice)
-	// amount = balance - (21000*250000 + 2_100_000_000)
-	require.Equal(t, "999999992650000000", tx.Amount)
+	// amount = balance - (100000*250000 + 2_100_000_000)
+	require.Equal(t, "999999972900000000", tx.Amount)
 }
 
 func TestGenerateBTCTxsPartitioning(t *testing.T) {
@@ -206,10 +207,11 @@ func TestBuildPayloadSigns(t *testing.T) {
 	require.NoError(t, err)
 
 	// ACT
-	p, err := drain.BuildPayload(100, 1, true, []draintx.EVMTx{evmTx}, nil, priv)
+	p, err := drain.BuildPayload(100, 1, true, drain.NetworkMainnet, []draintx.EVMTx{evmTx}, nil, priv)
 
 	// ASSERT
 	require.NoError(t, err)
 	require.True(t, p.Final)
+	require.Equal(t, drain.NetworkMainnet, p.Network)
 	require.NoError(t, p.Verify(ethcrypto.CompressPubkey(&priv.PublicKey)))
 }
