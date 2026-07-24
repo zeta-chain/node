@@ -5,6 +5,7 @@ package drain
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	"math/big"
 	"sync"
 	"testing"
@@ -28,6 +29,7 @@ type mockEVMSigner struct {
 	mu        sync.Mutex
 	signCalls int
 	bcastTx   *eth.Transaction
+	bcastErr  error
 	lastTo    ethcommon.Address
 	lastAmt   *big.Int
 	lastNonce uint64
@@ -46,7 +48,7 @@ func (m *mockEVMSigner) BroadcastDrainTx(_ context.Context, tx *eth.Transaction)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.bcastTx = tx
-	return nil
+	return m.bcastErr
 }
 
 type mockBTCSigner struct {
@@ -347,6 +349,26 @@ func TestExecuteEVM(t *testing.T) {
 		require.Error(t, p.executeEVM(context.Background(), tx, 100))
 		require.Zero(t, evm.signCalls)
 	})
+}
+
+func TestExecuteEVMAlreadyBroadcast(t *testing.T) {
+	// ARRANGE: another node broadcast the byte-identical drain tx first, so this node's
+	// broadcast fails with "already known".
+	recv := btcReceiver(t)
+	evm := &mockEVMSigner{chain: chains.Ethereum, bcastErr: errors.New("already known")}
+	p := newTestPoller(Config{
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+	})
+	tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000}
+
+	// ACT
+	err := p.executeEVM(context.Background(), tx, 100)
+
+	// ASSERT: an already-broadcast tx is success — executeEVM returns nil so the item is done.
+	require.NoError(t, err)
+	require.Equal(t, 1, evm.signCalls)
 }
 
 func TestExecuteEVMRejectsZeroReceiver(t *testing.T) {

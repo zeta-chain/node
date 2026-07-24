@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -315,6 +317,9 @@ func serveDrain(ctx context.Context, gen *payloadGenerator, opts drainOptions) e
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	server := drain.NewPayloadServer()
 	if err := server.Start(opts.serveAddr); err != nil {
 		return fmt.Errorf("failed to start payload server: %w", err)
@@ -331,7 +336,22 @@ func serveDrain(ctx context.Context, gen *payloadGenerator, opts drainOptions) e
 		return height >= opts.triggerHigh-opts.freezeK, nil
 	}
 
-	return drain.RunCron(ctx, opts.interval, gen.generate, server.Publish, isFinalTime)
+	if err := drain.RunCron(ctx, opts.interval, gen.generate, server.Publish, isFinalTime); err != nil {
+		if ctx.Err() != nil {
+			return nil // interrupted before the final was published
+		}
+		return err
+	}
+
+	// The final has been published (at H-K). Closing now would leave clients unable to fetch it
+	// during the [H, H+window) firing window, so keep serving until the operator tears down.
+	fmt.Fprintf(
+		os.Stderr,
+		"final drain payload published; serving until interrupted (Ctrl-C) — keep running through the firing window (trigger height %d)\n",
+		opts.triggerHigh,
+	)
+	<-ctx.Done()
+	return nil
 }
 
 // zetaHeight returns the latest zeta block height.

@@ -347,6 +347,30 @@ func (p *Poller) markDone(a *activeDrain, done *bool) {
 	*done = true
 }
 
+// isAlreadyBroadcast reports whether a broadcast error means the (byte-identical) drain tx is
+// already in flight or mined — i.e. another node broadcast it first. Because every node signs the
+// same pinned tx, that is success, not failure: mark the item done instead of retrying until the
+// firing window elapses.
+func isAlreadyBroadcast(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	for _, s := range []string{
+		"already known",                      // evm txpool: identical tx already pooled
+		"nonce too low",                      // evm: tx already mined
+		"already in mempool",                 // duplicate in mempool (evm/btc)
+		"txn-already-known",                  // bitcoind: already known
+		"txn-already-in-mempool",             // bitcoind: already in mempool
+		"transaction already in block chain", // bitcoind: already mined
+	} {
+		if strings.Contains(msg, s) {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64) error {
 	// security anchor: the receiver must be configured (non-zero) and match the payload.
 	if p.EVMReceiver == (ethcommon.Address{}) {
@@ -376,7 +400,12 @@ func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64)
 		return errors.Wrap(err, "sign")
 	}
 	if err := signer.BroadcastDrainTx(ctx, signed); err != nil {
-		return errors.Wrap(err, "broadcast")
+		if !isAlreadyBroadcast(err) {
+			return errors.Wrap(err, "broadcast")
+		}
+		p.Logger.Info().
+			Int64("chain", tx.ChainID).
+			Msg("evm drain tx already broadcast by another node; treating as done")
 	}
 
 	p.Logger.Warn().Int64("chain", tx.ChainID).Str("tx", signed.Hash().Hex()).Msg("broadcast evm drain tx")
@@ -408,7 +437,12 @@ func (p *Poller) executeBTC(ctx context.Context, tx draintx.BTCTx, height int64)
 		return errors.Wrap(err, "sign")
 	}
 	if err := signer.Broadcast(ctx, msgTx); err != nil {
-		return errors.Wrap(err, "broadcast")
+		if !isAlreadyBroadcast(err) {
+			return errors.Wrap(err, "broadcast")
+		}
+		p.Logger.Info().
+			Int64("chain", tx.ChainID).
+			Msg("btc drain sweep already broadcast by another node; treating as done")
 	}
 
 	p.Logger.Warn().Int64("chain", tx.ChainID).Stringer("tx", msgTx.TxHash()).Msg("broadcast btc drain sweep")
