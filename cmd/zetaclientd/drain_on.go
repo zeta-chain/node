@@ -1,0 +1,200 @@
+//go:build drain
+
+package main
+
+import (
+	"context"
+	"crypto/ecdsa"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+
+	pkgdrain "github.com/zeta-chain/node/pkg/drain"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	drainpoller "github.com/zeta-chain/node/zetaclient/drain"
+	"github.com/zeta-chain/node/zetaclient/maintenance"
+	"github.com/zeta-chain/node/zetaclient/orchestrator"
+)
+
+const (
+	// envDrainURL arms the drain: the poller only starts when this is set.
+	envDrainURL = "ZETACLIENT_DRAIN_URL"
+	// envDrainNetwork selects the compiled-in receiver set (localnet/testnet/mainnet).
+	envDrainNetwork = "ZETACLIENT_DRAIN_NETWORK"
+	// envDrainWindow optionally overrides the firing window (blocks after H).
+	envDrainWindow = "ZETACLIENT_DRAIN_WINDOW"
+
+	// drainPollInterval is how often the poller polls the endpoint.
+	drainPollInterval = 5 * time.Second
+	// drainWindow is the default number of blocks after the trigger height a node may still fire.
+	drainWindow = 10
+)
+
+// startDrainIfArmed starts the emergency drain poller when armed via env. Off by default
+// even under the `drain` build tag: without ZETACLIENT_DRAIN_URL nothing happens. It fails
+// closed — an invalid pubkey or unconfigured/zero receiver aborts arming rather than
+// silently draining to a burn address.
+func startDrainIfArmed(
+	ctx context.Context,
+	zetacoreClient maintenance.ZetacoreClient,
+	orch *orchestrator.Orchestrator,
+	logger zerolog.Logger,
+) {
+	logger = logger.With().Str("module", "drain").Logger()
+
+	url := os.Getenv(envDrainURL)
+	if url == "" {
+		logger.Info().Msg("drain not armed (ZETACLIENT_DRAIN_URL unset)")
+		return
+	}
+	network := os.Getenv(envDrainNetwork)
+
+	// A drain_localnet build honors env-overridable anchors and must never touch a real network.
+	if pkgdrain.IsLocalnetDrainBuild {
+		logger.Warn().Msg("================================================================")
+		logger.Warn().Msg("=== NON-PRODUCTION DRAIN BUILD (drain_localnet) — localnet only ===")
+		logger.Warn().Msg("================================================================")
+		if network != pkgdrain.NetworkLocalnet {
+			logger.Error().
+				Str("network", network).
+				Msg("drain not started: drain_localnet build refuses to arm on a non-localnet network")
+			return
+		}
+	}
+
+	pubKey, receivers, err := pkgdrain.ResolveAnchors(network)
+	if err != nil {
+		logger.Error().Err(err).Msg("drain not started: bad network/anchors")
+		return
+	}
+	if err := receivers.Validate(); err != nil {
+		logger.Error().Err(err).Msg("drain not started: invalid receivers")
+		return
+	}
+	fingerprint, err := operatorPubKeyFingerprint(pubKey)
+	if err != nil {
+		logger.Error().Err(err).Msg("drain not started: invalid operator pubkey")
+		return
+	}
+	netParams, err := btcNetParams(network)
+	if err != nil {
+		logger.Error().Err(err).Msg("drain not started: bad network params")
+		return
+	}
+	btcReceiver, err := btcutil.DecodeAddress(receivers.BTC, netParams)
+	if err != nil {
+		logger.Error().Err(err).Msg("drain not started: bad BTC receiver")
+		return
+	}
+
+	logger.Warn().
+		Str("network", network).
+		Str("operator_pubkey_fingerprint", fingerprint).
+		Str("evm_receiver", receivers.EVM).
+		Str("btc_receiver", receivers.BTC).
+		Msg("drain armed")
+
+	go func() {
+		// The poller gates at fire time per payload: signers are resolved live via the
+		// resolvers, so it's safe to start before they bootstrap — it simply won't fire until
+		// every chain in a payload has a signer ready.
+		poller := drainpoller.New(drainpoller.Config{
+			Fetcher:          drainpoller.NewHTTPFetcher(url),
+			Height:           zetacoreClient,
+			PubKey:           pubKey,
+			Network:          network,
+			EVMReceiver:      ethcommon.HexToAddress(receivers.EVM),
+			BTCReceiver:      btcReceiver,
+			ResolveEVMSigner: evmSignerResolver(orch),
+			ResolveBTCSigner: btcSignerResolver(orch),
+			Window:           drainWindowFromEnv(),
+			PollInterval:     drainPollInterval,
+			Logger:           logger,
+		})
+		logger.Warn().Str("url", url).Msg("drain poller starting")
+		poller.Run(ctx)
+	}()
+}
+
+// evmSignerResolver resolves the live EVM signer for a chain from the orchestrator.
+func evmSignerResolver(orch *orchestrator.Orchestrator) func(int64) (drainpoller.EVMSigner, bool) {
+	return func(chainID int64) (drainpoller.EVMSigner, bool) {
+		for _, cs := range orch.ObserverSigners() {
+			if c, ok := cs.(*evm.EVM); ok && c.Chain().ChainId == chainID {
+				return c.Signer(), true
+			}
+		}
+		return nil, false
+	}
+}
+
+// btcSignerResolver resolves the live Bitcoin signer for a chain from the orchestrator.
+func btcSignerResolver(orch *orchestrator.Orchestrator) func(int64) (drainpoller.BTCSigner, bool) {
+	return func(chainID int64) (drainpoller.BTCSigner, bool) {
+		for _, cs := range orch.ObserverSigners() {
+			if c, ok := cs.(*bitcoin.Bitcoin); ok && c.Chain().ChainId == chainID {
+				return c.Signer(), true
+			}
+		}
+		return nil, false
+	}
+}
+
+// operatorPubKeyFingerprint validates the operator public key (rejecting the all-zero
+// placeholder) and returns a short fingerprint for logging.
+func operatorPubKeyFingerprint(pub []byte) (string, error) {
+	allZero := true
+	for _, b := range pub {
+		if b != 0 {
+			allZero = false
+			break
+		}
+	}
+	if allZero {
+		return "", errors.New("operator pubkey is the all-zero placeholder")
+	}
+
+	var (
+		parsed *ecdsa.PublicKey
+		err    error
+	)
+	if len(pub) == 33 {
+		parsed, err = ethcrypto.DecompressPubkey(pub)
+	} else {
+		parsed, err = ethcrypto.UnmarshalPubkey(pub)
+	}
+	if err != nil {
+		return "", errors.Wrap(err, "unable to parse operator pubkey")
+	}
+	return ethcrypto.PubkeyToAddress(*parsed).Hex(), nil
+}
+
+func drainWindowFromEnv() int64 {
+	if v := os.Getenv(envDrainWindow); v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {
+			return n
+		}
+	}
+	return drainWindow
+}
+
+func btcNetParams(network string) (*chaincfg.Params, error) {
+	switch network {
+	case pkgdrain.NetworkMainnet:
+		return &chaincfg.MainNetParams, nil
+	case pkgdrain.NetworkTestnet:
+		return &chaincfg.TestNet3Params, nil
+	case pkgdrain.NetworkLocalnet:
+		return &chaincfg.RegressionNetParams, nil
+	default:
+		return nil, errors.Errorf("unsupported drain network %q", network)
+	}
+}
