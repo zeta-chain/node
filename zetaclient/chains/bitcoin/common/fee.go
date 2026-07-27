@@ -29,6 +29,10 @@ const (
 	OutboundBytesMin     = int64(239)  // 239vB == EstimateOutboundSize(2, 2, toP2WPKH)
 	OutboundBytesMax     = int64(1543) // 1543v == EstimateOutboundSize(21, 2, toP2TR)
 
+	// MaxNoOfInputsPerTx is the maximum number of inputs a single BTC outbound may spend. It is
+	// the shared source of truth for the signer, the emergency drain, and the e2e runner.
+	MaxNoOfInputsPerTx = 20
+
 	// bytesPerKB is the number of vB in a KB
 	bytesPerKB = 1000
 
