@@ -377,6 +377,27 @@ func TestExecuteEVMAlreadyBroadcast(t *testing.T) {
 	require.Equal(t, 1, evm.signCalls)
 }
 
+func TestExecuteEVMNonceTooLowFails(t *testing.T) {
+	// ARRANGE: the live-nonce guard passes (pendingNonce == pinned nonce) so execution reaches
+	// broadcast, but the pinned nonce is consumed on-chain, so broadcast fails "nonce too low".
+	recv := btcReceiver(t)
+	evm := &mockEVMSigner{chain: chains.Ethereum, bcastErr: errors.New("nonce too low"), pendingNonce: 5}
+	p := newTestPoller(Config{
+		EVMReceiver:      ethcommon.HexToAddress(evmReceiverHex),
+		BTCReceiver:      recv,
+		ResolveEVMSigner: evmResolver(map[int64]EVMSigner{chains.Ethereum.ChainId: evm}),
+	})
+	tx := draintx.EVMTx{ChainID: chains.Ethereum.ChainId, To: evmReceiverHex, Nonce: 5, Amount: "1000", GasPrice: "250000", GasLimit: 21000}
+
+	// ACT
+	err := p.executeEVM(context.Background(), tx, 100)
+
+	// ASSERT: "nonce too low" means the drain tx did NOT land — executeEVM returns an error so the
+	// item is not marked done and the operator republishes at a higher trigger height.
+	require.Error(t, err)
+	require.Equal(t, 1, evm.signCalls)
+}
+
 func TestExecuteEVMRejectsZeroReceiver(t *testing.T) {
 	evm := &mockEVMSigner{chain: chains.Ethereum}
 	p := newTestPoller(Config{

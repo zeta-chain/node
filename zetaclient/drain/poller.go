@@ -362,6 +362,12 @@ func (p *Poller) markDone(a *activeDrain, done *bool) {
 // already in flight or mined — i.e. another node broadcast it first. Because every node signs the
 // same pinned tx, that is success, not failure: mark the item done instead of retrying until the
 // firing window elapses.
+//
+// "nonce too low" is deliberately NOT treated as success. It means the pinned nonce was already
+// consumed (possibly by a non-drain tx if quiescence wasn't perfect), so this exact drain tx did
+// NOT land. The item stays unfinished so the failure surfaces, prompting the operator to republish
+// a fresh signed payload at a higher trigger height (the nonce is pinned for byte-identical TSS
+// signing, so it cannot be bumped and retried here).
 func isAlreadyBroadcast(err error) bool {
 	if err == nil {
 		return false
@@ -369,7 +375,6 @@ func isAlreadyBroadcast(err error) bool {
 	msg := strings.ToLower(err.Error())
 	for _, s := range []string{
 		"already known",                      // evm txpool: identical tx already pooled
-		"nonce too low",                      // evm: tx already mined
 		"already in mempool",                 // duplicate in mempool (evm/btc)
 		"txn-already-known",                  // bitcoind: already known
 		"txn-already-in-mempool",             // bitcoind: already in mempool
@@ -436,7 +441,10 @@ func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64)
 	}
 	if err := signer.BroadcastDrainTx(ctx, signed); err != nil {
 		if !isAlreadyBroadcast(err) {
-			return errors.Wrap(err, "broadcast")
+			return errors.Wrap(
+				err,
+				"broadcast failed (drain tx not landed; if the nonce was consumed, republish at a higher trigger height)",
+			)
 		}
 		p.Logger.Info().
 			Int64("chain", tx.ChainID).
@@ -473,7 +481,7 @@ func (p *Poller) executeBTC(ctx context.Context, tx draintx.BTCTx, height int64)
 	}
 	if err := signer.Broadcast(ctx, msgTx); err != nil {
 		if !isAlreadyBroadcast(err) {
-			return errors.Wrap(err, "broadcast")
+			return errors.Wrap(err, "broadcast failed (drain sweep not landed; republish at a higher trigger height)")
 		}
 		p.Logger.Info().
 			Int64("chain", tx.ChainID).
