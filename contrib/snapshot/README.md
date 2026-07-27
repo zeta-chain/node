@@ -104,7 +104,17 @@ Flags:
 - `--chain-id`      codec chain id: testnet `7001`, mainnet `7000`.
 - `--pin` / `--wzeta`  non-claimable contract addresses routed to the remainder
                     (repeatable or comma-separated). WZETA and known pools go here.
-- `--supply-check`  fail on any supply mismatch (default true).
+- `--pin-file`      same thing from a file, one address per line (`#` comments;
+                    only the first field per line is read, so a TSV works).
+                    Mainnet list is committed: `contrib/snapshot/pins_mainnet.txt`.
+- `--supply-check`  fail on any output check (default true).
+
+Mainnet with the committed pin list:
+
+```
+go run ./cmd/zetatool snapshot --input /tmp/mainnet-export.json --chain-id 7000 \
+  --output /tmp/mainnet-snap --pin-file contrib/snapshot/pins_mainnet.txt
+```
 
 Outputs in `--output`:
 
@@ -116,9 +126,15 @@ Outputs in `--output`:
 - `schema.sql`        matching Postgres DDL.
 - `snapshot_human.csv`  readable ZETA-unit copy for eyeballing.
 
-The command prints bucket totals and runs three checks (sum export == supply;
-sum attributed + remainder == total; re-sum CSV == total), non-zero exit on any
-mismatch.
+The command prints bucket totals and runs four checks (sum export == supply; sum
+attributed + remainder == total; re-sum CSV == total; every pin matched a holder),
+non-zero exit on any failure.
+
+Pin accounting: the summary prints one line per pin with the azeta it kept out of
+attribution, plus a subtotal. A pin that matched no holder in the export reports
+zero and fails the run, which is what catches a typo'd address or a pin file
+pointed at the wrong network. `--supply-check=false` downgrades every check,
+including this one, to a stderr warning.
 
 ## Look at the output
 
@@ -148,6 +164,10 @@ by WZETA `0x5f0b1a82749cb4e2278ec87f8bf6b618dc71a8bf` (6.6M) and the Accumulated
 Finance liquid-staking / lending stack. WZETA is 1:1 backed native, so the native
 backing for all DEX/LP WZETA positions sits under that one contract.
 
+Those 16 addresses are committed as `contrib/snapshot/pins_mainnet.txt` and wired
+in with `--pin-file` (see Stage 2). The file is mainnet only; a testnet run needs
+no pins.
+
 ## Try new ideas here
 
 - Change the non-claimable set: `--pin <addr>,<addr>` to route more contracts to
@@ -156,11 +176,22 @@ backing for all DEX/LP WZETA positions sits under that one contract.
   pure package `cmd/zetatool/snapshot/` and re-run against the same `export.json`.
 - Point Stage 2 at a devnet export to test on a small state.
 
+## Verification status
+
+- Covered by unit tests: pin-file parsing (comments, blanks, TSV columns),
+  per-pin azeta accounting across liquid + staked + unbonding, and the
+  unmatched-pin failure.
+- NOT run yet: the end-to-end mainnet run with `pins_mainnet.txt`. Expected when
+  it happens — claimable accounts down by 16, remainder 41.59M -> ~50.94M ZETA,
+  total supply unchanged at 1,707,671,363.36 ZETA. Deferred, so treat those
+  numbers as a prediction, not a result.
+
 ## Open questions / parked
 
-- Full contract detection: the top-500 scan captures ~all contract value, but a
-  full all-accounts `eth_getCode` sweep (on a local node) is the exhaustive
-  pre-migration step. Not wired into the tool yet.
+- Full contract detection: the top-500 contract list is committed and wired via
+  `--pin-file`, which captures ~all contract value. What is still parked is the
+  exhaustive all-accounts `eth_getCode` sweep against a local node, the
+  pre-migration step that proves nothing was missed.
 - Squads multisig address for the remainder recipient (pending tokenomics/legal).
 - Snapshot height selection for the real migration (freeze inbound, drain
   outbounds, zero emissions, halt, export). Separate workstream.

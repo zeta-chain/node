@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ const (
 	flagSnapshotOutput      = "output"
 	flagSnapshotChainID     = "chain-id"
 	flagSnapshotPin         = "pin"
+	flagSnapshotPinFile     = "pin-file"
 	flagSnapshotWZeta       = "wzeta"
 	flagSnapshotSupplyCheck = "supply-check"
 
@@ -58,7 +60,9 @@ Outputs into --output:
 	cmd.Flags().
 		StringSlice(flagSnapshotPin, nil, "non-claimable addresses routed to the remainder (repeatable or comma-separated)")
 	cmd.Flags().StringSlice(flagSnapshotWZeta, nil, "alias for --pin: non-claimable contract addresses (e.g. WZETA)")
-	cmd.Flags().Bool(flagSnapshotSupplyCheck, true, "fail on any supply-check mismatch")
+	cmd.Flags().
+		String(flagSnapshotPinFile, "", "file of non-claimable addresses, one per line (# comments; first field per line is the address)")
+	cmd.Flags().Bool(flagSnapshotSupplyCheck, true, "fail on any output check (supply mismatch, unmatched pin)")
 
 	if err := cmd.MarkFlagRequired(flagSnapshotInput); err != nil {
 		panic(err)
@@ -87,9 +91,22 @@ func runSnapshot(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	pinFile, err := cmd.Flags().GetString(flagSnapshotPinFile)
+	if err != nil {
+		return err
+	}
 	supplyCheck, err := cmd.Flags().GetBool(flagSnapshotSupplyCheck)
 	if err != nil {
 		return err
+	}
+
+	pins = append(pins, wzeta...)
+	if pinFile != "" {
+		filePins, err := readPinFile(pinFile)
+		if err != nil {
+			return err
+		}
+		pins = append(pins, filePins...)
 	}
 
 	appState, err := readAppState(input)
@@ -103,7 +120,7 @@ func runSnapshot(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cfg := snapshot.Config{Denom: snapshot.BaseDenom, Pins: append(pins, wzeta...)}
+	cfg := snapshot.Config{Denom: snapshot.BaseDenom, Pins: pins}
 	res, err := snapshot.Compute(gen, cfg)
 	if err != nil {
 		return err
@@ -137,6 +154,30 @@ func readAppState(path string) (map[string]json.RawMessage, error) {
 		return nil, fmt.Errorf("export json has no app_state")
 	}
 	return doc.AppState, nil
+}
+
+// readPinFile reads non-claimable addresses from a file, one per line, in file
+// order. `#` starts a comment and blank lines are skipped; only the first
+// whitespace-separated field of a line is read, so a TSV whose first column is
+// the address works as-is. Address validity is left to snapshot.Canonical, which
+// names the offending string.
+func readPinFile(path string) ([]string, error) {
+	raw, err := os.ReadFile(path) // #nosec G304 -- operator-supplied pin file path
+	if err != nil {
+		return nil, fmt.Errorf("read pin file %q: %w", path, err)
+	}
+	var pins []string
+	for _, line := range strings.Split(string(raw), "\n") {
+		if i := strings.Index(line, "#"); i >= 0 {
+			line = line[:i]
+		}
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		pins = append(pins, fields[0])
+	}
+	return pins, nil
 }
 
 func writeOutputs(dir string, res *snapshot.Result) error {
@@ -174,8 +215,8 @@ func writeCSV(path string, records [][]string) error {
 	return nil
 }
 
-// runChecks enforces the three supply invariants. When supplyCheck is false the
-// mismatches are reported but do not fail the command.
+// runChecks enforces the three supply invariants plus the pin-match check. When
+// supplyCheck is false the problems are reported but do not fail the command.
 func runChecks(gen *snapshot.Genesis, res *snapshot.Result, dbPath string, supplyCheck bool) error {
 	var problems []string
 
@@ -198,14 +239,23 @@ func runChecks(gen *snapshot.Genesis, res *snapshot.Result, dbPath string, suppl
 		problems = append(problems, fmt.Sprintf("csv total_azeta sum %s != supply %s", csvSum, res.Supply))
 	}
 
+	// (4) every pin matched a holder. A pin that matched nothing is a typo or a
+	// wrong-network pin file, and the books balance either way so the supply
+	// checks above cannot see it.
+	for _, p := range res.Pinned {
+		if p.Azeta.IsZero() {
+			problems = append(problems, fmt.Sprintf("pin %s matched no holder in the export", p.Canonical))
+		}
+	}
+
 	if len(problems) == 0 {
 		return nil
 	}
 	for _, p := range problems {
-		fmt.Fprintf(os.Stderr, "supply check failed: %s\n", p)
+		fmt.Fprintf(os.Stderr, "check failed: %s\n", p)
 	}
 	if supplyCheck {
-		return fmt.Errorf("%d supply check(s) failed", len(problems))
+		return fmt.Errorf("%d check(s) failed", len(problems))
 	}
 	return nil
 }
@@ -254,6 +304,15 @@ func printSummary(cmd *cobra.Command, gen *snapshot.Genesis, res *snapshot.Resul
 	fmt.Fprintf(out, "    staked:        %s\n", res.TotalStaked)
 	fmt.Fprintf(out, "    unbonding:     %s\n", res.TotalUnbonding)
 	fmt.Fprintf(out, "    remainder:     %s\n", res.Remainder)
+	if len(res.Pinned) > 0 {
+		subtotal := sdkmath.ZeroInt()
+		fmt.Fprintln(out, "  pinned (non-claimable):")
+		for _, p := range res.Pinned {
+			fmt.Fprintf(out, "    %s  %s\n", p.Canonical, p.Azeta)
+			subtotal = subtotal.Add(p.Azeta)
+		}
+		fmt.Fprintf(out, "    subtotal:      %s\n", subtotal)
+	}
 	fmt.Fprintf(out, "  total supply:    %s azeta\n", res.Supply)
 	fmt.Fprintf(out, "  SPL cap (9dec):  %s\n", res.SPLCap())
 }

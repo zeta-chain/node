@@ -92,11 +92,23 @@ func (a Account) Total9Dec() sdkmath.Int {
 	return a.Total().Quo(oneGZeta)
 }
 
+// PinnedAddr is a pinned non-claimable address and the azeta it contributed to
+// the remainder. Reported so an operator can confirm each pin actually matched
+// a holder in the export; a zero Azeta means the pin matched nothing.
+type PinnedAddr struct {
+	Canonical string
+	Azeta     sdkmath.Int
+}
+
 // Result is the full snapshot output: attributed accounts plus the remainder.
 type Result struct {
 	Accounts  []Account
 	Remainder sdkmath.Int
 	Supply    sdkmath.Int
+
+	// Pinned is one entry per pinned address, amount descending, holding the
+	// azeta that pin kept out of attribution.
+	Pinned []PinnedAddr
 
 	TotalLiquid    sdkmath.Int
 	TotalStaked    sdkmath.Int

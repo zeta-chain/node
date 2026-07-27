@@ -176,6 +176,140 @@ func TestComputeZeroAddressNotAttributed(t *testing.T) {
 	require.Equal(t, "400", res.Remainder.String(), "zero-address balance folds into remainder")
 }
 
+// TestComputePinnedAccounting checks that a pin holding liquid, staked and
+// unbonding azeta is kept out of attribution while its full contribution to the
+// remainder is reported. The pin is passed twice (hex + bech32) to prove the two
+// forms collapse to one entry.
+func TestComputePinnedAccounting(t *testing.T) {
+	// ARRANGE
+	valBytes := addr20(0x02)
+	eoaBytes := addr20(0x01)
+	pinBytes := addr20(0x05)
+
+	// slashed validator: 90 tokens backing 100 shares -> exchange rate 0.9
+	validator := stakingtypes.Validator{
+		OperatorAddress: valBech32(t, valBytes),
+		Tokens:          sdkmath.NewInt(90),
+		DelegatorShares: sdkmath.LegacyNewDec(100),
+		Status:          stakingtypes.Bonded,
+	}
+	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
+
+	gen := &Genesis{
+		Bank: banktypes.GenesisState{
+			Supply: coin(1000),
+			Balances: []banktypes.Balance{
+				{Address: accBech32(t, eoaBytes), Coins: coin(600)},
+				{Address: accBech32(t, pinBytes), Coins: coin(300)},
+			},
+		},
+		Staking: stakingtypes.GenesisState{
+			Validators: []stakingtypes.Validator{validator},
+			Delegations: []stakingtypes.Delegation{
+				// pinned delegator: floor(20 * 90/100) = 18
+				{
+					DelegatorAddress: accBech32(t, pinBytes),
+					ValidatorAddress: valBech32(t, valBytes),
+					Shares:           sdkmath.LegacyNewDec(20),
+				},
+			},
+			UnbondingDelegations: []stakingtypes.UnbondingDelegation{
+				{
+					DelegatorAddress: accBech32(t, pinBytes),
+					ValidatorAddress: valBech32(t, valBytes),
+					Entries: []stakingtypes.UnbondingDelegationEntry{
+						{Balance: sdkmath.NewInt(6)},
+						{Balance: sdkmath.NewInt(4)},
+					},
+				},
+			},
+		},
+	}
+
+	cfg := Config{Denom: BaseDenom, Pins: []string{canonHex(pinBytes), accBech32(t, pinBytes)}}
+
+	// ACT
+	res, err := Compute(gen, cfg)
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, res.Accounts, 1, "only the EOA is attributed")
+	require.Equal(t, canonHex(eoaBytes), res.Accounts[0].Canonical)
+
+	require.Len(t, res.Pinned, 1, "hex and bech32 forms of the same pin collapse")
+	require.Equal(t, canonHex(pinBytes), res.Pinned[0].Canonical)
+	require.Equal(t, "328", res.Pinned[0].Azeta.String(), "liquid 300 + staked 18 + unbonding 10")
+
+	require.Equal(t, "600", res.AttributedTotal().String())
+	require.Equal(t, "400", res.Remainder.String())
+	require.Equal(t, res.Supply.String(), res.AttributedTotal().Add(res.Remainder).String())
+}
+
+// TestComputePinNoHolder covers the typo case: a pin that matches nothing in the
+// export is still reported, with zero azeta, so the caller can fail the run.
+func TestComputePinNoHolder(t *testing.T) {
+	// ARRANGE
+	eoaBytes := addr20(0x01)
+	missingBytes := addr20(0x07)
+	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
+
+	gen := &Genesis{
+		Bank: banktypes.GenesisState{
+			Supply:   coin(1000),
+			Balances: []banktypes.Balance{{Address: accBech32(t, eoaBytes), Coins: coin(600)}},
+		},
+	}
+
+	// ACT
+	res, err := Compute(gen, Config{Denom: BaseDenom, Pins: []string{canonHex(missingBytes)}})
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, res.Pinned, 1)
+	require.Equal(t, canonHex(missingBytes), res.Pinned[0].Canonical)
+	require.True(t, res.Pinned[0].Azeta.IsZero(), "unmatched pin reports zero azeta")
+
+	require.Len(t, res.Accounts, 1)
+	require.Equal(t, "600", res.AttributedTotal().String())
+	require.Equal(t, "400", res.Remainder.String())
+}
+
+// TestComputePinnedOrder pins three addresses and checks the reported order is
+// amount descending with the canonical address breaking ties.
+func TestComputePinnedOrder(t *testing.T) {
+	// ARRANGE
+	bigBytes := addr20(0x0c)
+	tieLowBytes := addr20(0x0a)
+	tieHighBytes := addr20(0x0b)
+	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
+
+	gen := &Genesis{
+		Bank: banktypes.GenesisState{
+			Supply: coin(1000),
+			Balances: []banktypes.Balance{
+				{Address: accBech32(t, tieHighBytes), Coins: coin(5)},
+				{Address: accBech32(t, bigBytes), Coins: coin(100)},
+				{Address: accBech32(t, tieLowBytes), Coins: coin(5)},
+			},
+		},
+	}
+	cfg := Config{Denom: BaseDenom, Pins: []string{
+		canonHex(tieHighBytes), canonHex(bigBytes), canonHex(tieLowBytes),
+	}}
+
+	// ACT
+	res, err := Compute(gen, cfg)
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Empty(t, res.Accounts)
+	require.Equal(t, []PinnedAddr{
+		{Canonical: canonHex(bigBytes), Azeta: sdkmath.NewInt(100)},
+		{Canonical: canonHex(tieLowBytes), Azeta: sdkmath.NewInt(5)},
+		{Canonical: canonHex(tieHighBytes), Azeta: sdkmath.NewInt(5)},
+	}, res.Pinned)
+}
+
 func TestComputeUnknownValidator(t *testing.T) {
 	// ARRANGE: a delegation pointing at a validator not present in the set
 	gen := &Genesis{
