@@ -166,8 +166,9 @@ func readPinFile(path string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read pin file %q: %w", path, err)
 	}
-	var pins []string
-	for _, line := range strings.Split(string(raw), "\n") {
+	lines := strings.Split(string(raw), "\n")
+	pins := make([]string, 0, len(lines))
+	for _, line := range lines {
 		if i := strings.Index(line, "#"); i >= 0 {
 			line = line[:i]
 		}
