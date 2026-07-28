@@ -21,6 +21,7 @@ func init() {
 	rootCmd.AddCommand(cli.NewApplicationDBStatsCMD())
 	rootCmd.AddCommand(cli.NewTSSBalancesCMD())
 	rootCmd.AddCommand(cli.NewListChainsCMD())
+	rootCmd.AddCommand(cli.NewSnapshotCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 	rootCmd.PersistentFlags().
 		Bool(config.FlagDebug, false, "enable debug mode, to show more details on why the command might be failing")

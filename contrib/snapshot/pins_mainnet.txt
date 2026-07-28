@@ -1,0 +1,35 @@
+# Non-claimable native-ZETA holders on ZetaChain mainnet (chain 7000).
+#
+# These are contracts, not EOAs: they hold native ZETA that no keypair can claim
+# on Solana, so `zetatool snapshot --pin-file` routes their balances to the
+# remainder (migration multisig) instead of attributing them to a claimant.
+#
+# Source: eth_getCode over the 500 largest native-ZETA holders in the mainnet
+# export at height 17619782. Total 9,351,261 ZETA (~0.55% of supply).
+#
+# Only the address is parsed. Everything after `#` is a comment, and the ZETA
+# amounts below are a snapshot-time reference, not input.
+#
+# Caveats:
+#   - MAINNET ONLY. A testnet run needs no pins and will fail the pin-match
+#     check with this file (none of these addresses exist there).
+#   - Top-500 bounded. Smaller contract holders are still attributed and get
+#     resolved at claim time; the exhaustive all-accounts eth_getCode sweep is
+#     still open.
+
+0x5f0b1a82749cb4e2278ec87f8bf6b618dc71a8bf  # WETH9, 6,599,031 ZETA: canonical wrapped ZETA (WZETA); native backing for all WZETA/DEX/LP
+0x1840aabe58042e4080e248c7384381cb37178215  # stZETAMinterV203, 1,186,842 ZETA: Accumulated Finance unstZETA minter (unstake escrow)
+0x0fc8f47c5bd1c89b0e2f08bfe72df4ea9dff61aa  # proxy -> TTUV2Native, 680,661 ZETA: TTU v2 native staking/vault
+0x6197c0e4ce29338b8d40b7cc21a31344140ec58d  # FxEscrowProxy -> ZetaStaking, 299,405 ZETA: staking escrow
+0xa094488127a6c2282cb5289314ad1e511f2453ab  # stZETAMinterV205, 179,529 ZETA: AF unstZETA minter (v205)
+0x2463acdcea20513e6718d30fc43cf99d3b779039  # proxy -> CustomFeesNativeMerkleDistributor, 127,288 ZETA: airdrop/fee merkle distributor
+0x540095363a3642bc6dde623825261851b71d1b71  # wstZETALendingV102, 65,357 ZETA: AF wstZETA lending market
+0x866c2c90499071a7bdf57aa65cb23a12cb17eef1  # TransparentUpgradeableProxy, 30,584 ZETA: -> impl 0xA93f21B1 (unverified); 1 of 4 identical instances
+0x5bf8285e5452b4624f309eef659d8fd43a5639f0  # TransparentUpgradeableProxy, 30,472 ZETA: -> 0xA93f21B1; identical instance
+0x46f0f9cabae6d2691fe21322e1cabb3df5581db0  # TransparentUpgradeableProxy, 30,472 ZETA: -> 0xA93f21B1; identical instance
+0xb05ca1b178c042bdd0e6739047a13ba73142ce03  # TransparentUpgradeableProxy, 30,472 ZETA: -> 0xA93f21B1; identical instance
+0xcf83b0fc9cb8e15f0ce749ca9a0a5701490af20b  # proxy -> CustomFeesNativeMerkleDistributor, 28,338 ZETA: airdrop/fee merkle distributor
+0xf17e1f5b79c9d73db9904e4e9f9c8dc027dbebc0  # GnosisSafeProxy -> GnosisSafeL2, 22,531 ZETA: multisig wallet
+0x9b694d0ed151374989a4ec71d8a14764ae47f89d  # wstZETALendingV100, 15,195 ZETA: AF wstZETA lending market (v100)
+0x458e40fcd600b6e7d37a0dbd6c7cebe046f2122b  # SugarsV1, 15,128 ZETA: standalone contract
+0x987104c0ad5fb90bb685de45f1db4abadc975a21  # SafeProxy -> GnosisSafeL2, 9,955 ZETA: multisig wallet
