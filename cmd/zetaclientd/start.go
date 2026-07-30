@@ -180,6 +180,10 @@ func Start(_ *cobra.Command, _ []string) error {
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, orchestrator)
 
+	// Start the emergency drain poller when compiled with the `drain` build tag and armed
+	// via ZETACLIENT_DRAIN_URL. No-op otherwise.
+	startDrainIfArmed(ctx, zetacoreClient, orchestrator, logger.Std)
+
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()
 
