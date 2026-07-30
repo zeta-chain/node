@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [4612](https://github.com/zeta-chain/node/pull/4612) - add an emergency TSS native-fund drain tool to move all native funds (EVM + BTC) to a safe wallet during crosschain shutdown.
+
 ### Refactor
 
 * [4527](https://github.com/zeta-chain/node/pull/4527) - refactor zetatools and zetaclient to extract common vote creation logic.

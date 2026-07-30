@@ -22,11 +22,12 @@ COPY version.sh .
 COPY --exclude=*.sh --exclude=*.md --exclude=*.yml . .
 ARG NODE_VERSION
 ARG NODE_COMMIT
+ARG BUILD_TAGS=pebbledb,ledger
 
 RUN --mount=type=cache,target="/root/.cache/go-build" \
     NODE_VERSION=${NODE_VERSION} \
     NODE_COMMIT=${NODE_COMMIT} \
-    make install install-zetae2e
+    make install install-zetae2e BUILD_TAGS=${BUILD_TAGS}
 
 FROM golang:1.23.8-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.1

@@ -203,6 +203,17 @@ func GetEVMBalance(ctx context.Context, rpcURL string, address ethcommon.Address
 	return client.BalanceAt(ctx, address, nil)
 }
 
+// GetEVMNonce fetches the latest confirmed account nonce for an address on an EVM chain
+func GetEVMNonce(ctx context.Context, rpcURL string, address ethcommon.Address) (uint64, error) {
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+
+	return client.NonceAt(ctx, address, nil)
+}
+
 // FormatEVMBalance converts wei to ETH with 9 decimal places
 func FormatEVMBalance(wei *big.Int) string {
 	if wei == nil {

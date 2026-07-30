@@ -48,6 +48,7 @@ const (
 	flagSetupSui               = "setup-sui"
 	flagSetupTON               = "setup-ton"
 	flagSkipRegular            = "skip-regular"
+	flagDrainTest              = "drain-test"
 	flagLight                  = "light"
 	flagSetupOnly              = "setup-only"
 	flagSkipSetup              = "skip-setup"
@@ -101,6 +102,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSetupSui, false, "set to true to setup Sui protocol contracts during setup")
 	cmd.Flags().Bool(flagSetupTON, false, "set to true to setup TON protocol contracts during setup")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
+	cmd.Flags().Bool(flagDrainTest, false, "set to true to run only the emergency drain test in isolation")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
 	cmd.Flags().String(flagConfigOut, "", "config file to write the deployed contracts from the setup")
@@ -153,6 +155,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		setupSui               = must(cmd.Flags().GetBool(flagSetupSui))
 		setupTON               = must(cmd.Flags().GetBool(flagSetupTON))
 		skipRegular            = must(cmd.Flags().GetBool(flagSkipRegular))
+		drainTest              = must(cmd.Flags().GetBool(flagDrainTest))
 		light                  = must(cmd.Flags().GetBool(flagLight))
 		setupOnly              = must(cmd.Flags().GetBool(flagSetupOnly))
 		skipSetup              = must(cmd.Flags().GetBool(flagSkipSetup))
@@ -377,6 +380,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
+
+	// The drain test is destructive (it sweeps all native TSS funds) so it runs in
+	// isolation right after setup and exits, bypassing the regular test scaffolding.
+	if drainTest {
+		triggerDrain(deployerRunner, logger, conf)
+		return
+	}
 
 	// Run the proposals under the start sequence(proposals_e2e_start folder)
 	if !skipRegular {

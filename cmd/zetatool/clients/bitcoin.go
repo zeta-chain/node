@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
@@ -86,6 +87,14 @@ func (b *BitcoinClientAdapter) Ping(ctx context.Context) error {
 	return b.client.Ping(ctx)
 }
 
+// ListUnspentByAddress returns the confirmed UTXOs held by the given address
+func (b *BitcoinClientAdapter) ListUnspentByAddress(
+	ctx context.Context,
+	address btcutil.Address,
+) ([]btcjson.ListUnspentResult, error) {
+	return b.client.ListUnspentMinMaxAddresses(ctx, 1, 9_999_999, []btcutil.Address{address})
+}
+
 // GetRawTransactionVerbose returns detailed information about a transaction
 func (b *BitcoinClientAdapter) GetRawTransactionVerbose(
 	ctx context.Context,
@@ -157,6 +166,45 @@ func GetBTCBalance(ctx context.Context, address string, chainID int64) (float64,
 	balanceSatoshis := stats.ChainStats.FundedTxoSum - stats.ChainStats.SpentTxoSum
 
 	return float64(balanceSatoshis) / satoshisPerBitcoin, nil
+}
+
+// BTCUtxo is a single unspent output as returned by the mempool.space address UTXO API.
+type BTCUtxo struct {
+	TxID  string `json:"txid"`
+	Vout  uint32 `json:"vout"`
+	Value int64  `json:"value"` // satoshis
+}
+
+// GetBTCUtxos fetches the confirmed and unconfirmed UTXOs for an address via mempool.space.
+func GetBTCUtxos(ctx context.Context, address string, chainID int64) ([]BTCUtxo, error) {
+	apiURL := getMempoolAddressAPIURL(chainID, address)
+	if apiURL == "" {
+		return nil, fmt.Errorf("unsupported Bitcoin chain ID: %d", chainID)
+	}
+	apiURL += "/utxo"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	btcClient := &http.Client{Timeout: httpClientTimeout}
+	resp, err := btcClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch address utxos: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("mempool.space API returned status %d", resp.StatusCode)
+	}
+
+	var utxos []BTCUtxo
+	if err := json.NewDecoder(resp.Body).Decode(&utxos); err != nil {
+		return nil, fmt.Errorf("failed to decode address utxos: %w", err)
+	}
+
+	return utxos, nil
 }
 
 // getMempoolAddressAPIURL returns the mempool.space address API URL for the given chain ID
