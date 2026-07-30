@@ -116,6 +116,11 @@ install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
+# Production emergency-drain build: drain poller present, NO drain_localnet (compiled-in anchors only).
+install-zetaclient-drain: go.sum
+		@echo "--> Installing zetaclientd (drain)"
+		@go install -mod=readonly -ldflags '$(ldflags)' -tags pebbledb,ledger,drain ./cmd/zetaclientd
+
 install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
