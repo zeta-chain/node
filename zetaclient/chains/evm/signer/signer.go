@@ -50,6 +50,8 @@ var (
 type EVMClient interface {
 	NonceAt(_ context.Context, account ethcommon.Address, blockNumber *big.Int) (uint64, error)
 
+	PendingNonceAt(ctx context.Context, account ethcommon.Address) (uint64, error)
+
 	IsTxConfirmed(_ context.Context, txHash string, confirmations uint64) (bool, error)
 
 	Signer() eth.Signer

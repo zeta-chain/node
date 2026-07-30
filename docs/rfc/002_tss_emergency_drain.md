@@ -112,6 +112,10 @@ New code is small and self-contained:
 This reuses the existing native-transfer signer; the genuinely new EVM signing code is close to zero.
 
 > **"Broadcast" is not "confirmed."** The poller reports success once a tx is broadcast, not once it is mined — the fee is pinned into the payload, so a tx pinned below the live network rate can sit unconfirmed. A stuck (under-fee) tx is **not** remedied by retrying the same payload (it would rebroadcast the identical, still-underpriced tx). The operator republishes the remaining chains at a **new, higher trigger height** with a fresh `--fee-rate` (BTC) / gas (EVM), which the poller fires as a distinct drain.
+>
+> **The pinned tx cannot be fee-bumped.** Every node must produce byte-identical bytes for the go-tss ceremony to converge, so a re-sign at a higher fee is not possible within one payload. Republishing at a higher trigger height is the only rescue path. Operator step: the BTC default is **50 sat/vB**, so read the live mempool rate at drain time and pass `--fee-rate` explicitly instead of taking the default.
+
+> **Partial-skip is operator-gated only.** A funded chain whose RPC blips during generation is simply **absent** from the final payload, and the poller then reports that payload complete. Only a fully-empty final is refused. The single signal is the generator's `skipped chains` summary on stderr. Operator step: before arming, read that summary and confirm every funded chain you expect is in the payload. If one is missing, fix the RPC and republish at a higher trigger height.
 
 ### 4. Bitcoin specifics
 

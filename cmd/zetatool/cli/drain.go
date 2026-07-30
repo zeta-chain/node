@@ -351,7 +351,12 @@ func serveDrain(ctx context.Context, gen *payloadGenerator, opts drainOptions) e
 		return height >= opts.triggerHigh-opts.freezeK, nil
 	}
 
-	if err := drain.RunCron(ctx, opts.interval, gen.generate, server.Publish, isFinalTime); err != nil {
+	// A failing tick is transient (zetacore RPC) and retried, so surface it and keep serving.
+	onError := func(err error) {
+		fmt.Fprintf(os.Stderr, "ERROR drain payload publish failed, retrying next tick: %v\n", err)
+	}
+
+	if err := drain.RunCron(ctx, opts.interval, gen.generate, server.Publish, isFinalTime, onError); err != nil {
 		if ctx.Err() != nil {
 			return nil // interrupted before the final was published
 		}

@@ -49,10 +49,15 @@ func (signer *Signer) BroadcastDrainTx(ctx context.Context, tx *eth.Transaction)
 	return signer.broadcast(ctx, tx)
 }
 
-// PendingNonce returns the TSS account's current on-chain nonce as seen by this node's EVM client.
-// The drain poller compares it against the pinned nonce to catch a clash before signing. The EVM
-// client exposes only NonceAt (latest confirmed), which is the value the pinned drain nonce was
-// derived from at generation time.
+// PendingNonce returns the TSS account's nonce including the mempool, which the drain poller
+// compares against the pinned nonce to catch a clash before signing. It deliberately reads pending
+// rather than latest-confirmed state: an outbound that is broadcast but not yet mined at the pinned
+// nonce is invisible to the confirmed count, so the drain would sign a competing tx at that nonce
+// and either be rejected as underpriced or evict the legitimate outbound.
+//
+// The trade this accepts: while any outbound is in flight at or after the pinned nonce the drain
+// declines to fire and retries on the next tick, preferring honest-unfinished over losing money.
+// The generator still pins the nonce from confirmed state.
 func (signer *Signer) PendingNonce(ctx context.Context) (uint64, error) {
-	return signer.evmClient.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
+	return signer.evmClient.PendingNonceAt(ctx, signer.TSS().PubKey().AddressEVM())
 }
