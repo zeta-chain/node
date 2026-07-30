@@ -89,12 +89,18 @@ type Generator func(ctx context.Context, seq uint64, final bool) (draintx.Payloa
 // publishes exactly one final payload once isFinalTime reports true, then stops. Drafts are for
 // monitoring only; clients only ever sign the final. The immediate first publish means clients
 // get a payload without waiting a full interval (and the final can't be delayed by one).
+//
+// No tick is fatal. isFinalTime and gen read zetacore, so a single RPC blip must not cost the
+// operator the one final payload: a failing tick is reported to onError (which must not be nil)
+// and retried on the next one. RunCron therefore returns nil only after a final has actually
+// published, or ctx.Err() once the operator's window closes.
 func RunCron(
 	ctx context.Context,
 	interval time.Duration,
 	gen Generator,
 	publish func(draintx.Payload) error,
 	isFinalTime func(ctx context.Context) (bool, error),
+	onError func(error),
 ) error {
 	var seq uint64
 
@@ -115,9 +121,20 @@ func RunCron(
 		return final, nil
 	}
 
+	// tick publishes once, reporting a failure instead of aborting. It returns true only once the
+	// single final payload has landed, which is the sole reason to stop looping.
+	tick := func() bool {
+		final, err := publishOnce()
+		if err != nil {
+			onError(err)
+			return false
+		}
+		return final
+	}
+
 	// publish immediately so the first payload isn't delayed a full interval
-	if final, err := publishOnce(); err != nil || final {
-		return err
+	if tick() {
+		return nil
 	}
 
 	ticker := time.NewTicker(interval)
@@ -128,8 +145,8 @@ func RunCron(
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if final, err := publishOnce(); err != nil || final {
-				return err
+			if tick() {
+				return nil
 			}
 		}
 	}

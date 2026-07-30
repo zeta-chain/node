@@ -37,6 +37,9 @@ const (
 	// on digests + height, not nonce (nonce is cosmetic), so a constant is safe.
 	btcKeysignNonce = 0
 	// rbfSequenceNum opts the first input into full-RBF, mirroring the production BTC signer.
+	// It only marks the sweep replaceable; the poller never issues a fee-bumped replacement, and
+	// the fee is pinned at payload-build time. A sweep stuck below the going rate is rescued by
+	// republishing at a higher trigger height with a fresh --fee-rate, not by RBF.
 	rbfSequenceNum uint32 = 1
 )
 
