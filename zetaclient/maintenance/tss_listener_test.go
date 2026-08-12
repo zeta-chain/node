@@ -2,6 +2,7 @@ package maintenance
 
 import (
 	"context"
+	"io"
 	"math"
 	"testing"
 	"time"
@@ -24,7 +25,9 @@ func waitForListenerTick() {
 }
 
 func TestTSSListener(t *testing.T) {
-	logger := zerolog.New(zerolog.NewTestWriter(t))
+	// Deliberately not zerolog.NewTestWriter(t): Listen's workers keep running after the test
+	// returns, and logging into a finished t panics with "Log in goroutine after test completed".
+	logger := zerolog.New(io.Discard)
 
 	oldTSS := observertypes.TSS{TssPubkey: tssPubkeyOld}
 
@@ -89,7 +92,9 @@ func TestTSSListenerIgnoresKeygen(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	logger := zerolog.New(zerolog.NewTestWriter(t))
+	// Deliberately not zerolog.NewTestWriter(t): Listen's workers keep running after the test
+	// returns, and logging into a finished t panics with "Log in goroutine after test completed".
+	logger := zerolog.New(io.Discard)
 	oldTSS := observertypes.TSS{TssPubkey: tssPubkeyOld}
 
 	client := mocks.NewZetacoreClient(t)
