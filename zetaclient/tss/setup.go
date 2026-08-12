@@ -108,9 +108,18 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to read local TSS key shares")
 	}
 
+	// How hard to retry follows from the same signal. Holding a share means "there is no TSS"
+	// is not a possible answer, so keep asking through an RPC outage rather than giving up on
+	// a blip. Holding none means absence is plausible, and a fresh chain must not stall
+	// startup waiting to be told what it already knows.
+	tssBackoff := retry.DefaultBackoff()
+	if len(localKeyShares) > 0 {
+		tssBackoff = retry.DefaultConstantBackoff()
+	}
+
 	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
 		func() (observertypes.TSS, error) { return p.Zetacore.GetTSS(ctx) },
-		retry.DefaultBackoff(),
+		tssBackoff,
 	)
 
 	if tssErr != nil {
