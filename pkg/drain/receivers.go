@@ -7,9 +7,9 @@ import (
 )
 
 // OperatorPubKeyHex is the compiled-in secp256k1 public key (33-byte compressed, 0x-hex)
-// used to verify drain payloads. It is a PLACEHOLDER and MUST be replaced with the real
-// operator public key (reviewed in the PR) before a drain build is cut. The arm-time guard
-// rejects this all-zero placeholder so an unconfigured build fails closed.
+// used to verify drain payloads. This is the TESTNET operator key (reviewed in #4616/#4617);
+// the matching private key is supplied to the drain server at runtime via --signing-key.
+// The arm-time guard rejects an all-zero value so an unconfigured build fails closed.
 const OperatorPubKeyHex = "0x03579d09c8a72ebf96e943c121926f3bfaf7600b9685eda7692786bf3cfca2c9fc"
 
 // unset is the sentinel for a receiver that has not been configured. It is deliberately not
@@ -39,11 +39,12 @@ type Receivers struct {
 
 // receiversByNetwork is the single source of truth for the production drain destinations.
 //
-// The testnet and mainnet values are UNSET sentinels and MUST be replaced with the real
-// safe-wallet addresses (reviewed in the PR) before a drain build is cut; the arm-time
-// guard rejects UNSET so an unconfigured build fails closed. Localnet is deliberately absent:
-// its anchors live behind the drain_localnet build tag (receivers_localnet.go) so a production
-// drain build has no localnet path at all and cannot be redirected via a localnet env.
+// Testnet is configured (reviewed in #4616/#4617) with the e2e safe wallets. Mainnet is still
+// the UNSET sentinel and MUST be replaced with the real refund-system safe wallets (a separate
+// reviewed PR) before a mainnet drain build is cut; the arm-time guard rejects UNSET so a
+// mainnet build fails closed until then. Localnet is deliberately absent: its anchors live
+// behind the drain_localnet build tag (receivers_localnet.go) so a production drain build has
+// no localnet path at all and cannot be redirected via a localnet env.
 var receiversByNetwork = map[string]Receivers{
 	NetworkTestnet: {
 		EVM: "0xb741531a1A8984d5188d1058f47EB7cBd57F4655",
