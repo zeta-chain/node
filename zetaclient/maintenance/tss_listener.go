@@ -32,6 +32,12 @@ func NewTSSListener(client ZetacoreClient, logger zerolog.Logger) *TSSListener {
 }
 
 // Listen listens for any maintenance regarding TSS and calls action specified. Works in the background.
+//
+// Both watchers key off the TSS itself: the address changing, or a new key landing in history.
+// The keygen record is deliberately not watched. It is reset to "pending at block MaxInt64" on
+// any observer set change, and restarting on that reset is what turns a routine validator
+// unbonding into an outage — every signer shuts down at once and none of them can start again.
+// A real rotation still lands a new key in TSS history, so waitForNewKeyGeneration covers it.
 func (tl *TSSListener) Listen(ctx context.Context, action func()) {
 	var (
 		withLogger = bg.WithLogger(tl.logger)
@@ -40,7 +46,6 @@ func (tl *TSSListener) Listen(ctx context.Context, action func()) {
 
 	bg.Work(ctx, tl.waitForUpdate, bg.WithName("tss.wait_for_update"), withLogger, onComplete)
 	bg.Work(ctx, tl.waitForNewKeyGeneration, bg.WithName("tss.wait_for_generation"), withLogger, onComplete)
-	bg.Work(ctx, tl.waitForNewKeygen, bg.WithName("tss.wait_for_keygen"), withLogger, onComplete)
 }
 
 // waitForUpdate listens for TSS updates. Returns `nil` when the TSS address is updated
@@ -122,51 +127,6 @@ func (tl *TSSListener) waitForNewKeyGeneration(ctx context.Context) error {
 			return nil
 		case <-ctx.Done():
 			tl.logger.Info().Msg("stopped waiting for new key generation in the TSS listener")
-			return nil
-		}
-	}
-}
-
-// waitForNewKeygen is a background thread that listens for new keygen; it returns when a new keygen is set
-func (tl *TSSListener) waitForNewKeygen(ctx context.Context) error {
-	// Initial Keygen retrieval
-	keygen, err := tl.client.GetKeyGen(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get initial TSS history")
-	}
-
-	ticker := time.NewTicker(tssListenerTicker)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			keygenUpdated, err := tl.client.GetKeyGen(ctx)
-			switch {
-			case err != nil:
-				tl.logger.Warn().Err(err).Msg("unable to get keygen")
-				continue
-			// Keygen is not pending it has already been successfully generated, continue loop
-			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenSuccess:
-				continue
-			// Keygen failed we to need to wait until a new keygen is set, continue loop
-			case keygenUpdated.Status == observertypes.KeygenStatus_KeyGenFailed:
-				continue
-			// Keygen is pending but block number is not updated, continue loop.
-			// Most likely the zetaclient is waiting for the keygen block to arrive.
-			case keygenUpdated.Status == observertypes.KeygenStatus_PendingKeygen &&
-				keygenUpdated.BlockNumber <= keygen.BlockNumber:
-				continue
-			}
-
-			// Trigger restart only when the following conditions are met:
-			// 1. Keygen is pending
-			// 2. Block number is updated
-
-			tl.logger.Info().Int64("block_number", keygenUpdated.BlockNumber).Msg("got new keygen")
-			return nil
-		case <-ctx.Done():
-			tl.logger.Info().Msg("stopped waiting for new keygen in the TSS listener")
 			return nil
 		}
 	}

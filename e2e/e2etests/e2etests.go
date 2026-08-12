@@ -218,6 +218,7 @@ const (
 	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                   = "migrate_tss"
 	TestDrainTSSName                     = "drain_tss"
+	TestKeygenResetSigningName           = "keygen_reset_signing"
 	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
 	TestUpdateZRC20NameName              = "update_zrc20"
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
@@ -1717,6 +1718,14 @@ var AllE2ETests = []runner.E2ETest{
 		"emergency drain of native TSS funds (EVM + BTC)",
 		[]runner.ArgDefinition{},
 		TestDrainTSS,
+	),
+	runner.NewE2ETest(
+		TestKeygenResetSigningName,
+		"signing survives a reset keygen record",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000"},
+		},
+		TestKeygenResetSigning,
 	),
 	runner.NewE2ETest(
 		TestMigrateConnectorFundsName,

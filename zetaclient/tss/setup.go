@@ -86,8 +86,25 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	setupLogger.Info().Msg("fetched TSS keygen info")
 
-	whitelistedPeers := make([]peer.ID, len(tssKeygen.GranteePubkeys))
-	for i, pk := range tssKeygen.GranteePubkeys {
+	// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
+	currentTSS, tssErr := p.Zetacore.GetTSS(ctx)
+	if tssErr != nil {
+		// Absent on a chain that has never completed a keygen, which is a valid state to
+		// start from, so fall through to the ceremony rather than failing here.
+		setupLogger.Info().Err(tssErr).Msg("no finalized TSS available")
+		currentTSS = observertypes.TSS{}
+	}
+
+	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
+	if keyAlreadyFinalized {
+		setupLogger.Info().
+			Str("tss_pubkey", currentTSS.TssPubkey).
+			Int("grantees_in_keygen_record", len(tssKeygen.GranteePubkeys)).
+			Msg("TSS key already finalized; whitelisting its participants")
+	}
+
+	whitelistedPeers := make([]peer.ID, len(peerSource))
+	for i, pk := range peerSource {
 		whitelistedPeers[i], err = conversion.Bech32PubkeyToPeerID(pk)
 		if err != nil {
 			return nil, errors.Wrap(err, pk)
@@ -119,9 +136,20 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("started TSS server")
 
 	// 5. Perform key generation (if needed)
-	tssInfo, err := KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to perform keygen ceremony")
+	//
+	// A finalized TSS means there is nothing left to generate, so the ceremony is skipped
+	// entirely rather than waiting on the keygen record to say so. Waiting is not safe: the
+	// record is reset to "pending at block MaxInt64" on any observer set change, and the
+	// ceremony would then block forever on a block that never arrives, taking the signer down
+	// with it. KeygenCeremony returns GetTSS on its own success path, so this is the same value
+	// it would have produced. Rotating to a new key is driven by the TSS listener, which
+	// restarts zetaclient once the new key lands in TSS history.
+	tssInfo := currentTSS
+	if !keyAlreadyFinalized {
+		tssInfo, err = KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to perform keygen ceremony")
+		}
 	}
 
 	historicalTSSInfo, err := p.Zetacore.GetTSSHistory(ctx)
@@ -183,6 +211,27 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	return service, nil
+}
+
+// resolveTSSPeers returns the pubkeys allowed into p2p, and whether the TSS key is already
+// finalized (in which case no keygen ceremony is required).
+//
+// The keygen record describes a key that is yet to be generated, so it is only authoritative
+// before the first ceremony. zetacore resets it to a blank value on any observer set change
+// (x/observer/abci.go BeginBlocker): the grantee list is erased and the block set to MaxInt64.
+// That says nothing about a key generated long ago and whose shares this node still holds, so
+// a finalized TSS wins. Reading the record instead would leave a healthy signer with an empty
+// whitelist and a ceremony scheduled for a block that never arrives.
+//
+// The participant list is the set that produced the key we are about to sign with, which makes
+// it the correct whitelist: it must stay a superset of the participants recorded in the local
+// key share, or peers are refused at the p2p layer during keysign.
+func resolveTSSPeers(keygen observertypes.Keygen, currentTSS observertypes.TSS) (pubkeys []string, finalized bool) {
+	if currentTSS.TssPubkey == "" {
+		return keygen.GranteePubkeys, false
+	}
+
+	return currentTSS.TssParticipantList, true
 }
 
 // NewServer creates a new tss.TssServer (go-tss) instance for key signing.
