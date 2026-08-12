@@ -33,9 +33,17 @@ func TestReceiversValidate(t *testing.T) {
 	}
 }
 
-func TestResolveAnchorsTestnetUnset(t *testing.T) {
-	// testnet anchors resolve but are the UNSET sentinel until configured, so Validate fails closed.
+func TestResolveAnchorsTestnetConfigured(t *testing.T) {
+	// testnet anchors are configured for the Athens drain, so Validate passes.
 	_, receivers, err := drain.ResolveAnchors(drain.NetworkTestnet)
+	require.NoError(t, err)
+	require.NoError(t, receivers.Validate())
+}
+
+func TestResolveAnchorsMainnetUnset(t *testing.T) {
+	// mainnet anchors are still the UNSET sentinel until the real refund wallets
+	// are configured, so Validate fails closed.
+	_, receivers, err := drain.ResolveAnchors(drain.NetworkMainnet)
 	require.NoError(t, err)
 	require.Error(t, receivers.Validate())
 }

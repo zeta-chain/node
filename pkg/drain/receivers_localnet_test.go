@@ -30,6 +30,6 @@ func TestResolveAnchorsTestnetIgnoresEnv(t *testing.T) {
 	_, receivers, err := drain.ResolveAnchors(drain.NetworkTestnet)
 	require.NoError(t, err)
 	require.NotEqual(t, "0x971d9a4763D845F4346D39292b849C567184D201", receivers.EVM)
-	// testnet is unset by default -> fails closed
-	require.Error(t, receivers.Validate())
+	// testnet anchors are compiled-in and configured -> validates (env still ignored)
+	require.NoError(t, receivers.Validate())
 }
