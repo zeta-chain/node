@@ -37,7 +37,10 @@ func NewTSSListener(client ZetacoreClient, logger zerolog.Logger) *TSSListener {
 // The keygen record is deliberately not watched. It is reset to "pending at block MaxInt64" on
 // any observer set change, and restarting on that reset is what turns a routine validator
 // unbonding into an outage — every signer shuts down at once and none of them can start again.
-// A real rotation still lands a new key in TSS history, so waitForNewKeyGeneration covers it.
+//
+// Note this also removes the only trigger that restarted zetaclient for a scheduled keygen, so
+// while a finalized key exists a rotation ceremony will not start. That is deliberate; see the
+// step 5 comment in zetaclient/tss/setup.go.
 func (tl *TSSListener) Listen(ctx context.Context, action func()) {
 	var (
 		withLogger = bg.WithLogger(tl.logger)

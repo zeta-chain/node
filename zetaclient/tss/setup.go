@@ -19,7 +19,10 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/conversion"
 	"github.com/zeta-chain/go-tss/tss"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -87,12 +90,26 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("fetched TSS keygen info")
 
 	// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
-	currentTSS, tssErr := p.Zetacore.GetTSS(ctx)
-	if tssErr != nil {
-		// Absent on a chain that has never completed a keygen, which is a valid state to
-		// start from, so fall through to the ceremony rather than failing here.
-		setupLogger.Info().Err(tssErr).Msg("no finalized TSS available")
+	//
+	// Only a genuine "no TSS on this chain" answer may fall back to the keygen record. A
+	// transient RPC failure must not, because the record it would fall back to is exactly the
+	// blanked one this function exists to survive, and trusting it would restore both symptoms:
+	// an empty whitelist and a ceremony waiting on a block that never arrives.
+	currentTSS, tssErr := retry.DoTypedWithBackoff(func() (observertypes.TSS, error) {
+		tss, err := p.Zetacore.GetTSS(ctx)
+		if err != nil && !tssNotFound(err) {
+			return observertypes.TSS{}, retry.Retry(err)
+		}
+		return tss, err
+	}, retry.DefaultBackoff())
+
+	switch {
+	case tssNotFound(tssErr):
+		// Valid state to start from: no key has ever been generated on this chain.
+		setupLogger.Info().Msg("no TSS on chain yet; falling back to the keygen record")
 		currentTSS = observertypes.TSS{}
+	case tssErr != nil:
+		return nil, errors.Wrap(tssErr, "unable to get TSS")
 	}
 
 	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
@@ -100,7 +117,16 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		setupLogger.Info().
 			Str("tss_pubkey", currentTSS.TssPubkey).
 			Int("grantees_in_keygen_record", len(tssKeygen.GranteePubkeys)).
+			Int("participants_in_tss", len(currentTSS.TssParticipantList)).
 			Msg("TSS key already finalized; whitelisting its participants")
+	}
+
+	// Starting with nothing to whitelist is the failure this function guards against, so say
+	// so plainly instead of letting go-tss report it as missing bootstrap peers.
+	if len(peerSource) == 0 {
+		return nil, errors.New(
+			"no TSS peers to whitelist: both the TSS participant list and the keygen grantees are empty",
+		)
 	}
 
 	whitelistedPeers := make([]peer.ID, len(peerSource))
@@ -142,8 +168,11 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	// record is reset to "pending at block MaxInt64" on any observer set change, and the
 	// ceremony would then block forever on a block that never arrives, taking the signer down
 	// with it. KeygenCeremony returns GetTSS on its own success path, so this is the same value
-	// it would have produced. Rotating to a new key is driven by the TSS listener, which
-	// restarts zetaclient once the new key lands in TSS history.
+	// it would have produced.
+	//
+	// Consequence worth being explicit about: while a finalized key exists, a keygen scheduled
+	// by MsgUpdateKeygen will NOT run, because nothing else calls KeygenCeremony. Rotating on
+	// purpose means removing the current TSS first, or reintroducing a deliberate trigger.
 	tssInfo := currentTSS
 	if !keyAlreadyFinalized {
 		tssInfo, err = KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
@@ -231,7 +260,22 @@ func resolveTSSPeers(keygen observertypes.Keygen, currentTSS observertypes.TSS) 
 		return keygen.GranteePubkeys, false
 	}
 
+	// A TSS imported straight from genesis (x/observer/genesis.go) can carry a key with no
+	// participants recorded. The key is still real and must not be regenerated, so keep
+	// finalized set and take the peers from the keygen record instead of whitelisting nobody.
+	if len(currentTSS.TssParticipantList) == 0 {
+		return keygen.GranteePubkeys, true
+	}
+
 	return currentTSS.TssParticipantList, true
+}
+
+// tssNotFound reports whether the error means this chain has no TSS yet, as opposed to a
+// transient failure to ask. zetacore answers InvalidArgument for an absent record
+// (x/observer/keeper/grpc_query_tss.go); the only other InvalidArgument is a nil request,
+// which cannot happen here.
+func tssNotFound(err error) bool {
+	return status.Code(errors.Cause(err)) == codes.InvalidArgument
 }
 
 // NewServer creates a new tss.TssServer (go-tss) instance for key signing.

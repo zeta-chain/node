@@ -4,8 +4,11 @@ import (
 	"math"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -65,6 +68,23 @@ func TestResolveTSSPeers(t *testing.T) {
 		assert.Equal(t, []string{pubkeyA, pubkeyB}, pubkeys)
 	})
 
+	t.Run("genesis TSS without participants falls back to the grantees", func(t *testing.T) {
+		// x/observer/genesis.go imports a TSS verbatim, so it can carry a real key with no
+		// participant list. The key must still count as finalized, or startup would try to
+		// generate a replacement.
+		imported := observertypes.TSS{TssPubkey: tssKey}
+
+		keygen := observertypes.Keygen{
+			Status:         observertypes.KeygenStatus_KeyGenSuccess,
+			GranteePubkeys: []string{pubkeyA, pubkeyB},
+		}
+
+		pubkeys, finalizedKey := resolveTSSPeers(keygen, imported)
+
+		assert.True(t, finalizedKey, "an imported key is still a key; do not regenerate it")
+		assert.Equal(t, []string{pubkeyA, pubkeyB}, pubkeys, "must not whitelist nobody")
+	})
+
 	t.Run("successful keygen still resolves to the TSS participants", func(t *testing.T) {
 		succeeded := observertypes.Keygen{
 			Status:         observertypes.KeygenStatus_KeyGenSuccess,
@@ -76,5 +96,25 @@ func TestResolveTSSPeers(t *testing.T) {
 
 		assert.True(t, finalizedKey)
 		assert.Equal(t, finalized.TssParticipantList, pubkeys)
+	})
+}
+
+func TestTSSNotFound(t *testing.T) {
+	// zetacore answers InvalidArgument when no TSS record exists. Everything else is a
+	// transient failure that must not be mistaken for "this chain has no key".
+	t.Run("absent record", func(t *testing.T) {
+		err := errors.Wrap(status.Error(codes.InvalidArgument, "not found"), "failed to get tss")
+		assert.True(t, tssNotFound(err))
+	})
+
+	t.Run("transient failures are not absence", func(t *testing.T) {
+		for _, code := range []codes.Code{codes.Unavailable, codes.DeadlineExceeded, codes.Internal} {
+			err := errors.Wrap(status.Error(code, "boom"), "failed to get tss")
+			assert.False(t, tssNotFound(err), code.String())
+		}
+	})
+
+	t.Run("no error is not absence", func(t *testing.T) {
+		assert.False(t, tssNotFound(nil))
 	})
 }
