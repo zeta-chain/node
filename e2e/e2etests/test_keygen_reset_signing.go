@@ -45,6 +45,13 @@ func TestKeygenResetSigning(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
+	// Fund the deployer while the network is still healthy, so the withdraw later is the only
+	// thing under test. This doubles as the "before" half of the comparison: an inbound that
+	// works now, and an outbound that must still work once the record is erased.
+	depositHash := r.DepositEtherToDeployer()
+	depositCCTX := utils.WaitCctxMinedByInboundHash(r.Ctx, depositHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, depositCCTX, crosschaintypes.CctxStatus_OutboundMined)
+
 	tssBefore, err := r.ObserverClient.TSS(r.Ctx, &observertypes.QueryGetTSSRequest{})
 	require.NoError(r, err)
 	require.NotEmpty(r, tssBefore.TSS.TssPubkey, "test needs a TSS that has already been generated")
