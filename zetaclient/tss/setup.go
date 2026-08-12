@@ -103,9 +103,15 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to resolve TSS path")
 	}
 
+	// Deliberately not fatal. go-tss creates this directory in NewServer below, so it is
+	// expected to be missing on a node's first ever start, and refusing to boot over it would
+	// break exactly the case that has no key yet. A node that cannot read its shares simply
+	// has no local evidence of a key, which is the same position as one that holds none.
 	localKeyShares, err := ParsePubKeysFromPath(setupLogger, tssPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to read local TSS key shares")
+		setupLogger.Warn().Err(err).
+			Str("tss_path", tssPath).
+			Msg("unable to read local TSS key shares; assuming none are held")
 	}
 
 	// How hard to retry follows from the same signal. Holding a share means "there is no TSS"
