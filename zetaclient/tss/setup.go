@@ -94,54 +94,18 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	// treating a failed query as absence restores both symptoms: an empty whitelist, and a
 	// ceremony waiting on a block that never arrives.
 	//
-	// Whether this node holds a key share settles it without having to classify the error.
-	// A share on disk is proof a key exists, so a missing answer is a failure to ask, not an
-	// absence. No share means this node never took part in a keygen, and the keygen record is
-	// the only source it could use anyway.
-	//
-	// Looking for the shares is best effort throughout, because it only sharpens how the
-	// server's answer is read. go-tss creates this directory in NewServer below, so it is
-	// expected to be missing on a node's first ever start, and refusing to boot over that
-	// would break exactly the case that has no key yet. Step 6 still verifies the shares
-	// properly, and is fatal there.
-	var localKeyShares []PubKey
-
-	switch tssPath, pathErr := resolveTSSPath(p.Config.TssPath, logger); {
-	case pathErr != nil:
-		setupLogger.Warn().Err(pathErr).
-			Msg("unable to resolve TSS path; assuming no local key shares are held")
-	default:
-		shares, shareErr := ParsePubKeysFromPath(setupLogger, tssPath)
-		if shareErr != nil {
-			setupLogger.Warn().Err(shareErr).
-				Str("tss_path", tssPath).
-				Msg("unable to read local TSS key shares; assuming none are held")
-		}
-		localKeyShares = shares
-	}
-
-	// How hard to retry follows from the same signal. Holding a share means "there is no TSS"
-	// is not a possible answer, so keep asking through an RPC outage rather than giving up on
-	// a blip. Holding none means absence is plausible, and a fresh chain must not stall
-	// startup waiting to be told what it already knows.
-	tssBackoff := retry.DefaultBackoff()
-	if len(localKeyShares) > 0 {
-		tssBackoff = retry.DefaultConstantBackoff()
-	}
-
+	// A failed query therefore falls back to the record, and the guard below is what keeps that
+	// safe: if the record has been blanked there is nothing to whitelist and startup stops
+	// there rather than continuing on a bad answer. When the record is intact the fallback is
+	// the right one anyway — its grantees are the same set, and a keygen that already succeeded
+	// makes the ceremony a noop, so a blip heals itself instead of taking the node down.
 	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
 		func() (observertypes.TSS, error) { return p.Zetacore.GetTSS(ctx) },
-		tssBackoff,
+		retry.DefaultBackoff(),
 	)
 
 	if tssErr != nil {
-		if len(localKeyShares) > 0 {
-			return nil, errors.Wrap(tssErr, "unable to get TSS while holding key shares for one")
-		}
-
-		setupLogger.Warn().Err(tssErr).
-			Msg("no TSS available and no local key shares; falling back to the keygen record")
-
+		setupLogger.Warn().Err(tssErr).Msg("unable to get TSS; falling back to the keygen record")
 		currentTSS = observertypes.TSS{}
 	}
 

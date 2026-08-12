@@ -2,10 +2,8 @@ package tss
 
 import (
 	"math"
-	"path/filepath"
 	"testing"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -96,28 +94,4 @@ func TestResolveTSSPeers(t *testing.T) {
 		assert.True(t, finalizedKey)
 		assert.Equal(t, finalized.TssParticipantList, pubkeys)
 	})
-}
-
-// TestParsePubKeysFromPathMissingDir pins why Setup must not treat a failed key-share read as
-// fatal. go-tss creates the TSS directory in NewServer, which runs after Setup consults the
-// shares, so on a node's first ever start the directory does not exist yet and this returns an
-// error. Failing there would refuse to boot precisely the node that has no key.
-func TestParsePubKeysFromPathMissingDir(t *testing.T) {
-	logger := zerolog.New(zerolog.NewTestWriter(t))
-
-	keys, err := ParsePubKeysFromPath(logger, filepath.Join(t.TempDir(), "never-created"))
-
-	require.Error(t, err, "a missing TSS directory must surface as an error, not silently as no keys")
-	assert.Empty(t, keys)
-}
-
-// TestParsePubKeysFromPathEmptyDir covers the other shape: the directory exists but holds no
-// shares. That is not an error, and is how a node reports it has never taken part in a keygen.
-func TestParsePubKeysFromPathEmptyDir(t *testing.T) {
-	logger := zerolog.New(zerolog.NewTestWriter(t))
-
-	keys, err := ParsePubKeysFromPath(logger, t.TempDir())
-
-	require.NoError(t, err)
-	assert.Empty(t, keys)
 }
