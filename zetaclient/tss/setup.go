@@ -98,20 +98,26 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	// A share on disk is proof a key exists, so a missing answer is a failure to ask, not an
 	// absence. No share means this node never took part in a keygen, and the keygen record is
 	// the only source it could use anyway.
-	tssPath, err := resolveTSSPath(p.Config.TssPath, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to resolve TSS path")
-	}
+	// Looking for the shares is best effort throughout: it only sharpens how the answer below
+	// is read, so nothing here may stop us asking the server. go-tss creates this directory in
+	// NewServer below, so it is expected to be missing on a node's first ever start, and
+	// refusing to boot over that would break exactly the case that has no key yet. A node that
+	// cannot see its shares has no local evidence of a key, the same position as one holding
+	// none. Step 6 still verifies the shares properly, and is fatal there.
+	var localKeyShares []PubKey
 
-	// Deliberately not fatal. go-tss creates this directory in NewServer below, so it is
-	// expected to be missing on a node's first ever start, and refusing to boot over it would
-	// break exactly the case that has no key yet. A node that cannot read its shares simply
-	// has no local evidence of a key, which is the same position as one that holds none.
-	localKeyShares, err := ParsePubKeysFromPath(setupLogger, tssPath)
-	if err != nil {
-		setupLogger.Warn().Err(err).
-			Str("tss_path", tssPath).
-			Msg("unable to read local TSS key shares; assuming none are held")
+	switch tssPath, pathErr := resolveTSSPath(p.Config.TssPath, logger); {
+	case pathErr != nil:
+		setupLogger.Warn().Err(pathErr).
+			Msg("unable to resolve TSS path; assuming no local key shares are held")
+	default:
+		shares, shareErr := ParsePubKeysFromPath(setupLogger, tssPath)
+		if shareErr != nil {
+			setupLogger.Warn().Err(shareErr).
+				Str("tss_path", tssPath).
+				Msg("unable to read local TSS key shares; assuming none are held")
+		}
+		localKeyShares = shares
 	}
 
 	// How hard to retry follows from the same signal. Holding a share means "there is no TSS"
