@@ -4,11 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -96,25 +93,5 @@ func TestResolveTSSPeers(t *testing.T) {
 
 		assert.True(t, finalizedKey)
 		assert.Equal(t, finalized.TssParticipantList, pubkeys)
-	})
-}
-
-func TestTSSNotFound(t *testing.T) {
-	// zetacore answers InvalidArgument when no TSS record exists. Everything else is a
-	// transient failure that must not be mistaken for "this chain has no key".
-	t.Run("absent record", func(t *testing.T) {
-		err := errors.Wrap(status.Error(codes.InvalidArgument, "not found"), "failed to get tss")
-		assert.True(t, tssNotFound(err))
-	})
-
-	t.Run("transient failures are not absence", func(t *testing.T) {
-		for _, code := range []codes.Code{codes.Unavailable, codes.DeadlineExceeded, codes.Internal} {
-			err := errors.Wrap(status.Error(code, "boom"), "failed to get tss")
-			assert.False(t, tssNotFound(err), code.String())
-		}
-	})
-
-	t.Run("no error is not absence", func(t *testing.T) {
-		assert.False(t, tssNotFound(nil))
 	})
 }

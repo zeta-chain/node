@@ -19,8 +19,6 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/conversion"
 	"github.com/zeta-chain/go-tss/tss"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -91,25 +89,39 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
 	//
-	// Only a genuine "no TSS on this chain" answer may fall back to the keygen record. A
-	// transient RPC failure must not, because the record it would fall back to is exactly the
-	// blanked one this function exists to survive, and trusting it would restore both symptoms:
-	// an empty whitelist and a ceremony waiting on a block that never arrives.
-	currentTSS, tssErr := retry.DoTypedWithBackoff(func() (observertypes.TSS, error) {
-		tss, err := p.Zetacore.GetTSS(ctx)
-		if err != nil && !tssNotFound(err) {
-			return observertypes.TSS{}, retry.Retry(err)
-		}
-		return tss, err
-	}, retry.DefaultBackoff())
+	// "GetTSS failed" and "there is no TSS" are different answers and must not be merged. The
+	// record we would fall back to is the blanked one this function exists to survive, so
+	// treating a failed query as absence restores both symptoms: an empty whitelist, and a
+	// ceremony waiting on a block that never arrives.
+	//
+	// Whether this node holds a key share settles it without having to classify the error.
+	// A share on disk is proof a key exists, so a missing answer is a failure to ask, not an
+	// absence. No share means this node never took part in a keygen, and the keygen record is
+	// the only source it could use anyway.
+	tssPath, err := resolveTSSPath(p.Config.TssPath, logger)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to resolve TSS path")
+	}
 
-	switch {
-	case tssNotFound(tssErr):
-		// Valid state to start from: no key has ever been generated on this chain.
-		setupLogger.Info().Msg("no TSS on chain yet; falling back to the keygen record")
+	localKeyShares, err := ParsePubKeysFromPath(setupLogger, tssPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to read local TSS key shares")
+	}
+
+	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.TSS, error) { return p.Zetacore.GetTSS(ctx) },
+		retry.DefaultBackoff(),
+	)
+
+	if tssErr != nil {
+		if len(localKeyShares) > 0 {
+			return nil, errors.Wrap(tssErr, "unable to get TSS while holding key shares for one")
+		}
+
+		setupLogger.Warn().Err(tssErr).
+			Msg("no TSS available and no local key shares; falling back to the keygen record")
+
 		currentTSS = observertypes.TSS{}
-	case tssErr != nil:
-		return nil, errors.Wrap(tssErr, "unable to get TSS")
 	}
 
 	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
@@ -268,14 +280,6 @@ func resolveTSSPeers(keygen observertypes.Keygen, currentTSS observertypes.TSS) 
 	}
 
 	return currentTSS.TssParticipantList, true
-}
-
-// tssNotFound reports whether the error means this chain has no TSS yet, as opposed to a
-// transient failure to ask. zetacore answers InvalidArgument for an absent record
-// (x/observer/keeper/grpc_query_tss.go); the only other InvalidArgument is a nil request,
-// which cannot happen here.
-func tssNotFound(err error) bool {
-	return status.Code(errors.Cause(err)) == codes.InvalidArgument
 }
 
 // NewServer creates a new tss.TssServer (go-tss) instance for key signing.
