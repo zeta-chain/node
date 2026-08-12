@@ -99,9 +99,13 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	// there rather than continuing on a bad answer. When the record is intact the fallback is
 	// the right one anyway — its grantees are the same set, and a keygen that already succeeded
 	// makes the ceremony a noop, so a blip heals itself instead of taking the node down.
+	// Every error is retried, including the not-found a chain without a key answers with. The
+	// constant backoff is deliberate: sub-second retries give up inside an RPC restart, and the
+	// only node that pays the full wait is one on a chain with no key, which then waits for the
+	// keygen block anyway.
 	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
 		func() (observertypes.TSS, error) { return p.Zetacore.GetTSS(ctx) },
-		retry.DefaultBackoff(),
+		retry.DefaultConstantBackoff(),
 	)
 
 	if tssErr != nil {
