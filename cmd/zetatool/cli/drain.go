@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"os/signal"
 	"strconv"
@@ -55,6 +56,10 @@ const (
 	FlagOnlyChains = "only-chains"
 	// FlagExcludeChains drops these chain IDs from the drain (comma-separated).
 	FlagExcludeChains = "exclude-chains"
+	// FlagEVMMaxAmount caps the per-chain EVM transfer (wei) for a small-value rehearsal.
+	FlagEVMMaxAmount = "evm-max-amount"
+	// FlagBTCMaxSats caps the total BTC swept (sats) for a small-value rehearsal.
+	FlagBTCMaxSats = "btc-max-sats"
 )
 
 // NewDrainPayloadCMD creates the command that builds and signs an emergency drain payload.
@@ -70,6 +75,11 @@ Without --serve it prints a single signed payload to stdout. With --serve it run
 draft->freeze->final cron: it recomputes and republishes drafts (final:false) every
 --interval over HTTP, and once the zeta height reaches (trigger-height - freeze-window)
 it publishes exactly one final:true payload and stops.
+
+--evm-max-amount and --btc-max-sats cap the value moved so the whole path (payload ->
+TSS ceremony -> broadcast) can be rehearsed with a small amount before committing the
+full balance. They are rehearsal-only: a capped payload leaves the remainder at the TSS
+address, so the real drain is a second run without the caps at a higher trigger height.
 
 The chain argument selects the network (mainnet/testnet/localnet) the same way as
 tss-balances.`,
@@ -88,6 +98,16 @@ tss-balances.`,
 	cmd.Flags().Duration(FlagInterval, 10*time.Second, "serve-mode republish interval")
 	cmd.Flags().String(FlagOnlyChains, "", "comma-separated chain IDs to drain (default: all with funds)")
 	cmd.Flags().String(FlagExcludeChains, "", "comma-separated chain IDs to skip")
+	cmd.Flags().String(
+		FlagEVMMaxAmount,
+		"",
+		"rehearsal only: cap the per-chain EVM transfer at this many wei (default: full balance)",
+	)
+	cmd.Flags().Int64(
+		FlagBTCMaxSats,
+		0,
+		"rehearsal only: cap the total BTC swept at this many sats, by selecting a subset of UTXOs (default: all)",
+	)
 
 	return cmd
 }
@@ -167,6 +187,16 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		return nil, opts, err
 	}
 
+	evmMaxAmount, err := parseEVMMaxAmount(must(cmd.Flags().GetString(FlagEVMMaxAmount)))
+	if err != nil {
+		return nil, opts, err
+	}
+	btcMaxSats := must(cmd.Flags().GetInt64(FlagBTCMaxSats))
+	if btcMaxSats < 0 {
+		return nil, opts, fmt.Errorf("--%s must not be negative, got %d", FlagBTCMaxSats, btcMaxSats)
+	}
+	warnIfCapped(evmMaxAmount, btcMaxSats)
+
 	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
 	if err != nil {
 		return nil, opts, fmt.Errorf("invalid --%s: %w", FlagSigningKey, err)
@@ -208,8 +238,54 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		btcReceiver:   receivers.BTC,
 		feeRate:       feeRate,
 		filter:        filter,
+		evmMaxAmount:  evmMaxAmount,
+		btcMaxSats:    btcMaxSats,
 		priv:          priv,
 	}, opts, nil
+}
+
+// parseEVMMaxAmount parses the --evm-max-amount flag. Empty means no cap; the value is a decimal
+// wei amount, matching how amounts are carried in the payload.
+func parseEVMMaxAmount(s string) (sdkmath.Uint, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return sdkmath.ZeroUint(), nil
+	}
+	v, ok := new(big.Int).SetString(s, 10)
+	if !ok || v.Sign() < 0 {
+		return sdkmath.ZeroUint(), fmt.Errorf("invalid --%s %q: want a decimal wei amount", FlagEVMMaxAmount, s)
+	}
+	if v.Sign() == 0 {
+		return sdkmath.ZeroUint(), fmt.Errorf(
+			"--%s must be positive; omit the flag to drain the full balance",
+			FlagEVMMaxAmount,
+		)
+	}
+	return sdkmath.NewUintFromBigInt(v), nil
+}
+
+// warnIfCapped makes a rehearsal payload impossible to mistake for the real drain: the caps only
+// show up as smaller numbers inside the payload, which is easy to miss when the operator is
+// reading it under pressure.
+func warnIfCapped(evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
+	if evmMaxAmount.IsZero() && btcMaxSats == 0 {
+		return
+	}
+	fmt.Fprintf(
+		os.Stderr,
+		"WARN REHEARSAL PAYLOAD: value is capped (evm %s wei per chain, btc %d sats total); "+
+			"this does NOT drain the TSS. Re-run without the caps at a higher trigger height for the real drain\n",
+		capDisplay(evmMaxAmount.String(), evmMaxAmount.IsZero()),
+		btcMaxSats,
+	)
+}
+
+// capDisplay renders an unset cap as "uncapped" rather than "0", which would read as "sends nothing".
+func capDisplay(v string, unset bool) string {
+	if unset {
+		return "uncapped"
+	}
+	return v
 }
 
 // payloadGenerator builds a signed payload from live chain state; reused per cron tick.
@@ -223,7 +299,10 @@ type payloadGenerator struct {
 	btcReceiver   string
 	feeRate       int64
 	filter        chainFilter
-	priv          *ecdsa.PrivateKey
+	// evmMaxAmount / btcMaxSats are the rehearsal caps; zero means uncapped (a real drain).
+	evmMaxAmount sdkmath.Uint
+	btcMaxSats   int64
+	priv         *ecdsa.PrivateKey
 }
 
 // chainFilter restricts which chains the drain covers. Zero value (both maps nil) allows all.
@@ -306,11 +385,21 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 		ethcommon.HexToAddress(tssAddrRes.Eth),
 		g.evmReceiver,
 		g.filter,
+		g.evmMaxAmount,
 	)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
-	btcTxs, err := buildBTCTxs(ctx, g.cfg, g.btcChainID, tssAddrRes.Btc, g.btcReceiver, g.feeRate, g.filter)
+	btcTxs, err := buildBTCTxs(
+		ctx,
+		g.cfg,
+		g.btcChainID,
+		tssAddrRes.Btc,
+		g.btcReceiver,
+		g.feeRate,
+		g.filter,
+		g.btcMaxSats,
+	)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
@@ -414,6 +503,7 @@ func buildEVMTxs(
 	tssAddr ethcommon.Address,
 	receiver string,
 	filter chainFilter,
+	maxAmount sdkmath.Uint,
 ) ([]draintx.EVMTx, error) {
 	evmTxs := make([]draintx.EVMTx, 0, len(supportedChains))
 	included := make([]int64, 0, len(supportedChains))
@@ -464,6 +554,7 @@ func buildEVMTxs(
 			Balance:        sdkmath.NewUintFromString(balance.String()),
 			MedianGasPrice: median,
 			Nonce:          nonce,
+			MaxAmount:      maxAmount,
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: %v\n", chain.ChainId, err)
@@ -486,6 +577,7 @@ func buildBTCTxs(
 	receiver string,
 	feeRate int64,
 	filter chainFilter,
+	maxSats int64,
 ) ([]draintx.BTCTx, error) {
 	// The TSS BTC address is derived from the pubkey and keyed to btcChainID; the on-chain
 	// SupportedChains list can name a different (or no) BTC chain, so we never scan it here —
@@ -542,6 +634,7 @@ func buildBTCTxs(
 		To:      receiverAddr,
 		FeeRate: feeRate,
 		UTXOs:   utxos,
+		MaxSats: maxSats,
 	})
 	if err != nil {
 		return nil, err
@@ -556,14 +649,21 @@ func buildBTCTxs(
 			sweptSats += in.AmountSats
 		}
 	}
+	// With a cap the leftover is mostly deliberate (out-of-cap), not uneconomical dust; saying
+	// "uneconomical" there would send the operator hunting a problem that isn't one.
+	reason := "as uneconomical"
+	if maxSats > 0 {
+		reason = fmt.Sprintf("as out-of-cap or uneconomical (rehearsal cap %d sats)", maxSats)
+	}
 	fmt.Fprintf(
 		os.Stderr,
-		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) as uneconomical\n",
+		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) %s\n",
 		sweptInputs,
 		sweptSats,
 		len(txs),
 		len(utxos)-sweptInputs,
 		totalSats-sweptSats,
+		reason,
 	)
 
 	return txs, nil

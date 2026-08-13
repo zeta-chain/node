@@ -34,6 +34,11 @@ type EVMInput struct {
 	Balance        sdkmath.Uint
 	MedianGasPrice sdkmath.Uint
 	Nonce          uint64
+	// MaxAmount caps the transferred amount (wei) so operators can rehearse the drain with a
+	// small value before committing the full balance. Nil or zero means no cap (full drain).
+	// The fee still comes out of the balance; only the transfer is capped, so the remainder
+	// stays at the TSS address.
+	MaxAmount sdkmath.Uint
 }
 
 // UTXO is a single unspent output pinned into a BTC sweep.
@@ -49,6 +54,11 @@ type BTCInput struct {
 	To      btcutil.Address // hardcoded safe receiver
 	FeeRate int64           // sat/vB
 	UTXOs   []UTXO
+	// MaxSats caps the total input value of the sweep so operators can rehearse the drain with
+	// a small value. Zero means no cap (sweep everything). A UTXO cannot be spent partially and
+	// the sweep has no change output, so the cap is applied by selecting a subset of UTXOs
+	// (smallest first) whose total stays within it — never by reducing an output.
+	MaxSats int64
 }
 
 // GenerateEVMTx builds a fully-resolved EVM drain tx from a resolved input.
@@ -66,6 +76,16 @@ func GenerateEVMTx(in EVMInput) (draintx.EVMTx, error) {
 			"refusing to pin unbroadcastable evm tx: gas price %s, gas limit %d",
 			gasPrice, gasLimit,
 		)
+	}
+	// The cap only ever lowers the transfer; the fee is unchanged, so the untransferred
+	// remainder simply stays at the TSS address for the real drain.
+	if !in.MaxAmount.IsNil() && !in.MaxAmount.IsZero() && in.MaxAmount.LT(amount) {
+		amount = in.MaxAmount
+	}
+	// A balance that is entirely fee (or, with a cap, a rounding artifact) would pin a
+	// zero-value transfer that pays gas to move nothing.
+	if amount.IsZero() {
+		return draintx.EVMTx{}, fmt.Errorf("refusing to pin a zero-amount evm tx")
 	}
 	return draintx.EVMTx{
 		ChainID:  in.ChainID,
@@ -86,6 +106,10 @@ func GenerateEVMTx(in EVMInput) (draintx.EVMTx, error) {
 // cover the fee, or whose output would fall below dust, are skipped rather than aborting the
 // whole sweep — a returned empty slice means there is no economical BTC to sweep. The total
 // ordering makes partitioning deterministic so every node builds byte-identical txs.
+//
+// When in.MaxSats is set the sweep is first narrowed to a subset of UTXOs within that cap
+// (see selectCappedUTXOs); everything downstream is unchanged, so a capped run exercises the
+// exact same partitioning, fee math and signing path as the real drain.
 func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	if len(in.UTXOs) == 0 {
 		return nil, nil
@@ -94,6 +118,12 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	// copy before sorting so the caller's slice is untouched
 	utxos := make([]UTXO, len(in.UTXOs))
 	copy(utxos, in.UTXOs)
+	if in.MaxSats > 0 {
+		utxos = selectCappedUTXOs(utxos, in.MaxSats)
+		if len(utxos) == 0 {
+			return nil, nil
+		}
+	}
 	sort.Slice(utxos, func(i, j int) bool {
 		if utxos[i].AmountSats != utxos[j].AmountSats {
 			return utxos[i].AmountSats > utxos[j].AmountSats
@@ -140,6 +170,44 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	}
 
 	return txs, nil
+}
+
+// selectCappedUTXOs narrows utxos to a subset whose total value stays within maxSats, for a
+// small-value rehearsal of the sweep. A UTXO is indivisible and the sweep has no change output,
+// so this is the only way to bound a BTC drain's value.
+//
+// Selection is largest-first among the UTXOs that still fit: the biggest input under the cap is
+// taken first, then smaller ones top it up. Preferring large inputs keeps the rehearsal
+// economical — a smallest-first walk would pack the sweep with dust whose fee exceeds
+// MaxBTCFeeFraction, and the group would be dropped as uneconomical. The subset is limited to
+// one tx worth of inputs so a capped run emits exactly one sweep.
+//
+// Ties are broken by TxID then Vout so the selection is deterministic across nodes, matching
+// the ordering guarantee GenerateBTCTxs relies on.
+func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
+	sort.Slice(utxos, func(i, j int) bool {
+		if utxos[i].AmountSats != utxos[j].AmountSats {
+			return utxos[i].AmountSats > utxos[j].AmountSats
+		}
+		if utxos[i].TxID != utxos[j].TxID {
+			return utxos[i].TxID < utxos[j].TxID
+		}
+		return utxos[i].Vout < utxos[j].Vout
+	})
+
+	selected := make([]UTXO, 0, btccommon.MaxNoOfInputsPerTx)
+	var total int64
+	for _, u := range utxos {
+		if len(selected) == btccommon.MaxNoOfInputsPerTx {
+			break
+		}
+		if u.AmountSats <= 0 || total+u.AmountSats > maxSats {
+			continue
+		}
+		total += u.AmountSats
+		selected = append(selected, u)
+	}
+	return selected
 }
 
 // BuildPayload assembles the txs into a payload and signs it with priv. network is baked into the

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -119,6 +120,7 @@ func TestBuildEVMTxsSkipsChainOnRPCError(t *testing.T) {
 		ethcommon.HexToAddress("0x0000000000000000000000000000000000000001"),
 		"0x000000000000000000000000000000000000dEaD",
 		chainFilter{},
+		sdkmath.ZeroUint(),
 	)
 
 	// ASSERT: the broken chain is skipped, not fatal; the healthy chain is included.

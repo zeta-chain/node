@@ -81,6 +81,17 @@ Amounts can't be committed too early — a gas spike between publish and mining 
 
 `K` is sized comfortably larger than the client poll interval so the `final` reliably propagates.
 
+#### Rehearsal caps: `--evm-max-amount` / `--btc-max-sats`
+
+The drain fires once, on a live TSS, under time pressure — so the operator wants a small-value rehearsal of the *whole* path (payload → verify → ceremony → broadcast) before committing the full balance. `--only-chains` already narrows *which* chains move; these two flags bound *how much* moves:
+
+- **EVM — `--evm-max-amount <wei>`.** Caps the transferred amount per chain. Only the transfer is lowered; gas price, gas limit and the fee are computed exactly as in a real drain, so the pinned tx is byte-shaped identically and the remainder stays at the TSS address.
+- **BTC — `--btc-max-sats <sats>`.** A UTXO is indivisible and the sweep has **no change output** (see Bitcoin specifics), so the value cannot be lowered by shrinking an output — the poller's `validateBTCFee` requires `output + fee == sum(inputs)`, exactly so a malformed payload can't burn the remainder to miners. The cap is therefore applied by **selecting a subset of UTXOs** within it: largest-first (so the rehearsal doesn't pack itself with dust and get dropped as uneconomical), limited to one tx worth of inputs so a capped run emits exactly one sweep. Selection is fully ordered by amount → TxID → Vout, preserving the cross-node determinism the ceremony depends on.
+
+Both are **generator-side only** — the payload schema, the poller and the receiver anchors are untouched, so a rehearsal exercises the same client binary and the same code path as the real drain. A capped payload is still `final` (clients only sign finals), so the generator prints a loud `WARN REHEARSAL PAYLOAD` banner to stderr: the caps are otherwise visible only as smaller numbers inside the JSON, which is easy to miss.
+
+The real drain is then a **second run without the caps at a higher trigger height** — the poller already supports this (it re-arms on any payload newer than `lastFiredHeight`), and the generator re-reads live balances, nonces and UTXOs each tick, so the rehearsal's spent nonce and consumed UTXOs are picked up automatically.
+
 ### 2. Payload — the fully-resolved, byte-final tx body
 
 ```json
@@ -149,7 +160,7 @@ This leaves an external URL that can trigger a TSS transfer. It must not live pe
 
 - **e2e (localnet).** Run the drain API **locally** and point the two localnet zetaclients at it. Model on `e2e/e2etests/test_migrate_tss.go` (which already covers both EVM and BTC migration): disable inbound, generate receiver addresses (EVM + BTC), publish the signed payload, wait for the txs to mine, assert TSS balances → ~0 and the receivers increased. For BTC, fetch UTXOs via the runner's BTC RPC (not mempool.space, which lacks regtest) and follow the existing 20-UTXO / multi-round pattern. This exercises the **real** 2-node ceremony and identical-digest/sighash coordination — not a mock signer. **No new TSS keygen and no `MsgUpdateTssAddress`** — drain only.
 - **testnet (Athens).** Host the real endpoint, drain testnet gas to a throwaway wallet. Validates real operator clock skew, real gas prices, and the signature-verify path end to end.
-- **mainnet.** Operators run the drain build, disable inbound and drain pending nonces, operator publishes the signed payload with the agreed height, fire once per chain, then upgrade away and take the endpoint down.
+- **mainnet.** Operators run the drain build, disable inbound and drain pending nonces, operator publishes the signed payload with the agreed height, fire once per chain, then upgrade away and take the endpoint down. Rehearse first with `--evm-max-amount` / `--btc-max-sats` (see Rehearsal caps) at one trigger height, confirm the funds land at the receivers, then run uncapped at a higher height.
 
 ## Resolved decisions
 
