@@ -64,6 +64,12 @@ func tssMigrationTestRoutine(
 	}
 }
 
+// triggerTSSMigration generates a new TSS and migrates funds to it.
+//
+// This does not complete today. zetaclient no longer runs a keygen ceremony once a TSS key
+// exists, so the wait below never sees KeyGenSuccess and blocks forever. Both CI suites that
+// call it are disabled for the same reason (.github/workflows/e2e.yml), and the why is in the
+// step 5 comment in zetaclient/tss/setup.go. Re-enable rotation before re-enabling this.
 func triggerTSSMigration(
 	deployerRunner *runner.E2ERunner,
 	logger *runner.Logger,
@@ -106,7 +112,9 @@ func triggerTSSMigration(
 
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
-	// The zetaclient restarts required for this process are managed by the background workers in zetaclient (TSSListener)
+	// The TSSListener still restarts zetaclient when the TSS address changes or a new key lands in
+	// history, but it no longer watches the keygen record, so nothing restarts the clients to run
+	// the ceremony that would produce that new key in the first place.
 	fn := tssMigrationTestRoutine(conf, deployerRunner, verbose, expectedTssCount, e2etests.TestMigrateTSSName)
 
 	if err := fn(); err != nil {

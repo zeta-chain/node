@@ -283,13 +283,18 @@ jobs:
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
             timeout-minutes: 40
+          # Both TSS migration suites are off while zetaclient does not run a keygen ceremony
+          # once a TSS key exists (see the step 5 comment in zetaclient/tss/setup.go). They start
+          # by scheduling a keygen and then wait for it to succeed, which no longer happens, so
+          # they would burn the 40 minute timeout on every nightly run rather than tell anyone
+          # anything. Restore the TSS_MIGRATION_TESTS condition on both when rotation comes back.
           - make-target: "start-tss-migration-add-observer"
             runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            run: false
             timeout-minutes: 40
           - make-target: "start-tss-migration-remove-observer"
             runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            run: false
             timeout-minutes: 40
           - make-target: "start-replace-observer"
             runs-on: ubuntu-22.04
