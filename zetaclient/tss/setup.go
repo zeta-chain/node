@@ -80,27 +80,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("resolved pre-params file")
 
 	// 3. Prepare whitelist of peers
-	//
-	// Retried for the same reason as GetTSS below, and it matters more here: this call runs
-	// first, so a one-shot fatal would kill startup before the hardening downstream could ever
-	// apply. The event these retries exist for is every signer restarting at once with zetacore
-	// as the contended resource, which hits all three calls on this path equally.
-	tssKeygen, err := retry.DoTypedWithBackoffAndRetry(
-		func() (observertypes.Keygen, error) { return p.Zetacore.GetKeyGen(ctx) },
-		retry.DefaultConstantBackoff(),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get TSS keygen")
-	}
-
-	setupLogger.Info().Msg("fetched TSS keygen info")
-
-	currentTSS, whitelistedPeers, keyAlreadyFinalized, err := resolveWhitelist(
-		ctx,
-		p.Zetacore,
-		tssKeygen,
-		setupLogger,
-	)
+	currentTSS, whitelistedPeers, keyAlreadyFinalized, err := resolveWhitelist(ctx, p.Zetacore, setupLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -216,6 +196,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 // whole point of splitting this out of Setup is that it can be exercised without a p2p server,
 // key files on disk, or a full zetacore client.
 type tssFetcher interface {
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 }
 
@@ -241,9 +222,20 @@ type tssFetcher interface {
 func resolveWhitelist(
 	ctx context.Context,
 	client tssFetcher,
-	tssKeygen observertypes.Keygen,
 	setupLogger zerolog.Logger,
 ) (observertypes.TSS, []peer.ID, bool, error) {
+	// This query runs first, so leaving it a one-shot fatal would kill startup before the
+	// retry below could ever apply.
+	tssKeygen, err := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.Keygen, error) { return client.GetKeyGen(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
+	if err != nil {
+		return observertypes.TSS{}, nil, false, errors.Wrap(err, "unable to get TSS keygen")
+	}
+
+	setupLogger.Info().Msg("fetched TSS keygen info")
+
 	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
 		func() (observertypes.TSS, error) { return client.GetTSS(ctx) },
 		retry.DefaultConstantBackoff(),

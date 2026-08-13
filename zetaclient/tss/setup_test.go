@@ -111,9 +111,15 @@ func TestResolveTSSPeers(t *testing.T) {
 // zetaclient/testutils/mocks imports this package, so an in-package test importing it back
 // would be an import cycle.
 type stubTSSFetcher struct {
-	tss   observertypes.TSS
-	err   error
-	calls int
+	keygen    observertypes.Keygen
+	keygenErr error
+	tss       observertypes.TSS
+	err       error
+	calls     int
+}
+
+func (s *stubTSSFetcher) GetKeyGen(context.Context) (observertypes.Keygen, error) {
+	return s.keygen, s.keygenErr
 }
 
 func (s *stubTSSFetcher) GetTSS(context.Context) (observertypes.TSS, error) {
@@ -155,9 +161,9 @@ func TestResolveWhitelist(t *testing.T) {
 	// The mainnet case: the record has been erased, but the key it says nothing about is still
 	// there and still carries the participants to whitelist.
 	t.Run("finalized key survives a blanked record", func(t *testing.T) {
-		client := &stubTSSFetcher{tss: finalized}
+		client := &stubTSSFetcher{keygen: blanked, tss: finalized}
 
-		currentTSS, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, blanked, logger)
+		currentTSS, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, logger)
 
 		require.NoError(t, err)
 		assert.True(t, keyFinalized, "a finalized key must skip the ceremony")
@@ -166,9 +172,9 @@ func TestResolveWhitelist(t *testing.T) {
 	})
 
 	t.Run("no TSS yet whitelists the keygen grantees", func(t *testing.T) {
-		client := &stubTSSFetcher{tss: observertypes.TSS{}}
+		client := &stubTSSFetcher{keygen: populated, tss: observertypes.TSS{}}
 
-		currentTSS, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, populated, logger)
+		currentTSS, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, logger)
 
 		require.NoError(t, err)
 		assert.False(t, keyFinalized, "a first-ever node still has to run the ceremony")
@@ -179,9 +185,9 @@ func TestResolveWhitelist(t *testing.T) {
 	// A failed query is not the same as "there is no key", but with an intact record the
 	// fallback lands on the same set anyway.
 	t.Run("query failure falls back to the keygen record", func(t *testing.T) {
-		client := &stubTSSFetcher{err: context.Canceled}
+		client := &stubTSSFetcher{keygen: populated, err: context.Canceled}
 
-		_, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, populated, logger)
+		_, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, logger)
 
 		require.NoError(t, err)
 		assert.False(t, keyFinalized)
@@ -195,9 +201,9 @@ func TestResolveWhitelist(t *testing.T) {
 	// Both sources empty is the state that took mainnet down. Startup must stop here rather
 	// than hand go-tss an empty whitelist and let it fail as "missing bootstrap peers".
 	t.Run("query failure on a blanked record stops startup", func(t *testing.T) {
-		client := &stubTSSFetcher{err: context.Canceled}
+		client := &stubTSSFetcher{keygen: blanked, err: context.Canceled}
 
-		_, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, blanked, logger)
+		_, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, logger)
 
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no TSS peers to whitelist")
@@ -206,13 +212,27 @@ func TestResolveWhitelist(t *testing.T) {
 	})
 
 	t.Run("a pubkey that cannot become a peer ID is reported", func(t *testing.T) {
-		client := &stubTSSFetcher{tss: observertypes.TSS{}}
 		keygen := observertypes.Keygen{GranteePubkeys: []string{pubkeyA, "not-a-pubkey"}}
+		client := &stubTSSFetcher{keygen: keygen, tss: observertypes.TSS{}}
 
-		_, peers, _, err := resolveWhitelist(context.Background(), client, keygen, logger)
+		_, peers, _, err := resolveWhitelist(context.Background(), client, logger)
 
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "not-a-pubkey")
 		assert.Nil(t, peers)
+	})
+
+	// The keygen fetch is the first query on the startup path, so its failure has to stop
+	// startup rather than fall through to an empty whitelist.
+	t.Run("keygen query failure stops startup", func(t *testing.T) {
+		client := &stubTSSFetcher{keygenErr: context.Canceled, tss: finalized}
+
+		_, peers, keyFinalized, err := resolveWhitelist(context.Background(), client, logger)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "unable to get TSS keygen")
+		assert.Nil(t, peers)
+		assert.False(t, keyFinalized)
+		assert.Equal(t, 0, client.calls, "must not query the TSS after the keygen query failed")
 	})
 }
