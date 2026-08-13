@@ -87,60 +87,15 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 
 	setupLogger.Info().Msg("fetched TSS keygen info")
 
-	// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
-	//
-	// "GetTSS failed" and "there is no TSS" are different answers and must not be merged. The
-	// record we would fall back to is the blanked one this function exists to survive, so
-	// treating a failed query as absence restores both symptoms: an empty whitelist, and a
-	// ceremony waiting on a block that never arrives.
-	//
-	// A failed query therefore falls back to the record, and the guard below is what keeps that
-	// safe: if the record has been blanked there is nothing to whitelist and startup stops
-	// there rather than continuing on a bad answer. When the record is intact the fallback is
-	// the right one anyway — its grantees are the same set, and a keygen that already succeeded
-	// makes the ceremony a noop, so a blip heals itself instead of taking the node down.
-	// Every error is retried, including the not-found a chain without a key answers with. The
-	// constant backoff is deliberate: sub-second retries give up inside an RPC restart, and the
-	// only node that pays the full wait is one on a chain with no key, which then waits for the
-	// keygen block anyway.
-	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
-		func() (observertypes.TSS, error) { return p.Zetacore.GetTSS(ctx) },
-		retry.DefaultConstantBackoff(),
+	currentTSS, whitelistedPeers, keyAlreadyFinalized, err := resolveWhitelist(
+		ctx,
+		p.Zetacore,
+		tssKeygen,
+		setupLogger,
 	)
-
-	if tssErr != nil {
-		setupLogger.Warn().Err(tssErr).Msg("unable to get TSS; falling back to the keygen record")
-		currentTSS = observertypes.TSS{}
+	if err != nil {
+		return nil, err
 	}
-
-	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
-	if keyAlreadyFinalized {
-		setupLogger.Info().
-			Str("tss_pubkey", currentTSS.TssPubkey).
-			Int("grantees_in_keygen_record", len(tssKeygen.GranteePubkeys)).
-			Int("participants_in_tss", len(currentTSS.TssParticipantList)).
-			Msg("TSS key already finalized; whitelisting its participants")
-	}
-
-	// Starting with nothing to whitelist is the failure this function guards against, so say
-	// so plainly instead of letting go-tss report it as missing bootstrap peers.
-	if len(peerSource) == 0 {
-		return nil, errors.New(
-			"no TSS peers to whitelist: both the TSS participant list and the keygen grantees are empty",
-		)
-	}
-
-	whitelistedPeers := make([]peer.ID, len(peerSource))
-	for i, pk := range peerSource {
-		whitelistedPeers[i], err = conversion.Bech32PubkeyToPeerID(pk)
-		if err != nil {
-			return nil, errors.Wrap(err, pk)
-		}
-	}
-
-	setupLogger.Info().
-		Any("whitelisted_peers", whitelistedPeers).
-		Msg("resolved whitelist peers")
 
 	// 4. Bootstrap go-tss TSS server
 	tssServer, err := NewServer(
@@ -241,6 +196,81 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	return service, nil
+}
+
+// tssFetcher is the slice of Zetacore that resolveWhitelist needs. Narrow on purpose: the
+// whole point of splitting this out of Setup is that it can be exercised without a p2p server,
+// key files on disk, or a full zetacore client.
+type tssFetcher interface {
+	GetTSS(ctx context.Context) (observertypes.TSS, error)
+}
+
+// resolveWhitelist decides which peers the TSS server may talk to, and reports whether a TSS
+// key already exists so Setup can skip the keygen ceremony.
+//
+// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
+//
+// "GetTSS failed" and "there is no TSS" are different answers and must not be merged. The
+// record we would fall back to is the blanked one this function exists to survive, so
+// treating a failed query as absence restores both symptoms: an empty whitelist, and a
+// ceremony waiting on a block that never arrives.
+//
+// A failed query therefore falls back to the record, and the guard below is what keeps that
+// safe: if the record has been blanked there is nothing to whitelist and startup stops
+// there rather than continuing on a bad answer. When the record is intact the fallback is
+// the right one anyway — its grantees are the same set, and a keygen that already succeeded
+// makes the ceremony a noop, so a blip heals itself instead of taking the node down.
+// Every error is retried, including the not-found a chain without a key answers with. The
+// constant backoff is deliberate: sub-second retries give up inside an RPC restart, and the
+// only node that pays the full wait is one on a chain with no key, which then waits for the
+// keygen block anyway.
+func resolveWhitelist(
+	ctx context.Context,
+	client tssFetcher,
+	tssKeygen observertypes.Keygen,
+	setupLogger zerolog.Logger,
+) (observertypes.TSS, []peer.ID, bool, error) {
+	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.TSS, error) { return client.GetTSS(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
+
+	if tssErr != nil {
+		setupLogger.Warn().Err(tssErr).Msg("unable to get TSS; falling back to the keygen record")
+		currentTSS = observertypes.TSS{}
+	}
+
+	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
+	if keyAlreadyFinalized {
+		setupLogger.Info().
+			Str("tss_pubkey", currentTSS.TssPubkey).
+			Int("grantees_in_keygen_record", len(tssKeygen.GranteePubkeys)).
+			Int("participants_in_tss", len(currentTSS.TssParticipantList)).
+			Msg("TSS key already finalized; whitelisting its participants")
+	}
+
+	// Starting with nothing to whitelist is the failure this function guards against, so say
+	// so plainly instead of letting go-tss report it as missing bootstrap peers.
+	if len(peerSource) == 0 {
+		return observertypes.TSS{}, nil, false, errors.New(
+			"no TSS peers to whitelist: both the TSS participant list and the keygen grantees are empty",
+		)
+	}
+
+	whitelistedPeers := make([]peer.ID, len(peerSource))
+	for i, pk := range peerSource {
+		peerID, err := conversion.Bech32PubkeyToPeerID(pk)
+		if err != nil {
+			return observertypes.TSS{}, nil, false, errors.Wrap(err, pk)
+		}
+		whitelistedPeers[i] = peerID
+	}
+
+	setupLogger.Info().
+		Any("whitelisted_peers", whitelistedPeers).
+		Msg("resolved whitelist peers")
+
+	return currentTSS, whitelistedPeers, keyAlreadyFinalized, nil
 }
 
 // resolveTSSPeers returns the pubkeys allowed into p2p, and whether the TSS key is already
