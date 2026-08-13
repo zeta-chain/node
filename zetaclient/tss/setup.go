@@ -80,7 +80,15 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("resolved pre-params file")
 
 	// 3. Prepare whitelist of peers
-	tssKeygen, err := p.Zetacore.GetKeyGen(ctx)
+	//
+	// Retried for the same reason as GetTSS below, and it matters more here: this call runs
+	// first, so a one-shot fatal would kill startup before the hardening downstream could ever
+	// apply. The event these retries exist for is every signer restarting at once with zetacore
+	// as the contended resource, which hits all three calls on this path equally.
+	tssKeygen, err := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.Keygen, error) { return p.Zetacore.GetKeyGen(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get TSS keygen")
 	}
@@ -129,6 +137,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	// Consequence worth being explicit about: while a finalized key exists, a keygen scheduled
 	// by MsgUpdateKeygen will NOT run, because nothing else calls KeygenCeremony. Rotating on
 	// purpose means removing the current TSS first, or reintroducing a deliberate trigger.
+	// Tracked in https://github.com/zeta-chain/node/issues/4623.
 	tssInfo := currentTSS
 	if !keyAlreadyFinalized {
 		tssInfo, err = KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
@@ -137,7 +146,12 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		}
 	}
 
-	historicalTSSInfo, err := p.Zetacore.GetTSSHistory(ctx)
+	// Retried for the same reason as the two calls above: same startup path, same contended
+	// zetacore, and a one-shot failure here is equally fatal.
+	historicalTSSInfo, err := retry.DoTypedWithBackoffAndRetry(
+		func() ([]observertypes.TSS, error) { return p.Zetacore.GetTSSHistory(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get TSS history")
 	}

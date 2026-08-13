@@ -3,7 +3,6 @@ package maintenance
 import (
 	"context"
 	"io"
-	"math"
 	"testing"
 	"time"
 
@@ -18,10 +17,19 @@ const (
 	tssPubkeyNew = "zetapub1addwnpepqglunjrgl3qg08duxq9pf28jmvrer3crwnnfzp6m0u0yh9jk9mnn5p76utc"
 )
 
+// useFastTicker shrinks the watcher poll interval for the duration of one test. The assertions
+// are about which events cause a shutdown, not about the real 5s cadence, so waiting on it only
+// bought ~31s of sleep across this file.
+func useFastTicker(t *testing.T) {
+	original := tssListenerTicker
+	tssListenerTicker = 10 * time.Millisecond
+	t.Cleanup(func() { tssListenerTicker = original })
+}
+
 // waitForListenerTick gives the listener room for at least one tick so a shutdown it was
 // going to signal has actually had the chance to fire.
 func waitForListenerTick() {
-	time.Sleep(2 * tssListenerTicker)
+	time.Sleep(20 * tssListenerTicker)
 }
 
 func TestTSSListener(t *testing.T) {
@@ -38,6 +46,8 @@ func TestTSSListener(t *testing.T) {
 	// mainnet that reset restarted every signer at once, and none could start again because
 	// the erased grantee list left them with an empty p2p whitelist.
 	t.Run("blanked keygen record does not trigger a shutdown", func(t *testing.T) {
+		useFastTicker(t)
+
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -53,6 +63,8 @@ func TestTSSListener(t *testing.T) {
 	})
 
 	t.Run("TSS address change still triggers a shutdown", func(t *testing.T) {
+		useFastTicker(t)
+
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -68,6 +80,8 @@ func TestTSSListener(t *testing.T) {
 	})
 
 	t.Run("new key in TSS history still triggers a shutdown", func(t *testing.T) {
+		useFastTicker(t)
+
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -89,6 +103,8 @@ func TestTSSListener(t *testing.T) {
 // fails the test on any unexpected call, so a reintroduced keygen watcher shows up here rather
 // than as an outage.
 func TestTSSListenerIgnoresKeygen(t *testing.T) {
+	useFastTicker(t)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -105,14 +121,4 @@ func TestTSSListenerIgnoresKeygen(t *testing.T) {
 	waitForListenerTick()
 
 	client.Mock.AssertNotCalled(t, "GetKeyGen", ctx)
-
-	// Guard against the assertion above passing for the wrong reason: the record a caller
-	// would have read is the blanked one, and it must remain irrelevant.
-	blanked := observertypes.Keygen{
-		Status:      observertypes.KeygenStatus_PendingKeygen,
-		BlockNumber: math.MaxInt64,
-	}
-	if len(blanked.GranteePubkeys) != 0 {
-		t.Fatal("expected the blanked keygen record to carry no grantees")
-	}
 }

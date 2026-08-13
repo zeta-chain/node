@@ -13,7 +13,9 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-const tssListenerTicker = 5 * time.Second
+// tssListenerTicker is how often the watchers re-query zetacore. A var rather than a const so
+// tests can shrink it; nothing in production writes to it.
+var tssListenerTicker = 5 * time.Second
 
 // TSSListener is a struct that listens for TSS updates, new keygen, and new TSS key generation.
 type TSSListener struct {
