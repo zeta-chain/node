@@ -2,37 +2,35 @@ name: Build Drain Artifacts
 
 # On-demand build of the emergency-drain binaries. Deliberately NOT tied to any
 # release: the drain client is a dedicated, temporary build operators run only for
-# the drain window (RFC 002), so it is produced here by manual dispatch, never
-# shipped in a normal release.
+# the drain window (RFC 002), so it is produced here, never shipped in a release.
 #
-# Produces, cross-compiled for the signer hosts (linux amd64 + arm64):
-#   - zetaclientd  built with `-tags pebbledb,ledger,drain`  → the drain CLIENT.
-#       Run this workflow from a release/zetaclient/v38 (or v37) ref, matching what
-#       the target signers run, so the go-tss ceremony/state is compatible.
-#   - zetatool     built normally                            → the drain SERVER
-#       (`zetatool drain-payload --serve`). Run from `main`, where that subcommand
-#       and the receiver anchors live.
+# One run produces, cross-compiled for the signer hosts (linux amd64 + arm64):
+#   - zetaclientd-drain  from CLIENT_REF (default release/zetaclient/v38),
+#       built with `-tags pebbledb,ledger,drain` → the drain CLIENT (matches the
+#       version the signers run so the go-tss ceremony/state is compatible).
+#   - zetatool           from SERVER_REF (default main), built normally → the
+#       drain SERVER (`zetatool drain-payload --serve`), where the subcommand +
+#       receiver anchors live.
 #
-# Nothing here deploys, arms, or moves funds. It only emits binaries as artifacts.
+# Triggerable by manual dispatch, or by pushing a `drain-build/**` branch (so it
+# can be produced from the v38 branch without the main-branch dispatch registration).
+# Nothing here deploys, arms, or moves funds — it only emits binaries as artifacts.
 
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Ref to build from (v38 release branch for the client; main for zetatool)'
-        required: true
+      client_ref:
+        description: 'Ref for the drain client (zetaclientd)'
+        required: false
         type: string
         default: 'release/zetaclient/v38'
-      build_client:
-        description: 'Build zetaclientd with the drain tag (the client)'
+      server_ref:
+        description: 'Ref for the server (zetatool)'
         required: false
-        type: boolean
-        default: true
-      build_zetatool:
-        description: 'Build zetatool (the serve-cron server) — use ref=main'
-        required: false
-        type: boolean
-        default: false
+        type: string
+        default: 'main'
+  push:
+    branches: ['drain-build/**']
 
 permissions:
   contents: read
@@ -44,15 +42,25 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
+    env:
+      CLIENT_REF: ${{ inputs.client_ref || 'release/zetaclient/v38' }}
+      SERVER_REF: ${{ inputs.server_ref || 'main' }}
     steps:
-      - name: Checkout ${{ inputs.ref }}
+      - name: Checkout client ref
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ env.CLIENT_REF }}
+          path: client
+
+      - name: Checkout server ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SERVER_REF }}
+          path: server
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: client/go.mod
 
       - name: Install cross toolchain
         run: |
@@ -68,20 +76,20 @@ jobs:
           set -euo pipefail
           if [ "$ARCH" = "arm64" ]; then export CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++; else export CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++; fi
           export GOOS=linux GOARCH="$ARCH"
-          COMMIT=$(git rev-parse --short HEAD)
           # Only the DBBackend ldflag is functional; the rest is version cosmetics.
-          LDFLAGS="-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb -X github.com/zeta-chain/node/pkg/constant.CommitHash=${COMMIT} -s -w"
+          LDBASE="-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb -s -w"
           mkdir -p dist
-          if [ "${{ inputs.build_client }}" = "true" ]; then
-            echo "--> building zetaclientd (drain) linux/${ARCH}"
-            go build -tags pebbledb,ledger,drain -ldflags "$LDFLAGS" \
-              -o "dist/zetaclientd-drain-linux-${ARCH}" ./cmd/zetaclientd
-          fi
-          if [ "${{ inputs.build_zetatool }}" = "true" ]; then
-            echo "--> building zetatool linux/${ARCH}"
-            go build -tags pebbledb,ledger -ldflags "$LDFLAGS" \
-              -o "dist/zetatool-linux-${ARCH}" ./cmd/zetatool
-          fi
+
+          echo "--> zetaclientd (drain) linux/${ARCH} from ${CLIENT_REF}"
+          ( cd client && go build -tags pebbledb,ledger,drain \
+              -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
+              -o "../dist/zetaclientd-drain-linux-${ARCH}" ./cmd/zetaclientd )
+
+          echo "--> zetatool linux/${ARCH} from ${SERVER_REF}"
+          ( cd server && go build -tags pebbledb,ledger \
+              -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
+              -o "../dist/zetatool-linux-${ARCH}" ./cmd/zetatool )
+
           ( cd dist && sha256sum * > "SHA256SUMS-${ARCH}.txt" && cat "SHA256SUMS-${ARCH}.txt" )
 
       - name: Upload artifacts
