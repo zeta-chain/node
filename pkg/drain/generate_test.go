@@ -706,3 +706,74 @@ func TestGenerateBTCTxsCapKeepsCollectivelyViableGroups(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateBTCTxsCapDoesNotLetALargeUTXOCrowdOutAViableSubset(t *testing.T) {
+	payee := testPayee(t)
+	const feeRate = int64(40)
+	const maxSats = int64(100_000)
+
+	// Regression: filling largest-first from the front let the 60,000-sat UTXO take the cap space,
+	// which blocked both 50,000-sat UTXOs and then trimmed away as uneconomical on its own — so a
+	// capped run emitted nothing even though 50,000+50,000 fits the cap and clears the fee bound.
+	// Reported by greptile on #4630.
+	utxos := []drain.UTXO{
+		{TxID: "aaa", Vout: 0, AmountSats: 60_000},
+		{TxID: "bbb", Vout: 1, AmountSats: 50_000},
+		{TxID: "ccc", Vout: 2, AmountSats: 50_000},
+	}
+
+	size1, err := btccommon.EstimateOutboundSize(1, []btcutil.Address{payee})
+	require.NoError(t, err)
+	size2, err := btccommon.EstimateOutboundSize(2, []btcutil.Address{payee})
+	require.NoError(t, err)
+	// the largest UTXO is not viable alone...
+	require.Greater(t, size1*feeRate, int64(60_000)/drain.MaxBTCFeeFraction)
+	// ...but the pair of smaller ones is
+	require.LessOrEqual(t, size2*feeRate, int64(100_000)/drain.MaxBTCFeeFraction)
+
+	// ACT
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332, To: payee, FeeRate: feeRate, UTXOs: utxos, MaxSats: maxSats,
+	})
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, txs, 1)
+	require.Len(t, txs[0].Inputs, 2)
+
+	var totalIn int64
+	spent := make([]string, 0, 2)
+	for _, in := range txs[0].Inputs {
+		totalIn += in.AmountSats
+		spent = append(spent, in.TxID)
+	}
+	require.ElementsMatch(t, []string{"bbb", "ccc"}, spent)
+	require.LessOrEqual(t, totalIn, maxSats)
+	require.LessOrEqual(t, txs[0].FeeSats, totalIn/drain.MaxBTCFeeFraction)
+	require.Equal(t, totalIn-txs[0].FeeSats, txs[0].OutputSats)
+}
+
+func TestGenerateBTCTxsCapPrefersTheMostValuableViableSubset(t *testing.T) {
+	payee := testPayee(t)
+
+	// several offsets yield a viable candidate; the one sweeping the most value wins, so a
+	// rehearsal gets as close to the operator's cap as the UTXOs allow
+	utxos := []drain.UTXO{
+		{TxID: "aaa", Vout: 0, AmountSats: 40_000_000},
+		{TxID: "bbb", Vout: 1, AmountSats: 30_000_000},
+		{TxID: "ccc", Vout: 2, AmountSats: 30_000_000},
+	}
+
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332, To: payee, FeeRate: 10, UTXOs: utxos, MaxSats: 70_000_000,
+	})
+	require.NoError(t, err)
+	require.Len(t, txs, 1)
+
+	var totalIn int64
+	for _, in := range txs[0].Inputs {
+		totalIn += in.AmountSats
+	}
+	// 40M+30M = 70M exactly, rather than the 30M+30M an offset candidate would give
+	require.EqualValues(t, 70_000_000, totalIn)
+}
