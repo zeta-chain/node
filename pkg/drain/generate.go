@@ -57,7 +57,8 @@ type BTCInput struct {
 	// MaxSats caps the total input value of the sweep so operators can rehearse the drain with
 	// a small value. Zero means no cap (sweep everything). A UTXO cannot be spent partially and
 	// the sweep has no change output, so the cap is applied by selecting a subset of UTXOs
-	// (smallest first) whose total stays within it — never by reducing an output.
+	// (largest first, see selectCappedUTXOs) whose total stays within it — never by reducing
+	// an output.
 	MaxSats int64
 }
 
@@ -118,21 +119,13 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	// copy before sorting so the caller's slice is untouched
 	utxos := make([]UTXO, len(in.UTXOs))
 	copy(utxos, in.UTXOs)
+	sortUTXOsForSweep(utxos)
 	if in.MaxSats > 0 {
 		utxos = selectCappedUTXOs(utxos, in.MaxSats)
 		if len(utxos) == 0 {
 			return nil, nil
 		}
 	}
-	sort.Slice(utxos, func(i, j int) bool {
-		if utxos[i].AmountSats != utxos[j].AmountSats {
-			return utxos[i].AmountSats > utxos[j].AmountSats
-		}
-		if utxos[i].TxID != utxos[j].TxID {
-			return utxos[i].TxID < utxos[j].TxID
-		}
-		return utxos[i].Vout < utxos[j].Vout
-	})
 
 	to := in.To.EncodeAddress()
 	txs := make([]draintx.BTCTx, 0, (len(utxos)+btccommon.MaxNoOfInputsPerTx-1)/btccommon.MaxNoOfInputsPerTx)
@@ -172,19 +165,10 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	return txs, nil
 }
 
-// selectCappedUTXOs narrows utxos to a subset whose total value stays within maxSats, for a
-// small-value rehearsal of the sweep. A UTXO is indivisible and the sweep has no change output,
-// so this is the only way to bound a BTC drain's value.
-//
-// Selection is largest-first among the UTXOs that still fit: the biggest input under the cap is
-// taken first, then smaller ones top it up. Preferring large inputs keeps the rehearsal
-// economical — a smallest-first walk would pack the sweep with dust whose fee exceeds
-// MaxBTCFeeFraction, and the group would be dropped as uneconomical. The subset is limited to
-// one tx worth of inputs so a capped run emits exactly one sweep.
-//
-// Ties are broken by TxID then Vout so the selection is deterministic across nodes, matching
-// the ordering guarantee GenerateBTCTxs relies on.
-func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
+// sortUTXOsForSweep orders utxos by amount descending, tie-broken by TxID then Vout. The total
+// ordering is what makes both the capped selection and the group partitioning deterministic, so
+// every node builds byte-identical txs.
+func sortUTXOsForSweep(utxos []UTXO) {
 	sort.Slice(utxos, func(i, j int) bool {
 		if utxos[i].AmountSats != utxos[j].AmountSats {
 			return utxos[i].AmountSats > utxos[j].AmountSats
@@ -194,7 +178,19 @@ func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
 		}
 		return utxos[i].Vout < utxos[j].Vout
 	})
+}
 
+// selectCappedUTXOs narrows utxos to a subset whose total value stays within maxSats, for a
+// small-value rehearsal of the sweep. A UTXO is indivisible and the sweep has no change output,
+// so this is the only way to bound a BTC drain's value. It expects utxos already ordered by
+// sortUTXOsForSweep.
+//
+// Selection is therefore largest-first among the UTXOs that still fit: the biggest input under
+// the cap is taken first, then smaller ones top it up. Preferring large inputs keeps the
+// rehearsal economical — a smallest-first walk would pack the sweep with dust whose fee exceeds
+// MaxBTCFeeFraction, and the group would be dropped as uneconomical. The subset is limited to
+// one tx worth of inputs so a capped run emits exactly one sweep.
+func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
 	selected := make([]UTXO, 0, btccommon.MaxNoOfInputsPerTx)
 	var total int64
 	for _, u := range utxos {

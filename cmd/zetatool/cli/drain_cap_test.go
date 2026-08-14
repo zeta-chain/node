@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -31,6 +32,21 @@ func TestParseEVMMaxAmount(t *testing.T) {
 		// certainly meant to omit the flag
 		_, err := parseEVMMaxAmount("0")
 		require.ErrorContains(t, err, "must be positive")
+	})
+
+	t.Run("a value above 256 bits is rejected, not panicked on", func(t *testing.T) {
+		// sdkmath.Uint's constructor panics past 256 bits, so an extra-zeros typo would take
+		// down zetatool mid-drain instead of reporting a bad flag
+		maxUint256 := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1))
+
+		v, err := parseEVMMaxAmount(maxUint256.String())
+		require.NoError(t, err)
+		require.Equal(t, maxUint256.String(), v.String())
+
+		require.NotPanics(t, func() {
+			_, err = parseEVMMaxAmount(new(big.Int).Add(maxUint256, big.NewInt(1)).String())
+		})
+		require.ErrorContains(t, err, "exceeds the maximum 256-bit")
 	})
 
 	t.Run("rejects non-decimal and negative values", func(t *testing.T) {

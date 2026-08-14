@@ -261,31 +261,44 @@ func parseEVMMaxAmount(s string) (sdkmath.Uint, error) {
 			FlagEVMMaxAmount,
 		)
 	}
+	// sdkmath.Uint is bounded at 256 bits and its constructor panics past that, which would take
+	// down zetatool on an extra-zeros typo instead of reporting a bad flag.
+	if v.BitLen() > 256 {
+		return sdkmath.ZeroUint(), fmt.Errorf(
+			"--%s %q exceeds the maximum 256-bit wei amount",
+			FlagEVMMaxAmount,
+			s,
+		)
+	}
 	return sdkmath.NewUintFromBigInt(v), nil
 }
 
 // warnIfCapped makes a rehearsal payload impossible to mistake for the real drain: the caps only
 // show up as smaller numbers inside the payload, which is easy to miss when the operator is
 // reading it under pressure.
+//
+// The wording deliberately avoids claiming nothing is drained: a cap is an upper bound, so any
+// chain whose drainable balance already sits below it is swept in full by a "rehearsal".
 func warnIfCapped(evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
 	if evmMaxAmount.IsZero() && btcMaxSats == 0 {
 		return
 	}
+	evmCap := "uncapped"
+	if !evmMaxAmount.IsZero() {
+		evmCap = evmMaxAmount.String() + " wei per chain"
+	}
+	btcCap := "uncapped"
+	if btcMaxSats > 0 {
+		btcCap = fmt.Sprintf("%d sats total", btcMaxSats)
+	}
 	fmt.Fprintf(
 		os.Stderr,
-		"WARN REHEARSAL PAYLOAD: value is capped (evm %s wei per chain, btc %d sats total); "+
-			"this does NOT drain the TSS. Re-run without the caps at a higher trigger height for the real drain\n",
-		capDisplay(evmMaxAmount.String(), evmMaxAmount.IsZero()),
-		btcMaxSats,
+		"WARN REHEARSAL PAYLOAD: value is capped (evm: %s, btc: %s). This does NOT drain the TSS, "+
+			"except on chains already below the cap, which are swept in full. "+
+			"Re-run without the caps at a higher trigger height for the real drain\n",
+		evmCap,
+		btcCap,
 	)
-}
-
-// capDisplay renders an unset cap as "uncapped" rather than "0", which would read as "sends nothing".
-func capDisplay(v string, unset bool) string {
-	if unset {
-		return "uncapped"
-	}
-	return v
 }
 
 // payloadGenerator builds a signed payload from live chain state; reused per cron tick.
