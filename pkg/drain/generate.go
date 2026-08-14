@@ -189,39 +189,59 @@ func sortUTXOsForSweep(utxos []UTXO) {
 // so this is the only way to bound a BTC drain's value. It expects utxos already ordered by
 // sortUTXOsForSweep.
 //
-// Selection is therefore largest-first among the UTXOs that fit under the cap, and an input is
-// taken only if the resulting group would still satisfy the poller's fee bound
-// (fee <= total/MaxBTCFeeFraction). That second condition is what makes a capped run usable:
+// A viable subset has to clear two bars at once: total <= maxSats, and a fee that fits the
+// poller's bound, fee(n) <= total/MaxBTCFeeFraction. The bound cannot be applied per input as it
+// is added, because the fixed part of the fee is only amortised once the group is complete — two
+// 15,000-sat UTXOs at 10 sat/vB are viable together (fee 2390 against a 3000 allowance) while
+// neither clears the single-input threshold of 1710 against 1500.
 //
-//   - Fitting under the cap is not enough. A UTXO too big for the cap is skipped and the walk
-//     continues down the list, so without the fee test a small cap slides past every large UTXO
-//     and fills the group with dust instead. The fee of 20 dust inputs dwarfs their value, the
-//     whole group is then dropped as uneconomical, and the rehearsal silently covers no BTC at
-//     all — the one leg with no testnet coverage.
-//   - Topping up an already-viable group can destroy it. Each extra input adds a fixed ~68 vB of
-//     fee, so a 300-sat input added to a viable 90k-sat sweep at 50 sat/vB raises the fee past
-//     the bound and the group is dropped. An input must pay for its own marginal fee under the
-//     same 1/MaxBTCFeeFraction rule the poller applies.
+// So each candidate is built by fillAndTrim: fill largest-first on value alone, then drop the
+// smallest inputs until the completed group clears the bound. Filling from the front alone is not
+// enough either, because one large UTXO can hog the cap and block a better combination — with a
+// 100,000-sat cap at 40 sat/vB, a 60,000-sat UTXO is taken first, blocks both 50,000-sat UTXOs,
+// and then trims away as uneconomical, while 50,000+50,000 would have been viable. Candidates are
+// therefore built from every starting offset, i.e. ignoring the k largest UTXOs for each k, and
+// the best viable one wins: most value swept, fewest inputs to break a tie.
 //
-// The economics cannot be tested per input as it is added, because the fixed part of the fee is
-// only amortised once the group is complete: two 15,000-sat UTXOs at 10 sat/vB are viable together
-// (fee 2390 against a 3000 allowance) while neither clears the single-input threshold of 1710
-// against 1500. Judging inputs one at a time rejects the pair and emits nothing. So selection runs
-// in two phases:
+// This is a heuristic, not an exhaustive subset search: it covers the "a larger UTXO crowds out a
+// viable combination" family, which is what real wallet shapes produce, but an empty result means
+// only that none of these candidates was viable — never that no viable subset exists. The sound
+// impossibility test is a total balance below MinViableSweepSats, which is what the CLI reports.
 //
-//  1. Take largest-first everything that fits under the cap, up to one tx worth of inputs, on
-//     value alone.
-//  2. Drop the smallest input — the tail, since the list is descending — until the group satisfies
-//     the poller's bound, or nothing is left.
-//
-// Trimming from the tail is what preserves the second property above: the marginal input that
-// broke the bound is exactly the one removed first. And because phase 2 tests the completed group,
-// a non-empty result is economical by construction rather than by luck.
-//
-// An empty result means no *prefix* of the cap-limited selection is viable. See MinViableSweepSats
-// for the floor on a sweep's total, which is what the CLI reports.
+// Selection stays deterministic — a fixed input order and a fixed tie-break — because every node
+// must build byte-identical txs.
 func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address) ([]UTXO, error) {
-	// phase 1: fill on value alone
+	var best []UTXO
+	var bestTotal int64
+
+	for start := range utxos {
+		candidate, total, err := fillAndTrim(utxos[start:], maxSats, feeRate, to)
+		if err != nil {
+			return nil, err
+		}
+		if len(candidate) == 0 {
+			continue
+		}
+		// most value swept wins, then the cheaper shape; ties beyond that keep the earlier offset,
+		// which is the one holding the larger UTXOs
+		if total > bestTotal || (total == bestTotal && len(candidate) < len(best)) {
+			best, bestTotal = candidate, total
+		}
+	}
+
+	return best, nil
+}
+
+// fillAndTrim builds one candidate subset: take largest-first everything that fits under the cap,
+// up to one tx worth of inputs, then drop the smallest input — the tail, since utxos is descending
+// — until the completed group satisfies the poller's fee bound, or nothing is left.
+//
+// Trimming from the tail is what keeps a viable group from being destroyed by a marginal one: each
+// extra input adds a fixed ~68 vB of fee, so a 300-sat input added to a viable 90k-sat sweep at
+// 50 sat/vB pushes the fee past the bound — and that input is exactly the first one removed.
+// Because the bound is tested on the completed group, a non-empty result is economical by
+// construction rather than by luck.
+func fillAndTrim(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address) ([]UTXO, int64, error) {
 	selected := make([]UTXO, 0, btccommon.MaxNoOfInputsPerTx)
 	var total int64
 	for _, u := range utxos {
@@ -235,11 +255,10 @@ func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address)
 		selected = append(selected, u)
 	}
 
-	// phase 2: trim the tail until the completed group clears the poller's bound
 	for len(selected) > 0 {
 		size, err := btccommon.EstimateOutboundSize(int64(len(selected)), []btcutil.Address{to})
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		if size*feeRate <= total/MaxBTCFeeFraction {
 			break
@@ -247,7 +266,8 @@ func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address)
 		total -= selected[len(selected)-1].AmountSats
 		selected = selected[:len(selected)-1]
 	}
-	return selected, nil
+
+	return selected, total, nil
 }
 
 // MinViableSweepSats is the floor on a sweep's input *total* at this fee rate: enough to keep the
