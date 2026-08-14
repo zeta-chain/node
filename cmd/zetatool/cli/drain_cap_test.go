@@ -192,3 +192,31 @@ func TestReportNonceState(t *testing.T) {
 		require.Contains(t, out, "load-balanced")
 	})
 }
+
+func TestParseBTCMaxSats(t *testing.T) {
+	t.Run("omitted flag means uncapped", func(t *testing.T) {
+		v, err := parseBTCMaxSats(0, false)
+		require.NoError(t, err)
+		require.Zero(t, v)
+	})
+
+	t.Run("an explicit zero is rejected", func(t *testing.T) {
+		// zero is the uncapped sentinel, so typing it meaning "no BTC" would sweep everything;
+		// --evm-max-amount already rejects an explicit 0 and these should not disagree
+		_, err := parseBTCMaxSats(0, true)
+		require.ErrorContains(t, err, "must be positive")
+		require.ErrorContains(t, err, "omit the flag to sweep all BTC")
+		require.ErrorContains(t, err, FlagExcludeChains)
+	})
+
+	t.Run("negative is rejected", func(t *testing.T) {
+		_, err := parseBTCMaxSats(-1, true)
+		require.ErrorContains(t, err, "must not be negative")
+	})
+
+	t.Run("a positive cap passes through", func(t *testing.T) {
+		v, err := parseBTCMaxSats(100_000, true)
+		require.NoError(t, err)
+		require.EqualValues(t, 100_000, v)
+	})
+}

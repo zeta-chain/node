@@ -111,7 +111,7 @@ tss-balances.`,
 		FlagBTCMaxSats,
 		0,
 		"rehearsal only: cap the total BTC swept at this many sats, by selecting a subset of UTXOs. "+
-			"Whole UTXOs only, so a cap below the smallest sweepable UTXO sweeps nothing (reported) (default: all)",
+			"Whole UTXOs only, so a cap the UTXOs cannot sum to sweeps nothing (reported) (default: all)",
 	)
 
 	return cmd
@@ -196,9 +196,12 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 	if err != nil {
 		return nil, opts, err
 	}
-	btcMaxSats := must(cmd.Flags().GetInt64(FlagBTCMaxSats))
-	if btcMaxSats < 0 {
-		return nil, opts, fmt.Errorf("--%s must not be negative, got %d", FlagBTCMaxSats, btcMaxSats)
+	btcMaxSats, err := parseBTCMaxSats(
+		must(cmd.Flags().GetInt64(FlagBTCMaxSats)),
+		cmd.Flags().Changed(FlagBTCMaxSats),
+	)
+	if err != nil {
+		return nil, opts, err
 	}
 
 	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
@@ -275,6 +278,23 @@ func parseEVMMaxAmount(s string) (sdkmath.Uint, error) {
 		)
 	}
 	return sdkmath.NewUintFromBigInt(v), nil
+}
+
+// parseBTCMaxSats validates the --btc-max-sats flag. Zero doubles as the uncapped sentinel, so
+// "typed 0" and "not passed" have to be told apart: an operator who types 0 meaning "no BTC" would
+// otherwise get the full BTC drain. changed carries that distinction from cobra.
+func parseBTCMaxSats(v int64, changed bool) (int64, error) {
+	switch {
+	case v < 0:
+		return 0, fmt.Errorf("--%s must not be negative, got %d", FlagBTCMaxSats, v)
+	case v == 0 && changed:
+		return 0, fmt.Errorf(
+			"--%s must be positive; omit the flag to sweep all BTC, or use --%s to skip the BTC chain",
+			FlagBTCMaxSats,
+			FlagExcludeChains,
+		)
+	}
+	return v, nil
 }
 
 // warnIfCapped makes a rehearsal payload impossible to mistake for the real drain: the caps only
