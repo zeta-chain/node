@@ -768,11 +768,12 @@ func reportNonceState(w io.Writer, chainID int64, pinnedNonce, pending uint64) {
 
 // reportUnviableBTCCap explains why a capped run produced no BTC sweep, and what cap would.
 //
-// A UTXO wallet cannot always honour a small cap: the sweep spends whole UTXOs, so a viable
-// rehearsal needs a single UTXO that is at once large enough to out-earn its own fee and small
-// enough to fit the cap. If the wallet's UTXOs are all far above the cap and the rest is dust,
-// no cap in between exists — the operator needs to know that now, not after concluding BTC was
-// covered.
+// The sweep spends whole UTXOs, so a viable rehearsal needs the selected inputs to total at least
+// MinViableSweepSats while staying under the cap — and a cap can fall in a gap the wallet's UTXOs
+// simply cannot land on. The operator needs to know that now, not after concluding BTC was covered.
+//
+// The only sound impossibility test is against the whole balance: individual UTXOs below the floor
+// say nothing, since a group of them can clear it together.
 func reportUnviableBTCCap(
 	w io.Writer,
 	utxos []drain.UTXO,
@@ -786,43 +787,42 @@ func reportUnviableBTCCap(
 		return
 	}
 
-	// the smallest UTXO that would make a viable one-input sweep on its own; the operator can
-	// raise the cap to it, and if none exists the wallet's shape rules out a small BTC rehearsal
-	var smallestViable int64
+	var walletTotal int64
 	for _, u := range utxos {
-		if u.AmountSats >= minViable && (smallestViable == 0 || u.AmountSats < smallestViable) {
-			smallestViable = u.AmountSats
+		if u.AmountSats > 0 {
+			walletTotal += u.AmountSats
 		}
 	}
 
 	fmt.Fprintf(
 		w,
 		"ERROR chain %d: REHEARSAL SWEPT NO BTC. --%s %d admits no economical sweep at %d sat/vB "+
-			"(a sweep needs at least %d sats to out-earn its own fee)\n",
+			"(a sweep's inputs must total at least %d sats to out-earn the fee)\n",
 		chainID,
 		FlagBTCMaxSats,
 		maxSats,
 		feeRate,
 		minViable,
 	)
-	if smallestViable > 0 {
+	if walletTotal < minViable {
 		fmt.Fprintf(
 			w,
-			"ERROR chain %d: raise --%s to at least %d (the smallest UTXO that can be swept alone) "+
-				"or lower --%s, otherwise this run does NOT rehearse BTC\n",
+			"ERROR chain %d: the entire TSS balance is %d sats, below that floor, so no cap can "+
+				"rehearse BTC at this fee rate — lower --%s or drain BTC uncapped\n",
 			chainID,
-			FlagBTCMaxSats,
-			smallestViable,
+			walletTotal,
 			FlagFeeRate,
 		)
 		return
 	}
 	fmt.Fprintf(
 		w,
-		"ERROR chain %d: no single UTXO reaches %d sats at this fee rate, so no cap can rehearse BTC "+
-			"on these holdings — BTC can only be drained uncapped\n",
+		"ERROR chain %d: raise --%s to at least %d, or lower --%s. UTXOs are spent whole, so the "+
+			"cap must also be reachable by summing them; otherwise this run does NOT rehearse BTC\n",
 		chainID,
+		FlagBTCMaxSats,
 		minViable,
+		FlagFeeRate,
 	)
 }
 
