@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"os"
 	"os/signal"
@@ -195,7 +196,6 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 	if btcMaxSats < 0 {
 		return nil, opts, fmt.Errorf("--%s must not be negative, got %d", FlagBTCMaxSats, btcMaxSats)
 	}
-	warnIfCapped(evmMaxAmount, btcMaxSats)
 
 	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
 	if err != nil {
@@ -279,7 +279,7 @@ func parseEVMMaxAmount(s string) (sdkmath.Uint, error) {
 //
 // The wording deliberately avoids claiming nothing is drained: a cap is an upper bound, so any
 // chain whose drainable balance already sits below it is swept in full by a "rehearsal".
-func warnIfCapped(evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
+func warnIfCapped(w io.Writer, evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
 	if evmMaxAmount.IsZero() && btcMaxSats == 0 {
 		return
 	}
@@ -292,7 +292,7 @@ func warnIfCapped(evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
 		btcCap = fmt.Sprintf("%d sats total", btcMaxSats)
 	}
 	fmt.Fprintf(
-		os.Stderr,
+		w,
 		"WARN REHEARSAL PAYLOAD: value is capped (evm: %s, btc: %s). This does NOT drain the TSS, "+
 			"except on chains already below the cap, which are swept in full. "+
 			"Re-run without the caps at a higher trigger height for the real drain\n",
@@ -425,6 +425,12 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 			"refusing to sign an empty final drain payload: no chains have drainable funds",
 		)
 	}
+
+	// Emitted per payload, not once at startup: in --serve mode the cron rebuilds every
+	// --interval, and a startup-only banner would scroll off behind the per-tick chain logs
+	// within a minute. This is the only in-terminal signal that separates a rehearsal from the
+	// real drain, so it stays next to the payload it describes.
+	warnIfCapped(os.Stderr, g.evmMaxAmount, g.btcMaxSats)
 
 	return drain.BuildPayload(g.triggerHeight, seq, final, g.network, evmTxs, btcTxs, g.priv)
 }
