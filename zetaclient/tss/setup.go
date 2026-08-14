@@ -20,6 +20,7 @@ import (
 	"github.com/zeta-chain/go-tss/conversion"
 	"github.com/zeta-chain/go-tss/tss"
 
+	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -79,24 +80,10 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("resolved pre-params file")
 
 	// 3. Prepare whitelist of peers
-	tssKeygen, err := p.Zetacore.GetKeyGen(ctx)
+	currentTSS, whitelistedPeers, keyAlreadyFinalized, err := resolveWhitelist(ctx, p.Zetacore, setupLogger)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get TSS keygen")
+		return nil, err
 	}
-
-	setupLogger.Info().Msg("fetched TSS keygen info")
-
-	whitelistedPeers := make([]peer.ID, len(tssKeygen.GranteePubkeys))
-	for i, pk := range tssKeygen.GranteePubkeys {
-		whitelistedPeers[i], err = conversion.Bech32PubkeyToPeerID(pk)
-		if err != nil {
-			return nil, errors.Wrap(err, pk)
-		}
-	}
-
-	setupLogger.Info().
-		Any("whitelisted_peers", whitelistedPeers).
-		Msg("resolved whitelist peers")
 
 	// 4. Bootstrap go-tss TSS server
 	tssServer, err := NewServer(
@@ -119,12 +106,32 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	setupLogger.Info().Msg("started TSS server")
 
 	// 5. Perform key generation (if needed)
-	tssInfo, err := KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to perform keygen ceremony")
+	//
+	// A finalized TSS means there is nothing left to generate, so the ceremony is skipped
+	// entirely rather than waiting on the keygen record to say so. Waiting is not safe: the
+	// record is reset to "pending at block MaxInt64" on any observer set change, and the
+	// ceremony would then block forever on a block that never arrives, taking the signer down
+	// with it. KeygenCeremony returns GetTSS on its own success path, so this is the same value
+	// it would have produced.
+	//
+	// Consequence worth being explicit about: while a finalized key exists, a keygen scheduled
+	// by MsgUpdateKeygen will NOT run, because nothing else calls KeygenCeremony. Rotating on
+	// purpose means removing the current TSS first, or reintroducing a deliberate trigger.
+	// Tracked in https://github.com/zeta-chain/node/issues/4623.
+	tssInfo := currentTSS
+	if !keyAlreadyFinalized {
+		tssInfo, err = KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to perform keygen ceremony")
+		}
 	}
 
-	historicalTSSInfo, err := p.Zetacore.GetTSSHistory(ctx)
+	// Retried for the same reason as the two calls above: same startup path, same contended
+	// zetacore, and a one-shot failure here is equally fatal.
+	historicalTSSInfo, err := retry.DoTypedWithBackoffAndRetry(
+		func() ([]observertypes.TSS, error) { return p.Zetacore.GetTSSHistory(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get TSS history")
 	}
@@ -183,6 +190,121 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	return service, nil
+}
+
+// tssFetcher is the slice of Zetacore that resolveWhitelist needs. Narrow on purpose: the
+// whole point of splitting this out of Setup is that it can be exercised without a p2p server,
+// key files on disk, or a full zetacore client.
+type tssFetcher interface {
+	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
+	GetTSS(ctx context.Context) (observertypes.TSS, error)
+}
+
+// resolveWhitelist decides which peers the TSS server may talk to, and reports whether a TSS
+// key already exists so Setup can skip the keygen ceremony.
+//
+// A finalized TSS takes precedence over the keygen record; see resolveTSSPeers.
+//
+// "GetTSS failed" and "there is no TSS" are different answers and must not be merged. The
+// record we would fall back to is the blanked one this function exists to survive, so
+// treating a failed query as absence restores both symptoms: an empty whitelist, and a
+// ceremony waiting on a block that never arrives.
+//
+// A failed query therefore falls back to the record, and the guard below is what keeps that
+// safe: if the record has been blanked there is nothing to whitelist and startup stops
+// there rather than continuing on a bad answer. When the record is intact the fallback is
+// the right one anyway — its grantees are the same set, and a keygen that already succeeded
+// makes the ceremony a noop, so a blip heals itself instead of taking the node down.
+// Every error is retried, including the not-found a chain without a key answers with. The
+// constant backoff is deliberate: sub-second retries give up inside an RPC restart, and the
+// only node that pays the full wait is one on a chain with no key, which then waits for the
+// keygen block anyway.
+func resolveWhitelist(
+	ctx context.Context,
+	client tssFetcher,
+	setupLogger zerolog.Logger,
+) (observertypes.TSS, []peer.ID, bool, error) {
+	// This query runs first, so leaving it a one-shot fatal would kill startup before the
+	// retry below could ever apply.
+	tssKeygen, err := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.Keygen, error) { return client.GetKeyGen(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
+	if err != nil {
+		return observertypes.TSS{}, nil, false, errors.Wrap(err, "unable to get TSS keygen")
+	}
+
+	setupLogger.Info().Msg("fetched TSS keygen info")
+
+	currentTSS, tssErr := retry.DoTypedWithBackoffAndRetry(
+		func() (observertypes.TSS, error) { return client.GetTSS(ctx) },
+		retry.DefaultConstantBackoff(),
+	)
+
+	if tssErr != nil {
+		setupLogger.Warn().Err(tssErr).Msg("unable to get TSS; falling back to the keygen record")
+		currentTSS = observertypes.TSS{}
+	}
+
+	peerSource, keyAlreadyFinalized := resolveTSSPeers(tssKeygen, currentTSS)
+	if keyAlreadyFinalized {
+		setupLogger.Info().
+			Str("tss_pubkey", currentTSS.TssPubkey).
+			Int("grantees_in_keygen_record", len(tssKeygen.GranteePubkeys)).
+			Int("participants_in_tss", len(currentTSS.TssParticipantList)).
+			Msg("TSS key already finalized; whitelisting its participants")
+	}
+
+	// Starting with nothing to whitelist is the failure this function guards against, so say
+	// so plainly instead of letting go-tss report it as missing bootstrap peers.
+	if len(peerSource) == 0 {
+		return observertypes.TSS{}, nil, false, errors.New(
+			"no TSS peers to whitelist: both the TSS participant list and the keygen grantees are empty",
+		)
+	}
+
+	whitelistedPeers := make([]peer.ID, len(peerSource))
+	for i, pk := range peerSource {
+		peerID, err := conversion.Bech32PubkeyToPeerID(pk)
+		if err != nil {
+			return observertypes.TSS{}, nil, false, errors.Wrap(err, pk)
+		}
+		whitelistedPeers[i] = peerID
+	}
+
+	setupLogger.Info().
+		Any("whitelisted_peers", whitelistedPeers).
+		Msg("resolved whitelist peers")
+
+	return currentTSS, whitelistedPeers, keyAlreadyFinalized, nil
+}
+
+// resolveTSSPeers returns the pubkeys allowed into p2p, and whether the TSS key is already
+// finalized (in which case no keygen ceremony is required).
+//
+// The keygen record describes a key that is yet to be generated, so it is only authoritative
+// before the first ceremony. zetacore resets it to a blank value on any observer set change
+// (x/observer/abci.go BeginBlocker): the grantee list is erased and the block set to MaxInt64.
+// That says nothing about a key generated long ago and whose shares this node still holds, so
+// a finalized TSS wins. Reading the record instead would leave a healthy signer with an empty
+// whitelist and a ceremony scheduled for a block that never arrives.
+//
+// The participant list is the set that produced the key we are about to sign with, which makes
+// it the correct whitelist: it must stay a superset of the participants recorded in the local
+// key share, or peers are refused at the p2p layer during keysign.
+func resolveTSSPeers(keygen observertypes.Keygen, currentTSS observertypes.TSS) (pubkeys []string, finalized bool) {
+	if currentTSS.TssPubkey == "" {
+		return keygen.GranteePubkeys, false
+	}
+
+	// A TSS imported straight from genesis (x/observer/genesis.go) can carry a key with no
+	// participants recorded. The key is still real and must not be regenerated, so keep
+	// finalized set and take the peers from the keygen record instead of whitelisting nobody.
+	if len(currentTSS.TssParticipantList) == 0 {
+		return keygen.GranteePubkeys, true
+	}
+
+	return currentTSS.TssParticipantList, true
 }
 
 // NewServer creates a new tss.TssServer (go-tss) instance for key signing.

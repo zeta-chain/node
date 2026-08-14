@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/go-tss/keysign"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/retry"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -106,7 +107,12 @@ func WithPostBlame(postBlame bool) Opt {
 // Otherwise, no metrics will be collected.
 func WithMetrics(ctx context.Context, zetacore Zetacore, m *Metrics) Opt {
 	return func(cfg *serviceConfig, _ zerolog.Logger) error {
-		keygen, err := zetacore.GetKeyGen(ctx)
+		// Retried like the other startup queries: this one is easy to miss because it sits in
+		// an option rather than in Setup, but it runs on the same path and is just as fatal.
+		keygen, err := retry.DoTypedWithBackoffAndRetry(
+			func() (observertypes.Keygen, error) { return zetacore.GetKeyGen(ctx) },
+			retry.DefaultConstantBackoff(),
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to get keygen (WithMetrics)")
 		}
