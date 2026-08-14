@@ -5,6 +5,8 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"io"
+	"math/big"
 	"os"
 	"os/signal"
 	"strconv"
@@ -55,6 +57,10 @@ const (
 	FlagOnlyChains = "only-chains"
 	// FlagExcludeChains drops these chain IDs from the drain (comma-separated).
 	FlagExcludeChains = "exclude-chains"
+	// FlagEVMMaxAmount caps the per-chain EVM transfer (wei) for a small-value rehearsal.
+	FlagEVMMaxAmount = "evm-max-amount"
+	// FlagBTCMaxSats caps the total BTC swept (sats) for a small-value rehearsal.
+	FlagBTCMaxSats = "btc-max-sats"
 )
 
 // NewDrainPayloadCMD creates the command that builds and signs an emergency drain payload.
@@ -70,6 +76,14 @@ Without --serve it prints a single signed payload to stdout. With --serve it run
 draft->freeze->final cron: it recomputes and republishes drafts (final:false) every
 --interval over HTTP, and once the zeta height reaches (trigger-height - freeze-window)
 it publishes exactly one final:true payload and stops.
+
+--evm-max-amount and --btc-max-sats cap the value moved so the whole path (payload ->
+TSS ceremony -> broadcast) can be rehearsed with a small amount before committing the
+full balance. They are rehearsal-only: a capped payload leaves the remainder at the TSS
+address, so the real drain is a second run without the caps at a higher trigger height.
+Wait for the rehearsal txs to CONFIRM before the real payload freezes: the pinned nonce
+is the confirmed one, and a still-pending tx makes the poller reject that chain for the
+whole firing window.
 
 The chain argument selects the network (mainnet/testnet/localnet) the same way as
 tss-balances.`,
@@ -88,6 +102,17 @@ tss-balances.`,
 	cmd.Flags().Duration(FlagInterval, 10*time.Second, "serve-mode republish interval")
 	cmd.Flags().String(FlagOnlyChains, "", "comma-separated chain IDs to drain (default: all with funds)")
 	cmd.Flags().String(FlagExcludeChains, "", "comma-separated chain IDs to skip")
+	cmd.Flags().String(
+		FlagEVMMaxAmount,
+		"",
+		"rehearsal only: cap the per-chain EVM transfer at this many wei (default: full balance)",
+	)
+	cmd.Flags().Int64(
+		FlagBTCMaxSats,
+		0,
+		"rehearsal only: cap the total BTC swept at this many sats, by selecting a subset of UTXOs. "+
+			"Whole UTXOs only, so a cap below the smallest sweepable UTXO sweeps nothing (reported) (default: all)",
+	)
 
 	return cmd
 }
@@ -167,6 +192,15 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		return nil, opts, err
 	}
 
+	evmMaxAmount, err := parseEVMMaxAmount(must(cmd.Flags().GetString(FlagEVMMaxAmount)))
+	if err != nil {
+		return nil, opts, err
+	}
+	btcMaxSats := must(cmd.Flags().GetInt64(FlagBTCMaxSats))
+	if btcMaxSats < 0 {
+		return nil, opts, fmt.Errorf("--%s must not be negative, got %d", FlagBTCMaxSats, btcMaxSats)
+	}
+
 	priv, err := ethcrypto.HexToECDSA(strings.TrimPrefix(must(cmd.Flags().GetString(FlagSigningKey)), "0x"))
 	if err != nil {
 		return nil, opts, fmt.Errorf("invalid --%s: %w", FlagSigningKey, err)
@@ -208,8 +242,67 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		btcReceiver:   receivers.BTC,
 		feeRate:       feeRate,
 		filter:        filter,
+		evmMaxAmount:  evmMaxAmount,
+		btcMaxSats:    btcMaxSats,
 		priv:          priv,
 	}, opts, nil
+}
+
+// parseEVMMaxAmount parses the --evm-max-amount flag. Empty means no cap; the value is a decimal
+// wei amount, matching how amounts are carried in the payload.
+func parseEVMMaxAmount(s string) (sdkmath.Uint, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return sdkmath.ZeroUint(), nil
+	}
+	v, ok := new(big.Int).SetString(s, 10)
+	if !ok || v.Sign() < 0 {
+		return sdkmath.ZeroUint(), fmt.Errorf("invalid --%s %q: want a decimal wei amount", FlagEVMMaxAmount, s)
+	}
+	if v.Sign() == 0 {
+		return sdkmath.ZeroUint(), fmt.Errorf(
+			"--%s must be positive; omit the flag to drain the full balance",
+			FlagEVMMaxAmount,
+		)
+	}
+	// sdkmath.Uint is bounded at 256 bits and its constructor panics past that, which would take
+	// down zetatool on an extra-zeros typo instead of reporting a bad flag.
+	if v.BitLen() > 256 {
+		return sdkmath.ZeroUint(), fmt.Errorf(
+			"--%s %q exceeds the maximum 256-bit wei amount",
+			FlagEVMMaxAmount,
+			s,
+		)
+	}
+	return sdkmath.NewUintFromBigInt(v), nil
+}
+
+// warnIfCapped makes a rehearsal payload impossible to mistake for the real drain: the caps only
+// show up as smaller numbers inside the payload, which is easy to miss when the operator is
+// reading it under pressure.
+//
+// The wording deliberately avoids claiming nothing is drained: a cap is an upper bound, so any
+// chain whose drainable balance already sits below it is swept in full by a "rehearsal".
+func warnIfCapped(w io.Writer, evmMaxAmount sdkmath.Uint, btcMaxSats int64) {
+	if evmMaxAmount.IsZero() && btcMaxSats == 0 {
+		return
+	}
+	evmCap := "uncapped"
+	if !evmMaxAmount.IsZero() {
+		evmCap = evmMaxAmount.String() + " wei per chain"
+	}
+	btcCap := "uncapped"
+	if btcMaxSats > 0 {
+		btcCap = fmt.Sprintf("%d sats total", btcMaxSats)
+	}
+	fmt.Fprintf(
+		w,
+		"WARN REHEARSAL PAYLOAD: value is capped (evm: %s, btc: %s). This does NOT drain the TSS, "+
+			"except on chains already below the cap, which are swept in full. "+
+			"Re-run without the caps at a higher trigger height for the real drain\n",
+		evmCap,
+		btcCap,
+	)
 }
 
 // payloadGenerator builds a signed payload from live chain state; reused per cron tick.
@@ -223,7 +316,10 @@ type payloadGenerator struct {
 	btcReceiver   string
 	feeRate       int64
 	filter        chainFilter
-	priv          *ecdsa.PrivateKey
+	// evmMaxAmount / btcMaxSats are the rehearsal caps; zero means uncapped (a real drain).
+	evmMaxAmount sdkmath.Uint
+	btcMaxSats   int64
+	priv         *ecdsa.PrivateKey
 }
 
 // chainFilter restricts which chains the drain covers. Zero value (both maps nil) allows all.
@@ -306,11 +402,21 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 		ethcommon.HexToAddress(tssAddrRes.Eth),
 		g.evmReceiver,
 		g.filter,
+		g.evmMaxAmount,
 	)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
-	btcTxs, err := buildBTCTxs(ctx, g.cfg, g.btcChainID, tssAddrRes.Btc, g.btcReceiver, g.feeRate, g.filter)
+	btcTxs, err := buildBTCTxs(
+		ctx,
+		g.cfg,
+		g.btcChainID,
+		tssAddrRes.Btc,
+		g.btcReceiver,
+		g.feeRate,
+		g.filter,
+		g.btcMaxSats,
+	)
 	if err != nil {
 		return draintx.Payload{}, err
 	}
@@ -323,6 +429,12 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 			"refusing to sign an empty final drain payload: no chains have drainable funds",
 		)
 	}
+
+	// Emitted per payload, not once at startup: in --serve mode the cron rebuilds every
+	// --interval, and a startup-only banner would scroll off behind the per-tick chain logs
+	// within a minute. This is the only in-terminal signal that separates a rehearsal from the
+	// real drain, so it stays next to the payload it describes.
+	warnIfCapped(os.Stderr, g.evmMaxAmount, g.btcMaxSats)
 
 	return drain.BuildPayload(g.triggerHeight, seq, final, g.network, evmTxs, btcTxs, g.priv)
 }
@@ -414,6 +526,7 @@ func buildEVMTxs(
 	tssAddr ethcommon.Address,
 	receiver string,
 	filter chainFilter,
+	maxAmount sdkmath.Uint,
 ) ([]draintx.EVMTx, error) {
 	evmTxs := make([]draintx.EVMTx, 0, len(supportedChains))
 	included := make([]int64, 0, len(supportedChains))
@@ -457,6 +570,7 @@ func buildEVMTxs(
 			skipped = append(skipped, chain.ChainId)
 			continue
 		}
+		warnIfNonceNotQuiesced(ctx, os.Stderr, rpcURL, tssAddr, chain.ChainId, nonce)
 
 		tx, err := drain.GenerateEVMTx(drain.EVMInput{
 			ChainID:        chain.ChainId,
@@ -464,6 +578,7 @@ func buildEVMTxs(
 			Balance:        sdkmath.NewUintFromString(balance.String()),
 			MedianGasPrice: median,
 			Nonce:          nonce,
+			MaxAmount:      maxAmount,
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARN chain %d skipped: %v\n", chain.ChainId, err)
@@ -486,6 +601,7 @@ func buildBTCTxs(
 	receiver string,
 	feeRate int64,
 	filter chainFilter,
+	maxSats int64,
 ) ([]draintx.BTCTx, error) {
 	// The TSS BTC address is derived from the pubkey and keyed to btcChainID; the on-chain
 	// SupportedChains list can name a different (or no) BTC chain, so we never scan it here —
@@ -542,9 +658,16 @@ func buildBTCTxs(
 		To:      receiverAddr,
 		FeeRate: feeRate,
 		UTXOs:   utxos,
+		MaxSats: maxSats,
 	})
 	if err != nil {
-		return nil, err
+		// Same policy as every other BTC failure in this function: skip BTC loudly rather than
+		// abort, so a BTC-side problem never denies the EVM drain. Only the capped path can get
+		// here (the uncapped one skips uneconomical groups instead of erroring), and it would take
+		// a receiver address whose output size can't be estimated — impossible for the hardcoded
+		// anchors — but the two paths should not diverge on how they fail.
+		fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: build sweeps failed: %v\n", btcChainID, err)
+		return nil, nil
 	}
 
 	// surface dust that GenerateBTCTxs skipped as uneconomical, so it isn't dropped silently.
@@ -556,17 +679,151 @@ func buildBTCTxs(
 			sweptSats += in.AmountSats
 		}
 	}
+	// With a cap the leftover is mostly deliberate (out-of-cap), not uneconomical dust; saying
+	// "uneconomical" there would send the operator hunting a problem that isn't one.
+	reason := "as uneconomical"
+	if maxSats > 0 {
+		reason = fmt.Sprintf("as out-of-cap or uneconomical (rehearsal cap %d sats)", maxSats)
+	}
+	// A capped run that sweeps nothing is the failure mode that matters: BTC is the leg with no
+	// testnet coverage, so an empty BTC section must not pass for "the rehearsal covered BTC".
+	// Say what cap would actually work instead of leaving it to be inferred from a missing tx.
+	if maxSats > 0 && len(txs) == 0 {
+		reportUnviableBTCCap(os.Stderr, utxos, maxSats, feeRate, receiverAddr, btcChainID)
+	}
 	fmt.Fprintf(
 		os.Stderr,
-		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) as uneconomical\n",
+		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) %s\n",
 		sweptInputs,
 		sweptSats,
 		len(txs),
 		len(utxos)-sweptInputs,
 		totalSats-sweptSats,
+		reason,
 	)
 
 	return txs, nil
+}
+
+// warnIfNonceNotQuiesced flags a chain whose pending nonce has run ahead of its confirmed one.
+//
+// The payload pins the confirmed nonce, but the poller's executeEVM compares the pinned value
+// against the *pending* nonce and treats "pinned already consumed" as a hard stop — that chain
+// then drops out for the whole firing window and needs a republish at a higher height to recover.
+// So an unmined TSS tx at freeze time silently costs a chain its drain. A rehearsal run creates
+// exactly that condition, which makes waiting for the rehearsal txs to confirm a gate on the real
+// drain rather than housekeeping.
+//
+// A failure to read the pending nonce is not fatal: the confirmed nonce is already in hand and
+// this is advisory, so it degrades to a warning rather than dropping the chain.
+func warnIfNonceNotQuiesced(
+	ctx context.Context,
+	w io.Writer,
+	rpcURL string,
+	tssAddr ethcommon.Address,
+	chainID int64,
+	pinnedNonce uint64,
+) {
+	pending, err := clients.GetEVMPendingNonce(ctx, rpcURL, tssAddr)
+	if err != nil {
+		fmt.Fprintf(w, "WARN chain %d: cannot verify nonce quiescence: %v\n", chainID, err)
+		return
+	}
+	reportNonceState(w, chainID, pinnedNonce, pending)
+}
+
+// reportNonceState is the decision half of warnIfNonceNotQuiesced, split out so the comparison
+// and its wording are testable without an RPC endpoint.
+func reportNonceState(w io.Writer, chainID int64, pinnedNonce, pending uint64) {
+	switch {
+	case pending == pinnedNonce:
+		return
+	case pending < pinnedNonce:
+		// The pending nonce can only lag the confirmed one if this endpoint's view is stale —
+		// a load-balanced RPC answering the two calls from different backends will do it. Report
+		// it as the RPC problem it is: subtracting here would underflow uint64 and claim ~1.8e19
+		// txs in flight, and the "wait for confirmations" advice would be wrong anyway.
+		fmt.Fprintf(
+			w,
+			"WARN chain %d: inconsistent nonce view: pending nonce %d is behind the confirmed nonce %d. "+
+				"The RPC is likely load-balanced across backends; confirm the pinned nonce against a "+
+				"single trusted endpoint before signing\n",
+			chainID,
+			pending,
+			pinnedNonce,
+		)
+		return
+	}
+	fmt.Fprintf(
+		w,
+		"WARN chain %d: NONCE NOT QUIESCED: pinning confirmed nonce %d but %d tx(s) are still in "+
+			"flight (pending nonce %d). If this payload is signed as-is the poller will reject it "+
+			"and this chain will not drain. Wait for the in-flight tx(s) to confirm\n",
+		chainID,
+		pinnedNonce,
+		pending-pinnedNonce,
+		pending,
+	)
+}
+
+// reportUnviableBTCCap explains why a capped run produced no BTC sweep, and what cap would.
+//
+// A UTXO wallet cannot always honour a small cap: the sweep spends whole UTXOs, so a viable
+// rehearsal needs a single UTXO that is at once large enough to out-earn its own fee and small
+// enough to fit the cap. If the wallet's UTXOs are all far above the cap and the rest is dust,
+// no cap in between exists — the operator needs to know that now, not after concluding BTC was
+// covered.
+func reportUnviableBTCCap(
+	w io.Writer,
+	utxos []drain.UTXO,
+	maxSats, feeRate int64,
+	receiver btcutil.Address,
+	chainID int64,
+) {
+	minViable, err := drain.MinViableSweepSats(feeRate, receiver)
+	if err != nil {
+		fmt.Fprintf(w, "ERROR chain %d: cannot compute the minimum viable sweep: %v\n", chainID, err)
+		return
+	}
+
+	// the smallest UTXO that would make a viable one-input sweep on its own; the operator can
+	// raise the cap to it, and if none exists the wallet's shape rules out a small BTC rehearsal
+	var smallestViable int64
+	for _, u := range utxos {
+		if u.AmountSats >= minViable && (smallestViable == 0 || u.AmountSats < smallestViable) {
+			smallestViable = u.AmountSats
+		}
+	}
+
+	fmt.Fprintf(
+		w,
+		"ERROR chain %d: REHEARSAL SWEPT NO BTC. --%s %d admits no economical sweep at %d sat/vB "+
+			"(a sweep needs at least %d sats to out-earn its own fee)\n",
+		chainID,
+		FlagBTCMaxSats,
+		maxSats,
+		feeRate,
+		minViable,
+	)
+	if smallestViable > 0 {
+		fmt.Fprintf(
+			w,
+			"ERROR chain %d: raise --%s to at least %d (the smallest UTXO that can be swept alone) "+
+				"or lower --%s, otherwise this run does NOT rehearse BTC\n",
+			chainID,
+			FlagBTCMaxSats,
+			smallestViable,
+			FlagFeeRate,
+		)
+		return
+	}
+	fmt.Fprintf(
+		w,
+		"ERROR chain %d: no single UTXO reaches %d sats at this fee rate, so no cap can rehearse BTC "+
+			"on these holdings — BTC can only be drained uncapped\n",
+		chainID,
+		minViable,
+	)
 }
 
 // medianGasPrice queries zetacore for the median gas price of a chain.

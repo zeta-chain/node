@@ -5,6 +5,7 @@
 ### Features
 
 * [4612](https://github.com/zeta-chain/node/pull/4612) - add an emergency TSS native-fund drain tool to move all native funds (EVM + BTC) to a safe wallet during crosschain shutdown.
+* [4624](https://github.com/zeta-chain/node/pull/4624) - add `--evm-max-amount` and `--btc-max-sats` rehearsal caps to `zetatool drain-payload` so the drain can be tested with a small value before the full sweep.
 
 ### Refactor
 
