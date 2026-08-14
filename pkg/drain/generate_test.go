@@ -580,18 +580,20 @@ func TestMinViableSweepSats(t *testing.T) {
 	}
 }
 
-func TestGenerateBTCTxsCapStopsAtTheFirstUnaffordableInput(t *testing.T) {
+func TestGenerateBTCTxsCapExcludesInputsBelowTheirMarginalFee(t *testing.T) {
 	payee := testPayee(t)
 	const feeRate = int64(50)
 
-	// Selection stops at the first candidate that can't cover its own marginal fee rather than
-	// scanning on. With a descending list that is not merely an optimisation: the fee is fixed by
-	// the current input count, so no smaller candidate can pass the same test. Anything that did
-	// get taken after such a candidate would mean the ordering or the bound had been broken.
+	// Every candidate behind the 90k input is far below what a second input must be worth
+	// (TestGenerateBTCTxsCapMarginalFeeBoundary pins that threshold), so none of them is taken.
+	//
+	// Note this does NOT pin the loop's break-vs-continue choice, and no test can: the fee is
+	// fixed by the current input count and the list is descending, so a candidate that fails the
+	// bound is followed only by candidates that fail it harder. The two are indistinguishable by
+	// construction — the reason to break is that continuing reads as if recovery were possible.
 	utxos := []drain.UTXO{
 		{TxID: "big", Vout: 0, AmountSats: 90_000},
 		{TxID: "mid", Vout: 1, AmountSats: 300},
-		// a UTXO large enough to pay its way, but ordered behind the one that stops the walk
 		{TxID: "late", Vout: 2, AmountSats: 200},
 	}
 
@@ -602,4 +604,48 @@ func TestGenerateBTCTxsCapStopsAtTheFirstUnaffordableInput(t *testing.T) {
 	require.Len(t, txs, 1)
 	require.Len(t, txs[0].Inputs, 1)
 	require.EqualValues(t, 90_000, txs[0].Inputs[0].AmountSats)
+}
+
+func TestGenerateBTCTxsCapMarginalFeeBoundary(t *testing.T) {
+	payee := testPayee(t)
+	const feeRate = int64(50)
+	const anchor = int64(90_000)
+
+	// What a second input must be worth to be taken, derived from the estimator rather than
+	// hardcoded: with fee2 = size(2) * feeRate and the bound fee <= total/MaxBTCFeeFraction,
+	// the smallest qualifying amount is fee2*MaxBTCFeeFraction - anchor. At 50 sat/vB behind a
+	// 90k-sat anchor that is ~29.5k sats — three orders of magnitude above the dust this rule is
+	// usually described as excluding, which is why "it skips dust" undersells it.
+	size2, err := btccommon.EstimateOutboundSize(2, []btcutil.Address{payee})
+	require.NoError(t, err)
+	threshold := size2*feeRate*drain.MaxBTCFeeFraction - anchor
+
+	sweep := func(second int64) []draintx.BTCTx {
+		txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+			ChainID: 8332,
+			To:      payee,
+			FeeRate: feeRate,
+			UTXOs: []drain.UTXO{
+				{TxID: "anchor", Vout: 0, AmountSats: anchor},
+				{TxID: "second", Vout: 1, AmountSats: second},
+			},
+			MaxSats: 200_000,
+		})
+		require.NoError(t, err)
+		require.Len(t, txs, 1)
+		return txs
+	}
+
+	// one sat under: the anchor sweeps alone
+	require.Len(t, sweep(threshold - 1)[0].Inputs, 1)
+
+	// at the threshold: the second input pays its way and is taken, and the group still satisfies
+	// the poller's bound
+	txs := sweep(threshold)
+	require.Len(t, txs[0].Inputs, 2)
+	var totalIn int64
+	for _, in := range txs[0].Inputs {
+		totalIn += in.AmountSats
+	}
+	require.LessOrEqual(t, txs[0].FeeSats, totalIn/drain.MaxBTCFeeFraction)
 }
