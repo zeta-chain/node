@@ -441,3 +441,141 @@ func TestGenerateBTCTxsMaxSatsDoesNotMutateCallerSlice(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, original, utxos)
 }
+
+// mainnetShapedUTXOs mirrors the shape measured on mainnet during the live run: 20 UTXOs holding
+// ~99.75% of the balance, the remainder spread over hundreds of dust outputs. That shape is what
+// makes a capped selection hard — there is a wide gap between "large" and "dust" with nothing in
+// between for a small cap to land on.
+func mainnetShapedUTXOs() []drain.UTXO {
+	const totalSats = int64(177_000_000)
+	large := totalSats * 9975 / 10000 / 20
+
+	utxos := make([]drain.UTXO, 0, 500)
+	for i := 0; i < 20; i++ {
+		utxos = append(utxos, drain.UTXO{TxID: fmt.Sprintf("large-%03d", i), Vout: uint32(i), AmountSats: large})
+	}
+	for i := 0; i < 480; i++ {
+		utxos = append(utxos, drain.UTXO{TxID: fmt.Sprintf("dust-%03d", i), Vout: uint32(1000 + i), AmountSats: 931})
+	}
+	return utxos
+}
+
+func TestGenerateBTCTxsCapNeverEmitsUneconomicalSweep(t *testing.T) {
+	payee := testPayee(t)
+
+	// A cap below every large UTXO used to slide past all of them and fill the group with dust:
+	// fitting under the cap was the only test, so the walk kept going down the list. The dust
+	// group's fee then dwarfed its value and the whole sweep was dropped, leaving the operator
+	// with an empty BTC section. Whatever the cap, an emitted sweep must satisfy the poller's
+	// fee bound — the alternative is a rehearsal that silently skips BTC.
+	for _, feeRate := range []int64{10, 50} {
+		for _, maxSats := range []int64{100_000, 1_000_000, 5_000_000, 9_000_000, 20_000_000} {
+			txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+				ChainID: 8332,
+				To:      payee,
+				FeeRate: feeRate,
+				UTXOs:   mainnetShapedUTXOs(),
+				MaxSats: maxSats,
+			})
+			require.NoError(t, err)
+
+			for _, tx := range txs {
+				var totalIn int64
+				for _, in := range tx.Inputs {
+					totalIn += in.AmountSats
+				}
+				require.LessOrEqual(t, totalIn, maxSats, "feeRate=%d cap=%d", feeRate, maxSats)
+				// exactly the poller's validateBTCFee bound
+				require.LessOrEqual(
+					t, tx.FeeSats, totalIn/drain.MaxBTCFeeFraction,
+					"feeRate=%d cap=%d emitted a sweep the poller would reject", feeRate, maxSats,
+				)
+				require.GreaterOrEqual(t, tx.OutputSats, int64(constant.BTCWithdrawalDustAmount))
+				require.Equal(t, totalIn-tx.FeeSats, tx.OutputSats)
+			}
+		}
+	}
+}
+
+func TestGenerateBTCTxsCapDoesNotTopUpWithDust(t *testing.T) {
+	payee := testPayee(t)
+	const feeRate = int64(50)
+
+	// A single 90k-sat UTXO is viable on its own at 50 sat/vB (fee 8550 vs a 9000 allowance).
+	// Adding one 300-sat input costs ~68 vB more fee while adding almost no value, pushing the
+	// fee past the bound and taking the whole sweep down with it. Every input must cover its own
+	// marginal fee under the same 1/MaxBTCFeeFraction rule.
+	utxos := []drain.UTXO{{TxID: "big", Vout: 0, AmountSats: 90_000}}
+	for i := 0; i < 19; i++ {
+		utxos = append(utxos, drain.UTXO{TxID: fmt.Sprintf("d%02d", i), Vout: uint32(100 + i), AmountSats: 300})
+	}
+
+	// ACT
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332, To: payee, FeeRate: feeRate, UTXOs: utxos, MaxSats: 100_000,
+	})
+
+	// ASSERT: the viable sweep survives, and the dust that would have killed it is left behind
+	require.NoError(t, err)
+	require.Len(t, txs, 1)
+	require.Len(t, txs[0].Inputs, 1)
+	require.EqualValues(t, 90_000, txs[0].Inputs[0].AmountSats)
+	require.LessOrEqual(t, txs[0].FeeSats, txs[0].Inputs[0].AmountSats/drain.MaxBTCFeeFraction)
+}
+
+func TestGenerateBTCTxsCapTopsUpWithInputsThatPayForThemselves(t *testing.T) {
+	payee := testPayee(t)
+
+	// the rejection above is about marginal value, not about using one input: an input large
+	// enough to cover its own added fee is still taken
+	utxos := []drain.UTXO{
+		{TxID: "aaa", Vout: 0, AmountSats: 60_000_000},
+		{TxID: "bbb", Vout: 1, AmountSats: 30_000_000},
+		{TxID: "ccc", Vout: 2, AmountSats: 5_000_000},
+	}
+
+	// ACT
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332, To: payee, FeeRate: 10, UTXOs: utxos, MaxSats: 95_000_000,
+	})
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Len(t, txs, 1)
+	require.Len(t, txs[0].Inputs, 3)
+}
+
+func TestMinViableSweepSats(t *testing.T) {
+	payee := testPayee(t)
+
+	// a sweep below this threshold cannot satisfy both the fee bound and the dust floor, so no
+	// cap under it can ever produce a BTC tx
+	for _, feeRate := range []int64{1, 10, 50, 200} {
+		minViable, err := drain.MinViableSweepSats(feeRate, payee)
+		require.NoError(t, err)
+
+		// just under the threshold: nothing is emitted
+		txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+			ChainID: 8332,
+			To:      payee,
+			FeeRate: feeRate,
+			UTXOs:   []drain.UTXO{{TxID: "aaa", Vout: 0, AmountSats: minViable - 1}},
+			MaxSats: minViable - 1,
+		})
+		require.NoError(t, err)
+		require.Empty(t, txs, "feeRate=%d", feeRate)
+
+		// exactly at the threshold: a single-input sweep is emitted and passes the poller's bounds
+		txs, err = drain.GenerateBTCTxs(drain.BTCInput{
+			ChainID: 8332,
+			To:      payee,
+			FeeRate: feeRate,
+			UTXOs:   []drain.UTXO{{TxID: "aaa", Vout: 0, AmountSats: minViable}},
+			MaxSats: minViable,
+		})
+		require.NoError(t, err)
+		require.Len(t, txs, 1, "feeRate=%d minViable=%d", feeRate, minViable)
+		require.LessOrEqual(t, txs[0].FeeSats, minViable/drain.MaxBTCFeeFraction)
+		require.GreaterOrEqual(t, txs[0].OutputSats, int64(constant.BTCWithdrawalDustAmount))
+	}
+}

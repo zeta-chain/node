@@ -121,10 +121,14 @@ func GenerateBTCTxs(in BTCInput) ([]draintx.BTCTx, error) {
 	copy(utxos, in.UTXOs)
 	sortUTXOsForSweep(utxos)
 	if in.MaxSats > 0 {
-		utxos = selectCappedUTXOs(utxos, in.MaxSats)
-		if len(utxos) == 0 {
+		capped, err := selectCappedUTXOs(utxos, in.MaxSats, in.FeeRate, in.To)
+		if err != nil {
+			return nil, err
+		}
+		if len(capped) == 0 {
 			return nil, nil
 		}
+		utxos = capped
 	}
 
 	to := in.To.EncodeAddress()
@@ -185,12 +189,26 @@ func sortUTXOsForSweep(utxos []UTXO) {
 // so this is the only way to bound a BTC drain's value. It expects utxos already ordered by
 // sortUTXOsForSweep.
 //
-// Selection is therefore largest-first among the UTXOs that still fit: the biggest input under
-// the cap is taken first, then smaller ones top it up. Preferring large inputs keeps the
-// rehearsal economical — a smallest-first walk would pack the sweep with dust whose fee exceeds
-// MaxBTCFeeFraction, and the group would be dropped as uneconomical. The subset is limited to
-// one tx worth of inputs so a capped run emits exactly one sweep.
-func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
+// Selection is therefore largest-first among the UTXOs that fit under the cap, and an input is
+// taken only if the resulting group would still satisfy the poller's fee bound
+// (fee <= total/MaxBTCFeeFraction). That second condition is what makes a capped run usable:
+//
+//   - Fitting under the cap is not enough. A UTXO too big for the cap is skipped and the walk
+//     continues down the list, so without the fee test a small cap slides past every large UTXO
+//     and fills the group with dust instead. The fee of 20 dust inputs dwarfs their value, the
+//     whole group is then dropped as uneconomical, and the rehearsal silently covers no BTC at
+//     all — the one leg with no testnet coverage.
+//   - Topping up an already-viable group can destroy it. Each extra input adds a fixed ~68 vB of
+//     fee, so a 300-sat input added to a viable 90k-sat sweep at 50 sat/vB raises the fee past
+//     the bound and the group is dropped. An input must pay for its own marginal fee under the
+//     same 1/MaxBTCFeeFraction rule the poller applies.
+//
+// Because the group's fee is checked as each input is added, a non-empty result is economical by
+// construction rather than by luck. When the result is empty the cap admits no viable sweep at
+// this fee rate — see MinViableSweepSats for the threshold to report to the operator.
+//
+// The subset is limited to one tx worth of inputs so a capped run emits exactly one sweep.
+func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address) ([]UTXO, error) {
 	selected := make([]UTXO, 0, btccommon.MaxNoOfInputsPerTx)
 	var total int64
 	for _, u := range utxos {
@@ -200,10 +218,37 @@ func selectCappedUTXOs(utxos []UTXO, maxSats int64) []UTXO {
 		if u.AmountSats <= 0 || total+u.AmountSats > maxSats {
 			continue
 		}
+		// the fee depends only on the input count, so price the group as it would be with this
+		// input added and keep it only if the poller's bound still holds
+		size, err := btccommon.EstimateOutboundSize(int64(len(selected)+1), []btcutil.Address{to})
+		if err != nil {
+			return nil, err
+		}
+		if size*feeRate > (total+u.AmountSats)/MaxBTCFeeFraction {
+			continue
+		}
 		total += u.AmountSats
 		selected = append(selected, u)
 	}
-	return selected
+	return selected, nil
+}
+
+// MinViableSweepSats is the smallest input total a capped sweep can have and still be emitted at
+// this fee rate: enough to keep the single-input fee within 1/MaxBTCFeeFraction of the total, and
+// to leave an output above dust. A --btc-max-sats below this can only ever produce an empty BTC
+// section, so the CLI reports it instead of leaving the operator to infer it from a missing tx.
+func MinViableSweepSats(feeRate int64, to btcutil.Address) (int64, error) {
+	size, err := btccommon.EstimateOutboundSize(1, []btcutil.Address{to})
+	if err != nil {
+		return 0, err
+	}
+	fee := size * feeRate
+	minByFee := fee * MaxBTCFeeFraction
+	minByDust := fee + constant.BTCWithdrawalDustAmount
+	if minByFee > minByDust {
+		return minByFee, nil
+	}
+	return minByDust, nil
 }
 
 // BuildPayload assembles the txs into a payload and signs it with priv. network is baked into the

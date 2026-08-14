@@ -2,11 +2,16 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/drain"
 )
 
 func TestParseEVMMaxAmount(t *testing.T) {
@@ -91,5 +96,47 @@ func TestWarnIfCapped(t *testing.T) {
 		var buf bytes.Buffer
 		warnIfCapped(&buf, sdkmath.NewUint(1_000), 100_000)
 		require.Contains(t, buf.String(), "except on chains already below the cap")
+	})
+}
+
+func TestReportUnviableBTCCap(t *testing.T) {
+	payee, err := btcutil.NewAddressWitnessPubKeyHash(make([]byte, 20), &chaincfg.RegressionNetParams)
+	require.NoError(t, err)
+
+	const feeRate = int64(10)
+	minViable, err := drain.MinViableSweepSats(feeRate, payee)
+	require.NoError(t, err)
+
+	t.Run("points at the smallest cap that would work", func(t *testing.T) {
+		// mainnet-shaped: large UTXOs far above the cap, the rest dust far below the threshold
+		utxos := []drain.UTXO{
+			{TxID: "large", Vout: 0, AmountSats: 8_828_175},
+			{TxID: "dust", Vout: 1, AmountSats: 931},
+		}
+
+		var buf bytes.Buffer
+		reportUnviableBTCCap(&buf, utxos, 100_000, feeRate, payee, 8332)
+
+		out := buf.String()
+		require.Contains(t, out, "REHEARSAL SWEPT NO BTC")
+		require.Contains(t, out, fmt.Sprintf("at least %d sats", minViable))
+		// the actionable number: the smallest UTXO that can be swept on its own
+		require.Contains(t, out, "8828175")
+	})
+
+	t.Run("says so when no cap can rehearse BTC", func(t *testing.T) {
+		// every UTXO is below the viability threshold, so raising the cap cannot help
+		utxos := []drain.UTXO{
+			{TxID: "dust-0", Vout: 0, AmountSats: 931},
+			{TxID: "dust-1", Vout: 1, AmountSats: 500},
+		}
+
+		var buf bytes.Buffer
+		reportUnviableBTCCap(&buf, utxos, 100_000, feeRate, payee, 8332)
+
+		out := buf.String()
+		require.Contains(t, out, "REHEARSAL SWEPT NO BTC")
+		require.Contains(t, out, "no cap can rehearse BTC")
+		require.Contains(t, out, "can only be drained uncapped")
 	})
 }

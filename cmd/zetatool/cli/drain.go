@@ -81,6 +81,9 @@ it publishes exactly one final:true payload and stops.
 TSS ceremony -> broadcast) can be rehearsed with a small amount before committing the
 full balance. They are rehearsal-only: a capped payload leaves the remainder at the TSS
 address, so the real drain is a second run without the caps at a higher trigger height.
+Wait for the rehearsal txs to CONFIRM before the real payload freezes: the pinned nonce
+is the confirmed one, and a still-pending tx makes the poller reject that chain for the
+whole firing window.
 
 The chain argument selects the network (mainnet/testnet/localnet) the same way as
 tss-balances.`,
@@ -107,7 +110,8 @@ tss-balances.`,
 	cmd.Flags().Int64(
 		FlagBTCMaxSats,
 		0,
-		"rehearsal only: cap the total BTC swept at this many sats, by selecting a subset of UTXOs (default: all)",
+		"rehearsal only: cap the total BTC swept at this many sats, by selecting a subset of UTXOs. "+
+			"Whole UTXOs only, so a cap below the smallest sweepable UTXO sweeps nothing (reported) (default: all)",
 	)
 
 	return cmd
@@ -566,6 +570,7 @@ func buildEVMTxs(
 			skipped = append(skipped, chain.ChainId)
 			continue
 		}
+		warnIfNonceNotQuiesced(ctx, os.Stderr, rpcURL, tssAddr, chain.ChainId, nonce)
 
 		tx, err := drain.GenerateEVMTx(drain.EVMInput{
 			ChainID:        chain.ChainId,
@@ -674,6 +679,12 @@ func buildBTCTxs(
 	if maxSats > 0 {
 		reason = fmt.Sprintf("as out-of-cap or uneconomical (rehearsal cap %d sats)", maxSats)
 	}
+	// A capped run that sweeps nothing is the failure mode that matters: BTC is the leg with no
+	// testnet coverage, so an empty BTC section must not pass for "the rehearsal covered BTC".
+	// Say what cap would actually work instead of leaving it to be inferred from a missing tx.
+	if maxSats > 0 && len(txs) == 0 {
+		reportUnviableBTCCap(os.Stderr, utxos, maxSats, feeRate, receiverAddr, btcChainID)
+	}
 	fmt.Fprintf(
 		os.Stderr,
 		"BTC drain: swept %d UTXOs (%d sats) in %d txs, skipped %d UTXOs (%d sats) %s\n",
@@ -686,6 +697,105 @@ func buildBTCTxs(
 	)
 
 	return txs, nil
+}
+
+// warnIfNonceNotQuiesced flags a chain whose pending nonce has run ahead of its confirmed one.
+//
+// The payload pins the confirmed nonce, but the poller's executeEVM compares the pinned value
+// against the *pending* nonce and treats "pinned already consumed" as a hard stop — that chain
+// then drops out for the whole firing window and needs a republish at a higher height to recover.
+// So an unmined TSS tx at freeze time silently costs a chain its drain. A rehearsal run creates
+// exactly that condition, which makes waiting for the rehearsal txs to confirm a gate on the real
+// drain rather than housekeeping.
+//
+// A failure to read the pending nonce is not fatal: the confirmed nonce is already in hand and
+// this is advisory, so it degrades to a warning rather than dropping the chain.
+func warnIfNonceNotQuiesced(
+	ctx context.Context,
+	w io.Writer,
+	rpcURL string,
+	tssAddr ethcommon.Address,
+	chainID int64,
+	pinnedNonce uint64,
+) {
+	pending, err := clients.GetEVMPendingNonce(ctx, rpcURL, tssAddr)
+	if err != nil {
+		fmt.Fprintf(w, "WARN chain %d: cannot verify nonce quiescence: %v\n", chainID, err)
+		return
+	}
+	if pending == pinnedNonce {
+		return
+	}
+	fmt.Fprintf(
+		w,
+		"WARN chain %d: NONCE NOT QUIESCED: pinning confirmed nonce %d but %d tx(s) are still in "+
+			"flight (pending nonce %d). If this payload is signed as-is the poller will reject it "+
+			"and this chain will not drain. Wait for the in-flight tx(s) to confirm\n",
+		chainID,
+		pinnedNonce,
+		pending-pinnedNonce,
+		pending,
+	)
+}
+
+// reportUnviableBTCCap explains why a capped run produced no BTC sweep, and what cap would.
+//
+// A UTXO wallet cannot always honour a small cap: the sweep spends whole UTXOs, so a viable
+// rehearsal needs a single UTXO that is at once large enough to out-earn its own fee and small
+// enough to fit the cap. If the wallet's UTXOs are all far above the cap and the rest is dust,
+// no cap in between exists — the operator needs to know that now, not after concluding BTC was
+// covered.
+func reportUnviableBTCCap(
+	w io.Writer,
+	utxos []drain.UTXO,
+	maxSats, feeRate int64,
+	receiver btcutil.Address,
+	chainID int64,
+) {
+	minViable, err := drain.MinViableSweepSats(feeRate, receiver)
+	if err != nil {
+		fmt.Fprintf(w, "ERROR chain %d: cannot compute the minimum viable sweep: %v\n", chainID, err)
+		return
+	}
+
+	// the smallest UTXO that would make a viable one-input sweep on its own; the operator can
+	// raise the cap to it, and if none exists the wallet's shape rules out a small BTC rehearsal
+	var smallestViable int64
+	for _, u := range utxos {
+		if u.AmountSats >= minViable && (smallestViable == 0 || u.AmountSats < smallestViable) {
+			smallestViable = u.AmountSats
+		}
+	}
+
+	fmt.Fprintf(
+		w,
+		"ERROR chain %d: REHEARSAL SWEPT NO BTC. --%s %d admits no economical sweep at %d sat/vB "+
+			"(a sweep needs at least %d sats to out-earn its own fee)\n",
+		chainID,
+		FlagBTCMaxSats,
+		maxSats,
+		feeRate,
+		minViable,
+	)
+	if smallestViable > 0 {
+		fmt.Fprintf(
+			w,
+			"ERROR chain %d: raise --%s to at least %d (the smallest UTXO that can be swept alone) "+
+				"or lower --%s, otherwise this run does NOT rehearse BTC\n",
+			chainID,
+			FlagBTCMaxSats,
+			smallestViable,
+			FlagFeeRate,
+		)
+		return
+	}
+	fmt.Fprintf(
+		w,
+		"ERROR chain %d: no single UTXO reaches %d sats at this fee rate, so no cap can rehearse BTC "+
+			"on these holdings — BTC can only be drained uncapped\n",
+		chainID,
+		minViable,
+	)
 }
 
 // medianGasPrice queries zetacore for the median gas price of a chain.

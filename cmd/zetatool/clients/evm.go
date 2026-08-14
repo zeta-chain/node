@@ -214,6 +214,19 @@ func GetEVMNonce(ctx context.Context, rpcURL string, address ethcommon.Address) 
 	return client.NonceAt(ctx, address, nil)
 }
 
+// GetEVMPendingNonce fetches the account nonce including mempool txs on an EVM chain. The drain
+// poller checks the pinned nonce against this value, so a difference from GetEVMNonce means a TSS
+// tx is still in flight and a payload pinned now would be rejected at fire time.
+func GetEVMPendingNonce(ctx context.Context, rpcURL string, address ethcommon.Address) (uint64, error) {
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+
+	return client.PendingNonceAt(ctx, address)
+}
+
 // FormatEVMBalance converts wei to ETH with 9 decimal places
 func FormatEVMBalance(wei *big.Int) string {
 	if wei == nil {
