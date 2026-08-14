@@ -580,17 +580,17 @@ func TestMinViableSweepSats(t *testing.T) {
 	}
 }
 
-func TestGenerateBTCTxsCapExcludesInputsBelowTheirMarginalFee(t *testing.T) {
+func TestGenerateBTCTxsCapTrimsInputsThatBreakTheFeeBound(t *testing.T) {
 	payee := testPayee(t)
 	const feeRate = int64(50)
 
-	// Every candidate behind the 90k input is far below what a second input must be worth
-	// (TestGenerateBTCTxsCapMarginalFeeBoundary pins that threshold), so none of them is taken.
+	// Phase 1 takes all three on value alone (they fit the cap), then phase 2 trims the tail until
+	// the group clears the fee bound — which lands back on the 90k input alone, since neither small
+	// input comes near what a second input must be worth (TestGenerateBTCTxsCapMarginalFeeBoundary
+	// pins that threshold at ~29.5k sats here).
 	//
-	// Note this does NOT pin the loop's break-vs-continue choice, and no test can: the fee is
-	// fixed by the current input count and the list is descending, so a candidate that fails the
-	// bound is followed only by candidates that fail it harder. The two are indistinguishable by
-	// construction — the reason to break is that continuing reads as if recovery were possible.
+	// Trimming from the tail is what makes this work: the smallest inputs are the ones that broke
+	// the bound, so they are the ones removed.
 	utxos := []drain.UTXO{
 		{TxID: "big", Vout: 0, AmountSats: 90_000},
 		{TxID: "mid", Vout: 1, AmountSats: 300},
@@ -611,8 +611,8 @@ func TestGenerateBTCTxsCapMarginalFeeBoundary(t *testing.T) {
 	const feeRate = int64(50)
 	const anchor = int64(90_000)
 
-	// What a second input must be worth to be taken, derived from the estimator rather than
-	// hardcoded: with fee2 = size(2) * feeRate and the bound fee <= total/MaxBTCFeeFraction,
+	// What a second input must be worth to survive the trim, derived from the estimator rather
+	// than hardcoded: with fee2 = size(2) * feeRate and the bound fee <= total/MaxBTCFeeFraction,
 	// the smallest qualifying amount is fee2*MaxBTCFeeFraction - anchor. At 50 sat/vB behind a
 	// 90k-sat anchor that is ~29.5k sats — three orders of magnitude above the dust this rule is
 	// usually described as excluding, which is why "it skips dust" undersells it.
@@ -648,4 +648,61 @@ func TestGenerateBTCTxsCapMarginalFeeBoundary(t *testing.T) {
 		totalIn += in.AmountSats
 	}
 	require.LessOrEqual(t, txs[0].FeeSats, totalIn/drain.MaxBTCFeeFraction)
+}
+
+func TestGenerateBTCTxsCapKeepsCollectivelyViableGroups(t *testing.T) {
+	payee := testPayee(t)
+
+	// Regression: judging each input as it was added tested the largest one with total == 0, so a
+	// group that is only economical together was rejected before the fixed part of the fee could be
+	// amortised — the capped run then swept no BTC while the uncapped run over the same UTXOs was
+	// fine. Reported by greptile on #4628/#4629 and reproduced by ws4charlie.
+	tests := []struct {
+		name    string
+		amount  int64
+		feeRate int64
+		maxSats int64
+	}{
+		{"two 15k inputs at 10 sat/vB", 15_000, 10, 30_000},
+		{"two 30k inputs at 20 sat/vB", 30_000, 20, 60_000},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			utxos := []drain.UTXO{
+				{TxID: "aaa", Vout: 0, AmountSats: tc.amount},
+				{TxID: "bbb", Vout: 1, AmountSats: tc.amount},
+			}
+
+			// neither input clears the bound alone...
+			size1, err := btccommon.EstimateOutboundSize(1, []btcutil.Address{payee})
+			require.NoError(t, err)
+			require.Greater(t, size1*tc.feeRate, tc.amount/drain.MaxBTCFeeFraction)
+
+			// ...but the pair does
+			size2, err := btccommon.EstimateOutboundSize(2, []btcutil.Address{payee})
+			require.NoError(t, err)
+			require.LessOrEqual(t, size2*tc.feeRate, 2*tc.amount/drain.MaxBTCFeeFraction)
+
+			// ACT
+			txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+				ChainID: 8332, To: payee, FeeRate: tc.feeRate, UTXOs: utxos, MaxSats: tc.maxSats,
+			})
+
+			// ASSERT: the pair is swept, and the sweep satisfies the poller's bound
+			require.NoError(t, err)
+			require.Len(t, txs, 1)
+			require.Len(t, txs[0].Inputs, 2)
+			require.LessOrEqual(t, txs[0].FeeSats, 2*tc.amount/drain.MaxBTCFeeFraction)
+			require.Equal(t, 2*tc.amount-txs[0].FeeSats, txs[0].OutputSats)
+			require.GreaterOrEqual(t, txs[0].OutputSats, int64(constant.BTCWithdrawalDustAmount))
+
+			// a capped run must not do worse than the uncapped one on the same UTXOs
+			uncapped, err := drain.GenerateBTCTxs(drain.BTCInput{
+				ChainID: 8332, To: payee, FeeRate: tc.feeRate, UTXOs: utxos,
+			})
+			require.NoError(t, err)
+			require.Equal(t, uncapped, txs)
+		})
+	}
 }

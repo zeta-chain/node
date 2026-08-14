@@ -203,12 +203,25 @@ func sortUTXOsForSweep(utxos []UTXO) {
 //     the bound and the group is dropped. An input must pay for its own marginal fee under the
 //     same 1/MaxBTCFeeFraction rule the poller applies.
 //
-// Because the group's fee is checked as each input is added, a non-empty result is economical by
-// construction rather than by luck. When the result is empty the cap admits no viable sweep at
-// this fee rate — see MinViableSweepSats for the threshold to report to the operator.
+// The economics cannot be tested per input as it is added, because the fixed part of the fee is
+// only amortised once the group is complete: two 15,000-sat UTXOs at 10 sat/vB are viable together
+// (fee 2390 against a 3000 allowance) while neither clears the single-input threshold of 1710
+// against 1500. Judging inputs one at a time rejects the pair and emits nothing. So selection runs
+// in two phases:
 //
-// The subset is limited to one tx worth of inputs so a capped run emits exactly one sweep.
+//  1. Take largest-first everything that fits under the cap, up to one tx worth of inputs, on
+//     value alone.
+//  2. Drop the smallest input — the tail, since the list is descending — until the group satisfies
+//     the poller's bound, or nothing is left.
+//
+// Trimming from the tail is what preserves the second property above: the marginal input that
+// broke the bound is exactly the one removed first. And because phase 2 tests the completed group,
+// a non-empty result is economical by construction rather than by luck.
+//
+// An empty result means no *prefix* of the cap-limited selection is viable. See MinViableSweepSats
+// for the floor on a sweep's total, which is what the CLI reports.
 func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address) ([]UTXO, error) {
+	// phase 1: fill on value alone
 	selected := make([]UTXO, 0, btccommon.MaxNoOfInputsPerTx)
 	var total int64
 	for _, u := range utxos {
@@ -218,29 +231,35 @@ func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address)
 		if u.AmountSats <= 0 || total+u.AmountSats > maxSats {
 			continue
 		}
-		// the fee depends only on the input count, so price the group as it would be with this
-		// input added and keep it only if the poller's bound still holds
-		size, err := btccommon.EstimateOutboundSize(int64(len(selected)+1), []btcutil.Address{to})
+		total += u.AmountSats
+		selected = append(selected, u)
+	}
+
+	// phase 2: trim the tail until the completed group clears the poller's bound
+	for len(selected) > 0 {
+		size, err := btccommon.EstimateOutboundSize(int64(len(selected)), []btcutil.Address{to})
 		if err != nil {
 			return nil, err
 		}
-		// Stop rather than skip: the fee here is fixed by the current input count, and the list is
-		// descending, so every remaining candidate is worth less against the same fee and fails
-		// this test too. Continuing would only burn iterations while reading as if a later, smaller
-		// UTXO could recover the group.
-		if size*feeRate > (total+u.AmountSats)/MaxBTCFeeFraction {
+		if size*feeRate <= total/MaxBTCFeeFraction {
 			break
 		}
-		total += u.AmountSats
-		selected = append(selected, u)
+		total -= selected[len(selected)-1].AmountSats
+		selected = selected[:len(selected)-1]
 	}
 	return selected, nil
 }
 
-// MinViableSweepSats is the smallest input total a capped sweep can have and still be emitted at
-// this fee rate: enough to keep the single-input fee within 1/MaxBTCFeeFraction of the total, and
-// to leave an output above dust. A --btc-max-sats below this can only ever produce an empty BTC
-// section, so the CLI reports it instead of leaving the operator to infer it from a missing tx.
+// MinViableSweepSats is the floor on a sweep's input *total* at this fee rate: enough to keep the
+// fee within 1/MaxBTCFeeFraction of the total and to leave an output above dust. A --btc-max-sats
+// below it can only ever produce an empty BTC section, so the CLI reports it rather than leaving
+// the operator to infer it from a missing tx.
+//
+// It is priced for one input because the fee grows with the input count while the bound scales with
+// the total, so a single input is the cheapest shape a viable sweep can take — which makes this a
+// floor on the total for *any* input count, not a per-UTXO requirement. A group of UTXOs each
+// individually below it can still clear it together, so never read this as "no single UTXO reaches
+// it, therefore no cap can work".
 func MinViableSweepSats(feeRate int64, to btcutil.Address) (int64, error) {
 	size, err := btccommon.EstimateOutboundSize(1, []btcutil.Address{to})
 	if err != nil {
