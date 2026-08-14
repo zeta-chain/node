@@ -140,3 +140,35 @@ func TestReportUnviableBTCCap(t *testing.T) {
 		require.Contains(t, out, "can only be drained uncapped")
 	})
 }
+
+func TestReportNonceState(t *testing.T) {
+	t.Run("silent when quiesced", func(t *testing.T) {
+		var buf bytes.Buffer
+		reportNonceState(&buf, 1, 42, 42)
+		require.Empty(t, buf.String())
+	})
+
+	t.Run("reports in-flight txs when pending is ahead", func(t *testing.T) {
+		var buf bytes.Buffer
+		reportNonceState(&buf, 1, 42, 45)
+
+		out := buf.String()
+		require.Contains(t, out, "NONCE NOT QUIESCED")
+		require.Contains(t, out, "3 tx(s) are still in flight")
+		require.Contains(t, out, "confirmed nonce 42")
+	})
+
+	t.Run("a lagging pending view does not underflow", func(t *testing.T) {
+		// pending < pinned means a stale RPC view (a load-balanced endpoint answering the two
+		// calls from different backends). Subtracting would wrap uint64 and claim ~1.8e19 txs in
+		// flight, and "wait for confirmations" would be the wrong advice.
+		var buf bytes.Buffer
+		reportNonceState(&buf, 1, 45, 42)
+
+		out := buf.String()
+		require.NotContains(t, out, "18446744073709551")
+		require.NotContains(t, out, "NONCE NOT QUIESCED")
+		require.Contains(t, out, "inconsistent nonce view")
+		require.Contains(t, out, "load-balanced")
+	})
+}

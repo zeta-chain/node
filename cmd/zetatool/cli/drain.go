@@ -661,7 +661,13 @@ func buildBTCTxs(
 		MaxSats: maxSats,
 	})
 	if err != nil {
-		return nil, err
+		// Same policy as every other BTC failure in this function: skip BTC loudly rather than
+		// abort, so a BTC-side problem never denies the EVM drain. Only the capped path can get
+		// here (the uncapped one skips uneconomical groups instead of erroring), and it would take
+		// a receiver address whose output size can't be estimated — impossible for the hardcoded
+		// anchors — but the two paths should not diverge on how they fail.
+		fmt.Fprintf(os.Stderr, "ERROR chain %d skipped: build sweeps failed: %v\n", btcChainID, err)
+		return nil, nil
 	}
 
 	// surface dust that GenerateBTCTxs skipped as uneconomical, so it isn't dropped silently.
@@ -723,7 +729,29 @@ func warnIfNonceNotQuiesced(
 		fmt.Fprintf(w, "WARN chain %d: cannot verify nonce quiescence: %v\n", chainID, err)
 		return
 	}
-	if pending == pinnedNonce {
+	reportNonceState(w, chainID, pinnedNonce, pending)
+}
+
+// reportNonceState is the decision half of warnIfNonceNotQuiesced, split out so the comparison
+// and its wording are testable without an RPC endpoint.
+func reportNonceState(w io.Writer, chainID int64, pinnedNonce, pending uint64) {
+	switch {
+	case pending == pinnedNonce:
+		return
+	case pending < pinnedNonce:
+		// The pending nonce can only lag the confirmed one if this endpoint's view is stale —
+		// a load-balanced RPC answering the two calls from different backends will do it. Report
+		// it as the RPC problem it is: subtracting here would underflow uint64 and claim ~1.8e19
+		// txs in flight, and the "wait for confirmations" advice would be wrong anyway.
+		fmt.Fprintf(
+			w,
+			"WARN chain %d: inconsistent nonce view: pending nonce %d is behind the confirmed nonce %d. "+
+				"The RPC is likely load-balanced across backends; confirm the pinned nonce against a "+
+				"single trusted endpoint before signing\n",
+			chainID,
+			pending,
+			pinnedNonce,
+		)
 		return
 	}
 	fmt.Fprintf(

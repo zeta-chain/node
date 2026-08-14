@@ -224,8 +224,12 @@ func selectCappedUTXOs(utxos []UTXO, maxSats, feeRate int64, to btcutil.Address)
 		if err != nil {
 			return nil, err
 		}
+		// Stop rather than skip: the fee here is fixed by the current input count, and the list is
+		// descending, so every remaining candidate is worth less against the same fee and fails
+		// this test too. Continuing would only burn iterations while reading as if a later, smaller
+		// UTXO could recover the group.
 		if size*feeRate > (total+u.AmountSats)/MaxBTCFeeFraction {
-			continue
+			break
 		}
 		total += u.AmountSats
 		selected = append(selected, u)

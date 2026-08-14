@@ -579,3 +579,27 @@ func TestMinViableSweepSats(t *testing.T) {
 		require.GreaterOrEqual(t, txs[0].OutputSats, int64(constant.BTCWithdrawalDustAmount))
 	}
 }
+
+func TestGenerateBTCTxsCapStopsAtTheFirstUnaffordableInput(t *testing.T) {
+	payee := testPayee(t)
+	const feeRate = int64(50)
+
+	// Selection stops at the first candidate that can't cover its own marginal fee rather than
+	// scanning on. With a descending list that is not merely an optimisation: the fee is fixed by
+	// the current input count, so no smaller candidate can pass the same test. Anything that did
+	// get taken after such a candidate would mean the ordering or the bound had been broken.
+	utxos := []drain.UTXO{
+		{TxID: "big", Vout: 0, AmountSats: 90_000},
+		{TxID: "mid", Vout: 1, AmountSats: 300},
+		// a UTXO large enough to pay its way, but ordered behind the one that stops the walk
+		{TxID: "late", Vout: 2, AmountSats: 200},
+	}
+
+	txs, err := drain.GenerateBTCTxs(drain.BTCInput{
+		ChainID: 8332, To: payee, FeeRate: feeRate, UTXOs: utxos, MaxSats: 100_000,
+	})
+	require.NoError(t, err)
+	require.Len(t, txs, 1)
+	require.Len(t, txs[0].Inputs, 1)
+	require.EqualValues(t, 90_000, txs[0].Inputs[0].AmountSats)
+}
