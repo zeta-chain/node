@@ -107,8 +107,8 @@ func TestReportUnviableBTCCap(t *testing.T) {
 	minViable, err := drain.MinViableSweepSats(feeRate, payee)
 	require.NoError(t, err)
 
-	t.Run("points at the smallest cap that would work", func(t *testing.T) {
-		// mainnet-shaped: large UTXOs far above the cap, the rest dust far below the threshold
+	t.Run("reports the floor on the sweep total", func(t *testing.T) {
+		// mainnet-shaped: large UTXOs far above the cap, the rest dust
 		utxos := []drain.UTXO{
 			{TxID: "large", Vout: 0, AmountSats: 8_828_175},
 			{TxID: "dust", Vout: 1, AmountSats: 931},
@@ -119,13 +119,15 @@ func TestReportUnviableBTCCap(t *testing.T) {
 
 		out := buf.String()
 		require.Contains(t, out, "REHEARSAL SWEPT NO BTC")
-		require.Contains(t, out, fmt.Sprintf("at least %d sats", minViable))
-		// the actionable number: the smallest UTXO that can be swept on its own
-		require.Contains(t, out, "8828175")
+		require.Contains(t, out, fmt.Sprintf("must total at least %d sats", minViable))
+		require.Contains(t, out, fmt.Sprintf("raise --btc-max-sats to at least %d", minViable))
+		// the floor is on the total, not on any one UTXO: pointing at the smallest sweepable UTXO
+		// would overstate the cap needed, since smaller UTXOs can clear the floor as a group
+		require.NotContains(t, out, "8828175")
 	})
 
-	t.Run("says so when no cap can rehearse BTC", func(t *testing.T) {
-		// every UTXO is below the viability threshold, so raising the cap cannot help
+	t.Run("only claims impossibility against the whole balance", func(t *testing.T) {
+		// the entire balance is below the floor, which is the one sound impossibility test
 		utxos := []drain.UTXO{
 			{TxID: "dust-0", Vout: 0, AmountSats: 931},
 			{TxID: "dust-1", Vout: 1, AmountSats: 500},
@@ -136,8 +138,26 @@ func TestReportUnviableBTCCap(t *testing.T) {
 
 		out := buf.String()
 		require.Contains(t, out, "REHEARSAL SWEPT NO BTC")
+		require.Contains(t, out, "the entire TSS balance is 1431 sats")
 		require.Contains(t, out, "no cap can rehearse BTC")
-		require.Contains(t, out, "can only be drained uncapped")
+	})
+
+	t.Run("does not claim impossibility when a group could clear the floor", func(t *testing.T) {
+		// no single UTXO reaches the floor, but together they exceed it — the old per-UTXO test
+		// declared this wallet un-rehearsable, which was wrong
+		utxos := []drain.UTXO{
+			{TxID: "a", Vout: 0, AmountSats: 15_000},
+			{TxID: "b", Vout: 1, AmountSats: 15_000},
+		}
+		require.Less(t, utxos[0].AmountSats, minViable)
+		require.Greater(t, utxos[0].AmountSats+utxos[1].AmountSats, minViable)
+
+		var buf bytes.Buffer
+		reportUnviableBTCCap(&buf, utxos, 10_000, feeRate, payee, 8332)
+
+		out := buf.String()
+		require.NotContains(t, out, "no cap can rehearse BTC")
+		require.Contains(t, out, fmt.Sprintf("raise --btc-max-sats to at least %d", minViable))
 	})
 }
 
@@ -170,5 +190,33 @@ func TestReportNonceState(t *testing.T) {
 		require.NotContains(t, out, "NONCE NOT QUIESCED")
 		require.Contains(t, out, "inconsistent nonce view")
 		require.Contains(t, out, "load-balanced")
+	})
+}
+
+func TestParseBTCMaxSats(t *testing.T) {
+	t.Run("omitted flag means uncapped", func(t *testing.T) {
+		v, err := parseBTCMaxSats(0, false)
+		require.NoError(t, err)
+		require.Zero(t, v)
+	})
+
+	t.Run("an explicit zero is rejected", func(t *testing.T) {
+		// zero is the uncapped sentinel, so typing it meaning "no BTC" would sweep everything;
+		// --evm-max-amount already rejects an explicit 0 and these should not disagree
+		_, err := parseBTCMaxSats(0, true)
+		require.ErrorContains(t, err, "must be positive")
+		require.ErrorContains(t, err, "omit the flag to sweep all BTC")
+		require.ErrorContains(t, err, FlagExcludeChains)
+	})
+
+	t.Run("negative is rejected", func(t *testing.T) {
+		_, err := parseBTCMaxSats(-1, true)
+		require.ErrorContains(t, err, "must not be negative")
+	})
+
+	t.Run("a positive cap passes through", func(t *testing.T) {
+		v, err := parseBTCMaxSats(100_000, true)
+		require.NoError(t, err)
+		require.EqualValues(t, 100_000, v)
 	})
 }
