@@ -49,6 +49,7 @@ const (
 	flagSetupTON               = "setup-ton"
 	flagSkipRegular            = "skip-regular"
 	flagDrainTest              = "drain-test"
+	flagKeygenResetTest        = "keygen-reset-test"
 	flagLight                  = "light"
 	flagSetupOnly              = "setup-only"
 	flagSkipSetup              = "skip-setup"
@@ -103,6 +104,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSetupTON, false, "set to true to setup TON protocol contracts during setup")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagDrainTest, false, "set to true to run only the emergency drain test in isolation")
+	cmd.Flags().
+		Bool(flagKeygenResetTest, false, "set to true to run only the keygen reset test in isolation")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
 	cmd.Flags().String(flagConfigOut, "", "config file to write the deployed contracts from the setup")
@@ -156,6 +159,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		setupTON               = must(cmd.Flags().GetBool(flagSetupTON))
 		skipRegular            = must(cmd.Flags().GetBool(flagSkipRegular))
 		drainTest              = must(cmd.Flags().GetBool(flagDrainTest))
+		keygenResetTest        = must(cmd.Flags().GetBool(flagKeygenResetTest))
 		light                  = must(cmd.Flags().GetBool(flagLight))
 		setupOnly              = must(cmd.Flags().GetBool(flagSetupOnly))
 		skipSetup              = must(cmd.Flags().GetBool(flagSkipSetup))
@@ -385,6 +389,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// isolation right after setup and exits, bypassing the regular test scaffolding.
 	if drainTest {
 		triggerDrain(deployerRunner, logger, conf)
+		return
+	}
+
+	// The keygen reset test leaves the keygen record erased on purpose, so it also runs in
+	// isolation rather than ahead of tests that expect a populated one.
+	if keygenResetTest {
+		triggerKeygenReset(deployerRunner, logger, conf)
 		return
 	}
 

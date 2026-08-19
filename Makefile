@@ -331,6 +331,13 @@ start-drain-test: e2e-images
 	export ZETACLIENT_DRAIN_WINDOW="500" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
 
+# start-keygen-reset-test runs ONLY the keygen reset e2e test in isolation. It leaves the
+# keygen record erased, so it must not share a localnet with tests that expect a populated one.
+start-keygen-reset-test: e2e-images
+	@echo "--> Starting keygen reset e2e test"
+	export E2E_ARGS="--keygen-reset-test" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile dry up -d
+
 start-e2e-test-4nodes: e2e-images
 	@echo "--> Starting e2e test with 4 nodes"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d

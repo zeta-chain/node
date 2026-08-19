@@ -16,6 +16,7 @@
 
 ### Fixes
 
+* [4618](https://github.com/zeta-chain/node/pull/4618) - keep zetaclient signing when zetacore resets the keygen record on an observer set change, instead of shutting every signer down and refusing to restart. Note for operators: while a finalized TSS exists, a keygen scheduled via `MsgUpdateKeygen` will no longer run — rotating requires removing the current TSS first.
 * [4532](https://github.com/zeta-chain/node/pull/4532) - remove unnessary tests from the CI and fix e2e-performance-test-1k.
 * [4538](https://github.com/zeta-chain/node/pull/4538) - fix missed inbound caused by early closure of error monitor channel
 * [4534](https://github.com/zeta-chain/node/pull/4534) - fix Sui nightly e2e deposit test failure by reducing gas budget to 500000000

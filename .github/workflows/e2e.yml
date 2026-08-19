@@ -123,6 +123,7 @@ jobs:
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       DRAIN_TESTS: ${{ steps.matrix-conditionals.outputs.DRAIN_TESTS }}
+      KEYGEN_RESET_TESTS: ${{ steps.matrix-conditionals.outputs.KEYGEN_RESET_TESTS }}
       REPLACE_OBSERVER: ${{ steps.matrix-conditionals.outputs.REPLACE_OBSERVER }}
       STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
@@ -163,6 +164,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('DRAIN_TESTS', labels.includes('DRAIN_TESTS'));
+              core.setOutput('KEYGEN_RESET_TESTS', labels.includes('KEYGEN_RESET_TESTS'));
               core.setOutput('REPLACE_OBSERVER', labels.includes('REPLACE_OBSERVER'));
               core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
@@ -208,6 +210,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS_1K', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('DRAIN_TESTS', true);
+              core.setOutput('KEYGEN_RESET_TESTS', true);
               core.setOutput('STAKING_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
@@ -227,6 +230,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('DRAIN_TESTS', makeTargets.includes('drain-test'));
+              core.setOutput('KEYGEN_RESET_TESTS', makeTargets.includes('keygen-reset-test'));
               core.setOutput('REPLACE_OBSERVER', makeTargets.includes('replace-observer'));
               core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
@@ -283,13 +287,18 @@ jobs:
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
             timeout-minutes: 40
+          # Both TSS migration suites are off while zetaclient does not run a keygen ceremony
+          # once a TSS key exists (see the step 5 comment in zetaclient/tss/setup.go). They start
+          # by scheduling a keygen and then wait for it to succeed, which no longer happens, so
+          # they would burn the 40 minute timeout on every nightly run rather than tell anyone
+          # anything. Restore the TSS_MIGRATION_TESTS condition on both when rotation comes back.
           - make-target: "start-tss-migration-add-observer"
             runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            run: false
             timeout-minutes: 40
           - make-target: "start-tss-migration-remove-observer"
             runs-on: ubuntu-22.04
-            run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
+            run: false
             timeout-minutes: 40
           - make-target: "start-replace-observer"
             runs-on: ubuntu-22.04
@@ -298,6 +307,10 @@ jobs:
           - make-target: "start-drain-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.DRAIN_TESTS == 'true' }}
+            timeout-minutes: 40
+          - make-target: "start-keygen-reset-test"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.KEYGEN_RESET_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-staking-test"
             runs-on: ubuntu-22.04
