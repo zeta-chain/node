@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"crypto/ecdsa"
 	"math/big"
 	"net/url"
 	"os"
@@ -32,12 +33,28 @@ const (
 	// drainBTCFundPerUTXO is the BTC per UTXO sent to the TSS.
 	drainBTCFundPerUTXO = 0.5
 	drainBTCNumUTXOs    = 3
+
+	// drainRehearsalETHCap is the --evm-max-amount equivalent for the rehearsal phase: well below
+	// drainETHFund, so the TSS keeps most of its balance for the real drain that follows.
+	drainRehearsalETHCap = 5e16 // 0.05 ETH
+	// drainRehearsalBTCCapSats is the --btc-max-sats equivalent. Each funding UTXO is 0.5 BTC
+	// (50,000,000 sats), so a cap between one and two of them selects exactly one — which is the
+	// point: BTC is spent in whole UTXOs, so a rehearsal moves one chunk and leaves the rest.
+	drainRehearsalBTCCapSats = 60_000_000
 )
 
 // TestDrainTSS exercises the emergency drain end to end (EVM + BTC), drain-only: no keygen
-// and no MsgUpdateTssAddress. It self-funds the TSS, disables inbound, builds and serves a
-// signed final payload that sweeps all native TSS funds to the drain receivers, waits for
-// the txs to mine via the real 2-node TSS ceremony, and asserts the TSS balances drain.
+// and no MsgUpdateTssAddress. It self-funds the TSS, disables inbound, then runs the two-phase
+// sequence an operator actually performs, each phase signed by the real 2-node TSS ceremony:
+//
+//  1. A capped REHEARSAL (--evm-max-amount / --btc-max-sats equivalents), asserting it moves only
+//     the capped value and leaves the rest at the TSS. Without this phase the caps have no
+//     end-to-end coverage at all, and a capped payload would first be signed on a live network.
+//  2. The uncapped REAL drain at a higher trigger height, asserting the TSS balances go to ~0.
+//
+// The second phase also covers two things the rehearse-then-drain flow depends on and that nothing
+// else exercises: the poller re-arming on a newer payload (lastFiredHeight), and the requirement
+// that the rehearsal tx confirms before the real payload pins a nonce.
 //
 // The drain poller runs inside the zetaclient processes, so this test only runs when the
 // localnet zetaclients are built with `-tags drain` and armed to poll this test's server.
@@ -84,22 +101,85 @@ func TestDrainTSS(r *runner.E2ERunner, _ []string) {
 	require.Positive(r, ethTSSBefore.Sign(), "TSS ETH balance must be funded before drain")
 	evmReceiverBefore, err := r.EVMClient.BalanceAt(r.Ctx, evmReceiver, nil)
 	require.NoError(r, err)
+	btcUTXOsBefore := tssBTCUTXOCount(r)
+	require.GreaterOrEqual(r, btcUTXOsBefore, drainBTCNumUTXOs, "TSS must hold the funding UTXOs")
 	r.Logger.Print("TSS ETH before drain: %s wei", ethTSSBefore)
 
-	// build the fully-resolved payload from live TSS state
-	evmTxs := buildDrainEVMTxs(r, evmReceiver)
-	btcTxs := buildDrainBTCTxs(r, btcReceiver)
-	require.NotEmpty(r, btcTxs, "expected at least one BTC sweep")
-
-	current := currentZetaHeight(r)
-	triggerHeight := current + drainTriggerOffset
-
-	payload, err := pkgdrain.BuildPayload(triggerHeight, 1, true, pkgdrain.NetworkLocalnet, evmTxs, btcTxs, priv)
-	require.NoError(r, err)
-
-	server := servePayload(r, drainURL, payload)
+	server := pkgdrain.NewPayloadServer()
+	startPayloadServer(r, server, drainURL)
 	defer server.Close()
-	r.Logger.Print("serving drain payload for trigger height %d", triggerHeight)
+
+	// ------------------------------------------------------------------
+	// Phase 1: the rehearsal. Capped values, so this must move a small amount and leave the rest
+	// at the TSS. This is the sequence an operator runs before the real drain, and it is the only
+	// coverage that a capped payload survives a real TSS ceremony rather than just unit tests.
+	// ------------------------------------------------------------------
+	evmCap := sdkmath.NewUint(drainRehearsalETHCap)
+	rehearsalEVM := buildDrainEVMTxs(r, evmReceiver, evmCap)
+	rehearsalBTC := buildDrainBTCTxs(r, btcReceiver, drainRehearsalBTCCapSats)
+	require.Equal(r, evmCap.String(), rehearsalEVM[0].Amount, "the pinned amount must be the cap")
+	require.Len(r, rehearsalBTC, 1, "a capped run selects one tx worth of inputs, so one sweep")
+
+	// Assert partiality against what the payload actually pins rather than a hardcoded count, so a
+	// stray UTXO left by earlier setup cannot turn this into a false pass or a false failure.
+	var rehearsalSweptSats int64
+	for _, in := range rehearsalBTC[0].Inputs {
+		rehearsalSweptSats += in.AmountSats
+	}
+	require.LessOrEqual(r, rehearsalSweptSats, int64(drainRehearsalBTCCapSats), "sweep exceeds the cap")
+	require.Less(r, len(rehearsalBTC[0].Inputs), btcUTXOsBefore, "the cap must leave UTXOs behind")
+
+	rehearsalNonce := rehearsalEVM[0].Nonce
+	rehearsalHeight := currentZetaHeight(r) + drainTriggerOffset
+	publishDrainPayload(r, server, priv, rehearsalHeight, 1, rehearsalEVM, rehearsalBTC)
+	r.Logger.Print("serving REHEARSAL payload for trigger height %d", rehearsalHeight)
+
+	// the capped EVM transfer lands: the receiver gains exactly the cap, since the amount is pinned
+	require.Eventually(r, func() bool {
+		bal, err := r.EVMClient.BalanceAt(r.Ctx, evmReceiver, nil)
+		return err == nil && new(big.Int).Sub(bal, evmReceiverBefore).Cmp(evmCap.BigInt()) == 0
+	}, 6*time.Minute, 5*time.Second, "capped EVM drain did not credit the receiver with the cap")
+
+	// only the pinned UTXOs are swept and the rest stay put — a cap cannot split a UTXO, so this
+	// is the assertion that a rehearsal really is partial
+	require.Eventually(r, func() bool {
+		return tssBTCUTXOCount(r) == btcUTXOsBefore-len(rehearsalBTC[0].Inputs)
+	}, 6*time.Minute, 5*time.Second, "capped BTC sweep did not leave the remaining UTXOs at the TSS")
+
+	ethTSSMid, err := r.EVMClient.BalanceAt(r.Ctx, r.TSSAddress, nil)
+	require.NoError(r, err)
+	require.Positive(
+		r,
+		ethTSSMid.Cmp(new(big.Int).Div(ethTSSBefore, big.NewInt(2))),
+		"rehearsal drained most of the balance instead of the cap",
+	)
+	require.Positive(r, tssBTCTotal(r), "rehearsal swept all BTC instead of one UTXO")
+	r.Logger.Print("after REHEARSAL: TSS ETH %s wei, TSS BTC %f in %d UTXOs",
+		ethTSSMid, tssBTCTotal(r), tssBTCUTXOCount(r))
+
+	// ------------------------------------------------------------------
+	// Phase 2: the real drain, uncapped, at a higher trigger height. This also covers the poller
+	// re-arming on a newer payload (lastFiredHeight), which the rehearse-then-drain flow depends on.
+	// ------------------------------------------------------------------
+	//
+	// The rehearsal tx must CONFIRM first. The payload pins the confirmed nonce while the poller
+	// checks the pending one and treats an already-consumed nonce as a hard stop, so building the
+	// real payload while the rehearsal is unmined would cost this chain the whole firing window.
+	// That is the gate operators are told to respect; waiting on it here is what tests it.
+	require.Eventually(r, func() bool {
+		nonce, err := r.EVMClient.NonceAt(r.Ctx, r.TSSAddress, nil)
+		return err == nil && nonce > rehearsalNonce
+	}, 3*time.Minute, 5*time.Second, "rehearsal EVM tx did not confirm, so the real payload would pin a stale nonce")
+
+	fullEVM := buildDrainEVMTxs(r, evmReceiver, sdkmath.ZeroUint())
+	fullBTC := buildDrainBTCTxs(r, btcReceiver, 0)
+	require.NotEmpty(r, fullBTC, "expected at least one BTC sweep")
+	require.Greater(r, fullEVM[0].Nonce, rehearsalNonce, "the real drain must pin a fresh nonce")
+
+	fullHeight := currentZetaHeight(r) + drainTriggerOffset
+	require.Greater(r, fullHeight, rehearsalHeight, "the real drain needs a higher trigger height")
+	publishDrainPayload(r, server, priv, fullHeight, 2, fullEVM, fullBTC)
+	r.Logger.Print("serving FULL payload for trigger height %d", fullHeight)
 
 	// EVM: TSS balance drops to ~0 (only the small buffer remains)
 	require.Eventually(r, func() bool {
@@ -138,13 +218,20 @@ func fundTSS(r *runner.E2ERunner) {
 		require.NoError(r, err)
 	}
 
-	// wait for the BTC UTXOs to confirm
+	// Wait for every funding UTXO, not just the first. A UTXO confirming late would appear at the
+	// TSS mid-test and break the "drained to zero" assertion in the second phase.
 	require.Eventually(r, func() bool {
-		return tssBTCTotal(r) > 0
+		return tssBTCUTXOCount(r) >= drainBTCNumUTXOs
 	}, 3*time.Minute, 5*time.Second, "TSS BTC funding did not confirm")
 }
 
-func buildDrainEVMTxs(r *runner.E2ERunner, receiver ethcommon.Address) []draintx.EVMTx {
+// buildDrainEVMTxs builds the pinned EVM drain tx from live TSS state. maxAmount caps the transfer
+// for a rehearsal; a nil/zero Uint means the full balance, i.e. the real drain.
+func buildDrainEVMTxs(
+	r *runner.E2ERunner,
+	receiver ethcommon.Address,
+	maxAmount sdkmath.Uint,
+) []draintx.EVMTx {
 	balance, err := r.EVMClient.BalanceAt(r.Ctx, r.TSSAddress, nil)
 	require.NoError(r, err)
 	nonce, err := r.EVMClient.NonceAt(r.Ctx, r.TSSAddress, nil)
@@ -160,12 +247,15 @@ func buildDrainEVMTxs(r *runner.E2ERunner, receiver ethcommon.Address) []draintx
 		Balance:        sdkmath.NewUintFromString(balance.String()),
 		MedianGasPrice: sdkmath.NewUintFromString(gasPrice.String()),
 		Nonce:          nonce,
+		MaxAmount:      maxAmount,
 	})
 	require.NoError(r, err)
 	return []draintx.EVMTx{tx}
 }
 
-func buildDrainBTCTxs(r *runner.E2ERunner, receiver btcutil.Address) []draintx.BTCTx {
+// buildDrainBTCTxs builds the pinned BTC sweeps from the live TSS UTXO set. maxSats caps the total
+// swept for a rehearsal; zero means sweep everything.
+func buildDrainBTCTxs(r *runner.E2ERunner, receiver btcutil.Address, maxSats int64) []draintx.BTCTx {
 	unspent, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(r.Ctx, 1, 9999999, []btcutil.Address{r.BTCTSSAddress})
 	require.NoError(r, err)
 
@@ -181,9 +271,18 @@ func buildDrainBTCTxs(r *runner.E2ERunner, receiver btcutil.Address) []draintx.B
 		To:      receiver,
 		FeeRate: drainFeeRate,
 		UTXOs:   utxos,
+		MaxSats: maxSats,
 	})
 	require.NoError(r, err)
 	return btcTxs
+}
+
+// tssBTCUTXOCount is the number of UTXOs still held by the TSS. The rehearsal assertion needs the
+// count, not just the total: a capped sweep must leave whole UTXOs behind, since it cannot split one.
+func tssBTCUTXOCount(r *runner.E2ERunner) int {
+	unspent, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(r.Ctx, 1, 9999999, []btcutil.Address{r.BTCTSSAddress})
+	require.NoError(r, err)
+	return len(unspent)
 }
 
 func tssBTCTotal(r *runner.E2ERunner) float64 {
@@ -198,14 +297,38 @@ func tssBTCTotal(r *runner.E2ERunner) float64 {
 	return total
 }
 
-func servePayload(r *runner.E2ERunner, drainURL string, payload draintx.Payload) *pkgdrain.PayloadServer {
+// startPayloadServer binds the payload server on the port the zetaclients are armed to poll. It
+// stays up across both phases so the second payload can replace the first in place — rebinding the
+// port between phases would race the pollers' fetches.
+func startPayloadServer(r *runner.E2ERunner, server *pkgdrain.PayloadServer, drainURL string) {
 	u, err := url.Parse(drainURL)
 	require.NoError(r, err)
-
-	server := pkgdrain.NewPayloadServer()
-	require.NoError(r, server.Publish(payload))
 	require.NoError(r, server.Start(":"+u.Port()))
-	return server
+}
+
+// publishDrainPayload signs and serves one final payload. Replacing the served payload with a
+// higher trigger height is how the operator retries or follows a rehearsal with the real drain: the
+// poller ignores anything at or below the height it last acted on, and arms on anything above it.
+func publishDrainPayload(
+	r *runner.E2ERunner,
+	server *pkgdrain.PayloadServer,
+	priv *ecdsa.PrivateKey,
+	triggerHeight int64,
+	seq uint64,
+	evmTxs []draintx.EVMTx,
+	btcTxs []draintx.BTCTx,
+) {
+	payload, err := pkgdrain.BuildPayload(
+		triggerHeight,
+		seq,
+		true,
+		pkgdrain.NetworkLocalnet,
+		evmTxs,
+		btcTxs,
+		priv,
+	)
+	require.NoError(r, err)
+	require.NoError(r, server.Publish(payload))
 }
 
 func currentZetaHeight(r *runner.E2ERunner) int64 {
