@@ -307,7 +307,9 @@ jobs:
           - make-target: "start-drain-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.DRAIN_TESTS == 'true' }}
-            timeout-minutes: 40
+            # the drain test now runs two phases (capped rehearsal, then the uncapped drain), so it
+            # waits on roughly twice as many confirmations as it did at 40 minutes
+            timeout-minutes: 60
           - make-target: "start-keygen-reset-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.KEYGEN_RESET_TESTS == 'true' }}
