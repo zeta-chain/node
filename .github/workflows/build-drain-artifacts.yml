@@ -94,11 +94,15 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           mkdir -p dist
+          # goreleaser-cross's image ENTRYPOINT is the goreleaser binary itself, so a plain
+          # `docker run <image> bash build.sh` gets parsed as `goreleaser bash build.sh` --
+          # override it to actually get a shell.
           docker run --rm \
+            --entrypoint bash \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
             ghcr.io/goreleaser/goreleaser-cross:v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4 \
-            bash build.sh "${ARCH}"
+            build.sh "${ARCH}"
 
           ( cd dist && sha256sum * > "SHA256SUMS-${ARCH}.txt" && cat "SHA256SUMS-${ARCH}.txt" )
 
