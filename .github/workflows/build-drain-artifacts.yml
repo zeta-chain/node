@@ -58,37 +58,47 @@ jobs:
           ref: ${{ env.SERVER_REF }}
           path: server
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: client/go.mod
-
-      - name: Install cross toolchain
+      # Cross-compile inside the SAME pinned goreleaser-cross image the real
+      # zetaclientd releases use (Makefile GORELEASER / .goreleaser-zetaclient.yaml),
+      # instead of bare `apt-get install gcc-aarch64-linux-gnu` on whatever glibc
+      # ubuntu-latest happens to ship that week. The prior version of this workflow
+      # built on plain ubuntu-latest and produced a binary requiring GLIBC_2.38,
+      # which the signer hosts don't have -- zetaclientd failed at the dynamic
+      # linker before main() ever ran, so it silently never armed the drain poller.
+      # This is exactly the toolchain that already produces the binaries running
+      # successfully on those same hosts today.
+      - name: Write build script
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-                                  gcc-x86-64-linux-gnu g++-x86-64-linux-gnu
-
-      - name: Build
-        env:
-          ARCH: ${{ matrix.arch }}
-          CGO_ENABLED: '1'
-        run: |
+          cat > build.sh <<'SCRIPT'
           set -euo pipefail
-          if [ "$ARCH" = "arm64" ]; then export CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++; else export CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++; fi
-          export GOOS=linux GOARCH="$ARCH"
+          ARCH="$1"
+          if [ "$ARCH" = "arm64" ]; then CC=aarch64-linux-gnu-gcc; CXX=aarch64-linux-gnu-g++; else CC=x86_64-linux-gnu-gcc; CXX=x86_64-linux-gnu-g++; fi
+          export CGO_ENABLED=1 GOOS=linux GOARCH="$ARCH" CC CXX
           # Only the DBBackend ldflag is functional; the rest is version cosmetics.
           LDBASE="-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb -s -w"
           mkdir -p dist
 
-          echo "--> zetaclientd (drain) linux/${ARCH} from ${CLIENT_REF}"
+          echo "--> zetaclientd (drain) linux/${ARCH}"
           ( cd client && go build -tags pebbledb,ledger,drain \
               -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
               -o "../dist/zetaclientd-drain-linux-${ARCH}" ./cmd/zetaclientd )
 
-          echo "--> zetatool linux/${ARCH} from ${SERVER_REF}"
+          echo "--> zetatool linux/${ARCH}"
           ( cd server && go build -tags pebbledb,ledger \
               -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
               -o "../dist/zetatool-linux-${ARCH}" ./cmd/zetatool )
+          SCRIPT
+
+      - name: Build (goreleaser-cross v1.22.7, same image release-template.yml uses)
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p dist
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            ghcr.io/goreleaser/goreleaser-cross:v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4 \
+            bash build.sh "${ARCH}"
 
           ( cd dist && sha256sum * > "SHA256SUMS-${ARCH}.txt" && cat "SHA256SUMS-${ARCH}.txt" )
 
