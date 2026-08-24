@@ -79,12 +79,12 @@ jobs:
           mkdir -p dist
 
           echo "--> zetaclientd (drain) linux/${ARCH}"
-          ( cd client && go build -tags pebbledb,ledger,drain \
+          ( cd client && go build -buildvcs=false -tags pebbledb,ledger,drain \
               -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
               -o "../dist/zetaclientd-drain-linux-${ARCH}" ./cmd/zetaclientd )
 
           echo "--> zetatool linux/${ARCH}"
-          ( cd server && go build -tags pebbledb,ledger \
+          ( cd server && go build -buildvcs=false -tags pebbledb,ledger \
               -ldflags "$LDBASE -X github.com/zeta-chain/node/pkg/constant.CommitHash=$(git rev-parse --short HEAD)" \
               -o "../dist/zetatool-linux-${ARCH}" ./cmd/zetatool )
           SCRIPT
