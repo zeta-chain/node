@@ -31,6 +31,7 @@
 ### Tests
 
 * [4539](https://github.com/zeta-chain/node/pull/4539) - add support for `signet` name in the e2e config
+* [4635](https://github.com/zeta-chain/node/pull/4635) - add unit and e2e tests asserting `MsgCreateVestingAccount` is rejected when wrapped in a group proposal
 
 ## Release ReForge
 - zetacored: v37.0.0
