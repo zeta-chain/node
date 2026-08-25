@@ -259,7 +259,7 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 	})
 
 	t.Run(
-		"unable to process abort if the the universal contract is not abortable for coin-type ERC20",
+		"unable to process abort if the universal contract is not abortable for coin-type ERC20",
 		func(t *testing.T) {
 			// ARRANGE
 			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
@@ -296,7 +296,7 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 	)
 
 	t.Run(
-		"unable to process abort if the the universal contract is not abortable for coin-type Gas",
+		"unable to process abort if the universal contract is not abortable for coin-type Gas",
 		func(t *testing.T) {
 			// ARRANGE
 			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
@@ -333,7 +333,7 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 	)
 
 	t.Run(
-		"unable to process abort if the the universal contract is not abortable for coin-type Zeta",
+		"unable to process abort if the universal contract is not abortable for coin-type Zeta",
 		func(t *testing.T) {
 			// ARRANGE
 			k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
