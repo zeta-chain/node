@@ -259,6 +259,19 @@ type App struct {
 	//transferModule transfer.AppModule
 }
 
+// DisabledAuthzMsgs returns the message type URLs that may not be executed indirectly, i.e. wrapped
+// inside an authz.MsgExec or a group.MsgSubmitProposal. This is the single source of truth consumed
+// by the ante HandlerOptions; tests assert against it so the wiring cannot silently regress.
+func DisabledAuthzMsgs() []string {
+	return []string{
+		// MsgEthereumTx cannot be included on an authz.MsgExec msgs field
+		sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+	}
+}
+
 // New returns a reference to an initialized ZetaApp.
 func New(
 	logger log.Logger,
@@ -779,22 +792,15 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	options := ante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  TransactionGasLimit,
-		DisabledAuthzMsgs: []string{
-			sdk.MsgTypeURL(
-				&evmtypes.MsgEthereumTx{},
-			), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
-		},
-		ObserverKeeper: app.ObserverKeeper,
+		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		EvmKeeper:         app.EvmKeeper,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		SignModeHandler:   encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:    TransactionGasLimit,
+		DisabledAuthzMsgs: DisabledAuthzMsgs(),
+		ObserverKeeper:    app.ObserverKeeper,
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)

@@ -10,6 +10,7 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/stretchr/testify/require"
 
@@ -19,19 +20,20 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
-// disabledMsgs mirrors app.go's DisabledAuthzMsgs for the vesting entries: the three
-// vesting-account creation messages must not be executable indirectly.
-func disabledVestingMsgs() []string {
-	return []string{
-		sdk.MsgTypeURL(&vesting.MsgCreateVestingAccount{}),
-		sdk.MsgTypeURL(&vesting.MsgCreatePermanentLockedAccount{}),
-		sdk.MsgTypeURL(&vesting.MsgCreatePeriodicVestingAccount{}),
-	}
+// TestDisabledAuthzMsgs_WiresVestingCreation asserts the production disabled-msg list actually
+// contains the three vesting-account creation messages. This binds the ante test to app.go's real
+// wiring: dropping any of them from app.DisabledAuthzMsgs would fail here.
+func TestDisabledAuthzMsgs_WiresVestingCreation(t *testing.T) {
+	disabled := app.DisabledAuthzMsgs()
+	require.Contains(t, disabled, sdk.MsgTypeURL(&vesting.MsgCreateVestingAccount{}))
+	require.Contains(t, disabled, sdk.MsgTypeURL(&vesting.MsgCreatePermanentLockedAccount{}))
+	require.Contains(t, disabled, sdk.MsgTypeURL(&vesting.MsgCreatePeriodicVestingAccount{}))
 }
 
-// TestAuthzLimiter_AnteHandle verifies the decorator blocks disabled vesting msgs when they
-// are wrapped in authz.MsgExec OR group.MsgSubmitProposal (including nested), and lets
-// non-disabled messages through.
+// TestAuthzLimiter_AnteHandle verifies the decorator blocks the disabled vesting msgs when they are
+// wrapped in authz.MsgExec OR group.MsgSubmitProposal (including nested), and lets non-disabled
+// messages through. The decorator is built from app.DisabledAuthzMsgs() (the real production list)
+// so the test cannot pass while the chain wiring regresses.
 func TestAuthzLimiter_AnteHandle(t *testing.T) {
 	// ARRANGE
 	txConfig := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID).TxConfig
@@ -40,7 +42,7 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 	_, testAddress2 := sample.PrivKeyAddressPair()
 	_, policyAddress := sample.PrivKeyAddressPair()
 
-	decorator := ante.NewAuthzLimiterDecorator(disabledVestingMsgs()...)
+	decorator := ante.NewAuthzLimiterDecorator(app.DisabledAuthzMsgs()...)
 
 	createVestingMsg := vesting.NewMsgCreateVestingAccount(
 		testAddress, testAddress2,
@@ -48,9 +50,14 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC).Unix(),
 		false,
 	)
-	lockedAcctMsg := vesting.NewMsgCreatePermanentLockedAccount(
+	permanentLockedMsg := vesting.NewMsgCreatePermanentLockedAccount(
 		testAddress, testAddress2,
 		sdk.NewCoins(sdk.NewInt64Coin("azeta", 100_000_000)),
+	)
+	periodicVestingMsg := vesting.NewMsgCreatePeriodicVestingAccount(
+		testAddress, testAddress2,
+		time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC).Unix(),
+		nil,
 	)
 	bankSend := banktypes.NewMsgSend(
 		testAddress, testAddress2,
@@ -74,6 +81,19 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		msg := authz.NewMsgExec(testAddress, []sdk.Msg{inner})
 		return &msg
 	}
+	govProposal := func(t *testing.T, inner sdk.Msg) sdk.Msg {
+		msg, err := govv1.NewMsgSubmitProposal(
+			[]sdk.Msg{inner},
+			sdk.NewCoins(sdk.NewInt64Coin("azeta", 100_000_000)),
+			testAddress.String(),
+			"",
+			"title",
+			"summary",
+			false,
+		)
+		require.NoError(t, err)
+		return msg
+	}
 
 	tests := []struct {
 		name       string
@@ -89,19 +109,25 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		},
 		{
 			"group proposal wrapping MsgCreatePermanentLockedAccount is blocked",
-			groupProposal(t, lockedAcctMsg),
+			groupProposal(t, permanentLockedMsg),
+			true,
+			"found disabled msg type",
+		},
+		{
+			"group proposal wrapping MsgCreatePeriodicVestingAccount is blocked",
+			groupProposal(t, periodicVestingMsg),
 			true,
 			"found disabled msg type",
 		},
 		{
 			"authz exec wrapping a vesting msg is blocked",
-			authzExec(lockedAcctMsg),
+			authzExec(createVestingMsg),
 			true,
 			"found disabled msg type",
 		},
 		{
 			"authz exec wrapping a group proposal wrapping a vesting msg is blocked (nested)",
-			authzExec(groupProposal(t, lockedAcctMsg)),
+			authzExec(groupProposal(t, createVestingMsg)),
 			true,
 			"found disabled msg type",
 		},
@@ -113,7 +139,16 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		},
 		{
 			"top-level vesting msg is not blocked here (VestingAccountDecorator owns that)",
-			lockedAcctMsg,
+			createVestingMsg,
+			false,
+			"",
+		},
+		{
+			// Documents a known gap: AuthzLimiterDecorator has no gov.MsgSubmitProposal case, so a
+			// governance proposal can still carry a vesting-create. That path is privileged (a passed
+			// gov vote, self-funded from the gov account), unlike the permissionless group path.
+			"gov proposal wrapping a vesting msg is NOT blocked by this decorator (gov is out of scope)",
+			govProposal(t, createVestingMsg),
 			false,
 			"",
 		},
