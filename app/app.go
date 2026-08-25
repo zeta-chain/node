@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -257,6 +258,36 @@ type App struct {
 	EmissionsKeeper emissionskeeper.Keeper
 
 	//transferModule transfer.AppModule
+}
+
+// DisabledAuthzMsgs returns the message type URLs that may not be executed indirectly, i.e. wrapped
+// inside an authz.MsgExec or a group.MsgSubmitProposal. This is the single source of truth consumed
+// by the ante HandlerOptions; tests assert against it so the wiring cannot silently regress.
+func DisabledAuthzMsgs() []string {
+	return []string{
+		// MsgEthereumTx cannot be included on an authz.MsgExec msgs field
+		sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
+		sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+	}
+}
+
+// AnteHandlerOptions builds the ante HandlerOptions installed by New. It is exported so tests can
+// exercise the exact options the app runs with, rather than rebuilding the struct by hand and
+// drifting from the real wiring (e.g. dropping DisabledAuthzMsgs would then go unnoticed).
+func AnteHandlerOptions(app *App, signModeHandler *txsigning.HandlerMap) ante.HandlerOptions {
+	return ante.HandlerOptions{
+		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		EvmKeeper:         app.EvmKeeper,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		SignModeHandler:   signModeHandler,
+		SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:    TransactionGasLimit,
+		DisabledAuthzMsgs: DisabledAuthzMsgs(),
+		ObserverKeeper:    app.ObserverKeeper,
+	}
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -778,24 +809,7 @@ func New(
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 
-	options := ante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  TransactionGasLimit,
-		DisabledAuthzMsgs: []string{
-			sdk.MsgTypeURL(
-				&evmtypes.MsgEthereumTx{},
-			), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
-		},
-		ObserverKeeper: app.ObserverKeeper,
-	}
+	options := AnteHandlerOptions(app, encodingConfig.TxConfig.SignModeHandler())
 
 	anteHandler, err := ante.NewAnteHandler(options)
 	if err != nil {
