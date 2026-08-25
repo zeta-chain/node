@@ -45,6 +45,7 @@ func (k msgServer) UpdateGatewayContract(
 	oldGateway := protocolContracts.Gateway
 
 	// update all ZRC20 contracts with the new gateway address
+	tmpCtx, commit := ctx.CacheContext()
 	foreignCoins := k.GetAllForeignCoins(ctx)
 	for _, fcoin := range foreignCoins {
 		zrc20Addr := ethcommon.HexToAddress(fcoin.Zrc20ContractAddress)
@@ -53,7 +54,7 @@ func (k msgServer) UpdateGatewayContract(
 			continue
 		}
 
-		_, err := k.CallUpdateGatewayAddress(ctx, zrc20Addr, gatewayAddr)
+		_, err := k.CallUpdateGatewayAddress(tmpCtx, zrc20Addr, gatewayAddr)
 		if err != nil {
 			return nil, cosmoserrors.Wrapf(
 				err,
@@ -65,7 +66,7 @@ func (k msgServer) UpdateGatewayContract(
 
 	// update in the store address and save
 	protocolContracts.Gateway = msg.NewGatewayContractAddress
-	k.SetSystemContract(ctx, protocolContracts)
+	k.SetSystemContract(tmpCtx, protocolContracts)
 
 	// emit event
 	err = ctx.EventManager().EmitTypedEvent(
@@ -80,6 +81,7 @@ func (k msgServer) UpdateGatewayContract(
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 
 	return &types.MsgUpdateGatewayContractResponse{}, nil
 }

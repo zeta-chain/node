@@ -24,14 +24,15 @@ func (k msgServer) UnpauseZRC20(
 	}
 
 	// iterate all foreign coins and set unpaused status
+	tmpCtx, commit := ctx.CacheContext()
 	for _, zrc20 := range msg.Zrc20Addresses {
-		fc, found := k.GetForeignCoins(ctx, zrc20)
+		fc, found := k.GetForeignCoins(tmpCtx, zrc20)
 		if !found {
 			return nil, cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "foreign coin not found %s", zrc20)
 		}
 		// Set status to unpaused
 		fc.Paused = false
-		k.SetForeignCoins(ctx, fc)
+		k.SetForeignCoins(tmpCtx, fc)
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(
@@ -48,6 +49,7 @@ func (k msgServer) UnpauseZRC20(
 		)
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 
 	return &types.MsgUnpauseZRC20Response{}, nil
 }

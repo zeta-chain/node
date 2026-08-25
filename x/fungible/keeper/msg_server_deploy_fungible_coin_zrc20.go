@@ -49,10 +49,11 @@ func (k msgServer) DeployFungibleCoinZRC20(
 		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
+	tmpCtx, commit := ctx.CacheContext()
 	if msg.CoinType == coin.CoinType_Gas {
 		// #nosec G115 always in range
 		address, err = k.SetupChainGasCoinAndPool(
-			ctx,
+			tmpCtx,
 			msg.ForeignChainId,
 			msg.Name,
 			msg.Symbol,
@@ -66,7 +67,7 @@ func (k msgServer) DeployFungibleCoinZRC20(
 	} else {
 		// #nosec G115 always in range
 		address, err = k.DeployZRC20Contract(
-			ctx,
+			tmpCtx,
 			msg.Name,
 			msg.Symbol,
 			uint8(msg.Decimals),
@@ -98,6 +99,7 @@ func (k msgServer) DeployFungibleCoinZRC20(
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to emit event")
 	}
+	commit()
 
 	return &types.MsgDeployFungibleCoinZRC20Response{
 		Address: address.Hex(),

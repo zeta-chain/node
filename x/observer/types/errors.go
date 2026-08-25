@@ -86,4 +86,8 @@ var (
 		ModuleName,
 		1145,
 		"grantee is not the registered hotkey for the observer")
+	ErrChainNonceRollback = errorsmod.Register(
+		ModuleName,
+		1146,
+		"chain nonce rollback is not allowed")
 )

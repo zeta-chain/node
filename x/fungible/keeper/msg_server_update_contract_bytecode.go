@@ -64,9 +64,10 @@ func (k msgServer) UpdateContractBytecode(
 	}
 
 	// set the new CodeHash to the account
+	tmpCtx, commit := ctx.CacheContext()
 	oldCodeHash := acct.CodeHash
 	acct.CodeHash = ethcommon.HexToHash(msg.NewCodeHash).Bytes()
-	err = k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
+	err = k.evmKeeper.SetAccount(tmpCtx, contractAddress, *acct)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(
 			types.ErrSetBytecode,
@@ -89,6 +90,7 @@ func (k msgServer) UpdateContractBytecode(
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 
 	return &types.MsgUpdateContractBytecodeResponse{}, nil
 }

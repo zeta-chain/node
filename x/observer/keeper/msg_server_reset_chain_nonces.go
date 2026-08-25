@@ -26,6 +26,17 @@ func (k msgServer) ResetChainNonces(
 		return nil, types.ErrTssNotFound
 	}
 
+	// validate nonce is not being rolled back
+	currentChainNonce, chainNonceFound := k.GetChainNonces(ctx, msg.ChainId)
+	if chainNonceFound && msg.ChainNonceHigh < int64(currentChainNonce.Nonce) {
+		return nil, errors.Wrapf(
+			types.ErrChainNonceRollback,
+			"cannot roll back chain nonce from %d to %d",
+			currentChainNonce.Nonce,
+			msg.ChainNonceHigh,
+		)
+	}
+
 	// set chain nonces
 	chainNonce := types.ChainNonces{
 		ChainId: msg.ChainId,

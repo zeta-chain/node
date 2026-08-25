@@ -80,8 +80,12 @@ func (k Keeper) SetupChainGasCoinAndPool(
 		return ethcommon.Address{}, err
 	}
 	amount := big.NewInt(10)
-	// #nosec G115 always in range
-	amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
+	if decimals == 0 {
+		amount = big.NewInt(1)
+	} else {
+		// #nosec G115 always in range
+		amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
+	}
 	amountAZeta := big.NewInt(1e17)
 
 	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)

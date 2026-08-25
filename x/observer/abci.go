@@ -1,8 +1,6 @@
 package observer
 
 import (
-	"math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/keeper"
@@ -34,7 +32,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// #nosec G115 always in range
 
 	k.DisableInboundOnly(ctx)
-	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	// #nosec G115 always positive
 	k.SetLastObserverCount(
 		ctx,
