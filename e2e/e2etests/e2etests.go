@@ -206,27 +206,28 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestWhitelistERC20Name               = "whitelist_erc20"
-	TestDepositEtherLiquidityCapName     = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName          = "migrate_chain_support"
-	TestPauseZRC20Name                   = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name          = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName      = "update_bytecode_connector"
-	TestRateLimiterName                  = "rate_limiter"
-	TestCriticalAdminTransactionsName    = "critical_admin_transactions"
-	TestPauseERC20CustodyName            = "pause_erc20_custody"
-	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
-	TestMigrateTSSName                   = "migrate_tss"
-	TestDrainTSSName                     = "drain_tss"
-	TestKeygenResetSigningName           = "keygen_reset_signing"
-	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
-	TestUpdateZRC20NameName              = "update_zrc20"
-	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
-	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
-	TestZetaclientMinimumVersionName     = "zetaclient_minimum_version"
-	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
-	TestMigrateConnectorFundsName        = "migrate_connector_funds"
-	TestBurnFungibleModuleAssetName      = "burn_fungible_module_asset"
+	TestWhitelistERC20Name                  = "whitelist_erc20"
+	TestDepositEtherLiquidityCapName        = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName             = "migrate_chain_support"
+	TestPauseZRC20Name                      = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name             = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName         = "update_bytecode_connector"
+	TestRateLimiterName                     = "rate_limiter"
+	TestCriticalAdminTransactionsName       = "critical_admin_transactions"
+	TestPauseERC20CustodyName               = "pause_erc20_custody"
+	TestMigrateERC20CustodyFundsName        = "migrate_erc20_custody_funds"
+	TestMigrateTSSName                      = "migrate_tss"
+	TestDrainTSSName                        = "drain_tss"
+	TestKeygenResetSigningName              = "keygen_reset_signing"
+	TestSolanaWhitelistSPLName              = "solana_whitelist_spl"
+	TestUpdateZRC20NameName                 = "update_zrc20"
+	TestZetaclientRestartHeightName         = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName          = "zetaclient_signer_offset"
+	TestZetaclientMinimumVersionName        = "zetaclient_minimum_version"
+	TestUpdateOperationalChainParamsName    = "update_operational_chain_params"
+	TestMigrateConnectorFundsName           = "migrate_connector_funds"
+	TestBurnFungibleModuleAssetName         = "burn_fungible_module_asset"
+	TestDisallowVestingViaGroupProposalName = "disallow_vesting_via_group_proposal"
 
 	/*
 	 Operational tests
@@ -1773,6 +1774,12 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestBurnFungibleModuleAsset,
 		runner.WithMinimumVersion("v33.0.0"),
+	),
+	runner.NewE2ETest(
+		TestDisallowVestingViaGroupProposalName,
+		"vesting account creation via a group proposal is rejected by ante",
+		[]runner.ArgDefinition{},
+		TestDisallowVestingViaGroupProposal,
 	),
 	/*
 	 Special tests

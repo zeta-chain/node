@@ -434,6 +434,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCriticalAdminTransactionsName,
 			e2etests.TestUpdateOperationalChainParamsName,
 			e2etests.TestBurnFungibleModuleAssetName,
+			e2etests.TestDisallowVestingViaGroupProposalName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
