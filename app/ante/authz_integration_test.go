@@ -1,3 +1,9 @@
+//go:build test
+
+// This file builds a full in-process app via zetasimulation.NewSimApp, which requires the `test`
+// build tag; without it the EVM configurator panics. The tag keeps a bare `go test ./app/ante/...`
+// (no -tags) from taking the rest of the package down with a confusing panic.
+
 package ante_test
 
 import (
@@ -36,18 +42,11 @@ func TestProductionAnteHandler_RejectsVestingViaGroupProposal(t *testing.T) {
 
 	encCfg := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID)
 
-	// build the ante handler exactly as app.New does, with the real disabled-msg list
-	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
-		AccountKeeper:     zetaApp.AccountKeeper,
-		BankKeeper:        zetaApp.BankKeeper,
-		EvmKeeper:         zetaApp.EvmKeeper,
-		FeeMarketKeeper:   zetaApp.FeeMarketKeeper,
-		SignModeHandler:   encCfg.TxConfig.SignModeHandler(),
-		SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:    0,
-		DisabledAuthzMsgs: app.DisabledAuthzMsgs(),
-		ObserverKeeper:    zetaApp.ObserverKeeper,
-	})
+	// build the ante handler from the exact options app.New installs, so dropping any field there
+	// (e.g. DisabledAuthzMsgs) fails this test rather than silently passing
+	anteHandler, err := ante.NewAnteHandler(
+		app.AnteHandlerOptions(zetaApp, encCfg.TxConfig.SignModeHandler()),
+	)
 	require.NoError(t, err)
 
 	testPrivKey, testAddress := sample.PrivKeyAddressPair()

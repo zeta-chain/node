@@ -81,6 +81,15 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		msg := authz.NewMsgExec(testAddress, []sdk.Msg{inner})
 		return &msg
 	}
+	authzGrant := func(t *testing.T, msgTypeURL string) sdk.Msg {
+		msg, err := authz.NewMsgGrant(
+			testAddress, testAddress2,
+			authz.NewGenericAuthorization(msgTypeURL),
+			nil,
+		)
+		require.NoError(t, err)
+		return msg
+	}
 	govProposal := func(t *testing.T, inner sdk.Msg) sdk.Msg {
 		msg, err := govv1.NewMsgSubmitProposal(
 			[]sdk.Msg{inner},
@@ -122,6 +131,12 @@ func TestAuthzLimiter_AnteHandle(t *testing.T) {
 		{
 			"authz exec wrapping a vesting msg is blocked",
 			authzExec(createVestingMsg),
+			true,
+			"found disabled msg type",
+		},
+		{
+			"authz grant of a vesting-create authorization is blocked",
+			authzGrant(t, sdk.MsgTypeURL(&vesting.MsgCreateVestingAccount{})),
 			true,
 			"found disabled msg type",
 		},

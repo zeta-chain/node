@@ -42,8 +42,10 @@ func TestDisallowVestingViaGroupProposal(r *runner.E2ERunner, _ []string) {
 	)
 	require.NoError(r, err)
 
-	// broadcasting must fail: the ante decorator blocks the disabled inner message
-	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, proposalMsg)
+	// broadcasting must fail: the ante decorator blocks the disabled inner message. Use the
+	// no-retry variant since the rejection is deterministic — retrying only wastes ~25s and
+	// floods the log with the same error six times.
+	_, err = r.ZetaTxServer.BroadcastTxWithoutRetry(utils.OperationalPolicyName, proposalMsg)
 	require.Error(r, err)
 	require.ErrorContains(r, err, "found disabled msg type")
 }

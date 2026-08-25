@@ -275,50 +275,64 @@ func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdk
 	boWithMaxRetries := backoff.WithMaxRetries(bo, 5)
 
 	return retry.DoTypedWithBackoff(func() (*sdktypes.TxResponse, error) {
-		// Find number and sequence and set it
-		acc, err := zts.clientCtx.Keyring.Key(account)
-		if err != nil {
-			return nil, err
-		}
-
-		addr, err := acc.GetAddress()
-		if err != nil {
-			return nil, err
-		}
-
-		accountNumber, accountSeq, err := zts.clientCtx.AccountRetriever.GetAccountNumberSequence(zts.clientCtx, addr)
-		if err != nil {
-			return nil, retry.Retry(err)
-		}
-
-		zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
-
-		txBuilder, err := zts.txFactory.BuildUnsignedTx(msgs...)
-		if err != nil {
-			return nil, retry.Retry(err)
-		}
-
-		txBuilder.SetGasLimit(zts.txFactory.Gas())
-		txBuilder.SetFeeAmount(zts.txFactory.Fees())
-
-		// Sign tx
-		err = tx.Sign(zts.ctx, zts.txFactory, account, txBuilder, true)
-		if err != nil {
-			return nil, retry.Retry(err)
-		}
-
-		txBytes, err := zts.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-		if err != nil {
-			return nil, retry.Retry(err)
-		}
-
-		result, err := broadcastWithBlockTimeout(zts, txBytes)
-		if err != nil {
-			return nil, retry.Retry(err)
-		}
-
-		return result, nil
+		return zts.broadcastOnce(account, msgs...)
 	}, boWithMaxRetries)
+}
+
+// BroadcastTxWithoutRetry broadcasts a tx exactly once, without the retry/backoff loop that
+// BroadcastTx uses. Use it when the failure is deterministic by construction (e.g. a tx the ante
+// handler is expected to reject): retrying only burns ~25s and floods the log with the same error.
+func (zts *ZetaTxServer) BroadcastTxWithoutRetry(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
+	return zts.broadcastOnce(account, msgs...)
+}
+
+// broadcastOnce performs a single build-sign-broadcast attempt. The retry.Retry wrapping on errors
+// only matters when the result is fed to retry.DoTypedWithBackoff (as BroadcastTx does); callers
+// that invoke this directly still get the underlying error via Error().
+func (zts *ZetaTxServer) broadcastOnce(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
+	// Find number and sequence and set it
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return nil, err
+	}
+
+	accountNumber, accountSeq, err := zts.clientCtx.AccountRetriever.GetAccountNumberSequence(zts.clientCtx, addr)
+	if err != nil {
+		return nil, retry.Retry(err)
+	}
+
+	zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
+
+	txBuilder, err := zts.txFactory.BuildUnsignedTx(msgs...)
+	if err != nil {
+		return nil, retry.Retry(err)
+	}
+
+	txBuilder.SetGasLimit(zts.txFactory.Gas())
+	txBuilder.SetFeeAmount(zts.txFactory.Fees())
+
+	// Sign tx
+	err = tx.Sign(zts.ctx, zts.txFactory, account, txBuilder, true)
+	if err != nil {
+		return nil, retry.Retry(err)
+	}
+
+	txBytes, err := zts.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, retry.Retry(err)
+	}
+
+	result, err := broadcastWithBlockTimeout(zts, txBytes)
+	if err != nil {
+		return nil, retry.Retry(err)
+	}
+
+	return result, nil
 }
 
 func broadcastWithBlockTimeout(zts *ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {

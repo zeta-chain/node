@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -269,6 +270,23 @@ func DisabledAuthzMsgs() []string {
 		sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
 		sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 		sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+	}
+}
+
+// AnteHandlerOptions builds the ante HandlerOptions installed by New. It is exported so tests can
+// exercise the exact options the app runs with, rather than rebuilding the struct by hand and
+// drifting from the real wiring (e.g. dropping DisabledAuthzMsgs would then go unnoticed).
+func AnteHandlerOptions(app *App, signModeHandler *txsigning.HandlerMap) ante.HandlerOptions {
+	return ante.HandlerOptions{
+		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		EvmKeeper:         app.EvmKeeper,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		SignModeHandler:   signModeHandler,
+		SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:    TransactionGasLimit,
+		DisabledAuthzMsgs: DisabledAuthzMsgs(),
+		ObserverKeeper:    app.ObserverKeeper,
 	}
 }
 
@@ -791,17 +809,7 @@ func New(
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 
-	options := ante.HandlerOptions{
-		AccountKeeper:     app.AccountKeeper,
-		BankKeeper:        app.BankKeeper,
-		EvmKeeper:         app.EvmKeeper,
-		FeeMarketKeeper:   app.FeeMarketKeeper,
-		SignModeHandler:   encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:    ante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:    TransactionGasLimit,
-		DisabledAuthzMsgs: DisabledAuthzMsgs(),
-		ObserverKeeper:    app.ObserverKeeper,
-	}
+	options := AnteHandlerOptions(app, encodingConfig.TxConfig.SignModeHandler())
 
 	anteHandler, err := ante.NewAnteHandler(options)
 	if err != nil {
