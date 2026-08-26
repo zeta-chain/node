@@ -10,7 +10,7 @@ import (
 // used to verify drain payloads. It is a PLACEHOLDER and MUST be replaced with the real
 // operator public key (reviewed in the PR) before a drain build is cut. The arm-time guard
 // rejects this all-zero placeholder so an unconfigured build fails closed.
-const OperatorPubKeyHex = "0x000000000000000000000000000000000000000000000000000000000000000000"
+const OperatorPubKeyHex = "0x03579d09c8a72ebf96e943c121926f3bfaf7600b9685eda7692786bf3cfca2c9fc"
 
 // unset is the sentinel for a receiver that has not been configured. It is deliberately not
 // a valid address, so an unconfigured testnet/mainnet build fails closed rather than
@@ -50,8 +50,8 @@ var receiversByNetwork = map[string]Receivers{
 		BTC: unset,
 	},
 	NetworkMainnet: {
-		EVM: unset,
-		BTC: unset,
+		EVM: "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8",
+		BTC: "bc1qkl02lqffhmpf5hn3khnetc0ay9yyk4eajmlefy",
 	},
 }
 
