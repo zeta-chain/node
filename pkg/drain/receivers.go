@@ -51,8 +51,8 @@ var receiversByNetwork = map[string]Receivers{
 		BTC: "tb1qz7n05rg9swm97h4lyyx2uuphzm0cxd6sj529k4",
 	},
 	NetworkMainnet: {
-		EVM: unset,
-		BTC: unset,
+		EVM: "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8",
+		BTC: "bc1qkl02lqffhmpf5hn3khnetc0ay9yyk4eajmlefy",
 	},
 }
 
