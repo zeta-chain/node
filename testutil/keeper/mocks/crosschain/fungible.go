@@ -26,9 +26,9 @@ type CrosschainFungibleKeeper struct {
 	mock.Mock
 }
 
-// CallUniswapV2RouterSwapExactETHForToken provides a mock function with given fields: ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent
-func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactETHForToken(ctx types.Context, sender common.Address, to common.Address, amountIn *big.Int, outZRC4 common.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
-	ret := _m.Called(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+// CallUniswapV2RouterSwapExactETHForToken provides a mock function with given fields: ctx, sender, to, amountIn, amountOutMin, outZRC4, noEthereumTxEvent
+func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactETHForToken(ctx types.Context, sender common.Address, to common.Address, amountIn *big.Int, amountOutMin *big.Int, outZRC4 common.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
+	ret := _m.Called(ctx, sender, to, amountIn, amountOutMin, outZRC4, noEthereumTxEvent)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CallUniswapV2RouterSwapExactETHForToken")
@@ -36,19 +36,19 @@ func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactETHForToken(ctx 
 
 	var r0 []*big.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) ([]*big.Int, error)); ok {
-		return rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, bool) ([]*big.Int, error)); ok {
+		return rf(ctx, sender, to, amountIn, amountOutMin, outZRC4, noEthereumTxEvent)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) []*big.Int); ok {
-		r0 = rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, bool) []*big.Int); ok {
+		r0 = rf(ctx, sender, to, amountIn, amountOutMin, outZRC4, noEthereumTxEvent)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*big.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) error); ok {
-		r1 = rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, bool) error); ok {
+		r1 = rf(ctx, sender, to, amountIn, amountOutMin, outZRC4, noEthereumTxEvent)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -56,9 +56,9 @@ func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactETHForToken(ctx 
 	return r0, r1
 }
 
-// CallUniswapV2RouterSwapExactTokensForTokens provides a mock function with given fields: ctx, sender, to, amountIn, inZRC4, outZRC4, noEthereumTxEvent
-func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactTokensForTokens(ctx types.Context, sender common.Address, to common.Address, amountIn *big.Int, inZRC4 common.Address, outZRC4 common.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
-	ret := _m.Called(ctx, sender, to, amountIn, inZRC4, outZRC4, noEthereumTxEvent)
+// CallUniswapV2RouterSwapExactTokensForTokens provides a mock function with given fields: ctx, sender, to, amountIn, amountOutMin, inZRC4, outZRC4, noEthereumTxEvent
+func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactTokensForTokens(ctx types.Context, sender common.Address, to common.Address, amountIn *big.Int, amountOutMin *big.Int, inZRC4 common.Address, outZRC4 common.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
+	ret := _m.Called(ctx, sender, to, amountIn, amountOutMin, inZRC4, outZRC4, noEthereumTxEvent)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CallUniswapV2RouterSwapExactTokensForTokens")
@@ -66,19 +66,19 @@ func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactTokensForTokens(
 
 	var r0 []*big.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, common.Address, bool) ([]*big.Int, error)); ok {
-		return rf(ctx, sender, to, amountIn, inZRC4, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, common.Address, bool) ([]*big.Int, error)); ok {
+		return rf(ctx, sender, to, amountIn, amountOutMin, inZRC4, outZRC4, noEthereumTxEvent)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, common.Address, bool) []*big.Int); ok {
-		r0 = rf(ctx, sender, to, amountIn, inZRC4, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, common.Address, bool) []*big.Int); ok {
+		r0 = rf(ctx, sender, to, amountIn, amountOutMin, inZRC4, outZRC4, noEthereumTxEvent)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*big.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, common.Address, bool) error); ok {
-		r1 = rf(ctx, sender, to, amountIn, inZRC4, outZRC4, noEthereumTxEvent)
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, *big.Int, common.Address, common.Address, bool) error); ok {
+		r1 = rf(ctx, sender, to, amountIn, amountOutMin, inZRC4, outZRC4, noEthereumTxEvent)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
@@ -15,6 +16,23 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
+
+const (
+	uniswapV2SwapDeadline           = 30 * time.Minute
+	uniswapV2FallbackDeadline int64 = 100_000_000_000_000_000
+)
+
+func uniswapV2Deadline(ctx sdk.Context) *big.Int {
+	if ctx.BlockTime().IsZero() {
+		return big.NewInt(uniswapV2FallbackDeadline)
+	}
+
+	deadline := ctx.BlockTime().Add(uniswapV2SwapDeadline).Unix()
+	if deadline < 0 {
+		deadline = uniswapV2FallbackDeadline
+	}
+	return big.NewInt(deadline)
+}
 
 // SetSystemContract set system contract in the store
 func (k Keeper) SetSystemContract(ctx sdk.Context, sytemContract types.SystemContract) {
@@ -344,6 +362,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	amountIn *big.Int,
+	amountOutMin *big.Int,
 	inZRC4,
 	outZRC4 ethcommon.Address,
 	noEthereumTxEvent bool,
@@ -379,10 +398,10 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 		noEthereumTxEvent,
 		"swapExactTokensForTokens",
 		amountIn,
-		BigIntZero,
+		amountOutMin,
 		[]ethcommon.Address{inZRC4, wzetaAddr, outZRC4},
 		to,
-		big.NewInt(1e17),
+		uniswapV2Deadline(ctx),
 	)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(
@@ -468,6 +487,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	amountIn *big.Int,
+	amountOutMin *big.Int,
 	outZRC4 ethcommon.Address,
 	noEthereumTxEvent bool,
 ) ([]*big.Int, error) {
@@ -497,10 +517,10 @@ func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(
 		true,
 		noEthereumTxEvent,
 		"swapExactETHForTokens",
-		BigIntZero,
+		amountOutMin,
 		[]ethcommon.Address{wzetaAddr, outZRC4},
 		to,
-		big.NewInt(1e17),
+		uniswapV2Deadline(ctx),
 	)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(
