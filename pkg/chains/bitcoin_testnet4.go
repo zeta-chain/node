@@ -113,8 +113,8 @@ var TestNet4Params = chaincfg.Params{
 	Net:         TestNet4,
 	DefaultPort: "48333",
 	DNSSeeds: []chaincfg.DNSSeed{
-		{"seed.testnet4.bitcoin.sprovoost.nl", true},
-		{"seed.testnet4.wiz.biz", true},
+		{Host: "seed.testnet4.bitcoin.sprovoost.nl", HasFiltering: true},
+		{Host: "seed.testnet4.wiz.biz", HasFiltering: true},
 	},
 
 	// Chain parameters
