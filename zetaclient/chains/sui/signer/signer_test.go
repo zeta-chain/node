@@ -358,6 +358,41 @@ func TestSigner(t *testing.T) {
 
 		require.Eventually(t, wait, 5*time.Second, 100*time.Millisecond)
 	})
+
+	t.Run("ProcessCCTX recovers panic", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		const zetaHeight = 1000
+
+		nonce := uint64(123)
+		receiver := "0xdecb47015beebed053c19ef48fe4d722fa3870f567133d235ebe3a70da7b0000"
+
+		cctx := sample.CrossChainTxV2(t, "0xABC123")
+		cctx.InboundParams = nil
+		cctx.OutboundParams = []*cc.OutboundParams{{
+			Receiver:        receiver,
+			ReceiverChainId: ts.Chain.ChainId,
+			CoinType:        coin.CoinType_Gas,
+			Amount:          math.NewUint(100_000),
+			TssNonce:        nonce,
+			GasPrice:        "1000",
+			CallOptions: &cc.CallOptions{
+				GasLimit: 42,
+			},
+		}}
+		outboundID := base.OutboundIDFromCCTX(cctx)
+
+		ts.MockGatewayNonce(nonce)
+		ts.MockWithdrawCapID("0xWithdrawCapID")
+
+		// ACT
+		err := ts.Signer.ProcessCCTX(ts.Ctx, cctx, zetaHeight)
+
+		// ASSERT
+		require.ErrorContains(t, err, "caught panic during outbound processing")
+		require.False(t, ts.Signer.IsOutboundActive(outboundID))
+	})
 }
 
 type testSuite struct {

@@ -64,6 +64,26 @@ func TestDrySigner(t *testing.T) {
 	require.Len(t, ts.trackerBag, 0)
 }
 
+func TestSigner_TryProcessOutboundRecoversPanic(t *testing.T) {
+	ts := newTestSuite(t)
+
+	const nonce uint64 = 2
+	cctx := sample.CrossChainTx(t, "panic")
+	cctx.InboundParams = nil
+	cctx.OutboundParams = []*cc.OutboundParams{{
+		ReceiverChainId: ts.chain.ChainId,
+		TssNonce:        nonce,
+	}}
+	outboundID := base.OutboundIDFromCCTX(cctx)
+
+	signer := New(ts.baseSigner, ts.rpc, ts.gw)
+
+	require.NotPanics(t, func() {
+		signer.TryProcessOutbound(ts.ctx, cctx, ts.zetaRepo, 0)
+	})
+	require.False(t, signer.IsOutboundActive(outboundID))
+}
+
 func testSigner(t *testing.T, ts *testSuite, nonce uint64) (ton.Transaction, ton.Transaction) {
 	// Given TON signer
 	signer := New(ts.baseSigner, ts.rpc, ts.gw)
