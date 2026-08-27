@@ -254,6 +254,35 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		require.Empty(t, result)
 	})
 
+	t.Run("fail when foreign coin is paused", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		zrc20 := sample.EthAddress()
+		callEvent := false
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		foreignCoin := fungibletypes.ForeignCoins{
+			Zrc20ContractAddress: zrc20.Hex(),
+			Asset:                "USDT",
+			ForeignChainId:       1,
+			CoinType:             coin.CoinType_ERC20,
+			Paused:               true,
+		}
+		fungibleMock.On("GetForeignCoins", ctx, zrc20.Hex()).Return(foreignCoin, true)
+
+		// ACT
+		result, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
+
+		// ASSERT
+		require.Error(t, err)
+		require.ErrorIs(t, err, fungibletypes.ErrPausedZRC20)
+		require.Contains(t, err.Error(), "zrc20 "+zrc20.Hex()+" is paused")
+		require.Empty(t, result)
+	})
+
 	t.Run("fail when chain is not supported", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
@@ -320,6 +349,35 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		// ASSERT
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "gas limit query failed")
+	})
+
+	t.Run("fail when foreign coin is paused for call event", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		zrc20 := sample.EthAddress()
+		callEvent := true
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		foreignCoin := fungibletypes.ForeignCoins{
+			Zrc20ContractAddress: zrc20.Hex(),
+			Asset:                "USDT",
+			ForeignChainId:       1,
+			CoinType:             coin.CoinType_ERC20,
+			Paused:               true,
+		}
+		fungibleMock.On("GetForeignCoins", ctx, zrc20.Hex()).Return(foreignCoin, true)
+
+		// ACT
+		result, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
+
+		// ASSERT
+		require.Error(t, err)
+		require.ErrorIs(t, err, fungibletypes.ErrPausedZRC20)
+		require.Contains(t, err.Error(), "zrc20 "+zrc20.Hex()+" is paused")
+		require.Empty(t, result)
 	})
 
 	t.Run("success with call event (NoAssetCall)", func(t *testing.T) {
