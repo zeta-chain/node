@@ -13,6 +13,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+const maxBallotsPageLimit = 1000
+
 func (k Keeper) HasVoted(goCtx context.Context, req *types.QueryHasVotedRequest) (*types.QueryHasVotedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -73,6 +75,11 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
+	}
+	// A zero limit preserves the Cosmos SDK default page size, which is below
+	// maxBallotsPageLimit. Only explicit oversized limits are capped here.
+	if req.Pagination.Limit > maxBallotsPageLimit {
+		req.Pagination.Limit = maxBallotsPageLimit
 	}
 
 	pageRes, err := query.Paginate(ballotStore, req.Pagination, func(_ []byte, value []byte) error {
