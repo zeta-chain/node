@@ -57,7 +57,7 @@ func (args withdrawAndCallPTBArgs) onCallTypeArgs() ([]sui.TypeTag, error) {
 	for _, typeArg := range typeArgsStr {
 		typeStruct, err := zetasui.TypeTagFromString(typeArg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "invalid type argument %s", typeArg)
+			return nil, errors.Wrapf(zetasui.ErrInvalidPayload, "invalid type argument %s: %s", typeArg, err)
 		}
 		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: &typeStruct})
 	}

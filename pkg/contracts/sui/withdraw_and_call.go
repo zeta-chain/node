@@ -1,7 +1,6 @@
 package sui
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 
@@ -82,17 +81,17 @@ func (d WithdrawAndCallPTB) TxNonce() uint64 {
 func ExtractInitialSharedVersion(objData models.SuiObjectData) (uint64, error) {
 	owner, ok := objData.Owner.(map[string]any)
 	if !ok {
-		return 0, fmt.Errorf("invalid object owner type %T", objData.Owner)
+		return 0, errors.Wrapf(ErrInvalidPayload, "invalid object owner type %T", objData.Owner)
 	}
 
 	shared, ok := owner["Shared"]
 	if !ok {
-		return 0, fmt.Errorf("missing shared object")
+		return 0, errors.Wrap(ErrInvalidPayload, "missing shared object")
 	}
 
 	sharedMap, ok := shared.(map[string]any)
 	if !ok {
-		return 0, fmt.Errorf("invalid shared object type %T", shared)
+		return 0, errors.Wrapf(ErrInvalidPayload, "invalid shared object type %T", shared)
 	}
 
 	return extractInteger[uint64](sharedMap, "initial_shared_version")
