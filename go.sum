@@ -1955,6 +1955,8 @@ github.com/zeebo/errs v1.4.0/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtC
 github.com/zeebo/xxh3 v1.0.2/go.mod h1:5NWz9Sef7zIDm2JHfFlcQvNekmcEl9ekUZQQKCYaDcA=
 github.com/zeta-chain/evm v0.0.0-20250917210719-515bbca4d348 h1:Ta+tRdJ608We92ybjAUrOZ8SwnMP7YJM3v4K7HqT/co=
 github.com/zeta-chain/evm v0.0.0-20250917210719-515bbca4d348/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
+github.com/zeta-chain/evm v0.0.0-20260825061144-198da04bfbd3 h1:MNV4nHexIwFZWqvPUnmpRdwW/sKNjlJY7ItRuLeTFbU=
+github.com/zeta-chain/evm v0.0.0-20260825061144-198da04bfbd3/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
 github.com/zeta-chain/evm v0.0.0-20260903155126-a69d910e9214 h1:ZhDgxFGo8+VC4874CEyj7ZaFan0nfGB7dsuDquzmyNY=
 github.com/zeta-chain/evm v0.0.0-20260903155126-a69d910e9214/go.mod h1:WfvV0raMAIEEa5MX6kp8VyELvkwBTNw8JNVlAXtKAXA=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
