@@ -215,6 +215,7 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	p, err := ob.ZetaRepo().GetPendingNonces(ctx)
 	if err != nil {
 		logger.Error().Err(err).Send()
+		return
 	}
 
 	// increase pending nonce if lagged behind

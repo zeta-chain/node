@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"errors"
 	"math"
 	"testing"
 	"time"
@@ -22,6 +23,70 @@ func Test_FetchUTXOs(t *testing.T) {
 
 	// check number of UTXOs again
 	require.Equal(t, len(utxos), ob.TelemetryServer().GetNumberOfUTXOs())
+}
+
+func Test_FetchUTXOsPendingNoncesError(t *testing.T) {
+	// create test observer
+	ob := newTestSuite(t, chains.BitcoinMainnet)
+	ob.setPendingNonce(3)
+
+	tssAddress, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
+	require.NoError(t, err)
+	utxos := getTestUTXOs(tssAddress.EncodeAddress())
+
+	// zetacore fails to return the pending nonces
+	ob.zetacore.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).
+		Return(observertypes.PendingNonces{}, errors.New("failed to get pending nonces"))
+	ob.client.On("ListUnspentMinMaxAddresses", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(utxos, nil)
+
+	// should neither panic nor fail, and UTXOs should still be fetched
+	err = ob.FetchUTXOs(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, len(utxos), ob.TelemetryServer().GetNumberOfUTXOs())
+
+	// pending nonce should be left untouched
+	require.Equal(t, uint64(3), ob.GetPendingNonce())
+}
+
+func Test_RefreshPendingNonce(t *testing.T) {
+	tests := []struct {
+		name          string
+		pendingNonce  uint64
+		nonces        observertypes.PendingNonces
+		err           error
+		expectedNonce uint64
+	}{
+		{
+			name:          "should increase pending nonce if lagged behind",
+			pendingNonce:  3,
+			nonces:        observertypes.PendingNonces{NonceLow: 5, NonceHigh: 8},
+			expectedNonce: 5,
+		},
+		{
+			name:          "should not decrease pending nonce",
+			pendingNonce:  7,
+			nonces:        observertypes.PendingNonces{NonceLow: 5, NonceHigh: 8},
+			expectedNonce: 7,
+		},
+		{
+			name:          "should keep pending nonce if GetPendingNoncesByChain fails",
+			pendingNonce:  3,
+			err:           errors.New("failed to get pending nonces"),
+			expectedNonce: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ob := newTestSuite(t, chains.BitcoinMainnet)
+			ob.setPendingNonce(tt.pendingNonce)
+			ob.zetacore.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).Return(tt.nonces, tt.err)
+
+			ob.refreshPendingNonce(context.Background())
+			require.Equal(t, tt.expectedNonce, ob.GetPendingNonce())
+		})
+	}
 }
 
 func Test_SelectUTXOs(t *testing.T) {
