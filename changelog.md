@@ -27,6 +27,7 @@
 * [4561](https://github.com/zeta-chain/node/pull/4561) - add signet to BTC client `resolveParams` to fix e2e `unknown chain params` error
 * [4569](https://github.com/zeta-chain/node/pull/4569) - tighten MtA proof bounds in tss-lib to fix Alpha-Rays / TSSHOCK vulnerability
 * [4597](https://github.com/zeta-chain/node/pull/4597) - respect `DisableTssBlockScan` in Bitcoin observer to align inbound observation behavior with EVM observer
+* [4645](https://github.com/zeta-chain/node/pull/4645) - remove the unused simulation test workflow from the CI
 
 ### Tests
 
