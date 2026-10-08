@@ -39,24 +39,19 @@ func (m OutboundParams) Validate() error {
 		return fmt.Errorf("amount cannot be nil")
 	}
 
-	// Disabled checks
-	// TODO: Improve the checks, move the validation call to a new place and reenable
-	// https://github.com/zeta-chain/node/issues/2234
-	// https://github.com/zeta-chain/node/issues/2235
-	//if err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId); err != nil {
-	//	return err
-	//}
-	//if m.BallotIndex != "" {
-	//
-	//	if err := ValidateCCTXIndex(m.BallotIndex); err != nil {
-	//		return errors.Wrap(err, "invalid outbound tx ballot index")
-	//	}
-	//}
-	//if m.Hash != "" {
-	//	if err := ValidateHashForChain(m.Hash, m.ReceiverChainId); err != nil {
-	//		return errors.Wrap(err, "invalid outbound tx hash")
-	//	}
-	//}
+	if err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId); err != nil {
+		return err
+	}
+	if m.BallotIndex != "" {
+		if err := ValidateCCTXIndex(m.BallotIndex); err != nil {
+			return errors.Wrap(err, "invalid outbound tx ballot index")
+		}
+	}
+	if m.Hash != "" {
+		if err := ValidateHashForChain(m.Hash, m.ReceiverChainId); err != nil {
+			return errors.Wrap(err, "invalid outbound tx hash")
+		}
+	}
 
 	return nil
 }

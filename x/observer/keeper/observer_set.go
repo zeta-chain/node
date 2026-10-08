@@ -66,6 +66,9 @@ func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) uint64 {
 	if !found {
 		return 0
 	}
+	if observerSet.LenUint() <= 1 {
+		return observerSet.LenUint()
+	}
 	for i, addr := range observerSet.ObserverList {
 		if addr == address {
 			observerSet.ObserverList = append(observerSet.ObserverList[:i], observerSet.ObserverList[i+1:]...)

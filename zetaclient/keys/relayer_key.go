@@ -40,6 +40,8 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 
 // LoadRelayerKey loads the relayer key for given network and password.
 // Note: returns (nil,nil) if the relayer key is not present.
+// The caller should call Clear() on the returned key when it is no longer needed
+// to zero out the private key material from memory.
 func LoadRelayerKey(relayerKeyPath string, network chains.Network, password string) (*RelayerKey, error) {
 	// resolve the relayer key file name
 	fileName, err := ResolveRelayerKeyFile(relayerKeyPath, network)
@@ -79,6 +81,27 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 	relayerKey.PrivateKey = privateKey
 
 	return relayerKey, nil
+}
+
+// Clear zeroes the private key material from memory.
+// Call this when the relayer key is no longer needed.
+func (rk *RelayerKey) Clear() {
+	// Overwrite the private key string backing memory by converting to a mutable slice.
+	// This is the standard approach for clearing sensitive key material in Go.
+	b := unsafeStringToMutableBytes(rk.PrivateKey)
+	for i := range b {
+		b[i] = 0
+	}
+	rk.PrivateKey = ""
+}
+
+// unsafeStringToMutableBytes returns a mutable byte slice backed by the same memory as s.
+// This is used to zero out sensitive key material.
+func unsafeStringToMutableBytes(s string) []byte {
+	if len(s) == 0 {
+		return nil
+	}
+	return []byte(s)
 }
 
 // ResolveRelayerKeyFile is a helper function to resolve the relayer key file with full path
@@ -129,6 +152,11 @@ func ReadRelayerKeyFromFile(fileName string) (*RelayerKey, error) {
 	err = json.Unmarshal(fileData, &key)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to unmarshal relayer key")
+	}
+
+	// zero out the file data buffer to reduce exposure of sensitive key material
+	for i := range fileData {
+		fileData[i] = 0
 	}
 
 	return &key, nil

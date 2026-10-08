@@ -170,7 +170,12 @@ func (k Keeper) DeployZRC20Contract(
 	newCoin.ForeignChainId = chain.ChainId
 	newCoin.GasLimit = gasLimit.Uint64()
 	if liquidityCap == nil {
-		liquidityCap = ptr.Ptr(sdkmath.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
+		// compute 10^decimals for the liquidity cap
+		tenToDecimals := sdkmath.NewUint(1)
+		for i := uint32(0); i < newCoin.Decimals; i++ {
+			tenToDecimals = tenToDecimals.MulUint64(10)
+		}
+		liquidityCap = ptr.Ptr(sdkmath.NewUint(types.DefaultLiquidityCap).Mul(tenToDecimals))
 	}
 	newCoin.LiquidityCap = *liquidityCap
 	k.SetForeignCoins(ctx, newCoin)
