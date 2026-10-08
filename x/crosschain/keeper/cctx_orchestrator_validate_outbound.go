@@ -218,7 +218,7 @@ func (k Keeper) ValidateOutboundObservers(
 //
 // 3. Emit an event for the failed outbound transaction
 //
-// 4. Set the finalization status of the current outbound tx to executed. If a revert tx is is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
+// 4. Set the finalization status of the current outbound tx to executed. If a revert tx is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
 //
 // This function sets CCTX status , in cases where the outbound tx is successful, but tx itself fails
 // This is done because HandleValidOutbound does not set the cctx status
