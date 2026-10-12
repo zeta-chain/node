@@ -2,6 +2,7 @@ package signer
 
 import (
 	"context"
+	"runtime/debug"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -64,7 +65,18 @@ func (s *Signer) TryProcessOutbound(
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
 	s.MarkOutbound(outboundID, true)
-	defer s.MarkOutbound(outboundID, false)
+	defer func() {
+		s.MarkOutbound(outboundID, false)
+		panicStack := debug.Stack()
+		if r := recover(); r != nil {
+			s.Logger().Std.Error().
+				Str(logs.FieldCctxIndex, cctx.Index).
+				Str(logs.FieldOutboundID, outboundID).
+				Interface("panic", r).
+				Str("stack_trace", string(panicStack)).
+				Msg("caught panic error")
+		}
+	}()
 
 	outcome, err := s.processOutbound(ctx, cctx, zetaRepo, zetaBlockHeight)
 
