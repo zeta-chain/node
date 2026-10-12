@@ -79,7 +79,7 @@ jobs:
         with:
           name: zetae2e
           path: ~/go/bin/zetae2e
-          retention-days: 90
+          retention-days: 400
       
       - name: Clean Up Workspace
         if: always()
