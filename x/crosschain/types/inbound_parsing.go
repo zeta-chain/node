@@ -144,6 +144,7 @@ func NewWithdrawalInbound(
 		ConfirmationMode_SAFE,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(isCrossChainCall),
+		WithEventFees(math.NewUintFromBigInt(event.Gasfee), math.NewUintFromBigInt(event.ProtocolFlatFee)),
 	), nil
 }
 
@@ -245,5 +246,6 @@ func NewWithdrawAndCallInbound(
 		ConfirmationMode_SAFE,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(true),
+		WithEventFees(math.NewUintFromBigInt(event.Gasfee), math.NewUintFromBigInt(event.ProtocolFlatFee)),
 	), nil
 }

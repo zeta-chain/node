@@ -54447,6 +54447,12 @@ definitions:
       userGasFeePaid:
         type: string
         description: This field tracks the original gas fee paid by the user.
+      eventGasFee:
+        type: string
+        description: This field tracks the gas fee paid in the emitted GatewayZEVM V2 event.
+      eventProtocolFlatFee:
+        type: string
+        description: This field tracks the protocol flat fee paid in the emitted GatewayZEVM V2 event for auditability. It is not used to calculate unused gas refunds.
   zetachain.zetacore.crosschain.OutboundTracker:
     type: object
     properties:
