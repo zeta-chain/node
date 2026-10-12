@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 )
 
 // prepareWithdrawTx prepares withdraw outbound
@@ -53,11 +54,15 @@ func (signer *Signer) createMsgWithdraw(
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
-	amount := params.Amount.Uint64()
+	amount := uint64(0)
 
 	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports through the gateway.
-	if cancelTx {
-		amount = 0
+	if !cancelTx {
+		var err error
+		amount, err = base.OutboundAmountUint64(params.Amount)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// check receiver address
