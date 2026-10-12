@@ -265,6 +265,13 @@ func (k Keeper) getZRC20InboundDetails(
 		ctx.Logger().Info(fmt.Sprintf("cannot find foreign coin associated to the zrc20 address %s", zrc20.Hex()))
 		return InboundDetails{}, nil
 	}
+	if foreignCoin.Paused {
+		return InboundDetails{}, errorsmod.Wrapf(
+			fungibletypes.ErrPausedZRC20,
+			"zrc20 %s is paused",
+			zrc20.Hex(),
+		)
+	}
 
 	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	if !found {
