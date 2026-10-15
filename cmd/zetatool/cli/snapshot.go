@@ -58,6 +58,7 @@ The command refuses an export it cannot fully account for:
     rewards or accumulated commission, or a distribution module balance other
     than the community pool
   - a pin on a staking pool, or a remainder its categories do not explain
+  - bank balances that do not sum to the recorded supply
 These are hard errors; --supply-check=false does not disable them.
 
 Outputs into --output:
@@ -75,7 +76,8 @@ Outputs into --output:
 	cmd.Flags().StringSlice(flagSnapshotWZeta, nil, "alias for --pin: non-claimable contract addresses (e.g. WZETA)")
 	cmd.Flags().
 		String(flagSnapshotPinFile, "", "file of non-claimable addresses, one per line (# comments; first field per line is the address)")
-	cmd.Flags().Bool(flagSnapshotSupplyCheck, true, "fail on any output check (supply mismatch, unmatched pin)")
+	cmd.Flags().
+		Bool(flagSnapshotSupplyCheck, true, "fail on any output check (attributed total, CSV re-sum, unmatched pin)")
 
 	if err := cmd.MarkFlagRequired(flagSnapshotInput); err != nil {
 		panic(err)

@@ -128,15 +128,16 @@ Outputs in `--output`:
 - `schema.sql`        matching Postgres DDL.
 - `snapshot_human.csv`  readable ZETA-unit copy for eyeballing.
 
-The command prints bucket totals and runs four checks (sum export == supply; sum
-attributed + remainder == total; re-sum CSV == total; every pin matched a holder),
-non-zero exit on any failure.
+The command prints bucket totals and runs three output checks (sum attributed +
+remainder == total; re-sum CSV == total; every pin matched a holder), non-zero
+exit on any failure. A bank sum that does not equal the supply is refused
+earlier, before any output is written (see "Acceptance guarantees").
 
 Pin accounting: the summary prints one line per pin with the azeta it kept out of
 attribution, plus a subtotal. A pin that matched no holder in the export reports
 zero and fails the run, which is what catches a typo'd address or a pin file
-pointed at the wrong network. `--supply-check=false` downgrades these four checks,
-including this one, to a stderr warning.
+pointed at the wrong network. `--supply-check=false` downgrades these three
+output checks, including this one, to a stderr warning.
 
 The summary also splits the remainder by category (module accounts, zero
 address, non-20-byte holders, pins, share-rounding dust) and prints the azeta
@@ -167,6 +168,7 @@ These are hard errors. `--supply-check=false` does not turn them off.
   commission. That means the export was not taken with `--for-zero-height`.
 - The distribution module balance is not exactly the community pool.
 - A pin is one of the staking pools.
+- The bank balances do not sum exactly to the recorded supply.
 - The remainder is not exactly the sum of its categories.
 
 What these checks do NOT prove, and the operator still has to show for the
