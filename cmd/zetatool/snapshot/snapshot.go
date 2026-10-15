@@ -5,7 +5,9 @@
 // Everything here is free of file, RPC and cobra dependencies so it can be
 // unit-tested with hand-built fixtures. Reward math is intentionally absent:
 // the Stage 1 export runs with --for-zero-height, so withdrawn staking rewards
-// and validator commission are already folded into liquid bank balances.
+// and validator commission are already folded into liquid bank balances. That is
+// checked, not assumed: Compute refuses an export with unpaid rewards, and one
+// whose staking records do not fully explain the staking pools.
 package snapshot
 
 import (
@@ -119,6 +121,34 @@ type Result struct {
 	// Their azeta is not attributed and is swept into the remainder.
 	NonStandard      int
 	NonStandardAzeta sdkmath.Int
+
+	// Breakdown splits the remainder by where its azeta came from. Compute
+	// refuses a result whose categories do not sum exactly to Remainder.
+	Breakdown RemainderBreakdown
+}
+
+// RemainderBreakdown is the remainder by category. An address counts in one
+// category only: a pin, else a module account, else the zero address;
+// non-20-byte holders are disjoint from all three. The staking pools' own
+// balances are in no category: validator tokens and unbonding entries explain
+// them fully, and those are credited to their delegators.
+type RemainderBreakdown struct {
+	// ModuleAccounts is module liquid outside the two staking pools, plus
+	// module accounts' own stake and unbonding.
+	ModuleAccounts sdkmath.Int
+	// ZeroAddress is the null address's liquid + stake + unbonding.
+	ZeroAddress sdkmath.Int
+	// NonStandard is liquid + stake + unbonding of non-20-byte holders.
+	NonStandard sdkmath.Int
+	// Pinned equals the sum of Result.Pinned.
+	Pinned sdkmath.Int
+	// ShareDust is validator tokens lost to flooring each delegation's stake.
+	ShareDust sdkmath.Int
+}
+
+// Total sums every category.
+func (b RemainderBreakdown) Total() sdkmath.Int {
+	return b.ModuleAccounts.Add(b.ZeroAddress).Add(b.NonStandard).Add(b.Pinned).Add(b.ShareDust)
 }
 
 // AttributedTotal is the sum over attributed accounts (liquid+staked+unbonding).
@@ -134,4 +164,11 @@ func (r *Result) SPLCap() sdkmath.Int {
 		total = total.Add(a.Total9Dec())
 	}
 	return total
+}
+
+// ConversionDust is the azeta lost by flooring each row from 18 to 9 decimals:
+// supply minus the SPL cap scaled back to azeta. It is reported only; it is not
+// part of the azeta remainder.
+func (r *Result) ConversionDust() sdkmath.Int {
+	return r.Supply.Sub(r.SPLCap().Mul(oneGZeta))
 }

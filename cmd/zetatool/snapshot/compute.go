@@ -19,19 +19,43 @@ func SumBankDenom(gen *Genesis, denom string) sdkmath.Int {
 	return total
 }
 
+// moduleCanonical returns a module account's canonical address.
+func moduleCanonical(name string) (string, error) {
+	canon, err := canonicalFromBytes(authtypes.NewModuleAddress(name).Bytes())
+	if err != nil {
+		return "", fmt.Errorf("canonicalize module account %q: %w", name, err)
+	}
+	return canon, nil
+}
+
+// stakingPools maps the canonical address of each staking pool to its module
+// name. The pools hold all delegated and unbonding azeta.
+func stakingPools() (map[string]string, error) {
+	pools := make(map[string]string, 2)
+	for _, name := range []string{stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName} {
+		canon, err := moduleCanonical(name)
+		if err != nil {
+			return nil, err
+		}
+		pools[canon] = name
+	}
+	return pools, nil
+}
+
 // nonClaimableSet builds the set of canonical addresses that must not be
 // attributed: the module accounts plus the caller's pins (e.g. WZETA). The pins
 // are also returned on their own, zero-seeded, so Compute can report how much
 // azeta each one kept out of attribution (two pin inputs can canonicalize to the
-// same account; the map dedupes them).
-func nonClaimableSet(pins []string) (map[string]bool, map[string]sdkmath.Int, error) {
+// same account; the map dedupes them). A pin on a staking pool is refused: the
+// pool's balance is already credited to its delegators.
+func nonClaimableSet(pins []string, pools map[string]string) (map[string]bool, map[string]sdkmath.Int, error) {
 	set := make(map[string]bool, len(moduleAccountNames)+len(pins)+1)
 	pinned := make(map[string]sdkmath.Int, len(pins))
 	set[zeroAddress] = true
 	for _, name := range moduleAccountNames {
-		canon, err := canonicalFromBytes(authtypes.NewModuleAddress(name).Bytes())
+		canon, err := moduleCanonical(name)
 		if err != nil {
-			return nil, nil, fmt.Errorf("canonicalize module account %q: %w", name, err)
+			return nil, nil, err
 		}
 		set[canon] = true
 	}
@@ -39,6 +63,12 @@ func nonClaimableSet(pins []string) (map[string]bool, map[string]sdkmath.Int, er
 		canon, err := Canonical(pin)
 		if err != nil {
 			return nil, nil, fmt.Errorf("canonicalize pin %q: %w", pin, err)
+		}
+		if pool, isPool := pools[canon]; isPool {
+			return nil, nil, fmt.Errorf(
+				"pin %s is the %s staking pool; its balance is already accounted for by validator tokens",
+				pin, pool,
+			)
 		}
 		set[canon] = true
 		if _, ok := pinned[canon]; !ok {
@@ -60,17 +90,48 @@ func nonClaimableSet(pins []string) (map[string]bool, map[string]sdkmath.Int, er
 // remainder = supply - sum(attributed). It must be >= 0: staked/unbonding azeta
 // physically sits in the (non-claimable) staking pool module accounts, so those
 // pool balances cancel against the amounts credited to delegators here.
+//
+// Before attributing anything, Compute refuses an export with unpaid rewards or
+// incomplete staking records (see validateDistribution and validateStaking), and
+// afterwards it refuses a remainder its categories do not fully explain.
 func Compute(gen *Genesis, cfg Config) (*Result, error) {
-	nonClaimable, pinned, err := nonClaimableSet(cfg.Pins)
+	if err := validateDistribution(gen, cfg.Denom); err != nil {
+		return nil, err
+	}
+	shareDust, err := validateStaking(gen, cfg.Denom)
+	if err != nil {
+		return nil, err
+	}
+	pools, err := stakingPools()
+	if err != nil {
+		return nil, err
+	}
+	nonClaimable, pinned, err := nonClaimableSet(cfg.Pins, pools)
 	if err != nil {
 		return nil, err
 	}
 
-	// addPinned accumulates what a pin kept out of attribution. The other
-	// non-claimable addresses (module accounts, the zero address) are not tracked.
-	addPinned := func(canon string, amt sdkmath.Int) {
-		if cur, isPin := pinned[canon]; isPin {
+	res := &Result{
+		NonStandardAzeta: sdkmath.ZeroInt(),
+		Breakdown: RemainderBreakdown{
+			ModuleAccounts: sdkmath.ZeroInt(),
+			ZeroAddress:    sdkmath.ZeroInt(),
+			NonStandard:    sdkmath.ZeroInt(),
+			ShareDust:      shareDust,
+		},
+	}
+
+	// addNonClaimable routes azeta kept out of attribution to its remainder
+	// category: a pin first, then the zero address, else a module account.
+	addNonClaimable := func(canon string, amt sdkmath.Int) {
+		cur, isPin := pinned[canon]
+		switch {
+		case isPin:
 			pinned[canon] = cur.Add(amt)
+		case canon == zeroAddress:
+			res.Breakdown.ZeroAddress = res.Breakdown.ZeroAddress.Add(amt)
+		default:
+			res.Breakdown.ModuleAccounts = res.Breakdown.ModuleAccounts.Add(amt)
 		}
 	}
 
@@ -105,8 +166,6 @@ func Compute(gen *Genesis, cfg Config) (*Result, error) {
 		return acc
 	}
 
-	res := &Result{NonStandardAzeta: sdkmath.ZeroInt()}
-
 	// liquid
 	for i := range gen.Bank.Balances {
 		bal := gen.Bank.Balances[i]
@@ -122,10 +181,14 @@ func Compute(gen *Genesis, cfg Config) (*Result, error) {
 				res.NonStandard++
 				res.NonStandardAzeta = res.NonStandardAzeta.Add(amt)
 			}
+			res.Breakdown.NonStandard = res.Breakdown.NonStandard.Add(amt)
 			continue
 		}
 		if nonClaimable[canon] {
-			addPinned(canon, amt)
+			// a staking pool's balance is credited to its delegators below
+			if _, isPool := pools[canon]; !isPool {
+				addNonClaimable(canon, amt)
+			}
 			continue
 		}
 		if amt.IsZero() {
@@ -142,27 +205,26 @@ func Compute(gen *Genesis, cfg Config) (*Result, error) {
 		if err != nil {
 			return nil, fmt.Errorf("classify delegator %q: %w", del.DelegatorAddress, err)
 		}
-		// a pinned delegator skips attribution too, but only after the exchange
-		// rate math below, so its stake is reported against the pin
-		_, isPin := pinned[canon]
-		if !ok || (nonClaimable[canon] && !isPin) {
-			continue
-		}
 		valCanon, err := Canonical(del.ValidatorAddress)
 		if err != nil {
 			return nil, fmt.Errorf("canonicalize delegation validator %q: %w", del.ValidatorAddress, err)
 		}
-		val, ok := validators[valCanon]
-		if !ok {
+		val, found := validators[valCanon]
+		if !found {
 			return nil, fmt.Errorf("delegation references unknown validator %q", del.ValidatorAddress)
 		}
-		if val.DelegatorShares.IsZero() {
-			return nil, fmt.Errorf("validator %q has zero delegator shares", del.ValidatorAddress)
+		// floor(shares * tokens / delegator_shares); validateStaking guarantees
+		// a validator with zero delegator_shares has only zero-share delegations
+		staked := sdkmath.ZeroInt()
+		if !val.DelegatorShares.IsZero() {
+			staked = val.TokensFromShares(del.Shares).TruncateInt()
 		}
-		// floor(shares * tokens / delegator_shares)
-		staked := val.TokensFromShares(del.Shares).TruncateInt()
-		if isPin {
-			addPinned(canon, staked)
+		if !ok {
+			res.Breakdown.NonStandard = res.Breakdown.NonStandard.Add(staked)
+			continue
+		}
+		if nonClaimable[canon] {
+			addNonClaimable(canon, staked)
 			continue
 		}
 		acc := get(canon)
@@ -176,15 +238,16 @@ func Compute(gen *Genesis, cfg Config) (*Result, error) {
 		if err != nil {
 			return nil, fmt.Errorf("classify unbonding delegator %q: %w", ubd.DelegatorAddress, err)
 		}
-		if !ok {
-			continue
-		}
 		sum := sdkmath.ZeroInt()
 		for _, entry := range ubd.Entries {
 			sum = sum.Add(entry.Balance)
 		}
+		if !ok {
+			res.Breakdown.NonStandard = res.Breakdown.NonStandard.Add(sum)
+			continue
+		}
 		if nonClaimable[canon] {
-			addPinned(canon, sum)
+			addNonClaimable(canon, sum)
 			continue
 		}
 		acc := get(canon)
@@ -195,7 +258,8 @@ func Compute(gen *Genesis, cfg Config) (*Result, error) {
 }
 
 // finalize sorts the accounts and pins, computes bucket totals and the
-// remainder, and verifies the remainder is non-negative.
+// remainder, and verifies the remainder is non-negative and exactly explained by
+// its categories.
 func finalize(
 	res *Result,
 	accounts map[string]*Account,
@@ -220,8 +284,10 @@ func finalize(
 	})
 
 	res.Pinned = make([]PinnedAddr, 0, len(pinned))
+	res.Breakdown.Pinned = sdkmath.ZeroInt()
 	for canon, amt := range pinned {
 		res.Pinned = append(res.Pinned, PinnedAddr{Canonical: canon, Azeta: amt})
+		res.Breakdown.Pinned = res.Breakdown.Pinned.Add(amt)
 	}
 	sort.Slice(res.Pinned, func(i, j int) bool {
 		if !res.Pinned[i].Azeta.Equal(res.Pinned[j].Azeta) {
@@ -235,6 +301,17 @@ func finalize(
 		return nil, fmt.Errorf(
 			"remainder is negative: supply %s < attributed %s",
 			res.Supply, res.AttributedTotal(),
+		)
+	}
+	if bankSum := SumBankDenom(gen, denom); !bankSum.Equal(res.Supply) {
+		return nil, fmt.Errorf("bank balances sum %s != supply %s", bankSum, res.Supply)
+	}
+	// with the supply matching the bank and the staking records validated, the
+	// categories explain the remainder by construction; this is a backstop
+	if b := res.Breakdown; !res.Remainder.Equal(b.Total()) {
+		return nil, fmt.Errorf(
+			"remainder %s != categorised %s (modules %s, zero address %s, non-20-byte %s, pins %s, share dust %s)",
+			res.Remainder, b.Total(), b.ModuleAccounts, b.ZeroAddress, b.NonStandard, b.Pinned, b.ShareDust,
 		)
 	}
 	return res, nil

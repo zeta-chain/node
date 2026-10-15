@@ -1,0 +1,60 @@
+{
+  "app_state": {
+    "bank": {
+      "balances": [
+        {
+          "address": "0x4fea76427b8345861e80a3540a8a9d936fd39391",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0x1111111111111111111111111111111111111111",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "10000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0x3333333333333333333333333333333333333333",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "5000000000000000000"
+            }
+          ]
+        }
+      ],
+      "supply": [
+        {
+          "denom": "azeta",
+          "amount": "115000000000000000000"
+        }
+      ]
+    },
+    "staking": {
+      "validators": [
+        {
+          "operator_address": "0x2222222222222222222222222222222222222222",
+          "tokens": "100000000000000000000",
+          "delegator_shares": "100000000000000000000.000000000000000000",
+          "status": "BOND_STATUS_BONDED"
+        }
+      ],
+      "delegations": [],
+      "params": {
+        "bond_denom": "azeta"
+      }
+    },
+    "distribution": {
+      "fee_pool": {
+        "community_pool": []
+      }
+    }
+  }
+}

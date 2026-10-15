@@ -79,8 +79,9 @@ python3 contrib/snapshot/export_snapshot.py --network mainnet --for-zero-height 
 
 Useful flags:
 
-- `--for-zero-height`  fold rewards + commission into bank (recommended for the migration).
-- `--modules`          default `bank,staking,distribution`.
+- `--for-zero-height`  fold rewards + commission into bank. Required: Stage 2
+                       refuses an export with unpaid rewards.
+- `--modules`          default `bank,staking,distribution`. Stage 2 needs all three.
 - `--height`           default `-1` (latest).
 - `--skip-download`    reuse the cached snapshot in `~/zetacored_snapshot_<network>`.
 - `--dry-run`          print every command, execute nothing.
@@ -107,7 +108,8 @@ Flags:
 - `--pin-file`      same thing from a file, one address per line (`#` comments;
                     only the first field per line is read, so a TSV works).
                     Mainnet list is committed: `contrib/snapshot/pins_mainnet.txt`.
-- `--supply-check`  fail on any output check (default true).
+- `--supply-check`  fail on any output check (default true). It does not cover
+                    the hard refusals in "Acceptance guarantees" below.
 
 Mainnet with the committed pin list:
 
@@ -126,15 +128,56 @@ Outputs in `--output`:
 - `schema.sql`        matching Postgres DDL.
 - `snapshot_human.csv`  readable ZETA-unit copy for eyeballing.
 
-The command prints bucket totals and runs four checks (sum export == supply; sum
-attributed + remainder == total; re-sum CSV == total; every pin matched a holder),
-non-zero exit on any failure.
+The command prints bucket totals and runs three output checks (sum attributed +
+remainder == total; re-sum CSV == total; every pin matched a holder), non-zero
+exit on any failure. A bank sum that does not equal the supply is refused
+earlier, before any output is written (see "Acceptance guarantees").
 
 Pin accounting: the summary prints one line per pin with the azeta it kept out of
 attribution, plus a subtotal. A pin that matched no holder in the export reports
 zero and fails the run, which is what catches a typo'd address or a pin file
-pointed at the wrong network. `--supply-check=false` downgrades every check,
-including this one, to a stderr warning.
+pointed at the wrong network. `--supply-check=false` downgrades these three
+output checks, including this one, to a stderr warning.
+
+The summary also splits the remainder by category (module accounts, zero
+address, non-20-byte holders, pins, share-rounding dust) and prints the azeta
+lost to the 18->9 decimal floor.
+
+## Acceptance guarantees
+
+Before writing anything, Stage 2 refuses an export it cannot fully account for.
+These are hard errors. `--supply-check=false` does not turn them off.
+
+- The export has no `distribution` module.
+- The staking `bond_denom` is not `azeta`.
+- A validator is listed twice, has an invalid status, or has negative tokens or
+  delegator shares.
+- A delegation has negative shares, points at a validator not in the export, or
+  repeats a (delegator, validator) pair.
+- A validator's delegation shares do not sum exactly to its `delegator_shares`.
+  This is what catches a dropped delegation.
+- A validator's tokens exceed what its delegators are credited by more than one
+  azeta per delegation (rounding).
+- An unbonding record repeats a (delegator, validator) pair, or has a negative
+  entry.
+- The bonded pool balance is not exactly the bonded validators' tokens.
+- The not-bonded pool balance is not exactly the unbonding and unbonded
+  validators' tokens plus every unbonding entry. This is what catches a dropped
+  unbonding record.
+- Any validator has outstanding rewards, current rewards or accumulated
+  commission. That means the export was not taken with `--for-zero-height`.
+- The distribution module balance is not exactly the community pool.
+- A pin is one of the staking pools.
+- The bank balances do not sum exactly to the recorded supply.
+- The remainder is not exactly the sum of its categories.
+
+What these checks do NOT prove, and the operator still has to show for the
+final export:
+
+- The emissions collection address and the contract inventory are complete.
+  Both go to the foundation treasury, so they need checking once by hand.
+- The remainder reaches the treasury, once.
+- The export came from the agreed chain and height.
 
 ## Look at the output
 

@@ -1,12 +1,35 @@
 package cli
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+const auditPin = "0x3333333333333333333333333333333333333333"
+
+// auditExport is the path of a ported audit export in the snapshot testdata.
+func auditExport(name string) string {
+	return filepath.Join("..", "snapshot", "testdata", name+".json")
+}
+
+// runSnapshotCmd runs `zetatool snapshot` on input with extra flags and
+// returns its stdout.
+func runSnapshotCmd(t *testing.T, input string, extra ...string) (string, error) {
+	t.Helper()
+	cmd := NewSnapshotCMD()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	args := []string{"--input", input, "--output", t.TempDir(), "--chain-id", "7000", "--pin", auditPin}
+	cmd.SetArgs(append(args, extra...))
+	err := cmd.Execute()
+	return out.String(), err
+}
 
 func writePinFile(t *testing.T, content string) string {
 	t.Helper()
@@ -76,4 +99,48 @@ func TestReadPinFileMainnetList(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, pins, 16)
 	require.Equal(t, "0x5f0b1a82749cb4e2278ec87f8bf6b618dc71a8bf", pins[0], "WZETA is the largest holder")
+}
+
+func TestSnapshotCompleteExport(t *testing.T) {
+	// ACT
+	out, err := runSnapshotCmd(t, auditExport("complete"))
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Contains(t, out, "remainder by category (azeta):")
+	require.Contains(t, out, "pins:          5000000000000000000")
+	require.Contains(t, out, "conversion dust (18->9): 0 azeta")
+}
+
+// TestSnapshotRefusalNotSkippable runs an export that lost its unbonding record
+// and checks it is refused even with --supply-check=false.
+func TestSnapshotRefusalNotSkippable(t *testing.T) {
+	for _, supplyCheck := range []string{"true", "false"} {
+		t.Run("supply-check="+supplyCheck, func(t *testing.T) {
+			// ACT
+			_, err := runSnapshotCmd(t, auditExport("omitted_unbonding"), "--supply-check="+supplyCheck)
+
+			// ASSERT
+			require.ErrorContains(t, err, "not-bonded pool balance 100000000000000000000 != ")
+		})
+	}
+}
+
+func TestSnapshotMissingDistribution(t *testing.T) {
+	// ARRANGE
+	raw, err := os.ReadFile(auditExport("complete"))
+	require.NoError(t, err)
+	var doc map[string]map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(raw, &doc))
+	delete(doc["app_state"], "distribution")
+	stripped, err := json.Marshal(doc)
+	require.NoError(t, err)
+	input := filepath.Join(t.TempDir(), "export.json")
+	require.NoError(t, os.WriteFile(input, stripped, 0o600))
+
+	// ACT
+	_, err = runSnapshotCmd(t, input)
+
+	// ASSERT
+	require.ErrorContains(t, err, `app_state is missing the "distribution" module`)
 }

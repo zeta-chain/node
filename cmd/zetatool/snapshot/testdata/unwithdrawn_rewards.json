@@ -1,0 +1,105 @@
+{
+  "app_state": {
+    "bank": {
+      "balances": [
+        {
+          "address": "0x4fea76427b8345861e80a3540a8a9d936fd39391",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0x1111111111111111111111111111111111111111",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "10000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0x3333333333333333333333333333333333333333",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "5000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "0x93354845030274cd4bf1686abd60ab28ec52e1a7",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "10000000000000000000"
+            }
+          ]
+        }
+      ],
+      "supply": [
+        {
+          "denom": "azeta",
+          "amount": "125000000000000000000"
+        }
+      ]
+    },
+    "staking": {
+      "validators": [
+        {
+          "operator_address": "0x2222222222222222222222222222222222222222",
+          "tokens": "100000000000000000000",
+          "delegator_shares": "100000000000000000000.000000000000000000",
+          "status": "BOND_STATUS_BONDED"
+        }
+      ],
+      "delegations": [
+        {
+          "delegator_address": "0x1111111111111111111111111111111111111111",
+          "validator_address": "0x2222222222222222222222222222222222222222",
+          "shares": "100000000000000000000.000000000000000000"
+        }
+      ],
+      "params": {
+        "bond_denom": "azeta"
+      }
+    },
+    "distribution": {
+      "outstanding_rewards": [
+        {
+          "validator_address": "0x2222222222222222222222222222222222222222",
+          "outstanding_rewards": [
+            {
+              "denom": "azeta",
+              "amount": "10000000000000000000.000000000000000000"
+            }
+          ]
+        }
+      ],
+      "validator_current_rewards": [
+        {
+          "validator_address": "0x2222222222222222222222222222222222222222",
+          "rewards": {
+            "rewards": [
+              {
+                "denom": "azeta",
+                "amount": "10000000000000000000.000000000000000000"
+              }
+            ],
+            "period": "2"
+          }
+        }
+      ],
+      "validator_accumulated_commissions": [
+        {
+          "validator_address": "0x2222222222222222222222222222222222222222",
+          "accumulated": {
+            "commission": []
+          }
+        }
+      ]
+    }
+  }
+}
