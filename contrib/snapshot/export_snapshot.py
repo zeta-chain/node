@@ -9,25 +9,28 @@ Unlike the devnet fork flow, this does NOT sync or start the node: `zetacored ex
 reads committed state directly from the data dir, so we only init a home, drop in the
 network config, load a snapshot's `data/` into it, and run the export.
 
+For the migration snapshot, `--for-zero-height` and the bank, staking and distribution
+modules are required: `zetatool snapshot` refuses an export without them.
+
 Run from the root zeta-node directory:
-    python3 contrib/snapshot/export_snapshot.py --network testnet
-    python3 contrib/snapshot/export_snapshot.py --network mainnet
+    python3 contrib/snapshot/export_snapshot.py --network testnet --for-zero-height
+    python3 contrib/snapshot/export_snapshot.py --network mainnet --for-zero-height
 Or:
-    make snapshot-export NETWORK=mainnet
-    make snapshot-export NETWORK=testnet SNAPSHOT_EXPORT_ARGS="--height 1000000 --modules bank,staking"
+    make snapshot-export NETWORK=mainnet SNAPSHOT_EXPORT_ARGS="--for-zero-height"
+    make snapshot-export NETWORK=testnet SNAPSHOT_EXPORT_ARGS="--for-zero-height --height 1000000 --modules bank,staking,distribution"
 
 Examples:
     # Testnet, latest height, default modules (bank,staking,distribution)
-    python3 contrib/snapshot/export_snapshot.py --network testnet
+    python3 contrib/snapshot/export_snapshot.py --network testnet --for-zero-height
 
     # Mainnet, stamping a version label on the locally-built binary
-    python3 contrib/snapshot/export_snapshot.py --network mainnet --node-version v36.0.1
+    python3 contrib/snapshot/export_snapshot.py --network mainnet --for-zero-height --node-version v36.0.1
 
     # Reuse an already-downloaded snapshot cache
-    python3 contrib/snapshot/export_snapshot.py --network mainnet --skip-download
+    python3 contrib/snapshot/export_snapshot.py --network mainnet --for-zero-height --skip-download
 
     # Dry run: print every resolved command, execute nothing
-    python3 contrib/snapshot/export_snapshot.py --network mainnet --dry-run
+    python3 contrib/snapshot/export_snapshot.py --network mainnet --for-zero-height --dry-run
 
 Caveats:
     1. Binary-version compatibility: the `zetacored` binary must be able to open the
