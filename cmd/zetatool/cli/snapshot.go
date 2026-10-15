@@ -41,11 +41,24 @@ func NewSnapshotCMD() *cobra.Command {
 		Short: "Build a per-address native-ZETA balance snapshot for the Solana migration",
 		Long: `Build the ZETA->Solana migration snapshot (Stage 2) from a zetacored export.
 
-Reads the bank and staking genesis from an export produced with
+Reads the bank, staking and distribution genesis from an export produced with
 --for-zero-height (so withdrawn staking rewards and validator commission are
 already folded into liquid bank balances) and attributes native ZETA to each
 claimable address. Module accounts and any pinned contracts (e.g. WZETA) are
 routed to a single remainder that goes to the migration multisig.
+
+The command refuses an export it cannot fully account for:
+  - staking records that do not add up: a validator's delegation shares must
+    sum to its delegator_shares, with no duplicate, unknown-validator or
+    negative records, and its tokens must be credited to its delegators
+  - staking pools that do not match exactly: the bonded pool must equal bonded
+    validator tokens, the not-bonded pool must equal unbonding/unbonded
+    validator tokens plus every unbonding entry
+  - an export not taken at zero height: any outstanding rewards, current
+    rewards or accumulated commission, or a distribution module balance other
+    than the community pool
+  - a pin on a staking pool, or a remainder its categories do not explain
+These are hard errors; --supply-check=false does not disable them.
 
 Outputs into --output:
   snapshot_db.csv    Postgres COPY-ready (raw azeta + 9-decimal SPL amount)
@@ -305,6 +318,13 @@ func printSummary(cmd *cobra.Command, gen *snapshot.Genesis, res *snapshot.Resul
 	fmt.Fprintf(out, "    staked:        %s\n", res.TotalStaked)
 	fmt.Fprintf(out, "    unbonding:     %s\n", res.TotalUnbonding)
 	fmt.Fprintf(out, "    remainder:     %s\n", res.Remainder)
+	b := res.Breakdown
+	fmt.Fprintln(out, "  remainder by category (azeta):")
+	fmt.Fprintf(out, "    module accts:  %s\n", b.ModuleAccounts)
+	fmt.Fprintf(out, "    zero address:  %s\n", b.ZeroAddress)
+	fmt.Fprintf(out, "    non-20-byte:   %s\n", b.NonStandard)
+	fmt.Fprintf(out, "    pins:          %s\n", b.Pinned)
+	fmt.Fprintf(out, "    share dust:    %s\n", b.ShareDust)
 	if len(res.Pinned) > 0 {
 		subtotal := sdkmath.ZeroInt()
 		fmt.Fprintln(out, "  pinned (non-claimable):")
@@ -316,4 +336,5 @@ func printSummary(cmd *cobra.Command, gen *snapshot.Genesis, res *snapshot.Resul
 	}
 	fmt.Fprintf(out, "  total supply:    %s azeta\n", res.Supply)
 	fmt.Fprintf(out, "  SPL cap (9dec):  %s\n", res.SPLCap())
+	fmt.Fprintf(out, "  conversion dust (18->9): %s azeta\n", res.ConversionDust())
 }
