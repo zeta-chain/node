@@ -310,7 +310,7 @@ func printSummary(cmd *cobra.Command, gen *snapshot.Genesis, res *snapshot.Resul
 	fmt.Fprintf(out, "  validators:      %d\n", len(gen.Staking.Validators))
 	fmt.Fprintf(out, "  claimable accts: %d\n", len(res.Accounts))
 	if res.NonStandard > 0 {
-		fmt.Fprintf(out, "  non-std swept:   %d holder(s), %s azeta -> remainder\n",
+		fmt.Fprintf(out, "  non-std swept:   %d holder(s), %s liquid azeta -> remainder\n",
 			res.NonStandard, res.NonStandardAzeta)
 	}
 	fmt.Fprintln(out, "  buckets (azeta):")

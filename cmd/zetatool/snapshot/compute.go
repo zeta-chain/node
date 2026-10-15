@@ -303,6 +303,11 @@ func finalize(
 			res.Supply, res.AttributedTotal(),
 		)
 	}
+	if bankSum := SumBankDenom(gen, denom); !bankSum.Equal(res.Supply) {
+		return nil, fmt.Errorf("bank balances sum %s != supply %s", bankSum, res.Supply)
+	}
+	// with the supply matching the bank and the staking records validated, the
+	// categories explain the remainder by construction; this is a backstop
 	if b := res.Breakdown; !res.Remainder.Equal(b.Total()) {
 		return nil, fmt.Errorf(
 			"remainder %s != categorised %s (modules %s, zero address %s, non-20-byte %s, pins %s, share dust %s)",

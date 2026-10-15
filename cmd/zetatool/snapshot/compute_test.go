@@ -459,9 +459,8 @@ func TestComputeRefusesStakingPoolPin(t *testing.T) {
 	require.ErrorContains(t, err, "pin "+pool+" is the bonded_tokens_pool staking pool")
 }
 
-// TestComputeRefusesUnexplainedRemainder records a supply 1 above the bank
-// balances, so the remainder holds azeta no category accounts for.
-func TestComputeRefusesUnexplainedRemainder(t *testing.T) {
+// TestComputeRefusesSupplyMismatch records a supply 1 above the bank balances.
+func TestComputeRefusesSupplyMismatch(t *testing.T) {
 	// ARRANGE
 	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
 	gen := &Genesis{
@@ -479,7 +478,98 @@ func TestComputeRefusesUnexplainedRemainder(t *testing.T) {
 	_, err := Compute(gen, Config{Denom: BaseDenom})
 
 	// ASSERT
-	require.ErrorContains(t, err, "remainder 401 != categorised 400 (modules 0, zero address 400, non-20-byte 0")
+	require.ErrorContains(t, err, "bank balances sum 1000 != supply 1001")
+}
+
+// TestFinalizeRefusesUnexplainedRemainder hands finalize a breakdown that misses
+// part of the remainder. Compute cannot produce one once the supply matches the
+// bank and the staking records are validated, so the identity check is a
+// backstop and is reached here directly.
+func TestFinalizeRefusesUnexplainedRemainder(t *testing.T) {
+	// ARRANGE
+	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
+	gen := &Genesis{
+		Bank: banktypes.GenesisState{
+			Supply:   coin(400),
+			Balances: []banktypes.Balance{{Address: accBech32(t, make([]byte, addressLen)), Coins: coin(400)}},
+		},
+	}
+	res := &Result{Breakdown: RemainderBreakdown{
+		ModuleAccounts: sdkmath.ZeroInt(),
+		ZeroAddress:    sdkmath.NewInt(399),
+		NonStandard:    sdkmath.ZeroInt(),
+		ShareDust:      sdkmath.ZeroInt(),
+	}}
+
+	// ACT
+	_, err := finalize(res, map[string]*Account{}, map[string]sdkmath.Int{}, gen, BaseDenom)
+
+	// ASSERT
+	require.ErrorContains(t, err, "remainder 400 != categorised 399 (modules 0, zero address 399, non-20-byte 0")
+}
+
+// TestComputePinOverridesCategory pins the zero address and a module account,
+// each holding liquid, stake and unbonding, and checks a pin takes precedence
+// over both categories.
+func TestComputePinOverridesCategory(t *testing.T) {
+	// ARRANGE
+	coin := func(n int64) sdk.Coins { return sdk.NewCoins(sdk.NewInt64Coin(BaseDenom, n)) }
+	zero := accBech32(t, make([]byte, addressLen))
+	module := moduleBech32(t, authtypes.FeeCollectorName)
+	val := valBech32(t, addr20(0x02))
+
+	gen := &Genesis{
+		Bank: banktypes.GenesisState{
+			Supply: coin(368),
+			Balances: []banktypes.Balance{
+				{Address: zero, Coins: coin(100)},
+				{Address: module, Coins: coin(200)},
+				{Address: moduleBech32(t, stakingtypes.BondedPoolName), Coins: coin(50)},
+				{Address: moduleBech32(t, stakingtypes.NotBondedPoolName), Coins: coin(18)},
+			},
+		},
+		Staking: stakingtypes.GenesisState{
+			Params: stakingtypes.Params{BondDenom: BaseDenom},
+			Validators: []stakingtypes.Validator{{
+				OperatorAddress: val,
+				Tokens:          sdkmath.NewInt(50),
+				DelegatorShares: sdkmath.LegacyNewDec(50),
+				Status:          stakingtypes.Bonded,
+			}},
+			Delegations: []stakingtypes.Delegation{
+				{DelegatorAddress: zero, ValidatorAddress: val, Shares: sdkmath.LegacyNewDec(20)},
+				{DelegatorAddress: module, ValidatorAddress: val, Shares: sdkmath.LegacyNewDec(30)},
+			},
+			UnbondingDelegations: []stakingtypes.UnbondingDelegation{
+				{
+					DelegatorAddress: zero,
+					ValidatorAddress: val,
+					Entries:          []stakingtypes.UnbondingDelegationEntry{{Balance: sdkmath.NewInt(7)}},
+				},
+				{
+					DelegatorAddress: module,
+					ValidatorAddress: val,
+					Entries:          []stakingtypes.UnbondingDelegationEntry{{Balance: sdkmath.NewInt(11)}},
+				},
+			},
+		},
+	}
+
+	// ACT
+	res, err := Compute(gen, Config{Denom: BaseDenom, Pins: []string{zero, module}})
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Empty(t, res.Accounts)
+	require.Equal(t, []PinnedAddr{
+		{Canonical: canonHex(authtypes.NewModuleAddress(authtypes.FeeCollectorName).Bytes()), Azeta: sdkmath.NewInt(241)},
+		{Canonical: zeroAddress, Azeta: sdkmath.NewInt(127)},
+	}, res.Pinned, "module 200+30+11, zero address 100+20+7")
+	require.Equal(t, "368", res.Breakdown.Pinned.String())
+	require.Equal(t, "0", res.Breakdown.ModuleAccounts.String())
+	require.Equal(t, "0", res.Breakdown.ZeroAddress.String())
+	require.Equal(t, "368", res.Remainder.String())
+	require.Equal(t, res.Remainder.String(), res.Breakdown.Total().String())
 }
 
 func TestComputeConversionDust(t *testing.T) {
