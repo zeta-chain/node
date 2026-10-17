@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
@@ -143,12 +143,8 @@ func (pks PubKeys) Equals(newPks PubKeys) bool {
 	source := append(pks[:0:0], pks...)
 	dest := append(newPks[:0:0], newPks...)
 	// sort both lists
-	sort.Slice(source[:], func(i, j int) bool {
-		return source[i].String() < source[j].String()
-	})
-	sort.Slice(dest[:], func(i, j int) bool {
-		return dest[i].String() < dest[j].String()
-	})
+	slices.Sort(source)
+	slices.Sort(dest)
 	for i := range source {
 		if !source[i].Equals(dest[i]) {
 			return false
