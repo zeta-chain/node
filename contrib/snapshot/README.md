@@ -84,6 +84,13 @@ Useful flags:
 - `--modules`          default `bank,staking,distribution`. Stage 2 needs all three.
 - `--height`           default `-1` (latest).
 - `--skip-download`    reuse the cached snapshot in `~/zetacored_snapshot_<network>`.
+                       Without it, every run re-downloads a fresh snapshot.
+- `--home`             export home, default `~/.zetacored-snapshot-export`. The
+                       script overwrites its config and deletes its `data/`, so it
+                       refuses a home that has `data/` but no `.zeta-snapshot-export`
+                       marker, which it writes after `init`. An export home made
+                       before the marker existed is refused too; delete it or pick
+                       another `--home`.
 - `--dry-run`          print every command, execute nothing.
 - `--node-version`     only stamps a version string; it does NOT check out or build
                        that release. Build the matching binary yourself first (see
@@ -102,7 +109,9 @@ Flags:
 
 - `--input`         path to `export.json` (required).
 - `--output`        output directory (default `.`).
-- `--chain-id`      codec chain id: testnet `7001`, mainnet `7000`.
+- `--chain-id`      codec chain id: testnet `7001`, mainnet `7000`. Mainnet
+                    requires pins: without `--pin`, `--wzeta` or `--pin-file` it
+                    fails before reading the export.
 - `--pin` / `--wzeta`  non-claimable contract addresses routed to the remainder
                     (repeatable or comma-separated). WZETA and known pools go here.
 - `--pin-file`      same thing from a file, one address per line (`#` comments;

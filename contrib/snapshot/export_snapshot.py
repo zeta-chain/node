@@ -44,6 +44,7 @@ Caveats:
 """
 
 import argparse
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -58,6 +59,9 @@ HOME_DIR = Path.home()
 
 # Default export home — deliberately NOT the user's ~/.zetacored.
 DEFAULT_EXPORT_HOME = HOME_DIR / ".zetacored-snapshot-export"
+
+# Written into a home after init, so a later run knows it may overwrite that home.
+EXPORT_HOME_MARKER = ".zeta-snapshot-export"
 
 # network-config raw base + the files we pull into <HOME>/config/.
 NETWORK_CONFIG_BASE = "https://raw.githubusercontent.com/zeta-chain/network-config/main"
@@ -164,6 +168,15 @@ def main(args):
         print("Mode:      DRY RUN (nothing will be executed)")
     print("=" * 80)
 
+    # Steps 2 and 4 overwrite config and delete data/, so refuse a home that holds
+    # node data this script did not create.
+    marker = home / EXPORT_HOME_MARKER
+    if (home / "data").exists() and not marker.exists():
+        print(f"Error: {home} looks like a real node home, not one this script created "
+              f"(it has data/ but no {EXPORT_HOME_MARKER} marker). Refusing to overwrite it.")
+        print("Pick another --home, or delete the directory yourself if it is disposable.")
+        sys.exit(1)
+
     # Step 1: Optionally build the binary at a specific version.
     print("\n[1/5] Building zetacored...")
     if args.node_version:
@@ -174,9 +187,13 @@ def main(args):
     # Step 2: Initialize the export home.
     print("\n[2/5] Initializing export home...")
     run_command(
-        f"zetacored init export-node --chain-id {chain_id} --home {home} -o",
+        f"zetacored init export-node --chain-id {chain_id} --home {shlex.quote(str(home))} -o",
         dry_run=args.dry_run,
     )
+    if args.dry_run:
+        print(f"Would create export-home marker {marker}")
+    else:
+        marker.touch()
 
     # Step 3: Download network-config files into <HOME>/config/.
     print("\n[3/5] Downloading network configuration...")
@@ -190,23 +207,26 @@ def main(args):
         print("--skip-download set; reusing existing snapshot cache.")
     else:
         run_command(
-            f"python3 {DOWNLOAD_SNAPSHOT_SCRIPT} --chain-id {chain_id}",
+            f"python3 {shlex.quote(str(DOWNLOAD_SNAPSHOT_SCRIPT))} --chain-id {chain_id} --force",
             dry_run=args.dry_run,
         )
 
     data_dir = home / "data"
-    run_command(f'rm -rf "{data_dir}"', dry_run=args.dry_run)
-    run_command(f'cp -r "{cache_dir / "data"}" "{data_dir}"', dry_run=args.dry_run)
+    run_command(f"rm -rf {shlex.quote(str(data_dir))}", dry_run=args.dry_run)
+    run_command(
+        f"cp -r {shlex.quote(str(cache_dir / 'data'))} {shlex.quote(str(data_dir))}",
+        dry_run=args.dry_run,
+    )
 
     # Step 5: Run the export.
     print("\n[5/5] Exporting genesis...")
     raw_output = output.with_name(output.name + ".raw")
-    export_cmd = f"zetacored export --home {home} --modules-to-export {args.modules}"
+    export_cmd = f"zetacored export --home {shlex.quote(str(home))} --modules-to-export {args.modules}"
     if args.height != -1:
         export_cmd += f" --height {args.height}"
     if args.for_zero_height:
         export_cmd += " --for-zero-height"
-    export_cmd += f' > "{raw_output}" 2> "{log_path}"'
+    export_cmd += f" > {shlex.quote(str(raw_output))} 2> {shlex.quote(str(log_path))}"
     run_command(export_cmd, dry_run=args.dry_run)
 
     # The node logger emits an early warning to stdout ahead of the JSON, which
@@ -269,7 +289,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--skip-download",
         action="store_true",
-        help="Reuse the existing snapshot cache instead of downloading",
+        help="Reuse the existing snapshot cache instead of downloading. "
+             "Without it, every run re-downloads a fresh snapshot.",
     )
     parser.add_argument(
         "--dry-run",
