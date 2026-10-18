@@ -144,3 +144,20 @@ func TestSnapshotMissingDistribution(t *testing.T) {
 	// ASSERT
 	require.ErrorContains(t, err, `app_state is missing the "distribution" module`)
 }
+
+// TestSnapshotMainnetRequiresPins runs mainnet with no pins against an input that
+// does not exist, so passing proves the refusal comes before the export is read.
+func TestSnapshotMainnetRequiresPins(t *testing.T) {
+	// ARRANGE
+	cmd := NewSnapshotCMD()
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(&bytes.Buffer{})
+	input := filepath.Join(t.TempDir(), "does-not-exist.json")
+	cmd.SetArgs([]string{"--input", input, "--output", t.TempDir(), "--chain-id", "7000"})
+
+	// ACT
+	err := cmd.Execute()
+
+	// ASSERT
+	require.ErrorContains(t, err, "mainnet (--chain-id 7000) requires pins: pass --pin-file contrib/snapshot/pins_mainnet.txt")
+}

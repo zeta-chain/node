@@ -123,6 +123,9 @@ func runSnapshot(cmd *cobra.Command, _ []string) error {
 		}
 		pins = append(pins, filePins...)
 	}
+	if chainID == 7000 && len(pins) == 0 {
+		return fmt.Errorf("mainnet (--chain-id 7000) requires pins: pass --pin-file contrib/snapshot/pins_mainnet.txt")
+	}
 
 	appState, err := readAppState(input)
 	if err != nil {
