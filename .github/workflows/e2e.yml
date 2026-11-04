@@ -31,6 +31,9 @@ jobs:
   # this cannot run on forks as forks cannot push packages in pull request context
   # forked pull request will fall back to slow build
   build-zetanode:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-22.04
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node') && github.actor != 'dependabot[bot]'
     env:
@@ -346,6 +349,9 @@ jobs:
     secrets: inherit
   # this allows you to set a required status check
   e2e-ok:
+    permissions:
+      actions: read
+      pull-requests: write
     runs-on: ubuntu-22.04
     needs:
       - build-zetanode

@@ -10,6 +10,9 @@ on:
     - cron: '56 22 * * *'
 jobs:
   semgrep:
+    permissions:
+      contents: read
+      security-events: write
     name: semgrep/ci
     runs-on: ubuntu-22.04
     env:
