@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -134,8 +135,8 @@ func (p *Process) ShutdownNow() {
 		}()
 
 		// stop services in the reverse order
-		for i := len(p.stopStack) - 1; i >= 0; i-- {
-			p.stopStack[i]()
+		for _, stop := range slices.Backward(p.stopStack) {
+			stop()
 		}
 	}()
 
