@@ -78,7 +78,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	// zetacore client is used for all communication to zeta node.
 	// it accumulates votes, and provides a source of truth for all clients
 	//
-	// This call crated client, ensured block production, then prepares the client
+	// This call creates a client, ensures block production, then prepares the client
 	zetacoreClient, err := zetacore.NewFromConfig(ctx, &cfg, passes.hotkey, logger.Std)
 	if err != nil {
 		return errors.Wrap(err, "unable to create zetacore client from config")
