@@ -24,15 +24,15 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.23'
       
       - name: Test
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 20
           max_attempts: 2
@@ -43,9 +43,9 @@ jobs:
             make test-coverage
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v7.1.1
         with:
-          file: coverage.out
+          files: coverage.out
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: zeta-chain/node
 
@@ -61,21 +61,21 @@ jobs:
           ./zetacored version
 
       - name: Upload zetacored
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zetacored
           path: ~/go/bin/zetacored
           retention-days: 30
       
       - name: Upload zetaclientd
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zetaclientd
           path: ~/go/bin/zetaclientd
           retention-days: 30
 
       - name: Upload zetae2e
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zetae2e
           path: ~/go/bin/zetae2e
@@ -92,9 +92,9 @@ jobs:
     # it will still be check in the merge queue in this case
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.23'
       - name: go get node
