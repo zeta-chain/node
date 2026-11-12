@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -49,8 +50,8 @@ func main() {
 	outputDir := filepath.Dir(outputFile)
 	err := os.MkdirAll(outputDir, 0750)
 	if err != nil {
-		fmt.Printf("Error creating output directory %q: %v\n", outputDir, err)
-		return
+		fmt.Fprintf(os.Stderr, "Error creating output directory %q: %v\n", outputDir, err)
+		os.Exit(1)
 	}
 
 	// Collect all module data
@@ -59,14 +60,15 @@ func main() {
 		return visit(path, f, err, &modules, docsSpecDir)
 	})
 	if err != nil {
-		fmt.Printf("Error walking the path %q: %v\n", startDir, err)
-		return
+		fmt.Fprintf(os.Stderr, "Error walking the path %q: %v\n", startDir, err)
+		os.Exit(1)
 	}
 
 	// Write all data to single file
 	err = writeToSingleFile(outputFile, modules)
 	if err != nil {
-		fmt.Printf("Error writing to file %q: %v\n", outputFile, err)
+		fmt.Fprintf(os.Stderr, "Error writing to file %q: %v\n", outputFile, err)
+		os.Exit(1)
 	}
 }
 
@@ -150,7 +152,7 @@ func processProtoFile(path string, modules *[]ModuleData, docsSpecDir string) er
 		}
 
 		// Search for the corresponding Go function
-		goFunctionPath := filepath.Join(currentDir, "x")
+		goFunctionPath := filepath.Join(currentDir, "x", moduleName)
 
 		for _, service := range msgServices {
 			for _, element := range service.Elements {
@@ -300,6 +302,9 @@ func writeToSingleFile(outputFile string, modules []ModuleData) error {
 					fmt.Printf("Error writing to file %q: %v\n", outputFile, err)
 					return err
 				}
+				if !strings.HasSuffix(message.ProtoMessage, "\n") {
+					message.ProtoMessage += "\n"
+				}
 				_, err = file.WriteString(message.ProtoMessage)
 				if err != nil {
 					fmt.Printf("Error writing to file %q: %v\n", outputFile, err)
@@ -325,7 +330,14 @@ func messageToString(message *proto.Message) string {
 	for _, element := range message.Elements {
 		switch field := element.(type) {
 		case *proto.NormalField:
-			sb.WriteString(fmt.Sprintf("\t%s %s = %d;\n", field.Type, field.Name, field.Sequence))
+			prefix := ""
+			switch {
+			case field.Repeated:
+				prefix = "repeated "
+			case field.Optional:
+				prefix = "optional "
+			}
+			sb.WriteString(fmt.Sprintf("\t%s%s %s = %d;\n", prefix, field.Type, field.Name, field.Sequence))
 		case *proto.MapField:
 			sb.WriteString(
 				fmt.Sprintf("\tmap<%s, %s> %s = %d;\n", field.KeyType, field.Type, field.Name, field.Sequence),
@@ -348,7 +360,13 @@ func messageToString(message *proto.Message) string {
 	return sb.String()
 }
 
+var errFound = errors.New("found")
+
 func findFunctionInGoFiles(functionName string, startDir string) (string, bool) {
+	if _, err := os.Stat(startDir); err != nil {
+		return "", false // the module may not exist under x/
+	}
+
 	var functionDoc string
 	found := false
 
@@ -357,33 +375,30 @@ func findFunctionInGoFiles(functionName string, startDir string) (string, bool) 
 		if err != nil {
 			return err
 		}
-
-		if f.IsDir() || filepath.Ext(path) != ".go" {
+		if f.IsDir() || filepath.Ext(path) != ".go" || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
 
 		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
 			fmt.Printf("Error parsing Go file %q: %v\n", path, err)
-			return err
+			return nil // a single unparsable file should not stop the search
 		}
 
 		for _, decl := range node.Decls {
-			if funcDecl, ok := decl.(*ast.FuncDecl); ok {
-				if funcDecl.Name.Name == functionName {
-					if funcDecl.Doc != nil {
-						functionDoc = funcDecl.Doc.Text()
-					}
-					found = true
-					return filepath.SkipDir
-				}
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv == nil || fn.Name.Name != functionName {
+				continue
 			}
+			if fn.Doc != nil {
+				functionDoc = fn.Doc.Text()
+			}
+			found = true
+			return errFound
 		}
-
 		return nil
 	})
-
-	if err != nil {
+	if err != nil && !errors.Is(err, errFound) {
 		fmt.Printf("Error walking the path %q: %v\n", startDir, err)
 	}
 

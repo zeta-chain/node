@@ -56,7 +56,8 @@ message MsgAddAuthorization {
 
 #### MsgRemoveAuthorization
 
-RemoveAuthorization removes the authorization from the list. It should be called by the admin policy account.
+RemoveAuthorization defines a method to remove an authorization.
+This should be called by the admin policy account.
 
 ```proto
 message MsgRemoveAuthorization {
@@ -658,7 +659,7 @@ Authorized: admin policy group groupEmergency.
 ```proto
 message MsgPauseZRC20 {
 	string creator = 1;
-	string zrc20_addresses = 2;
+	repeated string zrc20_addresses = 2;
 }
 ```
 
@@ -670,7 +671,7 @@ Authorized: admin policy group groupOperational.
 ```proto
 message MsgUnpauseZRC20 {
 	string creator = 1;
-	string zrc20_addresses = 2;
+	repeated string zrc20_addresses = 2;
 }
 ```
 
@@ -733,7 +734,7 @@ Enabled chains allow the submissions of block headers and using it to verify the
 ```proto
 message MsgEnableHeaderVerification {
 	string creator = 1;
-	int64 chain_id_list = 2;
+	repeated int64 chain_id_list = 2;
 }
 ```
 
@@ -745,7 +746,7 @@ Disabled chains do not allow the submissions of block headers or using it to ver
 ```proto
 message MsgDisableHeaderVerification {
 	string creator = 1;
-	int64 chain_id_list = 2;
+	repeated int64 chain_id_list = 2;
 }
 ```
 
@@ -818,7 +819,10 @@ message MsgUpdateObserver {
 
 #### MsgUpdateChainParams
 
-UpdateChainParams updates the chain params with gas price multiplier and stability pool percentage.
+UpdateChainParams updates chain parameters for a specific chain, or add a new one.
+Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
+connector and ERC20 custody contract addresses, etc.
+Only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgUpdateChainParams {
