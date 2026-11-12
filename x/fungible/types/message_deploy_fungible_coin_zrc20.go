@@ -66,8 +66,8 @@ func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 	if msg.GasLimit < 0 {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit")
 	}
-	if msg.Decimals > 77 {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78")
+	if msg.Decimals > 77 || msg.Decimals == 0 {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be between 1 and 77")
 	}
 	if msg.LiquidityCap != nil && msg.LiquidityCap.IsNil() {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "liquidity cap is nil")

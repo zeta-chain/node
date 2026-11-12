@@ -25,31 +25,32 @@ func (k msgServer) DeploySystemContracts(
 	}
 
 	// uniswap v2 factory
-	factory, err := k.DeployUniswapV2Factory(ctx)
+	tmpCtx, commit := ctx.CacheContext()
+	factory, err := k.DeployUniswapV2Factory(tmpCtx)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to deploy UniswapV2Factory")
 	}
 
 	// wzeta contract
-	wzeta, err := k.DeployWZETA(ctx)
+	wzeta, err := k.DeployWZETA(tmpCtx)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to DeployWZetaContract")
 	}
 
 	// uniswap v2 router
-	router, err := k.DeployUniswapV2Router02(ctx, factory, wzeta)
+	router, err := k.DeployUniswapV2Router02(tmpCtx, factory, wzeta)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to deploy UniswapV2Router02")
 	}
 
 	// connector zevm
-	connector, err := k.DeployConnectorZEVM(ctx, wzeta)
+	connector, err := k.DeployConnectorZEVM(tmpCtx, wzeta)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to deploy ConnectorZEVM")
 	}
 
 	// system contract
-	systemContract, err := k.DeploySystemContract(ctx, wzeta, factory, router)
+	systemContract, err := k.DeploySystemContract(tmpCtx, wzeta, factory, router)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to deploy SystemContract")
 	}
@@ -72,6 +73,7 @@ func (k msgServer) DeploySystemContracts(
 		)
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 
 	return &types.MsgDeploySystemContractsResponse{
 		UniswapV2Factory: factory.Hex(),
