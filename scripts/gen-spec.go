@@ -364,7 +364,7 @@ var errFound = errors.New("found")
 
 func findFunctionInGoFiles(functionName string, startDir string) (string, bool) {
 	if _, err := os.Stat(startDir); err != nil {
-		return "", false // у x/ може не бути такого модуля
+		return "", false // the module may not exist under x/
 	}
 
 	var functionDoc string
@@ -382,7 +382,7 @@ func findFunctionInGoFiles(functionName string, startDir string) (string, bool) 
 		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
 			fmt.Printf("Error parsing Go file %q: %v\n", path, err)
-			return nil // один поганий файл не має зупиняти пошук
+			return nil // a single unparsable file should not stop the search
 		}
 
 		for _, decl := range node.Decls {
