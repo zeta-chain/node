@@ -86,7 +86,7 @@ func TestMsgServer_DisableVerificationFlags(t *testing.T) {
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
-	t.Run("disable chain if even if the the chain has nto been set before", func(t *testing.T) {
+	t.Run("disable chain if even if the chain has nto been set before", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.LightclientKeeperWithMocks(t, keepertest.LightclientMockOptions{
 			UseAuthorityMock: true,
 		})
