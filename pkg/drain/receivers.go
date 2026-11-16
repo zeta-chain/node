@@ -91,7 +91,11 @@ func (r Receivers) Validate() error {
 		// overrides must be checksummed: a typo in one hex digit would otherwise still parse.
 		if !ethcommon.IsHexAddress(a) || ethcommon.HexToAddress(a).Hex() != a ||
 			ethcommon.HexToAddress(a) == (ethcommon.Address{}) {
-			return errors.Errorf("EVM drain receiver override for chain %d (%q) is not a valid checksummed address", chainID, a)
+			return errors.Errorf(
+				"EVM drain receiver override for chain %d (%q) is not a valid checksummed address",
+				chainID,
+				a,
+			)
 		}
 	}
 	return nil
