@@ -81,9 +81,10 @@ type Config struct {
 	// Network is the zeta network this client is armed for; a payload built for a different
 	// network is rejected (cross-network replay protection).
 	Network string
-	// EVMReceiver/BTCReceiver are the compiled-in security anchors; every tx must send here.
-	EVMReceiver ethcommon.Address
-	BTCReceiver btcutil.Address
+	// EVMReceivers/BTCReceiver are the compiled-in security anchors; every tx must send here.
+	// The EVM receiver is resolved per chain via EVMReceivers.EVMFor.
+	EVMReceivers pkgdrain.Receivers
+	BTCReceiver  btcutil.Address
 	// ResolveEVMSigner/ResolveBTCSigner resolve the live per-chain signer at fire time, so
 	// a signer that bootstraps late is still picked up on a retry.
 	ResolveEVMSigner func(chainID int64) (EVMSigner, bool)
@@ -392,11 +393,12 @@ func isAlreadyBroadcast(err error) bool {
 
 func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64) error {
 	// security anchor: the receiver must be configured (non-zero) and match the payload.
-	if p.EVMReceiver == (ethcommon.Address{}) {
+	receiver := ethcommon.HexToAddress(p.EVMReceivers.EVMFor(tx.ChainID))
+	if receiver == (ethcommon.Address{}) {
 		return errors.New("evm receiver is the zero address")
 	}
-	if !strings.EqualFold(tx.To, p.EVMReceiver.Hex()) {
-		return errors.Errorf("evm receiver mismatch: payload %s, expected %s", tx.To, p.EVMReceiver.Hex())
+	if !strings.EqualFold(tx.To, receiver.Hex()) {
+		return errors.Errorf("evm receiver mismatch: payload %s, expected %s", tx.To, receiver.Hex())
 	}
 
 	signer, ok := p.ResolveEVMSigner(tx.ChainID)
@@ -438,7 +440,7 @@ func (p *Poller) executeEVM(ctx context.Context, tx draintx.EVMTx, height int64)
 	}
 
 	// #nosec G115 height is a positive zeta block height
-	signed, err := signer.SignDrainTx(ctx, p.EVMReceiver, amount, gasPrice, tx.GasLimit, tx.Nonce, uint64(height))
+	signed, err := signer.SignDrainTx(ctx, receiver, amount, gasPrice, tx.GasLimit, tx.Nonce, uint64(height))
 	if err != nil {
 		return errors.Wrap(err, "sign")
 	}

@@ -11,7 +11,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -99,6 +98,7 @@ func startDrainIfArmed(
 		Str("network", network).
 		Str("operator_pubkey_fingerprint", fingerprint).
 		Str("evm_receiver", receivers.EVM).
+		Interface("evm_receiver_overrides", receivers.EVMByChain).
 		Str("btc_receiver", receivers.BTC).
 		Msg("drain armed")
 
@@ -111,7 +111,7 @@ func startDrainIfArmed(
 			Height:           zetacoreClient,
 			PubKey:           pubKey,
 			Network:          network,
-			EVMReceiver:      ethcommon.HexToAddress(receivers.EVM),
+			EVMReceivers:     receivers,
 			BTCReceiver:      btcReceiver,
 			ResolveEVMSigner: evmSignerResolver(orch),
 			ResolveBTCSigner: btcSignerResolver(orch),

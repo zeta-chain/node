@@ -241,7 +241,7 @@ func setupGenerator(cmd *cobra.Command, chainArg string) (*payloadGenerator, dra
 		btcChainID:    btcChainID,
 		triggerHeight: opts.triggerHigh,
 		network:       drainNetwork(network),
-		evmReceiver:   receivers.EVM,
+		evmReceivers:  receivers,
 		btcReceiver:   receivers.BTC,
 		feeRate:       feeRate,
 		filter:        filter,
@@ -332,7 +332,7 @@ type payloadGenerator struct {
 	btcChainID    int64
 	triggerHeight int64
 	network       string
-	evmReceiver   string
+	evmReceivers  drain.Receivers
 	btcReceiver   string
 	feeRate       int64
 	filter        chainFilter
@@ -420,7 +420,7 @@ func (g *payloadGenerator) generate(ctx context.Context, seq uint64, final bool)
 		g.zetacore,
 		supportedChains.Chains,
 		ethcommon.HexToAddress(tssAddrRes.Eth),
-		g.evmReceiver,
+		g.evmReceivers,
 		g.filter,
 		g.evmMaxAmount,
 	)
@@ -544,7 +544,7 @@ func buildEVMTxs(
 	zetacoreClient rpc.Clients,
 	supportedChains []pkgchains.Chain,
 	tssAddr ethcommon.Address,
-	receiver string,
+	receivers drain.Receivers,
 	filter chainFilter,
 	maxAmount sdkmath.Uint,
 ) ([]draintx.EVMTx, error) {
@@ -594,7 +594,7 @@ func buildEVMTxs(
 
 		tx, err := drain.GenerateEVMTx(drain.EVMInput{
 			ChainID:        chain.ChainId,
-			To:             receiver,
+			To:             receivers.EVMFor(chain.ChainId),
 			Balance:        sdkmath.NewUintFromString(balance.String()),
 			MedianGasPrice: median,
 			Nonce:          nonce,

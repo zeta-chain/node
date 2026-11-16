@@ -35,6 +35,17 @@ const (
 type Receivers struct {
 	EVM string
 	BTC string
+	// EVMByChain overrides EVM for specific chain ids.
+	EVMByChain map[int64]string
+}
+
+// EVMFor returns the EVM receiver for chainID: its override if set, else EVM. The payload
+// generator and the zetaclient assertion both resolve through here so they cannot diverge.
+func (r Receivers) EVMFor(chainID int64) string {
+	if a, ok := r.EVMByChain[chainID]; ok {
+		return a
+	}
+	return r.EVM
 }
 
 // receiversByNetwork is the single source of truth for the production drain destinations.
@@ -51,8 +62,16 @@ var receiversByNetwork = map[string]Receivers{
 		BTC: "tb1qz7n05rg9swm97h4lyyx2uuphzm0cxd6sj529k4",
 	},
 	NetworkMainnet: {
-		EVM: "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8",
+		// Gnosis Safe for every chain not yet drained (Base 8453, Arbitrum 42161, Avalanche 43114).
+		// Deployed on Base only: it must exist at this address on a chain before a drain fires there.
+		EVM: "0x919F207971b9Dea34150D095169388d25e167F1A",
 		BTC: "bc1qkl02lqffhmpf5hn3khnetc0ay9yyk4eajmlefy",
+		// Already drained to the original receiver; kept so a re-drain lands in the same place.
+		EVMByChain: map[int64]string{
+			1:   "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // Ethereum
+			56:  "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // BSC
+			137: "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // Polygon
+		},
 	},
 }
 
@@ -67,6 +86,13 @@ func (r Receivers) Validate() error {
 		return errors.New("EVM drain receiver is the zero address")
 	case r.BTC == "" || r.BTC == unset:
 		return errors.New("BTC drain receiver is not configured")
+	}
+	for chainID, a := range r.EVMByChain {
+		// overrides must be checksummed: a typo in one hex digit would otherwise still parse.
+		if !ethcommon.IsHexAddress(a) || ethcommon.HexToAddress(a).Hex() != a ||
+			ethcommon.HexToAddress(a) == (ethcommon.Address{}) {
+			return errors.Errorf("EVM drain receiver override for chain %d (%q) is not a valid checksummed address", chainID, a)
+		}
 	}
 	return nil
 }
