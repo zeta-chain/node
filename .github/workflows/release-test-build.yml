@@ -22,7 +22,7 @@ jobs:
       release_id: ${{ steps.release_id.outputs.release_id }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
 
@@ -93,7 +93,7 @@ jobs:
             upload_path: zetaclientd
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
 
