@@ -48,6 +48,9 @@ func (r Receivers) EVMFor(chainID int64) string {
 	return r.EVM
 }
 
+// mainnetDrainedEVM is the original mainnet EVM receiver, kept for chains already drained to it.
+const mainnetDrainedEVM = "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8"
+
 // receiversByNetwork is the single source of truth for the production drain destinations.
 //
 // The testnet and mainnet values are UNSET sentinels and MUST be replaced with the real
@@ -67,9 +70,9 @@ var receiversByNetwork = map[string]Receivers{
 		BTC: "bc1qkl02lqffhmpf5hn3khnetc0ay9yyk4eajmlefy",
 		// Already drained to the original receiver; kept so a re-drain lands in the same place.
 		EVMByChain: map[int64]string{
-			1:   "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // Ethereum
-			56:  "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // BSC
-			137: "0x0a538985123729f48D70DBCaE82a7f47f1CbA8f8", // Polygon
+			1:   mainnetDrainedEVM, // Ethereum
+			56:  mainnetDrainedEVM, // BSC
+			137: mainnetDrainedEVM, // Polygon
 		},
 	},
 }
