@@ -21,7 +21,7 @@ jobs:
       GOTOOLCHAIN: auto
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -37,17 +37,17 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.23'
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           skip-cache: true
@@ -62,7 +62,7 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -108,7 +108,7 @@ jobs:
 
 
       - name: Report nosec uses
-        uses: mshick/add-pr-comment@v2
+        uses: mshick/add-pr-comment@v3
         if: env.nosec_detected == 1
         with:
           message: |
@@ -123,7 +123,7 @@ jobs:
             Pay extra attention to the way `#nosec` is being used in the files listed above. 
 
       - name: Add Label
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         if: env.nosec_detected == 1
         with:
           script: |

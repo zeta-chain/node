@@ -24,9 +24,9 @@ jobs:
       github.actor != 'dependabot[bot]' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node')
     steps:
-      - uses: actions/checkout@v4    
+      - uses: actions/checkout@v7    
       - name: Checkout semgrep-utilities repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: zeta-chain/semgrep-utilities
           path: semgrep-utilities
@@ -40,6 +40,6 @@ jobs:
       - run: python semgrep-utilities/utilities/github-sarif-helper/src/semgrep-json-to-sarif.py --json semgrep-findings.json --sarif semgrep-github.sarif
 
       - name: Upload SARIF file for GitHub Advanced Security Dashboard
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep-github.sarif

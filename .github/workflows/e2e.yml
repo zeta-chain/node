@@ -42,27 +42,27 @@ jobs:
     outputs:
       image: ${{ steps.build.outputs.metadata && fromJson(steps.build.outputs.metadata)['image.name'] || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # configure docker to use the containerd snapshotter
       # so that we can use the buildkit cache
       - uses: depot/use-containerd-snapshotter-action@v1
 
       - name: Login to Docker Hub registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
 
       - name: Login to github docker registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore go cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: restore-go-cache
         with:
           path: |
@@ -89,7 +89,7 @@ jobs:
       # build zetanode with cache options
       - name: Build zetanode for cache
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         env:
           CACHE_FROM_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache"
           CACHE_TO_CONFIG: "type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max"
@@ -138,7 +138,7 @@ jobs:
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
       - id: matrix-conditionals
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const getPrLabels = async (pull_number) => {
@@ -360,7 +360,7 @@ jobs:
     if: ${{ !cancelled() }}
     steps:
       - name: Send slack message with results
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.e2e.result == 'failure') }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
@@ -402,7 +402,7 @@ jobs:
             });
 
       - name: Add MERGE_FAILED label if merge queue failed
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         if: ${{ github.event_name == 'merge_group' && needs.e2e.result == 'failure' }}
         with:
           script: |

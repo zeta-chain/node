@@ -46,7 +46,7 @@ jobs:
   check-goreleaser:
     runs-on: ${{ vars.RELEASE_RUNNER }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build release snapshot
         if: inputs.skip_checks != true
         run: |
@@ -65,7 +65,7 @@ jobs:
     timeout-minutes: 60
     environment: release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Change Log Release Notes.
         id: release_notes

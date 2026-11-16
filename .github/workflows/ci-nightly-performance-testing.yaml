@@ -19,10 +19,10 @@ jobs:
     env:
       endpoint_to_test: "http://localhost:9545"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: "INSTALL:NODEJS"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 
@@ -102,7 +102,7 @@ jobs:
           artillery report report.json --output artillery_report.html
 
       - name: "UPLOAD:REPORT"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: artillery-report
