@@ -118,7 +118,10 @@ func TestBuildEVMTxsSkipsChainOnRPCError(t *testing.T) {
 		zetacore,
 		chainsIn,
 		ethcommon.HexToAddress("0x0000000000000000000000000000000000000001"),
-		"0x000000000000000000000000000000000000dEaD",
+		drain.Receivers{
+			EVM:        "0x000000000000000000000000000000000000dEaD",
+			EVMByChain: map[int64]string{56: "0x919F207971b9Dea34150D095169388d25e167F1A"},
+		},
 		chainFilter{},
 		sdkmath.ZeroUint(),
 	)
@@ -127,6 +130,8 @@ func TestBuildEVMTxsSkipsChainOnRPCError(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, txs, 1)
 	require.EqualValues(t, 56, txs[0].ChainID)
+	// the payload's to is resolved per chain through Receivers.EVMFor
+	require.Equal(t, "0x919F207971b9Dea34150D095169388d25e167F1A", txs[0].To)
 }
 
 func TestDrainNetwork(t *testing.T) {
