@@ -71,6 +71,46 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
 	})
 
+	t.Run("should fail if v2 revert gas limit exceeds uint64", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := getValidEthChainID()
+		setSupportedChain(ctx, zk, chainID)
+
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		_, err := zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, zrc20, big.NewInt(withdrawFee))
+		require.NoError(t, err)
+
+		k.SetGasPrice(ctx, types.GasPrice{
+			ChainId:     chainID,
+			MedianIndex: 0,
+			Prices:      []uint64{gasPrice},
+		})
+
+		cctx := types.CrossChainTx{
+			ProtocolContractVersion: types.ProtocolContractVersion_V2,
+			RevertOptions: types.RevertOptions{
+				CallOnRevert:   true,
+				RevertGasLimit: math.NewUintFromBigInt(new(big.Int).Lsh(big.NewInt(1), 64)),
+			},
+			InboundParams: &types.InboundParams{
+				CoinType: coin.CoinType_Gas,
+			},
+			OutboundParams: []*types.OutboundParams{
+				{
+					ReceiverChainId: chainID,
+					CallOptions:     &types.CallOptions{},
+				},
+			},
+		}
+
+		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
+		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
+	})
+
 	t.Run("should fail if not coin type gas", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		chainID := getValidEthChainID()
@@ -233,6 +273,46 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutboundParam().Amount.Uint64())
 		require.Equal(t, uint64(21_000), cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutboundParam().GasPrice)
+	})
+
+	t.Run("should fail if v2 erc20 revert gas limit exceeds uint64", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := getValidEthChainID()
+		setSupportedChain(ctx, zk, chainID)
+
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "foo")
+
+		_, err := zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, gasZRC20, big.NewInt(withdrawFee))
+		require.NoError(t, err)
+
+		k.SetGasPrice(ctx, types.GasPrice{
+			ChainId:     chainID,
+			MedianIndex: 0,
+			Prices:      []uint64{gasPrice},
+		})
+
+		cctx := types.CrossChainTx{
+			ProtocolContractVersion: types.ProtocolContractVersion_V2,
+			RevertOptions: types.RevertOptions{
+				CallOnRevert:   true,
+				RevertGasLimit: math.NewUintFromBigInt(new(big.Int).Lsh(big.NewInt(1), 64)),
+			},
+			InboundParams: &types.InboundParams{
+				CoinType: coin.CoinType_ERC20,
+			},
+			OutboundParams: []*types.OutboundParams{
+				{
+					ReceiverChainId: chainID,
+					CallOptions:     &types.CallOptions{},
+				},
+			},
+		}
+
+		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
+		require.ErrorIs(t, err, types.ErrInvalidGasLimit)
 	})
 
 	t.Run("should fail if not coin type erc20", func(t *testing.T) {
