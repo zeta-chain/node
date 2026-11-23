@@ -91,6 +91,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 		effectiveGasPrice                  math.Int
 		effectiveGasLimit                  uint64
 		userGasFeePaid                     math.Uint
+		eventGasFee                        math.Uint
 		senderChainID                      int64
 		senderZEVMAddress                  string
 		receiverChainID                    int64
@@ -204,6 +205,43 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 			),
 			refundRemainingFeesExpectedAmount:  big.NewInt(542),
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
+		},
+		{
+			name:                          "updated flow: event gas fee caps refundable remaining fees",
+			userGasFeePaidIsNil:           false,
+			receiverChainID:               ethChainID,
+			senderChainID:                 zetaChainID,
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			gasUsed:                       5,
+			effectiveGasPrice:             math.NewInt(10),
+			userGasFeePaid:                math.NewUint(1000),
+			eventGasFee:                   math.NewUint(700),
+			stabilityPoolPercentage:       40,
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			refundRemainingFeesReturn:     nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				246,
+			),
+			refundRemainingFeesExpectedAmount:  big.NewInt(371),
+			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
+		},
+		{
+			name:                          "updated flow: no calls if outbound fee exhausts event gas fee cap",
+			userGasFeePaidIsNil:           false,
+			receiverChainID:               ethChainID,
+			senderChainID:                 zetaChainID,
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			gasUsed:                       90,
+			effectiveGasPrice:             math.NewInt(10),
+			userGasFeePaid:                math.NewUint(1000),
+			eventGasFee:                   math.NewUint(800),
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
 		},
 		{
 			name:                          "updated flow: no calls if remaining fee rounds down to zero",
@@ -389,6 +427,7 @@ func TestKeeper_ManageUnusedGasFee(t *testing.T) {
 				var nilUint math.Uint
 				outbound.UserGasFeePaid = nilUint
 			}
+			outbound.EventGasFee = tc.eventGasFee
 
 			// Setup cctx
 			cctx := &types.CrossChainTx{

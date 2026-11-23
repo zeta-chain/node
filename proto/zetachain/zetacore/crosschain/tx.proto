@@ -220,6 +220,19 @@ message MsgVoteInbound {
   // error_message carries information about the error that caused non-SUCCESS
   // status of inbound observation
   string error_message = 22;
+
+  // event_gas_fee tracks the gas fee paid in GatewayZEVM V2 events.
+  string event_gas_fee = 23 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
+
+  // event_protocol_flat_fee tracks the protocol flat fee paid in GatewayZEVM V2 events for auditability.
+  // It is not used to calculate unused gas refunds.
+  string event_protocol_flat_fee = 24 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgVoteInboundResponse {}

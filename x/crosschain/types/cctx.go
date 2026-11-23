@@ -330,6 +330,8 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
+		EventGasFee:            msg.EventGasFee,
+		EventProtocolFlatFee:   msg.EventProtocolFlatFee,
 		// use SAFE confirmation mode as default value.
 		// it will be overwritten by actual confirmation mode in the outbound vote message.
 		ConfirmationMode: ConfirmationMode_SAFE,

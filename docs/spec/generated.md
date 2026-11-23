@@ -364,6 +364,8 @@ message MsgVoteInbound {
 	InboundStatus status = 20;
 	ConfirmationMode confirmation_mode = 21;
 	string error_message = 22;
+	string event_gas_fee = 23;
+	string event_protocol_flat_fee = 24;
 }
 ```
 
