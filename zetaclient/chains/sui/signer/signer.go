@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	suiptb "github.com/pattonkan/sui-go/sui"
@@ -92,14 +93,26 @@ func New(baseSigner *base.Signer,
 
 // ProcessCCTX schedules outbound cross-chain transaction.
 // Build --> Sign --> Broadcast --(async)--> Wait for execution --> PostOutboundTracker
-func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
+func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) (err error) {
 	var (
 		outboundID = base.OutboundIDFromCCTX(cctx)
 		nonce      = cctx.GetCurrentOutboundParam().TssNonce
 	)
 
 	s.MarkOutbound(outboundID, true)
-	defer func() { s.MarkOutbound(outboundID, false) }()
+	defer func() {
+		s.MarkOutbound(outboundID, false)
+		panicStack := debug.Stack()
+		if r := recover(); r != nil {
+			s.Logger().Std.Error().
+				Str(logs.FieldCctxIndex, cctx.Index).
+				Str(logs.FieldOutboundID, outboundID).
+				Interface("panic", r).
+				Str("stack_trace", string(panicStack)).
+				Msg("caught panic error")
+			err = errors.Errorf("caught panic during outbound processing: %v", r)
+		}
+	}()
 
 	// prepare logger
 	logger := s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
