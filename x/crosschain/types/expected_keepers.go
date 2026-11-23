@@ -179,6 +179,7 @@ type FungibleKeeper interface {
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		amountIn *big.Int,
+		amountOutMin *big.Int,
 		inZRC4,
 		outZRC4 ethcommon.Address,
 		noEthereumTxEvent bool,
@@ -188,6 +189,7 @@ type FungibleKeeper interface {
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		amountIn *big.Int,
+		amountOutMin *big.Int,
 		outZRC4 ethcommon.Address,
 		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
