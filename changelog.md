@@ -37,6 +37,7 @@
 ### CI
 
 * [4648](https://github.com/zeta-chain/node/pull/4648) - declare explicit job-level `GITHUB_TOKEN` permissions on workflows that write (packages, releases, PR comments/labels, security events).
+* [4654](https://github.com/zeta-chain/node/pull/4654) - remove the `build-testnet-ubuntu` make target (its Dockerfile no longer exists) and the Athens testnet rows of the node deployment doc, after the Athens testnet sunset.
 
 ## Release ReForge
 - zetacored: v37.0.0
