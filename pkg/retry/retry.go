@@ -116,8 +116,7 @@ func DoTypedWithBackoff[T any](cb TypedCallback[T], bo Backoff) (T, error) {
 		err    error
 	)
 
-	// #nosec G703 error is propagated
-	_ = DoWithBackoff(func() error {
+	err = DoWithBackoff(func() error {
 		result, err = cb()
 		return err
 	}, bo)
